@@ -282,6 +282,32 @@ void Client::UpdateResolution() {
     MemEdit::WriteInt(dwSlideNoticeWidth + 1, m_nGameWidth);    //push 800 ; CSlideNotice::CSlideNotice
     MemEdit::WriteInt(dwSlideNoticeSetMsgWidth + 1, m_nGameWidth);    //push 800 ; CSlideNotice::SetMsg
     MemEdit::WriteInt(dwSlideNoticeSetMsgWidth2 + 2, m_nGameWidth);    //push 800 ; CSlideNotice::SetMsg
+
+    MemEdit::WriteInt(0x008D01B2 + 0x2E01 + 1, m_nGameWidth - 227);    // ShopButton X
+    MemEdit::WriteInt(0x008D01B2 + 0x2EA9 + 1, m_nGameWidth - 171);    // MTSButton X
+    MemEdit::WriteInt(0x008D01B2 + 0x2F72 + 1, m_nGameWidth - 115);    // Menu Button X
+    MemEdit::WriteInt(0x008D01B2 + 0x2F72 + 1, m_nGameWidth - 115);    // Menu Button X
+    MemEdit::WriteInt(0x008D01B2 + 0x303A + 1, m_nGameWidth - 59);    // Shortcut Button X
+
+    MemEdit::WriteInt(0x008D01B2 + 0x33D9 + 1, m_nGameWidth - 32); // Toggle Quickslot X
+    MemEdit::WriteInt(0x008DF4B1 + 0x457 + 1, m_nGameWidth - 32); // Toggle Quickslot X
+
+    MemEdit::WriteInt(0x008D01B2 + 0x32DD + 1, m_nGameWidth - 62); // SetKey X
+    MemEdit::WriteInt(0x008D01B2 + 0x3256 + 1, m_nGameWidth - 92); // SkillKey X
+    MemEdit::WriteInt(0x008D01B2 + 0x31CF + 1, m_nGameWidth - 122); // StatKey X
+    MemEdit::WriteInt(0x008D01B2 + 0x3148 + 1, m_nGameWidth - 152); // InvenKey X
+    MemEdit::WriteInt(0x008D01B2 + 0x30C1 + 1, m_nGameWidth - 182); // EquipKey X
+
+    MemEdit::WriteInt(0x008D3B2F  + 0x52F + 1, m_nGameWidth - 227); // Alert GM
+    MemEdit::WriteInt(0x008D01B2  + 0x2E01 + 1, m_nGameWidth - 227); // Alert GM
+    MemEdit::WriteInt(0x008D01B2  + 0x34E9 + 1, m_nGameWidth - 227); // Alert GM
+
+    MemEdit::WriteInt(0x008D3B2F  + 0x5A5 + 1, m_nGameWidth - 201); // IconMemo X Pos
+
+    MemEdit::WriteInt(0x00849DE2 + 0x5D + 1, m_nGameWidth - 134); // Game Menu X Pos
+    MemEdit::WriteInt(0x00849DE2 + 0x57 + 1, m_nGameHeight - 177); // Game Menu Y Pos
+    MemEdit::WriteInt(0x0084A560 + 0x5D + 1, m_nGameWidth - 93); // ShortCut Menu X Pos
+    MemEdit::WriteInt(0x0084A560 + 0x57 + 1, m_nGameHeight - 282); // ShortCut Menu Y Pos
 }
 
 void Client::UpdateLogin() {
