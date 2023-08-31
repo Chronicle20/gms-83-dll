@@ -1,0 +1,17 @@
+#include "winhook_types.h"
+
+CreateFileA_t CreateFileA_Original;
+WinExec_t WinExec_Original;
+GetProcAddress_t GetProcAddress_Original;
+CreateMutexA_t CreateMutexA_Original;
+OpenMutexA_t OpenMutexA_Original;
+WSPStartup_t WSPStartup_Original;
+RegisterClassExA_t RegisterClassExA_Original;
+CreateProcessW_t CreateProcessW_Original;
+CreateProcessA_t CreateProcessA_Original;
+OpenProcess_t OpenProcess_Original;
+CreateThread_t CreateThread_Original;
+GetACP_t GetACP_Original;
+CreateWindowExA_t CreateWindowExA_Original;
+NtTerminateProcess_t NtTerminateProcess_Original;
+RegCreateKeyExA_t RegCreateKeyExA_Original;
