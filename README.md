@@ -22,8 +22,12 @@ Redirect IP the game uses for socket connections. Provided configuration produce
 ### enable-minimize
 Allow the minimize button to be used in the windowed application.
 
+### high-resolution
+Move client to use 1920x1080 as the expected resolution. UI.wz edits will be necessary for things to look fully proper. 
+
 ### no-beginner-party-block
 Removes restriction on Beginners from joining / creating parties. There may be server-side checks that need to be removed / configured depending on source.
+
 ### no-enter-mts-map-restriction
 Removes restriction on entering MTS on certain maps.
 
