@@ -19,6 +19,9 @@ Removes the display of the MapleStory patcher window on launch.
 ### redirect
 Redirect IP the game uses for socket connections. Provided configuration produces a "localhost".
 
+
+### no-beginner-party-block
+Removes restriction on Beginners from joining / creating parties. There may be server-side checks that need to be removed / configured depending on source.
 ### no-enter-mts-map-restriction
 Removes restriction on entering MTS on certain maps.
 
