@@ -18,6 +18,10 @@ Removes the display of the MapleStory patcher window on launch.
 
 ### redirect
 Redirect IP the game uses for socket connections. Provided configuration produces a "localhost".
+
+### no-enter-mts-map-restriction
+Removes restriction on entering MTS on certain maps.
+
 ## Notes
 
 - I use CLion with a VisualStudio(2022 x86) Toolchain. Other IDEs are possible. 
