@@ -11,6 +11,10 @@ A collection of GMS v83 Client Edits which can be loaded through the provided ij
 4. Create an "edits" folder in the root MapleStory directory to house your client edits.
 5. Place (any) DLLs and corresponding INI configurations within the "edits" folder which you would like to apply to the client.
 
+## Edits
+
+### no-patcher
+Removes the display of the MapleStory patcher window on launch.
 ## Notes
 
 - I use CLion with a VisualStudio(2022 x86) Toolchain. Other IDEs are possible. 
