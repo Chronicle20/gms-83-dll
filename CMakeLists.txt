@@ -3,3 +3,4 @@ project(gms_83_dll)
 
 set(CMAKE_CXX_STANDARD 14)
 add_subdirectory(no-patcher)
+add_subdirectory(redirect)

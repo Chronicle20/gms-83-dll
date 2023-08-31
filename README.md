@@ -15,6 +15,9 @@ A collection of GMS v83 Client Edits which can be loaded through the provided ij
 
 ### no-patcher
 Removes the display of the MapleStory patcher window on launch.
+
+### redirect
+Redirect IP the game uses for socket connections. Provided configuration produces a "localhost".
 ## Notes
 
 - I use CLion with a VisualStudio(2022 x86) Toolchain. Other IDEs are possible. 
