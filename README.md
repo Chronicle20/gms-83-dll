@@ -12,6 +12,8 @@ A collection of GMS v83 Client Edits which can be loaded through the provided ij
 5. Place (any) DLLs and corresponding INI configurations within the "edits" folder which you would like to apply to the client.
 
 ## Edits
+### bypass
+Exactly what you think it is.
 
 ### no-patcher
 Removes the display of the MapleStory patcher window on launch.
