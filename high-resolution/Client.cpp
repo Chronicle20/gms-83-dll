@@ -278,6 +278,10 @@ void Client::UpdateResolution() {
     MemEdit::WriteInt(0x0066BACE + 2, floor(-m_nGameWidth / 2));        //and ecx,-400
     MemEdit::WriteInt(0x009B76BD + 3, floor(-m_nGameHeight / 2));    //push -300
     MemEdit::WriteInt(0x009B76CB + 3, floor(m_nGameHeight / 2));        //push 300
+
+    MemEdit::WriteInt(dwSlideNoticeWidth + 1, m_nGameWidth);    //push 800 ; CSlideNotice::CSlideNotice
+    MemEdit::WriteInt(dwSlideNoticeSetMsgWidth + 1, m_nGameWidth);    //push 800 ; CSlideNotice::SetMsg
+    MemEdit::WriteInt(dwSlideNoticeSetMsgWidth2 + 2, m_nGameWidth);    //push 800 ; CSlideNotice::SetMsg
 }
 
 void Client::UpdateLogin() {
