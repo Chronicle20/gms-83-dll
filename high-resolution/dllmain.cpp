@@ -1,12 +1,12 @@
 #include <Windows.h>
+#include <cmath>
 #include "Client.h"
 
 // main thread
-VOID __stdcall MainProc()
-{
-    Client::m_nGameWidth=1920;
-    Client::m_nGameHeight=1080;
+VOID __stdcall MainProc() {
+
     //Client::UpdateLogin();
+    Client::SetResolution(1920, 1080);
     Client::UpdateResolution();
 }
 

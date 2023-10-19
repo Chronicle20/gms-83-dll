@@ -84,3 +84,11 @@ const DWORD dwLoginFindIDBtn = 0x00620735;
 const DWORD dwLoginSaveIDBtn = 0x006206BE;
 const DWORD dwLoginWebHomeBtn = 0x006208A0;
 const DWORD dwLoginWebRegisterBtn = 0x00620829;
+
+const DWORD dwCUIRecommendWorld = 0x0062B2CF;
+const DWORD dwCUIRecommendWorldRtn = 0x0062B345;
+const DWORD dwCUILoginStart = 0x0060E157;
+const DWORD dwCUILoginStartRtn = dwCUILoginStart + 0x73;
+const DWORD dwCUITitle = 0x0062034A;
+const DWORD dwCUITitleRtn = dwCUITitle + 0xAC;
+const DWORD dwCLoginUtilDlgInit = 0x0060F799;
