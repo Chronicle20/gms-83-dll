@@ -19,27 +19,6 @@ namespace WinHooks {
 // deprecated api call warning
 #pragma warning(disable : 4996)
 
-/// <summary>
-/// Used to map out imports used by MapleStory.
-/// The log output can be used to reconstruct the _ZAPIProcAddress struct
-/// ZAPI struct is the dword before the while loop when searching for aob: 68 FE 00 00 00 ?? 8D
-/// </summary>
-    FARPROC WINAPI GetProcAddress_Hook(HMODULE hModule, LPCSTR lpProcName) {
-        if (Common::GetInstance()->m_bThemidaUnpacked) {
-            DWORD dwRetAddr = reinterpret_cast<DWORD>(_ReturnAddress());
-
-            if (Common::GetInstance()->m_dwGetProcRetAddr != dwRetAddr) {
-                Common::GetInstance()->m_dwGetProcRetAddr = dwRetAddr;
-
-                Log("[GetProcAddress] Detected library loading from %08X.", dwRetAddr);
-            }
-
-            Log("[GetProcAddress] => %s", lpProcName);
-        }
-
-        return GetProcAddress_Original(hModule, lpProcName);
-    }
-
     /// <summary>
     /// CreateMutexA is the first Windows library call after the executable unpacks itself.
     /// We hook this function to do all our memory edits and hooks when it's called.
@@ -64,140 +43,11 @@ namespace WinHooks {
             lpName = szMutex;
 #endif
 
-#if !MAPLE_INSTAJECT
             Common::GetInstance()->OnThemidaUnpack();
-#endif
-
             return CreateMutexA_Original(lpMutexAttributes, bInitialOwner, lpName);
         }
 
         return CreateMutexA_Original(lpMutexAttributes, bInitialOwner, lpName);
-    }
-
-    /// <summary>
-    /// In some versions, Maple calls this library function to check if the anticheat has started.
-    /// We can spoof this and return a fake handle for it to close.
-    /// </summary>
-    HANDLE WINAPI OpenMutexA_Hook(
-            DWORD dwDesiredAccess,
-            BOOL bInitialOwner,
-            LPCSTR lpName
-    ) {
-#if _DEBUG
-        Log("Opening mutex %s", lpName);
-#endif
-
-        if (strstr(lpName, "meteora")) // make sure we only override hackshield
-        {
-            Log("Detected HS mutex => spoofing.");
-
-            Common::GetInstance()->m_pFakeHsModule = new FakeModule();
-
-            if (!Common::GetInstance()->m_pFakeHsModule->CreateModule("ehsvc.dll")) {
-                Log("Unable to create fake HS module.");
-            } else {
-                Log("Fake HS module loaded.");
-            }
-
-            // return handle to a spoofed mutex so it can close the handle
-            return CreateMutexA_Original(NULL, TRUE, "FakeMutex1");
-        } else // TODO add second mutex handling
-        {
-            return OpenMutexA_Original(dwDesiredAccess, bInitialOwner, lpName);
-        }
-    }
-
-    /// <summary>
-    /// Used to track what maple is trying to start (mainly for anticheat modules).
-    /// </summary>
-    BOOL WINAPI CreateProcessW_Hook(
-            LPCWSTR lpApplicationName,
-            LPWSTR lpCommandLine,
-            LPSECURITY_ATTRIBUTES lpProcessAttributes,
-            LPSECURITY_ATTRIBUTES lpThreadAttributes,
-            BOOL bInheritHandles,
-            DWORD dwCreationFlags,
-            LPVOID lpEnvironment,
-            LPCWSTR lpCurrentDirectory,
-            LPSTARTUPINFOW lpStartupInfo,
-            LPPROCESS_INFORMATION lpProcessInformation
-    ) {
-        if (Common::GetConfig()->HookToggleInfo.CreateProcess_Logging) {
-            auto sAppName = lpApplicationName ? lpApplicationName : L"Null App Name";
-            auto sArgs = lpCommandLine ? lpCommandLine : L"Null Args";
-
-            Log("CreateProcessW -> %s : %s", sAppName, sArgs);
-        }
-
-        return CreateProcessW_Original(
-                lpApplicationName, lpCommandLine, lpProcessAttributes,
-                lpThreadAttributes, bInheritHandles, dwCreationFlags,
-                lpEnvironment, lpCurrentDirectory, lpStartupInfo,
-                lpProcessInformation
-        );
-    }
-
-    /// <summary>
-    /// Used same as above and also to kill/redirect some web requests.
-    /// </summary>
-    BOOL WINAPI CreateProcessA_Hook(
-            LPCSTR lpApplicationName,
-            LPSTR lpCommandLine,
-            LPSECURITY_ATTRIBUTES lpProcessAttributes,
-            LPSECURITY_ATTRIBUTES lpThreadAttributes,
-            BOOL bInheritHandles,
-            DWORD dwCreationFlags,
-            LPVOID lpEnvironment,
-            LPCSTR lpCurrentDirectory,
-            LPSTARTUPINFOA lpStartupInfo,
-            LPPROCESS_INFORMATION lpProcessInformation) {
-#if MAPLETRACKING_CREATE_PROCESS
-        auto sAppName = lpApplicationName ? lpApplicationName : "Null App Name";
-        auto sArgs = lpCommandLine ? lpCommandLine : "Null Args";
-
-        Log("CreateProcessA -> %s : %s", sAppName, sArgs);
-#endif
-
-        if (Common::GetConfig()->MapleExitWindowWebUrl &&
-            strstr(lpCommandLine, Common::GetConfig()->MapleExitWindowWebUrl)) {
-            Log("[CreateProcessA] [%08X] Killing web request to: %s", _ReturnAddress(), lpApplicationName);
-            return FALSE; // ret value doesn't get used by maple after creating web requests as far as i can tell
-        }
-
-        return CreateProcessA_Original(
-                lpApplicationName, lpCommandLine, lpProcessAttributes,
-                lpThreadAttributes, bInheritHandles, dwCreationFlags,
-                lpEnvironment, lpCurrentDirectory, lpStartupInfo,
-                lpProcessInformation
-        );
-    }
-
-    /// <summary>
-    /// Same as CreateProcessW
-    /// </summary>
-    HANDLE WINAPI CreateThread_Hook(
-            LPSECURITY_ATTRIBUTES lpThreadAttributes,
-            SIZE_T dwStackSize,
-            LPTHREAD_START_ROUTINE lpStartAddress,
-            __drv_aliasesMem LPVOID lpParameter,
-            DWORD dwCreationFlags,
-            LPDWORD lpThreadId
-    ) {
-        return CreateThread_Original(lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags,
-                                     lpThreadId);
-    }
-
-    /// <summary>
-    /// Used to track what processes Maple opens.
-    /// </summary>
-    HANDLE WINAPI OpenProcess_Hook(
-            DWORD dwDesiredAccess,
-            BOOL bInheritHandle,
-            DWORD dwProcessId
-    ) {
-        Log("OpenProcess -> PID: %d - CallAddy: %08X", dwProcessId, _ReturnAddress());
-
-        return OpenProcess_Original(dwDesiredAccess, bInheritHandle, dwProcessId);
     }
 
     /// <summary>
@@ -233,38 +83,5 @@ namespace WinHooks {
         }
 
         return uiNewLocale;
-    }
-
-    /// <summary>
-    /// We use this function to track what memory addresses are killing the process.
-    /// There are more ways that Maple kills itself, but this is one of them.
-    /// </summary>
-    LONG NTAPI NtTerminateProcess_Hook(
-            HANDLE hProcHandle,
-            LONG ntExitStatus
-    ) {
-        Log("NtTerminateProcess: %08X", unsigned(_ReturnAddress()));
-
-        return NtTerminateProcess_Original(hProcHandle, ntExitStatus);
-    }
-
-    /// <summary>
-    /// Maplestory saves registry information (config stuff) for a number of things. This can be used to track that.
-    /// </summary>
-    LSTATUS WINAPI RegCreateKeyExA_Hook(
-            HKEY hKey,
-            LPCSTR lpSubKey,
-            DWORD Reserved,
-            LPSTR lpClass,
-            DWORD dwOptions,
-            REGSAM samDesired,
-            const LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-            PHKEY phkResult,
-            LPDWORD lpdwDisposition
-    ) {
-        Log("RegCreateKeyExA - Return address: %d", _ReturnAddress());
-
-        return RegCreateKeyExA_Original(hKey, lpSubKey, Reserved, lpClass, dwOptions, samDesired, lpSecurityAttributes,
-                                        phkResult, lpdwDisposition);
     }
 }

@@ -9,7 +9,5 @@
 
 // add headers that you want to pre-compile here
 #include "framework.h"
-#include "MapleAPI.h"
-#include "../common/MapleTypes.h"
 
 #endif //PCH_H
