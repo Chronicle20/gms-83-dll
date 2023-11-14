@@ -12,7 +12,7 @@
 #include "winhook_types.h"
 #include "FakeModule.h"
 
-#define MAPLE_MULTICLIENT FALSE
+#define MAPLE_MULTICLIENT TRUE
 
 /// <summary>
 /// 
