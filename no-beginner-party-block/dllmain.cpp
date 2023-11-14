@@ -5,12 +5,9 @@ const DWORD dwSendJoinPartyMsg = 0x0052FECF;
 const DWORD dwSendCreateNewPartyMsg = 0x52FCE1;
 
 // main thread
-VOID __stdcall MainProc()
-{
-    BYTE* bArr = new BYTE[1];
-    bArr[0] = 0xEB;
-    MemEdit::WriteBytes(dwSendJoinPartyMsg+0x65, bArr, 1);
-    MemEdit::WriteBytes(dwSendCreateNewPartyMsg+0xA4, bArr, 1);
+VOID __stdcall MainProc() {
+    MemEdit::WriteBytes(dwSendJoinPartyMsg + 0x65, new BYTE[1]{0xEB}, 1);
+    MemEdit::WriteBytes(dwSendCreateNewPartyMsg + 0xA4, new BYTE[1]{0xEB}, 1);
 }
 
 // dll entry point

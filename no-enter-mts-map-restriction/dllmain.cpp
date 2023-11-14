@@ -4,11 +4,8 @@
 const DWORD dwSendMigrateToITCRequest = 0x00A12522;
 
 // main thread
-VOID __stdcall MainProc()
-{
-    BYTE* bArr = new BYTE[1];
-    bArr[0] = 0xEB;
-    MemEdit::WriteBytes(dwSendMigrateToITCRequest+0xE9, bArr, 1);
+VOID __stdcall MainProc() {
+    MemEdit::WriteBytes(dwSendMigrateToITCRequest + 0xE9, new BYTE[1]{0xEB}, 1);
 }
 
 // dll entry point
