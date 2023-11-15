@@ -1146,6 +1146,10 @@ __declspec(naked) void Nuked494D2F() {
     }
 }
 
+const DWORD dwSendCheckPasswordPacket = 0x005F6952;
+const DWORD dwSendCheckPasswordPacketFirstJump = dwSendCheckPasswordPacket + 0x42;
+const DWORD dwSendCheckPasswordPacketSecondChange = dwSendCheckPasswordPacket + 0x252;
+
 
 // main thread
 VOID __stdcall MainProc()
@@ -1165,6 +1169,9 @@ VOID __stdcall MainProc()
     MemEdit::CodeCave(NukedCLoginSendCheckPasswordPacket, dwCLoginSendCheckPasswordPacket, 5);
     MemEdit::CodeCave(Nuked494D2F, dw494D2F, 6);
 
+    // CLogin::SendCheckPasswordPacket auth patches
+    MemEdit::WriteBytes(dwSendCheckPasswordPacketFirstJump, new BYTE[6]{0xE9, 0xC1, 0x01, 0x00, 0x00, 0x90}, 6);
+    MemEdit::WriteBytes(dwSendCheckPasswordPacketSecondChange, new BYTE[7]{0xFF, 0x75, 0x0C, 0x90, 0x90, 0x90, 0x90}, 7);
 }
 
 // dll entry point
