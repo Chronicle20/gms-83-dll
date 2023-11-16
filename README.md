@@ -3,6 +3,8 @@
 ## Overview
 A collection of GMS v83 Client Edits which can be loaded through the provided ijl15 proxy. The collection itself builds off of the fundamentals provided in the MapleClientCollection framework by MinimumDelta. The goal is that each DLL loaded provides clear and concise behavior. Opting in or out of functionality is handled through DLL deployment (or lack thereof).
 
+![GitHub license](https://img.shields.io/badge/License-AGPL%203.0-blue)
+
 ## Usage
 
 1. Clone and Build the repository to produce the proxy and client edit DLLs.
@@ -42,3 +44,6 @@ The proxy and client edits provided in this collection were all made possible th
 - Hendi - [Localhost Workshop](https://forum.ragezone.com/threads/localhost-workshop.1202021/) - Foundation for minimum client edits to produce a localhost. 
 - MinimumDelta - MapleClientCollection - A wonderful framework for enabling DLL based client edits.
 - izarooni - [MapleEzorsia](https://github.com/izarooni/MapleEzorsia) - Foundation for HD client edits.
+
+## License
+The code in this repository is under either the AGPL 3.0 license, or a license compatible with the Apache 2 license. See the [License Page](https://www.gnu.org/licenses/agpl-3.0-standalone.html) for more information.
