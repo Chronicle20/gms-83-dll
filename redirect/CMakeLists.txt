@@ -14,3 +14,6 @@ add_library(redirect SHARED
 # Set additional include directories if needed
 target_include_directories(redirect PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(redirect PRIVATE ${CMAKE_SOURCE_DIR}/common/detours.lib)
+
+# Copy INI file to build directory
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/redirect.ini DESTINATION ${CMAKE_BINARY_DIR}/redirect)
