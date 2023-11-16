@@ -5,7 +5,7 @@ add_library(bypass SHARED
         dllmain.cpp
         ${CMAKE_SOURCE_DIR}/common/memedit.cpp
         ${CMAKE_SOURCE_DIR}/common/hooker.cpp
-        ${CMAKE_SOURCE_DIR}/common/Logger.cpp
+        ${CMAKE_SOURCE_DIR}/common/logger.cpp
 )
 
 # Set additional include directories if needed

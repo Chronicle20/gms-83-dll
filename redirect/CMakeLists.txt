@@ -4,7 +4,7 @@ project(redirect)
 add_library(redirect SHARED
         dllmain.cpp
         ${CMAKE_SOURCE_DIR}/common/Common.cpp
-        ${CMAKE_SOURCE_DIR}/common/Logger.cpp
+        ${CMAKE_SOURCE_DIR}/common/logger.cpp
         ${CMAKE_SOURCE_DIR}/common/winhooks.cpp
         ${CMAKE_SOURCE_DIR}/common/winhook_types.cpp
         ${CMAKE_SOURCE_DIR}/common/hooker.cpp
