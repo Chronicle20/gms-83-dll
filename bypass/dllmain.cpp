@@ -589,7 +589,7 @@ __declspec(naked) void NukedCWvsAppRun() {
             cmp dword ptr [ebp-0D08h], 0
             jz label9F629E
 
-            cmp dword ptr [ebp-0ACh], 20000000h
+            cmp dword ptr [ebp-0ACh], 0x20000000
 
             jnz short label9F61B1
 
@@ -613,11 +613,11 @@ __declspec(naked) void NukedCWvsAppRun() {
             call dwCxxThrowException
 
             label9F61B1:
-            cmp dword ptr [ebp-0ACh], 21000000h
+            cmp dword ptr [ebp-0ACh], 0x21000000
 
             jl short label9F6213
 
-            cmp dword ptr [ebp-0ACh], 21000006h
+            cmp dword ptr [ebp-0ACh], 0x21000006
 
             jg short label9F6213
 
@@ -631,17 +631,16 @@ __declspec(naked) void NukedCWvsAppRun() {
             mov eax, [ebp-0D40h]
             mov eax, [eax]
             mov [ebp-0CECh], eax
-        //push offset AVCDisconnectException
-            push 0
+            push 11831384 //AVCDisconnectException
             lea eax, [ebp-0CECh]
             push eax
             call dwCxxThrowException
 
             label9F6213:
-            cmp dword ptr [ebp-0ACh], 22000000h
+            cmp dword ptr [ebp-0ACh], 0x22000000
             jl short label9F6275
 
-            cmp dword ptr [ebp-0ACh], 2200000Dh
+            cmp dword ptr [ebp-0ACh], 0x2200000D
 
             jg short label9F6275
 
@@ -651,12 +650,11 @@ __declspec(naked) void NukedCWvsAppRun() {
             mov[ebp - 0CF8h], eax
             lea eax, [ebp - 0CF8h]
             mov[ebp - 0D44h], eax
-            mov dword ptr[ebp - 4], 1
+            mov dword ptr[ebp - 4], 2
             mov eax, [ebp - 0D44h]
             mov eax, [eax]
             mov[ebp - 0CF4h], eax
-        //push offset AVCDisconnectException
-            push 0
+            push 0B44760h
             lea eax, [ebp - 0CF4h]
             push eax
             call dwCxxThrowException
@@ -667,6 +665,7 @@ __declspec(naked) void NukedCWvsAppRun() {
             mov eax, [ebp - 0D00h]
             mov[ebp - 0CFCh], eax
         //push offset AVCDisconnectException
+            push    0B44EE0h
             lea eax, [ebp - 0CFCh]
             push eax
             call dwCxxThrowException
@@ -1059,7 +1058,7 @@ __declspec(naked) void NukedCLoginSendCheckPasswordPacket() {
     }
 }
 
-__declspec(naked) void Nuked494D2F() {
+__declspec(naked) void NukedCClientSocketConnect2() {
     __asm {
             push ebp
             mov ebp, esp
@@ -1167,7 +1166,7 @@ VOID __stdcall MainProc()
     MemEdit::CodeCave(NukedCWvsAppCallUpdate, dwCWvsAppCallUpdate, 5);
     MemEdit::CodeCave(NukedCClientSocketConnect, dwCClientSocketConnect, 5);
     MemEdit::CodeCave(NukedCLoginSendCheckPasswordPacket, dwCLoginSendCheckPasswordPacket, 5);
-    MemEdit::CodeCave(Nuked494D2F, dw494D2F, 6);
+    MemEdit::CodeCave(NukedCClientSocketConnect2, dw494D2F, 6);
 
     // CLogin::SendCheckPasswordPacket auth patches
     MemEdit::WriteBytes(dwSendCheckPasswordPacketFirstJump, new BYTE[6]{0xE9, 0xC1, 0x01, 0x00, 0x00, 0x90}, 6);
