@@ -18,6 +18,9 @@ Exactly what you think it is.
 ### enable-minimize
 Allow the minimize button to be used in the windowed application.
 
+### high-resolution
+Move client to use 1920x1080 as the expected resolution. UI.wz edits will be necessary for things to look fully proper.
+
 ### no-ad-balloon
 Removes the Ad window on client termination.
 
