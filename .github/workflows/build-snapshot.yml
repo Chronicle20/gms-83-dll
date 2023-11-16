@@ -36,5 +36,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          path: ${{github.workspace}}/build/artifacts.tar
+          path: ${{github.workspace}}/build/artifacts/
           name: artifacts-snapshot
