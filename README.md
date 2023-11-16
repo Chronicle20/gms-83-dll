@@ -15,23 +15,23 @@ A collection of GMS v83 Client Edits which can be loaded through the provided ij
 ### bypass
 Exactly what you think it is.
 
-### no-patcher
-Removes the display of the MapleStory patcher window on launch.
-
-### redirect
-Redirect IP the game uses for socket connections. Provided configuration produces a "localhost".
-
 ### enable-minimize
 Allow the minimize button to be used in the windowed application.
 
-### high-resolution
-WIP - Move client to use 1920x1080 as the expected resolution. UI.wz edits will be necessary for things to look fully proper. 
+### no-ad-balloon
+Removes the Ad window on client termination.
 
 ### no-beginner-party-block
 Removes restriction on Beginners from joining / creating parties. There may be server-side checks that need to be removed / configured depending on source.
 
 ### no-enter-mts-map-restriction
 Removes restriction on entering MTS on certain maps.
+
+### no-patcher
+Removes the display of the MapleStory patcher window on launch.
+
+### redirect
+Redirect IP the game uses for socket connections. Provided configuration produces a "localhost".
 
 ## Notes
 
