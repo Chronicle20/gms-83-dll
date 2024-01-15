@@ -149,7 +149,7 @@ public:
 			ZRefCountedDummy<T>* pNode = this->CastNode(pHead);
 			ZRefCountedDummy<T>* pNodePrev = reinterpret_cast<ZRefCountedDummy<T>*>(pNode->m_pPrev);
 
-			pHead = pNodePrev ? &pNodePrev->t : reinterpret_cast<T*>(nullptr);
+			pHead = pNodePrev ? &pNodePrev->t : nullptr;
 
 			T* pNew = this->AddTail();
 			*pNew = *pNext;
