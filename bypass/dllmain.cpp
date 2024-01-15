@@ -1076,93 +1076,6 @@ __declspec(naked) void NukedCLoginSendCheckPasswordPacket() {
     }
 }
 
-__declspec(naked) void NukedCClientSocketConnect2() {
-    __asm {
-            push ebp
-            mov ebp, esp
-            sub esp, 30h
-            push ebx
-            push esi
-            push edi
-            mov[ebp-30h], ecx
-            jmp label494DEF
-
-            label494DEF:
-            mov ecx,[ebp-30h]
-            call dwCClientSocketClearSendReceiveCtx
-            mov ecx,[ebp-30h]
-            add ecx, 8
-            call dw494857
-            mov eax,[ebp-30h]
-            add eax, 8
-            mov[ebp-24h], eax
-            push 0
-            push 1
-            push 2
-            call dword ptr ds :[0x00AF036C]
-
-            mov ecx,[ebp-24h]
-            mov[ecx], eax
-            mov eax,[ebp-24h]
-            cmp dword ptr[eax], 0FFFFFFFFh
-            jnz short label494E47
-            call dword ptr ds :[0x00AF0364]
-            mov[ebp-20h], eax
-            mov eax,[ebp-20h]
-            mov[ebp-1Ch], eax
-            mov eax,[ebp-1Ch]
-            mov[ebp-18h], eax
-            push 0B44EE0h
-            lea eax,[ebp-18h]
-            push eax
-            call dwCxxThrowException
-
-            label494E47:
-            call dword ptr ds :[0x00BF060C]
-            add eax, 1388h
-            mov ecx,[ebp - 30h]
-            mov[ecx + 38h], eax
-            mov eax,[ebp - 30h]
-            mov eax,[eax + 8]
-            mov[ebp - 28h], eax
-            push 33h
-            push 401h
-            mov eax,[ebp - 30h]
-            push dword ptr[eax + 4]
-            push dword ptr[ebp - 28h]
-            call dword ptr ds :[0x00BF062C]
-            cmp eax, 0FFFFFFFFh
-            jz short label494EA5
-            mov eax,[ebp-30h]
-            mov eax,[eax+8]
-            mov[ebp-2Ch], eax
-            push 10h
-            push dword ptr[ebp+8]
-            push dword ptr[ebp-2Ch]
-            call dword ptr ds :[0x00BF064C]
-            cmp eax, 0FFFFFFFFh
-            jnz short label494EA5
-            call dword ptr ds :[0x00BF0640]
-            cmp eax, 2733h
-            jz short label494EAF
-
-            label494EA5:
-            push 0
-            mov ecx,[ebp-30h]
-            call dwCClientSocketOnConnect
-
-            label494EAF:
-            jmp label494ECA
-
-            label494ECA:
-            pop edi
-            pop esi
-            pop ebx
-            leave
-            retn 4
-    }
-}
-
 const DWORD dwSendCheckPasswordPacket = 0x005F6952;
 const DWORD dwSendCheckPasswordPacketFirstJump = dwSendCheckPasswordPacket + 0x42;
 const DWORD dwSendCheckPasswordPacketSecondChange = dwSendCheckPasswordPacket + 0x252;
@@ -1184,24 +1097,10 @@ _ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocke
 typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
 _CClientSocket__OnConnect_t _CClientSocket__OnConnect = reinterpret_cast<_CClientSocket__OnConnect_t>(0x00494ED1);
 
-VOID __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, INT bSuccess) {
-    Log("CClientSocket::OnConnect - bSuccess %d", bSuccess);
-    _CClientSocket__OnConnect(pThis, edx, bSuccess);
-}
-
-VOID __fastcall ZSocketBase__CloseSocket_Hook(ZSocketBase *pThis, PVOID edx) {
-    Log("ZSocketBase::CloseSocket - FD %d", pThis->_m_hSocket);
-    _ZSocketBase__CloseSocket(pThis, edx);
-}
-
 VOID __fastcall CClient__Connect_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr) {
     Log("CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)");
-    Log("CClientSocket::Connect - CClientSocket::ClearSendReceiveCtx");
     _CClientSocket__ClearSendReceiveCtx(pThis, edx);
-    Log("CClientSocket::Connect - ZSocketBase::CloseSocket");
-    Log("CClientSocket::Connect - FD %d", pThis->m_sock._m_hSocket);
-    ZSocketBase__CloseSocket_Hook(&(pThis->m_sock), edx);
-    Log("CClientSocket::Connect - FD %d", pThis->m_sock._m_hSocket);
+    _ZSocketBase__CloseSocket(&(pThis->m_sock), edx);
 
     pThis->m_sock._m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (pThis->m_sock._m_hSocket == -1) {
@@ -1210,24 +1109,10 @@ VOID __fastcall CClient__Connect_Hook(CClientSocket *pThis, PVOID edx, const soc
     }
     pThis->m_tTimeout = timeGetTime() + 5000;
 
-    int ret = WSAAsyncSelect(pThis->m_sock._m_hSocket, pThis->m_hWnd, WM_USER + 1, FD_CLOSE);
-    if (ret == -1) {
-        Log("CClientSocket::Connect -> WSAAsyncSelect %d", ret);
-        CClientSocket__OnConnect_Hook(pThis, edx, 0);
-        return;
-    }
-
-    ret = connect(pThis->m_sock._m_hSocket, reinterpret_cast<const sockaddr*>(pAddr), sizeof(*pAddr));
-    if (ret != SOCKET_ERROR) {
-        Log("CClientSocket::Connect -> connect %d", ret);
-        CClientSocket__OnConnect_Hook(pThis, edx, 0);
-        return;
-    }
-    ret = WSAGetLastError();
-    if (ret != 10035) {
-        Log("CClientSocket::Connect -> WSAGetLastError %d", ret);
-        CClientSocket__OnConnect_Hook(pThis, edx, 0);
-        return;
+    if (WSAAsyncSelect(pThis->m_sock._m_hSocket, pThis->m_hWnd, WM_USER + 1, 0x33) == -1 ||
+        connect(pThis->m_sock._m_hSocket, reinterpret_cast<const sockaddr*>(pAddr), sizeof(*pAddr)) != -1 ||
+        WSAGetLastError() != WSAEWOULDBLOCK) {
+        _CClientSocket__OnConnect(pThis, edx, 0);
     }
 }
 
@@ -1247,10 +1132,6 @@ VOID __stdcall MainProc() {
     MemEdit::CodeCave(NukedCClientSocketConnect, dwCClientSocketConnect, 5);
     MemEdit::CodeCave(NukedCLoginSendCheckPasswordPacket, dwCLoginSendCheckPasswordPacket, 5);
 
-    // going to replace with something else
-    // MemEdit::CodeCave(NukedCClientSocketConnect2, dw494D2F, 6);
-    INITMAPLEHOOK(_ZSocketBase__CloseSocket, _ZSocketBase__CloseSocket_t, ZSocketBase__CloseSocket_Hook, 0x00494857);
-    INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook, 0x00494ED1);
     INITMAPLEHOOK(_CClient__Connect, _CClientSocket__Connect_t, CClient__Connect_Hook, 0x00494D2F);
 
     // CLogin::SendCheckPasswordPacket auth patches
