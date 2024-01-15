@@ -8,8 +8,17 @@
  You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Windows.h>
+// Exclude rarely-used stuff from Windows headers
+// Important to define this before Windows.h is included in a project because of linker issues with the WinSock2 lib
+#define WIN32_LEAN_AND_MEAN
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#include "CClientSocket.h"
 #include <memedit.h>
+#include <ws2ipdef.h>
+#include <timeapi.h>
 #include "logger.h"
 #include "hooker.h"
 
@@ -31,10 +40,10 @@ const DWORD dwNukedCWvsAppSetupReturn = dwCWvsAppSetUp + 0xA08;
 const DWORD dwCWvsAppInitializeInput = 0x009F7CE1;
 const DWORD dwNukedCWvsAppInitializeInputReturn = dwCWvsAppInitializeInput + 0x52F;
 
-const DWORD dwCWvsAppRun= 0x009F5C50;
+const DWORD dwCWvsAppRun = 0x009F5C50;
 const DWORD dwNukedCWvsAppRunReturn = dwCWvsAppRun + 0xD2F; //D2F
 
-const DWORD dwCClientSocketConnect= 0x00494CA3;
+const DWORD dwCClientSocketConnect = 0x00494CA3;
 const DWORD dwNukedCClientSocketConnectReturn = dwCClientSocketConnect + 0x5F; //D2F
 
 const DWORD dwCWvsAppCallUpdate = 0x009F84D0;
@@ -134,23 +143,23 @@ const DWORD dwCClientSocketOnConnect = 0x00494ED1;
 
 __declspec(naked) void FixFullScreen() {
     __asm {
-            mov eax,0
+            mov eax, 0
             jmp dword ptr[dwFixFullScreenReturn]
     }
 }
 
 __declspec(naked) void NukedCWvsAppSetup() {
     __asm {
-            mov eax, dword ptr ds : [0x00AE7DF2]
+            mov eax, dword ptr ds :[0x00AE7DF2]
             call dwEH_prolog
             sub esp, 1012
             push ebx
             push esi
             push edi
-            mov [ebp-1008], ecx
-            mov ecx, [ebp-1008]
+            mov[ebp-1008], ecx
+            mov ecx,[ebp-1008]
             call dwCWvsAppInitializeAuth
-            call dword ptr ds : [0x00BF060C] //timeGetTime
+            call dword ptr ds :[0x00BF060C] //timeGetTime
             push eax
             call dwSrand
             pop ecx
@@ -159,95 +168,95 @@ __declspec(naked) void NukedCWvsAppSetup() {
             label21:
         // CSecurityClient crap
             xor eax, eax
-            cmp dword ptr ds : [0x00BEC3A8], 0
+            cmp dword ptr ds :[0x00BEC3A8], 0
             setnz al
             test eax, eax
             jnz short label20
             call dwCSecurityClientCreateInstance
             label20:
             xor eax, eax
-            cmp dword ptr ds : [0x00BEC3A8] , 0
+            cmp dword ptr ds :[0x00BEC3A8], 0
             setnz al
             test eax, eax
             jmp short label22
-            mov ecx, dword ptr ds : [0x00BEC3A8]
+            mov ecx, dword ptr ds :[0x00BEC3A8]
             call dwCSecurityClientInitModule
             label22:
             xor eax, eax
-            cmp dword ptr ds : [0x00BEC3A8] , 0
+            cmp dword ptr ds :[0x00BEC3A8], 0
             setnz al
             test eax, eax
             jmp short label23
-            mov ecx, dword ptr ds : [0x00BEC3A8]
+            mov ecx, dword ptr ds :[0x00BEC3A8]
             call dwCSecurityClientStartModule
             label23:
             mov dword ptr ds:[0x00BF1AC8], 16
-            mov ecx, [ebp-1008]
+            mov ecx,[ebp-1008]
             call dwCWvsAppInitializePCOM
-            mov ecx, [ebp-1008]
+            mov ecx,[ebp-1008]
             call dwCWvsAppCreateMainWindow
             call dwCClientSocketCreateInstance
-            mov ecx, [ebp-1008]
+            mov ecx,[ebp-1008]
             call dwCWvsAppConnectLogin
             call dwCFuncKeyMappedManCreateInstance
             call dwCQuickslotKeyMappedManCreateInstance
             call dwCMacroSysManCreateInstance
-            mov ecx, [ebp-1008]
+            mov ecx,[ebp-1008]
             call dwCWvsAppInitializeResMan
-            lea eax, [ebp-400]
+            lea eax,[ebp-400]
             push eax
-            call dword ptr ds : [0x00BF0448]
+            call dword ptr ds :[0x00BF0448]
             push eax
-            call dword ptr ds : [0x00BF0444]
+            call dword ptr ds :[0x00BF0444]
             mov eax, 0x00BE7918
-            mov eax, [eax+14320]
-            mov [ebp-944], eax
-            cmp dword ptr [ebp-944], 0
+            mov eax,[eax+14320]
+            mov[ebp-944], eax
+            cmp dword ptr[ebp-944], 0
             jz short label1
             push 32
         //mov ecx, dword ptr ds : [0x00BF0B00]
-            mov eax, dword ptr [0x00BF0B00]
+            mov eax, dword ptr[0x00BF0B00]
             mov ecx, eax
             call dwZAllocAnonSelectorAlloc
-            mov [ebp-872], eax
-            and dword ptr [ebp-4], 0
-            cmp dword ptr [ebp-872], 0
+            mov[ebp-872], eax
+            and dword ptr[ebp-4], 0
+            cmp dword ptr[ebp-872], 0
             jz short label2
             sub esp, 16
-            lea esi, [ebp-400]
+            lea esi,[ebp-400]
             mov edi, esp
             movsd
             movsd
             movsd
             movsd
-            mov ecx, [ebp-872]
-            call dword ptr ds : [0x0042C3DE]
-            mov [ebp-1012], eax
+            mov ecx,[ebp-872]
+            call dword ptr ds :[0x0042C3DE]
+            mov[ebp-1012], eax
             jmp short label3
             label2:
-            and dword ptr [ebp-1012], 0
+            and dword ptr[ebp-1012], 0
             label3:
-            mov eax, [ebp-1012]
-            mov [ebp-868], eax
-            or dword ptr [ebp-4], 4294967295
+            mov eax,[ebp-1012]
+            mov[ebp-868], eax
+            or dword ptr[ebp-4], 4294967295
             label1:
-            mov ecx, [ebp-1008]
+            mov ecx,[ebp-1008]
             call dwCWvsAppInitializeGr2D
-            mov ecx, [ebp - 1008]
+            mov ecx,[ebp - 1008]
             call dwCWvsAppInitializeInput
             push 300
-            call dword ptr ds : [0x00BF02F4]
-            mov ecx, [ebp-1008]
+            call dword ptr ds :[0x00BF02F4]
+            mov ecx,[ebp-1008]
             call dwCWvsAppInitializeSound
             push 300
-            call dword ptr ds : [0x00BF02F4]
-            mov ecx, [ebp - 1008]
+            call dword ptr ds :[0x00BF02F4]
+            mov ecx,[ebp - 1008]
             call dwCWvsAppInitializeGameData
-            mov ecx, [ebp - 1008]
+            mov ecx,[ebp - 1008]
             call dwCWvsAppCreateWndManager
             push 0
             push 0
-            mov ecx, dword ptr ds : [0x00BEBF9C]
+            mov ecx, dword ptr ds :[0x00BEBF9C]
             call dwCConfigApplySysOpt
             call dwCActionManCreateInstance
             mov ecx, eax
@@ -261,21 +270,21 @@ __declspec(naked) void NukedCWvsAppSetup() {
             call dwCQuestManLoadDemand
             test eax, eax
             jnz short label4
-            mov dword ptr [ebp-880], 570425350
-            lea eax, [ebp-880]
-            mov [ebp-1016], eax
-            mov dword ptr [ebp-4], 1
-            mov eax, [ebp-1016]
-            mov eax, [eax]
-            mov [ebp-876], eax
+            mov dword ptr[ebp-880], 570425350
+            lea eax,[ebp-880]
+            mov[ebp-1016], eax
+            mov dword ptr[ebp-4], 1
+            mov eax,[ebp-1016]
+            mov eax,[eax]
+            mov[ebp-876], eax
             push 11814752
-            lea eax, [ebp-876]
+            lea eax,[ebp-876]
             push eax
             call dwCxxThrowException
             label4:
-            mov ecx, dword ptr ds : [0x00BED614]
+            mov ecx, dword ptr ds :[0x00BED614]
             call dwCQuestManLoadPartyQuestInfo
-            mov ecx, dword ptr ds : [0x00BED614]
+            mov ecx, dword ptr ds :[0x00BED614]
             call dwCQuestManLoadExclusive
             call dwCMonsterBookManCreateInstance
             mov ecx, eax
@@ -283,117 +292,117 @@ __declspec(naked) void NukedCWvsAppSetup() {
             test eax, eax
             jnz short label5
             mov dword ptr[ebp - 888], 570425350
-            lea eax, [ebp - 888]
+            lea eax,[ebp - 888]
             mov[ebp - 1020], eax
             mov dword ptr[ebp - 4], 2
-            mov eax, [ebp - 1020]
-            mov eax, [eax]
+            mov eax,[ebp - 1020]
+            mov eax,[eax]
             mov[ebp - 884], eax
             push 11814752
-            lea eax, [ebp - 884]
+            lea eax,[ebp - 884]
             push eax
             call dwCxxThrowException
             label5:
             call dwCRadioManagerCreateInstance
             push 260
-            lea eax, [ebp-292]
+            lea eax,[ebp-292]
             push eax
             push 0
-            call dword ptr ds : [0x00BF028C]
-            lea eax, [ebp-292]
+            call dword ptr ds :[0x00BF028C]
+            lea eax,[ebp-292]
             push eax
             call dwCWvsAppDir_BackSlashToSlash
             pop ecx
-            lea eax, [ebp-292]
+            lea eax,[ebp-292]
             push eax
             call dwCWvsAppDir_upDir
             pop ecx
-            lea eax, [ebp - 292]
+            lea eax,[ebp - 292]
             push eax
             call dwCWvsAppDir_SlashToBackSlash
             pop ecx
             push ecx
             mov eax, esp
-            mov [ebp-892], esp
-            mov [ebp-1004], eax
-            mov eax, [ebp-1004]
-            and dword ptr [eax], 0
+            mov[ebp-892], esp
+            mov[ebp-1004], eax
+            mov eax,[ebp-1004]
+            and dword ptr[eax], 0
             push 4294967295
-            lea eax, [ebp-292]
+            lea eax,[ebp-292]
             push eax
-            mov ecx, [ebp-1004]
+            mov ecx,[ebp-1004]
             call dwZXStringCharGetBuffer
-            mov dword ptr [ebp-4], 3
+            mov dword ptr[ebp-4], 3
             call dwCConfigGetInstance
             mov ecx, eax
-            or dword ptr [ebp-4], 4294967295
+            or dword ptr[ebp-4], 4294967295
             call dwCConfigCheckExecPathReg
             push 56
         //mov ecx, dword ptr ds : [0x00BF0B00]
             mov eax, dword ptr[0x00BF0B00]
             mov ecx, eax
             call dwZAllocAnonSelectorAlloc
-            mov [ebp-900], eax
-            mov dword ptr [ebp-4], 4
-            cmp dword ptr [ebp-900], 0
+            mov[ebp-900], eax
+            mov dword ptr[ebp-4], 4
+            cmp dword ptr[ebp-900], 0
             jz short label6
-            mov ecx, [ebp-900]
+            mov ecx,[ebp-900]
             call dwCLogoCLogo
-            mov [ebp-1024], eax
+            mov[ebp-1024], eax
             jmp short label7
             label6:
-            and dword ptr [ebp-1024], 0
+            and dword ptr[ebp-1024], 0
             label7:
-            mov eax, [ebp-1024]
-            mov [ebp-896], eax
-            or dword ptr [ebp-4], 4294967295
+            mov eax,[ebp-1024]
+            mov[ebp-896], eax
+            or dword ptr[ebp-4], 4294967295
             push 0
-            push dword ptr [ebp-896]
+            push dword ptr[ebp-896]
             call dwset_stage
             pop ecx
             pop ecx
-            mov dword ptr [ebp-808], 3708088046
-            and dword ptr [ebp-312], 0
+            mov dword ptr[ebp-808], 3708088046
+            and dword ptr[ebp-312], 0
             jmp short label8
             label15:
-            mov eax, [ebp-312]
+            mov eax,[ebp-312]
             inc eax
-            mov [ebp-312], eax
+            mov[ebp-312], eax
             label8:
-            cmp dword ptr [ebp-312], 256
+            cmp dword ptr[ebp-312], 256
             jge label9
-            mov eax, [ebp-312]
-            mov [ebp-860], eax
-            mov dword ptr  [ebp-864], 8
+            mov eax,[ebp-312]
+            mov[ebp-860], eax
+            mov dword ptr[ebp-864], 8
             jmp short label13
             label14:
-            mov eax, [ebp-864]
+            mov eax,[ebp-864]
             dec eax
-            mov [ebp-864], eax
+            mov[ebp-864], eax
             label13:
             cmp dword ptr[ebp-864], 0
             jle short label10
-            mov eax, [ebp-860]
+            mov eax,[ebp-860]
             and eax, 1
             test eax, eax
             jz short label12
-            mov eax, [ebp-860]
+            mov eax,[ebp-860]
             shr eax, 1
-            mov ecx, [ebp-808]
+            mov ecx,[ebp-808]
             sub ecx, 5421
             xor eax, ecx
-            mov [ebp-860], eax
+            mov[ebp-860], eax
             jmp short label11
             label12:
-            mov eax, [ebp-860]
+            mov eax,[ebp-860]
             shr eax, 1
-            mov [ebp-860], eax
+            mov[ebp-860], eax
             label11:
             jmp short label14
             label10:
-            mov eax, [ebp-312]
-            mov ecx, [ebp-860]
-            mov dword ptr ds : [0x00BF167C][eax*4], ecx
+            mov eax,[ebp-312]
+            mov ecx,[ebp-860]
+            mov dword ptr ds :[0x00BF167C][eax*4], ecx
             jmp label15
             label9:
             jmp short label16
@@ -404,13 +413,13 @@ __declspec(naked) void NukedCWvsAppSetup() {
 
 __declspec(naked) void NukedCWvsAppInitializeInput() {
     __asm {
-            mov eax, dword ptr ds : [0x00AE812D]
+            mov eax, dword ptr ds :[0x00AE812D]
             call dwEH_prolog
             sub esp, 198h
             push ebx
             push esi
             push edi
-            mov [ebp-1A0h], ecx
+            mov[ebp-1A0h], ecx
             jmp short label3
             label3:
             push 9D0h
@@ -418,24 +427,24 @@ __declspec(naked) void NukedCWvsAppInitializeInput() {
             mov eax, dword ptr[0x00BF0B00]
             mov ecx, eax
             call dwZAllocAnonSelectorAlloc
-            mov [ebp-190h], eax
-            and dword ptr [ebp-4], 0
-            cmp dword ptr [ebp-190h], 0
+            mov[ebp-190h], eax
+            and dword ptr[ebp-4], 0
+            cmp dword ptr[ebp-190h], 0
             jz label1
-            mov ecx, [ebp-190h]
+            mov ecx,[ebp-190h]
             call dwCInputSystemCInputSystem
-            mov [ebp-1A4h], eax
+            mov[ebp-1A4h], eax
             jmp label2
             label1:
-            and dword ptr [ebp-1A4h], 0
+            and dword ptr[ebp-1A4h], 0
             label2:
-            mov eax, [ebp- 1A4h]
-            mov [ebp-18Ch], eax
-            or dword ptr [ebp-4], 0FFFFFFFFh
-            mov eax, [ebp-1A0h]
-            mov eax, [eax + 4]
-            mov [ebp-194h], eax
-            mov eax, [ebp-1A0h]
+            mov eax,[ebp- 1A4h]
+            mov[ebp-18Ch], eax
+            or dword ptr[ebp-4], 0FFFFFFFFh
+            mov eax,[ebp-1A0h]
+            mov eax,[eax + 4]
+            mov[ebp-194h], eax
+            mov eax,[ebp-1A0h]
             add eax, 54h
             push eax
             push dword ptr[ebp-194h]
@@ -457,78 +466,78 @@ __declspec(naked) void NukedCWvsAppRun() {
             push ebx
             push esi
             push edi
-            mov [ebp-0D30h], ecx
-            and dword ptr [ebp-9Ch], 0
+            mov[ebp-0D30h], ecx
+            and dword ptr[ebp-9Ch], 0
 
             push 6
             pop ecx
             xor eax, eax
-            lea edi, [ebp-98h]
+            lea edi,[ebp-98h]
             rep stosd
-            and dword ptr [ebp-28h], 0
+            and dword ptr[ebp-28h], 0
             xor eax, eax
-            lea edi, [ebp-24h]
+            lea edi,[ebp-24h]
             stosd
             stosd
             xor eax, eax
-            cmp dword ptr ds : [0x00BE7914], 0
+            cmp dword ptr ds :[0x00BE7914], 0
             setnz al
             test eax, eax
             jz short label9F5CA3
-            mov ecx, dword ptr ds : [0x00BE7914]
+            mov ecx, dword ptr ds :[0x00BE7914]
             call dwCClientSocketManipulatePacket
 
             label9F5CA3:
             jmp label9F5FDB
 
             label9F5FDB:
-            and dword ptr [ebp-2Ch], 0
+            and dword ptr[ebp-2Ch], 0
 
             label9F5FDF:
             push 0FFh
             push 0
             push 0
-            mov eax, [ebp-0D30h]
+            mov eax,[ebp-0D30h]
             add eax, 54h
             push eax
             push 3
-            call dword ptr ds : [0x00BF04EC]
+            call dword ptr ds :[0x00BF04EC]
 
-            mov [ebp-0A8h], eax
-            mov eax, [ebp-0A8h]
-            mov [ebp-0D34h], eax
-            cmp dword ptr [ebp-0D34h], 0
+            mov[ebp-0A8h], eax
+            mov eax,[ebp-0A8h]
+            mov[ebp-0D34h], eax
+            cmp dword ptr[ebp-0D34h], 0
             jb label9F62BB
 
-            cmp dword ptr [ebp-0D34h], 2
+            cmp dword ptr[ebp-0D34h], 2
             jbe label9F6030
 
-            cmp dword ptr [ebp-0D34h], 3
+            cmp dword ptr[ebp-0D34h], 3
             jz short label9F6079
 
             jmp label9F62BB
 
             label9F6030:
-            push dword ptr [ebp-0A8h]
-            mov ecx, dword ptr ds : [0x00BEC33C]
+            push dword ptr[ebp-0A8h]
+            mov ecx, dword ptr ds :[0x00BEC33C]
             call dwCInputSystemUpdateDevice
 
             label9F6041 :
-            lea eax, [ebp-28h]
+            lea eax,[ebp-28h]
             push eax
-            mov ecx, dword ptr ds : [0x00BEC33C]
+            mov ecx, dword ptr ds :[0x00BEC33C]
             call dwCInputSystemGetISMessage
             test eax, eax
             jz short label9F6074
 
-            push dword ptr [ebp-20h]
-            push dword ptr [ebp-24h]
-            push dword ptr [ebp-28h]
-            mov ecx, [ebp-0D30h]
+            push dword ptr[ebp-20h]
+            push dword ptr[ebp-24h]
+            push dword ptr[ebp-28h]
+            mov ecx,[ebp-0D30h]
             call dwCWvsAppISMsgProc
 
-            mov eax, [ebp+8]
-            cmp dword ptr [eax], 0
+            mov eax,[ebp+8]
+            cmp dword ptr[eax], 0
             jz short label9F6072
             jmp label9F6074
 
@@ -543,147 +552,147 @@ __declspec(naked) void NukedCWvsAppRun() {
             push 0
             push 0
             push 0
-            lea eax, [ebp-9Ch]
+            lea eax,[ebp-9Ch]
             push eax
-            call dword ptr ds : [0x00BF04E8]
+            call dword ptr ds :[0x00BF04E8]
             test eax, eax
             jz label9F62B6
-            lea eax, [ebp-9Ch]
+            lea eax,[ebp-9Ch]
             push eax
-            call dword ptr ds : [0x00BF0430]
-            lea eax, [ebp-9Ch]
+            call dword ptr ds :[0x00BF0430]
+            lea eax,[ebp-9Ch]
             push eax
-            call dword ptr ds : [0x00BF042C]
-            mov eax, [ebp-0D30h]
-            cmp dword ptr [eax+38h], 0
+            call dword ptr ds :[0x00BF042C]
+            mov eax,[ebp-0D30h]
+            cmp dword ptr[eax+38h], 0
             jnz short label9F60C5
-            and dword ptr [ebp-0D04h], 0
+            and dword ptr[ebp-0D04h], 0
             jmp short label9F60F2
 
             label9F60C5:
-            mov eax, [ebp-0D30h]
-            mov eax, [eax+38h]
-            mov [ebp-0ACh], eax
-            mov eax, [ebp-0D30h]
-            and dword ptr [eax+38h], 0
-            mov eax, [ebp-0D30h]
-            and dword ptr [eax+34h], 0
-            mov dword ptr [ebp-0D04h], 1
+            mov eax,[ebp-0D30h]
+            mov eax,[eax+38h]
+            mov[ebp-0ACh], eax
+            mov eax,[ebp-0D30h]
+            and dword ptr[eax+38h], 0
+            mov eax,[ebp-0D30h]
+            and dword ptr[eax+34h], 0
+            mov dword ptr[ebp-0D04h], 1
 
             label9F60F2:
-            cmp dword ptr [ebp-0D04h], 0
+            cmp dword ptr[ebp-0D04h], 0
             jz short label9F6108
             push 0
-            push dword ptr [ebp-0ACh]
+            push dword ptr[ebp-0ACh]
             call dwComIssueError
 
             label9F6108:
-            mov eax, [ebp-0D30h]
-            cmp dword ptr [eax+34h], 0
+            mov eax,[ebp-0D30h]
+            cmp dword ptr[eax+34h], 0
             jnz short label9F611D
-            and dword ptr [ebp-0D08h], 0
+            and dword ptr[ebp-0D08h], 0
             jmp short label9F614A
 
             label9F611D:
-            mov eax, [ebp-0D30h]
-            mov eax, [eax+34h]
-            mov [ebp-0ACh], eax
-            mov eax, [ebp-0D30h]
-            and dword ptr [eax+38h], 0
-            mov eax, [ebp-0D30h]
-            and dword ptr [eax+34h], 0
-            mov dword ptr [ebp-0D08h], 1
+            mov eax,[ebp-0D30h]
+            mov eax,[eax+34h]
+            mov[ebp-0ACh], eax
+            mov eax,[ebp-0D30h]
+            and dword ptr[eax+38h], 0
+            mov eax,[ebp-0D30h]
+            and dword ptr[eax+34h], 0
+            mov dword ptr[ebp-0D08h], 1
 
             label9F614A:
-            cmp dword ptr [ebp-0D08h], 0
+            cmp dword ptr[ebp-0D08h], 0
             jz label9F629E
 
-            cmp dword ptr [ebp-0ACh], 0x20000000
+            cmp dword ptr[ebp-0ACh], 0x20000000
 
             jnz short label9F61B1
 
-            mov eax, [ebp-0D30h]
-            push dword ptr [eax+40h]
-            lea ecx, [ebp-0CE8h]
+            mov eax,[ebp-0D30h]
+            push dword ptr[eax+40h]
+            lea ecx,[ebp-0CE8h]
             call dwCPatchExceptionCPatchException
 
-            mov [ebp-0D38h], eax
-            mov eax, [ebp-0D38h]
-            mov [ebp-0D3Ch], eax
+            mov[ebp-0D38h], eax
+            mov eax,[ebp-0D38h]
+            mov[ebp-0D3Ch], eax
 
-            and dword ptr [ebp-4], 0
-            mov esi, [ebp-0D3Ch]
+            and dword ptr[ebp-4], 0
+            mov esi,[ebp-0D3Ch]
             mov ecx, 142h
-            lea edi, [ebp-7E0h]
+            lea edi,[ebp-7E0h]
             rep movsd
             push 0B52FC8h
-            lea eax, [ebp-7E0h]
+            lea eax,[ebp-7E0h]
             push eax
             call dwCxxThrowException
 
             label9F61B1:
-            cmp dword ptr [ebp-0ACh], 0x21000000
+            cmp dword ptr[ebp-0ACh], 0x21000000
 
             jl short label9F6213
 
-            cmp dword ptr [ebp-0ACh], 0x21000006
+            cmp dword ptr[ebp-0ACh], 0x21000006
 
             jg short label9F6213
 
-            mov eax, [ebp-0ACh]
-            mov [ebp-0D0Ch], eax
-            mov eax, [ebp-0D0Ch]
-            mov [ebp-0CF0h], eax
-            lea eax, [ebp-0CF0h]
-            mov [ebp-0D40h], eax
-            mov dword ptr [ebp-4], 1
-            mov eax, [ebp-0D40h]
-            mov eax, [eax]
-            mov [ebp-0CECh], eax
+            mov eax,[ebp-0ACh]
+            mov[ebp-0D0Ch], eax
+            mov eax,[ebp-0D0Ch]
+            mov[ebp-0CF0h], eax
+            lea eax,[ebp-0CF0h]
+            mov[ebp-0D40h], eax
+            mov dword ptr[ebp-4], 1
+            mov eax,[ebp-0D40h]
+            mov eax,[eax]
+            mov[ebp-0CECh], eax
             push 11831384 //AVCDisconnectException
-            lea eax, [ebp-0CECh]
+            lea eax,[ebp-0CECh]
             push eax
             call dwCxxThrowException
 
             label9F6213:
-            cmp dword ptr [ebp-0ACh], 0x22000000
+            cmp dword ptr[ebp-0ACh], 0x22000000
             jl short label9F6275
 
-            cmp dword ptr [ebp-0ACh], 0x2200000D
+            cmp dword ptr[ebp-0ACh], 0x2200000D
 
             jg short label9F6275
 
-            mov eax, [ebp - 0ACh]
+            mov eax,[ebp - 0ACh]
             mov[ebp - 0D10h], eax
-            mov eax, [ebp - 0D10h]
+            mov eax,[ebp - 0D10h]
             mov[ebp - 0CF8h], eax
-            lea eax, [ebp - 0CF8h]
+            lea eax,[ebp - 0CF8h]
             mov[ebp - 0D44h], eax
             mov dword ptr[ebp - 4], 2
-            mov eax, [ebp - 0D44h]
-            mov eax, [eax]
+            mov eax,[ebp - 0D44h]
+            mov eax,[eax]
             mov[ebp - 0CF4h], eax
             push 0B44760h
-            lea eax, [ebp - 0CF4h]
+            lea eax,[ebp - 0CF4h]
             push eax
             call dwCxxThrowException
 
             label9F6275:
-            mov eax, [ebp - 0ACh]
+            mov eax,[ebp - 0ACh]
             mov[ebp - 0D00h], eax
-            mov eax, [ebp - 0D00h]
+            mov eax,[ebp - 0D00h]
             mov[ebp - 0CFCh], eax
         //push offset AVCDisconnectException
             push    0B44EE0h
-            lea eax, [ebp - 0CFCh]
+            lea eax,[ebp - 0CFCh]
             push eax
             call dwCxxThrowException
 
             label9F629E:
-            mov eax, [ebp+8]
-            cmp dword ptr [eax], 0
+            mov eax,[ebp+8]
+            cmp dword ptr[eax], 0
             jnz short label9F62AF
-            cmp dword ptr [ebp-98h], 12h
+            cmp dword ptr[ebp-98h], 12h
             jnz short label9F62B1
 
             label9F62AF:
@@ -696,21 +705,21 @@ __declspec(naked) void NukedCWvsAppRun() {
             jmp label9F694D
 
             label9F62BB:
-            lea eax, [ebp-28h]
+            lea eax,[ebp-28h]
             push eax
-            mov ecx, dword ptr ds : [0x00BEC33C]
+            mov ecx, dword ptr ds :[0x00BEC33C]
             call dwCInputSystemGenerateAutoKeyDown
             test eax, eax
             jz short label9F62E2
 
-            push dword ptr [ebp-20h]
-            push dword ptr [ebp-24h]
-            push dword ptr [ebp-28h]
-            mov ecx, [ebp-0D30h]
+            push dword ptr[ebp-20h]
+            push dword ptr[ebp-24h]
+            push dword ptr[ebp-28h]
+            mov ecx,[ebp-0D30h]
             call dwCWvsAppISMsgProc
 
             label9F62E2:
-            mov ecx, dword ptr ds : [0x00BEC3A8]
+            mov ecx, dword ptr ds :[0x00BEC3A8]
             nop
             nop
             nop
@@ -724,7 +733,7 @@ __declspec(naked) void NukedCWvsAppRun() {
 
             label9F62FD:
             xor eax, eax
-            cmp dword ptr ds : [0x00BF14EC], 0
+            cmp dword ptr ds :[0x00BF14EC], 0
             setz al
             movzx eax, al
             neg eax
@@ -736,39 +745,39 @@ __declspec(naked) void NukedCWvsAppRun() {
             jmp short label9F632E
 
             label9F632E:
-            cmp dword ptr ds : [0x00BF14EC], 0
+            cmp dword ptr ds :[0x00BF14EC], 0
             jnz short label9F6341
             push 80004003h
             call dwComIssueError
 
             label9F6341:
-            mov ecx, dword ptr ds : [0x00BF14EC]
+            mov ecx, dword ptr ds :[0x00BF14EC]
             call dwIWzGr2DGetnextRenderTime
-            mov [ebp-0B0h], eax
-            push dword ptr [ebp-0B0h]
-            mov ecx, [ebp-0D30h]
+            mov[ebp-0B0h], eax
+            push dword ptr[ebp-0B0h]
+            mov ecx,[ebp-0D30h]
             call dwCWvsAppCallUpdate
             call dwCWndManRedrawInvalidatedWindows
-            cmp dword ptr ds : [0x00BF14EC], 0
+            cmp dword ptr ds :[0x00BF14EC], 0
             jnz short label9F637B
             push 80004003h
             call dwComIssueError
 
             label9F637B:
-            mov ecx, dword ptr ds : [0x00BF14EC]
+            mov ecx, dword ptr ds :[0x00BF14EC]
             call dwIWzGr2DRenderFrame
             jmp label9F6945
 
             label9F6945:
             push 1
-            call dword ptr ds : [0x00BF02F4]
+            call dword ptr ds :[0x00BF02F4]
 
             label9F694D:
-            mov eax, [ebp+8]
-            cmp dword ptr [eax], 0
+            mov eax,[ebp+8]
+            cmp dword ptr[eax], 0
             jnz short label9F695E
 
-            cmp dword ptr [ebp-98h], 12h
+            cmp dword ptr[ebp-98h], 12h
             jnz short label9F6960
 
             label9F695E:
@@ -778,13 +787,13 @@ __declspec(naked) void NukedCWvsAppRun() {
             jmp label9F5FDF
 
             label9F6965:
-            push dword ptr [ebp-34h]
+            push dword ptr[ebp-34h]
             call dwA61DF2
             pop ecx
-            cmp dword ptr [ebp-98h], 12h
+            cmp dword ptr[ebp-98h], 12h
             jnz short label9F697
             push 0
-            call dword ptr ds : [0x00BF041C]
+            call dword ptr ds :[0x00BF041C]
 
             label9F697:
             jmp dword ptr[dwNukedCWvsAppRunReturn]
@@ -793,134 +802,134 @@ __declspec(naked) void NukedCWvsAppRun() {
 
 __declspec(naked) void NukedCWvsAppCallUpdate() {
     __asm {
-            mov eax, dword ptr ds : [0x00AE823A]
+            mov eax, dword ptr ds :[0x00AE823A]
             call dwEH_prolog
             sub esp, 200h
             push ebx
             push esi
             push edi
-            mov [ebp-204h], ecx
+            mov[ebp-204h], ecx
             jmp short label1
 
             label1:
-            mov eax, [ebp-204h]
-            cmp dword ptr [eax+1Ch], 0
+            mov eax,[ebp-204h]
+            cmp dword ptr[eax+1Ch], 0
             jz short label2
 
-            mov eax, [ebp-204h]
-            mov ecx, [ebp+8]
-            mov [eax+18h], ecx
-            mov eax, [ebp-204h]
-            mov ecx, [ebp+8]
-            mov [eax+44h], ecx
-            mov eax, [ebp-204h]
-            mov ecx, [ebp+8]
+            mov eax,[ebp-204h]
+            mov ecx,[ebp+8]
+            mov[eax+18h], ecx
+            mov eax,[ebp-204h]
+            mov ecx,[ebp+8]
+            mov[eax+44h], ecx
+            mov eax,[ebp-204h]
+            mov ecx,[ebp+8]
             mov[eax + 48h], ecx
-            mov eax, [ebp - 204h]
-            mov ecx, [ebp + 8]
+            mov eax,[ebp - 204h]
+            mov ecx,[ebp + 8]
             mov[eax + 4Ch], ecx
-            mov eax, [ebp - 204h]
-            mov ecx, [ebp + 8]
+            mov eax,[ebp - 204h]
+            mov ecx,[ebp + 8]
             mov[eax + 50h], ecx
-            mov eax, [ebp - 204h]
-            and dword ptr [eax+1Ch], 0
+            mov eax,[ebp - 204h]
+            and dword ptr[eax+1Ch], 0
 
             label2:
-            mov eax, [ebp-204h]
-            mov ecx, [ebp+8]
-            sub ecx, [eax+18h]
+            mov eax,[ebp-204h]
+            mov ecx,[ebp+8]
+            sub ecx,[eax+18h]
             test ecx, ecx
             jle label4
 
-            mov eax, dword ptr ds : [0x00BEDED4]
-            mov [ebp-14h], eax
-            lea ecx, [ebp-18h]
+            mov eax, dword ptr ds :[0x00BEDED4]
+            mov[ebp-14h], eax
+            lea ecx,[ebp-18h]
             call dwZRefCStage
 
-            and dword ptr [ebp-4], 0
-            mov eax, [ebp-14h]
-            mov [ebp-1C0h], eax
-            cmp dword ptr [ebp-1C0h], 0
+            and dword ptr[ebp-4], 0
+            mov eax,[ebp-14h]
+            mov[ebp-1C0h], eax
+            cmp dword ptr[ebp-1C0h], 0
             jz short label5
 
-            mov eax, [ebp-1C4h]
-            mov [ebp-208h], eax
-            mov eax, [ebp-14h]
-            mov [ebp-208h], eax
-            mov eax, [ebp-208h]
-            mov eax, [eax]
-            mov ecx, [ebp-208h]
-            call dword ptr [eax]
+            mov eax,[ebp-1C4h]
+            mov[ebp-208h], eax
+            mov eax,[ebp-14h]
+            mov[ebp-208h], eax
+            mov eax,[ebp-208h]
+            mov eax,[eax]
+            mov ecx,[ebp-208h]
+            call dword ptr[eax]
 
             label5:
             call dwCWndManSUpdate
-            mov eax, [ebp-204h]
-            mov eax, [eax+18h]
+            mov eax,[ebp-204h]
+            mov eax,[eax+18h]
             add eax, 1Eh
-            mov ecx, [ebp-204h]
-            mov [ecx+18h], eax
-            mov eax, [ebp-204h]
-            mov ecx, [ebp+8]
-            sub ecx, [eax+18h]
+            mov ecx,[ebp-204h]
+            mov[ecx+18h], eax
+            mov eax,[ebp-204h]
+            mov ecx,[ebp+8]
+            sub ecx,[eax+18h]
             test ecx, ecx
             jle short label6
 
-            cmp dword ptr ds : [0x00BF14EC], 0
+            cmp dword ptr ds :[0x00BF14EC], 0
             jnz short label7
 
             push 80004003h
             call dwComIssueError
             label7:
-            mov eax, [ebp-204h]
-            mov eax, [eax+18h]
-            mov [ebp-1D0h], eax
-            mov eax, dword ptr ds : [0x00BF14EC]
-            mov [ebp-1CCh], eax
-            push dword ptr [ebp-1D0h]
-            mov eax, [ebp-1CCh]
-            mov eax, [eax]
-            push dword ptr [ebp-1CCh]
-            call dword ptr [eax+18h]
+            mov eax,[ebp-204h]
+            mov eax,[eax+18h]
+            mov[ebp-1D0h], eax
+            mov eax, dword ptr ds :[0x00BF14EC]
+            mov[ebp-1CCh], eax
+            push dword ptr[ebp-1D0h]
+            mov eax,[ebp-1CCh]
+            mov eax,[eax]
+            push dword ptr[ebp-1CCh]
+            call dword ptr[eax+18h]
 
-            mov [ebp-1C8h], eax
-            cmp dword ptr [ebp-1C8h], 0
+            mov[ebp-1C8h], eax
+            cmp dword ptr[ebp-1C8h], 0
             jge short label6
 
             push 0BD83B0h
-            push dword ptr [ebp-1CCh]
-            push dword ptr [ebp-1C8h]
+            push dword ptr[ebp-1CCh]
+            push dword ptr[ebp-1C8h]
             call dwComIssueErrorEx
             label6:
-            or dword ptr [ebp-4], 0FFFFFFFFh
-            lea ecx, [ebp-18h]
+            or dword ptr[ebp-4], 0FFFFFFFFh
+            lea ecx,[ebp-18h]
             call dwZRefCStageDestructor
             jmp label2
 
             label4:
-            cmp dword ptr ds : [0x00BF14EC], 0
+            cmp dword ptr ds :[0x00BF14EC], 0
             jnz short label9
             push 80004003h
             call dwComIssueError
 
             label9:
-            mov eax, dword ptr ds : [0x00BF14EC]
-            mov [ebp-200h], eax
-            push dword ptr [ebp+8]
-            mov eax, [ebp-200h]
-            mov eax, [eax]
-            push dword ptr [ebp-200h]
-            call dword ptr [eax+18h]
-            mov [ebp-1FCh], eax
-            cmp dword ptr [ebp-1FCh], 0
+            mov eax, dword ptr ds :[0x00BF14EC]
+            mov[ebp-200h], eax
+            push dword ptr[ebp+8]
+            mov eax,[ebp-200h]
+            mov eax,[eax]
+            push dword ptr[ebp-200h]
+            call dword ptr[eax+18h]
+            mov[ebp-1FCh], eax
+            cmp dword ptr[ebp-1FCh], 0
             jge short label8
 
             push 0BD83B0h
-            push dword ptr [ebp-200h]
-            push dword ptr [ebp-1FCh]
+            push dword ptr[ebp-200h]
+            push dword ptr[ebp-1FCh]
             call dwComIssueErrorEx
 
             label8:
-            mov ecx, dword ptr ds : [0x00BE78D4]
+            mov ecx, dword ptr ds :[0x00BE78D4]
             call dwCActionManSweepCache
             jmp dword ptr[dwNukedCWvsAppCallUpdateReturn]
     }
@@ -932,17 +941,17 @@ __declspec(naked) void NukedCClientSocketConnect() {
             mov ebp, esp
             push esi
             mov esi, ecx
-            push dword ptr [ebp+8]
-            lea ecx, [esi+0Ch]
+            push dword ptr[ebp+8]
+            lea ecx,[esi+0Ch]
             call dw494D07
-            mov eax, [esi+18h]
+            mov eax,[esi+18h]
             mov ecx, eax
             neg ecx
             sbb ecx, ecx
-            lea edx, [eax-10h]
+            lea edx,[eax-10h]
             and ecx, edx
-            mov [esi+20h], eax
-            mov ecx, [ecx+4]
+            mov[esi+20h], eax
+            mov ecx,[ecx+4]
             mov edx, ecx
             add ecx, 10h
             neg edx
@@ -950,7 +959,7 @@ __declspec(naked) void NukedCClientSocketConnect() {
             and edx, ecx
             push eax
             mov ecx, esi
-            mov [esi+20h], edx
+            mov[esi+20h], edx
             call dw494D2F
             jmp dword ptr[dwNukedCClientSocketConnectReturn]
     }
@@ -958,7 +967,7 @@ __declspec(naked) void NukedCClientSocketConnect() {
 
 __declspec(naked) void NukedCLoginSendCheckPasswordPacket() {
     __asm {
-            mov eax, dword ptr ds : [0x00AE7DF2]
+            mov eax, dword ptr ds :[0x00AE7DF2]
             call dwEH_prolog
             sub esp, 1012
             push ebx
@@ -966,14 +975,14 @@ __declspec(naked) void NukedCLoginSendCheckPasswordPacket() {
             push edi
             mov esi, ecx
             xor edi, edi
-            cmp [esi+170h], edi
+            cmp[esi+170h], edi
             jnz label5F6B53
             push 1
             pop ebx
-            lea ecx, [esi+18Ch]
-            mov [esi+170h], ebx
+            lea ecx,[esi+18Ch]
+            mov[esi+170h], ebx
             call dw5FDDE3
-            lea ecx, [esi+204h]
+            lea ecx,[esi+204h]
             call dw5FDF26
             jmp label5F6B5D
 
@@ -981,86 +990,86 @@ __declspec(naked) void NukedCLoginSendCheckPasswordPacket() {
             jmp dword ptr[dwNukedCLoginSendCheckPasswordPacketReturn]
 
             label5F6B5D:
-            lea ecx, [ebp-4Ch]
+            lea ecx,[ebp-4Ch]
             call dwA54B90
-            lea ecx, [ebp-4Ch]
-            mov dword ptr [ebp-4], 2
+            lea ecx,[ebp-4Ch]
+            mov dword ptr[ebp-4], 2
             call dwA54BD0
             push ebx
-            lea ecx, [ebp-1Ch]
+            lea ecx,[ebp-1Ch]
             call dwCOutPacketConstructor
             push ecx
             mov ecx, esp
-            mov [ebp-28h], esp
+            mov[ebp-28h], esp
             or esi, 0FFFFFFFFh
             push esi
-            push dword ptr [ebp+8]
-            mov byte ptr [ebp-4], 3
-            mov [ecx], edi
+            push dword ptr[ebp+8]
+            mov byte ptr[ebp-4], 3
+            mov[ecx], edi
             call dwZXStringGetBuffer
-            lea ecx, [ebp-1Ch]
+            lea ecx,[ebp-1Ch]
             call dwCOutPacketEncodeStr
             push ecx
             mov ecx, esp
-            mov [ebp-60h], esp
+            mov[ebp-60h], esp
             push esi
-            push dword ptr [ebp+0Ch]
+            push dword ptr[ebp+0Ch]
             nop
             nop
             nop
             nop
-            mov [ecx], edi
+            mov[ecx], edi
             call dwZXStringGetBuffer
-            lea ecx, [ebp - 1Ch]
+            lea ecx,[ebp - 1Ch]
             call dwCOutPacketEncodeStr
             push 10h
-            lea ecx, [ebp-4Ch]
+            lea ecx,[ebp-4Ch]
             call dwA54EB0
             push eax
-            lea ecx, [ebp-1Ch]
+            lea ecx,[ebp-1Ch]
             call dwCOutPacketEncodeBuffer
-            lea ecx, [ebp-4Ch]
+            lea ecx,[ebp-4Ch]
             call dwA54EB0
             push eax
-            lea ecx, [ebp-1Ch]
+            lea ecx,[ebp-1Ch]
             call dwCOutPacketEncode4
-            mov eax, dword ptr ds : [0x00BE7B38]
-            push dword ptr [eax+24h]
-            lea ecx, [ebp-1Ch]
+            mov eax, dword ptr ds :[0x00BE7B38]
+            push dword ptr[eax+24h]
+            lea ecx,[ebp-1Ch]
             call dwCOutPacketEncode1
             push edi
-            lea ecx, [ebp - 1Ch]
+            lea ecx,[ebp - 1Ch]
             call dwCOutPacketEncode1
             push edi
-            lea ecx, [ebp - 1Ch]
+            lea ecx,[ebp - 1Ch]
             call dwCOutPacketEncode1
-            mov ecx, dword ptr ds : [0x00BEBF9C]
+            mov ecx, dword ptr ds :[0x00BEBF9C]
             call dw5F6CFB
             push eax
-            lea ecx, [ebp-1Ch]
+            lea ecx,[ebp-1Ch]
             call dwCOutPacketEncode4
-            mov ecx, dword ptr ds : [0x00BE7914]
-            lea eax, [ebp-1Ch]
+            mov ecx, dword ptr ds :[0x00BE7914]
+            lea eax,[ebp-1Ch]
             push eax
             call dwCClientSocketSendPacket
-            mov eax, dword ptr ds : [0x00BE7918]
+            mov eax, dword ptr ds :[0x00BE7918]
             push esi
-            push dword ptr [ebp+8]
-            lea ecx, [eax+2048h]
+            push dword ptr[ebp+8]
+            lea ecx,[eax+2048h]
             call dwZXStringGetBuffer
-            mov eax, dword ptr ds : [0x00BEDA60]
+            mov eax, dword ptr ds :[0x00BEDA60]
             cmp eax, edi
             jz short label5F6C48
-            lea ecx, [eax+4]
-            mov eax, [ecx]
-            call dword ptr [eax+34h]
+            lea ecx,[eax+4]
+            mov eax,[ecx]
+            call dword ptr[eax+34h]
 
             label5F6C48:
-            lea ecx, [ebp-18h]
-            mov byte ptr [ebp-4], 2
+            lea ecx,[ebp-18h]
+            mov byte ptr[ebp-4], 2
             call ZArrayRemoveAll
-            lea ecx, [ebp-4Ch]
-            mov [ebp-4], esi
+            lea ecx,[ebp-4Ch]
+            mov[ebp-4], esi
             call dwA54BC0
             mov eax, ebx
             jmp dword ptr[dwNukedCLoginSendCheckPasswordPacketReturn]
@@ -1075,71 +1084,71 @@ __declspec(naked) void NukedCClientSocketConnect2() {
             push ebx
             push esi
             push edi
-            mov [ebp-30h], ecx
+            mov[ebp-30h], ecx
             jmp label494DEF
 
             label494DEF:
-            mov ecx, [ebp-30h]
+            mov ecx,[ebp-30h]
             call dwCClientSocketClearSendReceiveCtx
-            mov ecx, [ebp-30h]
+            mov ecx,[ebp-30h]
             add ecx, 8
             call dw494857
-            mov eax, [ebp-30h]
+            mov eax,[ebp-30h]
             add eax, 8
-            mov [ebp-24h], eax
+            mov[ebp-24h], eax
             push 0
             push 1
             push 2
-            call dword ptr ds : [0x00AF036C]
+            call dword ptr ds :[0x00AF036C]
 
-            mov ecx, [ebp-24h]
-            mov [ecx], eax
-            mov eax, [ebp-24h]
-            cmp dword ptr [eax], 0FFFFFFFFh
+            mov ecx,[ebp-24h]
+            mov[ecx], eax
+            mov eax,[ebp-24h]
+            cmp dword ptr[eax], 0FFFFFFFFh
             jnz short label494E47
-            call dword ptr ds : [0x00AF0364]
-            mov [ebp-20h], eax
-            mov eax, [ebp-20h]
-            mov [ebp-1Ch], eax
-            mov eax, [ebp-1Ch]
-            mov [ebp-18h], eax
+            call dword ptr ds :[0x00AF0364]
+            mov[ebp-20h], eax
+            mov eax,[ebp-20h]
+            mov[ebp-1Ch], eax
+            mov eax,[ebp-1Ch]
+            mov[ebp-18h], eax
             push 0B44EE0h
-            lea eax, [ebp-18h]
+            lea eax,[ebp-18h]
             push eax
             call dwCxxThrowException
 
             label494E47:
-            call dword ptr ds : [0x00BF060C]
+            call dword ptr ds :[0x00BF060C]
             add eax, 1388h
-            mov ecx, [ebp - 30h]
+            mov ecx,[ebp - 30h]
             mov[ecx + 38h], eax
-            mov eax, [ebp - 30h]
-            mov eax, [eax + 8]
+            mov eax,[ebp - 30h]
+            mov eax,[eax + 8]
             mov[ebp - 28h], eax
             push 33h
             push 401h
-            mov eax, [ebp - 30h]
+            mov eax,[ebp - 30h]
             push dword ptr[eax + 4]
             push dword ptr[ebp - 28h]
-            call dword ptr ds : [0x00BF062C]
+            call dword ptr ds :[0x00BF062C]
             cmp eax, 0FFFFFFFFh
             jz short label494EA5
-            mov eax, [ebp-30h]
-            mov eax, [eax+8]
-            mov [ebp-2Ch], eax
+            mov eax,[ebp-30h]
+            mov eax,[eax+8]
+            mov[ebp-2Ch], eax
             push 10h
-            push dword ptr [ebp+8]
-            push dword ptr [ebp-2Ch]
-            call dword ptr ds : [0x00BF064C]
+            push dword ptr[ebp+8]
+            push dword ptr[ebp-2Ch]
+            call dword ptr ds :[0x00BF064C]
             cmp eax, 0FFFFFFFFh
             jnz short label494EA5
-            call dword ptr ds : [0x00BF0640]
+            call dword ptr ds :[0x00BF0640]
             cmp eax, 2733h
             jz short label494EAF
 
             label494EA5:
             push 0
-            mov ecx, [ebp-30h]
+            mov ecx,[ebp-30h]
             call dwCClientSocketOnConnect
 
             label494EAF:
@@ -1159,9 +1168,71 @@ const DWORD dwSendCheckPasswordPacketFirstJump = dwSendCheckPasswordPacket + 0x4
 const DWORD dwSendCheckPasswordPacketSecondChange = dwSendCheckPasswordPacket + 0x252;
 
 
+// void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
+typedef VOID(__fastcall *_CClientSocket__Connect_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
+_CClientSocket__Connect_t _CClient__Connect;
+
+// void __thiscall CClientSocket::ClearSendReceiveCtx(CClientSocket *this)
+typedef VOID(__fastcall *_CClientSocket__ClearSendReceiveCtx_t)(CClientSocket *pThis, PVOID edx);
+_CClientSocket__ClearSendReceiveCtx_t _CClientSocket__ClearSendReceiveCtx = reinterpret_cast<_CClientSocket__ClearSendReceiveCtx_t>(0x004969EE);
+
+// void __thiscall ZSocketBase::CloseSocket(ZSocketBase *this)
+typedef VOID(__fastcall *_ZSocketBase__CloseSocket_t)(ZSocketBase *pThis, PVOID edx);
+_ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(0x00494857);
+
+// int __thiscall CClientSocket::OnConnect(CClientSocket *this, int bSuccess)
+typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
+_CClientSocket__OnConnect_t _CClientSocket__OnConnect = reinterpret_cast<_CClientSocket__OnConnect_t>(0x00494ED1);
+
+VOID __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, INT bSuccess) {
+    Log("CClientSocket::OnConnect - bSuccess %d", bSuccess);
+    _CClientSocket__OnConnect(pThis, edx, bSuccess);
+}
+
+VOID __fastcall ZSocketBase__CloseSocket_Hook(ZSocketBase *pThis, PVOID edx) {
+    Log("ZSocketBase::CloseSocket - FD %d", pThis->_m_hSocket);
+    _ZSocketBase__CloseSocket(pThis, edx);
+}
+
+VOID __fastcall CClient__Connect_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr) {
+    Log("CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)");
+    Log("CClientSocket::Connect - CClientSocket::ClearSendReceiveCtx");
+    _CClientSocket__ClearSendReceiveCtx(pThis, edx);
+    Log("CClientSocket::Connect - ZSocketBase::CloseSocket");
+    Log("CClientSocket::Connect - FD %d", pThis->m_sock._m_hSocket);
+    ZSocketBase__CloseSocket_Hook(&(pThis->m_sock), edx);
+    Log("CClientSocket::Connect - FD %d", pThis->m_sock._m_hSocket);
+
+    pThis->m_sock._m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (pThis->m_sock._m_hSocket == -1) {
+        Log("CClientSocket::Connect -> Should throw an exception here.");
+        return;
+    }
+    pThis->m_tTimeout = timeGetTime() + 5000;
+
+    int ret = WSAAsyncSelect(pThis->m_sock._m_hSocket, pThis->m_hWnd, WM_USER + 1, FD_CLOSE);
+    if (ret == -1) {
+        Log("CClientSocket::Connect -> WSAAsyncSelect %d", ret);
+        CClientSocket__OnConnect_Hook(pThis, edx, 0);
+        return;
+    }
+
+    ret = connect(pThis->m_sock._m_hSocket, reinterpret_cast<const sockaddr*>(pAddr), sizeof(*pAddr));
+    if (ret != SOCKET_ERROR) {
+        Log("CClientSocket::Connect -> connect %d", ret);
+        CClientSocket__OnConnect_Hook(pThis, edx, 0);
+        return;
+    }
+    ret = WSAGetLastError();
+    if (ret != 10035) {
+        Log("CClientSocket::Connect -> WSAGetLastError %d", ret);
+        CClientSocket__OnConnect_Hook(pThis, edx, 0);
+        return;
+    }
+}
+
 // main thread
-VOID __stdcall MainProc()
-{
+VOID __stdcall MainProc() {
     // Window Mode Magic
     MemEdit::CodeCave(FixFullScreen, dwFixFullScreen, 5);
 
@@ -1175,11 +1246,17 @@ VOID __stdcall MainProc()
     MemEdit::CodeCave(NukedCWvsAppCallUpdate, dwCWvsAppCallUpdate, 5);
     MemEdit::CodeCave(NukedCClientSocketConnect, dwCClientSocketConnect, 5);
     MemEdit::CodeCave(NukedCLoginSendCheckPasswordPacket, dwCLoginSendCheckPasswordPacket, 5);
-    MemEdit::CodeCave(NukedCClientSocketConnect2, dw494D2F, 6);
+
+    // going to replace with something else
+    // MemEdit::CodeCave(NukedCClientSocketConnect2, dw494D2F, 6);
+    INITMAPLEHOOK(_ZSocketBase__CloseSocket, _ZSocketBase__CloseSocket_t, ZSocketBase__CloseSocket_Hook, 0x00494857);
+    INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook, 0x00494ED1);
+    INITMAPLEHOOK(_CClient__Connect, _CClientSocket__Connect_t, CClient__Connect_Hook, 0x00494D2F);
 
     // CLogin::SendCheckPasswordPacket auth patches
     MemEdit::WriteBytes(dwSendCheckPasswordPacketFirstJump, new BYTE[6]{0xE9, 0xC1, 0x01, 0x00, 0x00, 0x90}, 6);
-    MemEdit::WriteBytes(dwSendCheckPasswordPacketSecondChange, new BYTE[7]{0xFF, 0x75, 0x0C, 0x90, 0x90, 0x90, 0x90}, 7);
+    MemEdit::WriteBytes(dwSendCheckPasswordPacketSecondChange, new BYTE[7]{0xFF, 0x75, 0x0C, 0x90, 0x90, 0x90, 0x90},
+                        7);
 }
 
 // dll entry point

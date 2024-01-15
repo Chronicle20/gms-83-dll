@@ -21,7 +21,6 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <iostream>
 #include <sstream>
 
 SOCKET m_GameSock = INVALID_SOCKET;

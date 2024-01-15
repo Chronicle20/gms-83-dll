@@ -12,4 +12,10 @@ add_library(bypass SHARED
 target_include_directories(bypass PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(bypass PRIVATE ${CMAKE_SOURCE_DIR}/common/detours.lib)
 
+# Link against Ws2_32.lib
+if (WIN32)
+    target_link_libraries(bypass PRIVATE Ws2_32.lib)
+    target_link_libraries(bypass PRIVATE winmm.lib)
+endif()
+
 set_target_properties(bypass PROPERTIES OUTPUT_NAME "bypass-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
