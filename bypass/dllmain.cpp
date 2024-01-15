@@ -935,36 +935,6 @@ __declspec(naked) void NukedCWvsAppCallUpdate() {
     }
 }
 
-__declspec(naked) void NukedCClientSocketConnect() {
-    __asm {
-            push ebp
-            mov ebp, esp
-            push esi
-            mov esi, ecx
-            push dword ptr[ebp+8]
-            lea ecx,[esi+0Ch]
-            call dw494D07
-            mov eax,[esi+18h]
-            mov ecx, eax
-            neg ecx
-            sbb ecx, ecx
-            lea edx,[eax-10h]
-            and ecx, edx
-            mov[esi+20h], eax
-            mov ecx,[ecx+4]
-            mov edx, ecx
-            add ecx, 10h
-            neg edx
-            sbb edx, edx
-            and edx, ecx
-            push eax
-            mov ecx, esi
-            mov[esi+20h], edx
-            call dw494D2F
-            jmp dword ptr[dwNukedCClientSocketConnectReturn]
-    }
-}
-
 __declspec(naked) void NukedCLoginSendCheckPasswordPacket() {
     __asm {
             mov eax, dword ptr ds :[0x00AE7DF2]
@@ -1080,10 +1050,13 @@ const DWORD dwSendCheckPasswordPacket = 0x005F6952;
 const DWORD dwSendCheckPasswordPacketFirstJump = dwSendCheckPasswordPacket + 0x42;
 const DWORD dwSendCheckPasswordPacketSecondChange = dwSendCheckPasswordPacket + 0x252;
 
-
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
-typedef VOID(__fastcall *_CClientSocket__Connect_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
-_CClientSocket__Connect_t _CClient__Connect;
+typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
+_CClientSocket__Connect_addr_t _CClient__Connect_addr;
+
+// void __thiscall CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)
+typedef VOID(__fastcall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, PVOID edx, CClientSocket::CONNECTCONTEXT *ctx);
+_CClientSocket__Connect_ctx_t  _CClient__Connect_ctx;
 
 // void __thiscall CClientSocket::ClearSendReceiveCtx(CClientSocket *this)
 typedef VOID(__fastcall *_CClientSocket__ClearSendReceiveCtx_t)(CClientSocket *pThis, PVOID edx);
@@ -1097,7 +1070,7 @@ _ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocke
 typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
 _CClientSocket__OnConnect_t _CClientSocket__OnConnect = reinterpret_cast<_CClientSocket__OnConnect_t>(0x00494ED1);
 
-VOID __fastcall CClient__Connect_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr) {
+VOID __fastcall CClient__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr) {
     Log("CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)");
     _CClientSocket__ClearSendReceiveCtx(pThis, edx);
     _ZSocketBase__CloseSocket(&(pThis->m_sock), edx);
@@ -1116,6 +1089,16 @@ VOID __fastcall CClient__Connect_Hook(CClientSocket *pThis, PVOID edx, const soc
     }
 }
 
+VOID __fastcall CClient__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx, CClientSocket::CONNECTCONTEXT *ctx) {
+    Log("CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)");
+    pThis->m_ctxConnect.lAddr.RemoveAll();
+    pThis->m_ctxConnect.lAddr.AddTail(&ctx->lAddr);
+    pThis->m_ctxConnect.posList = ctx->posList;
+    pThis->m_ctxConnect.bLogin = ctx->bLogin;
+    pThis->m_ctxConnect.posList = reinterpret_cast<__POSITION *>(pThis->m_ctxConnect.lAddr.GetHeadPosition());
+    CClient__Connect_Addr_Hook(pThis, edx, &pThis->m_addr);
+}
+
 // main thread
 VOID __stdcall MainProc() {
     // Window Mode Magic
@@ -1129,10 +1112,10 @@ VOID __stdcall MainProc() {
     MemEdit::CodeCave(NukedCWvsAppInitializeInput, dwCWvsAppInitializeInput, 5);
     MemEdit::CodeCave(NukedCWvsAppRun, dwCWvsAppRun, 5);
     MemEdit::CodeCave(NukedCWvsAppCallUpdate, dwCWvsAppCallUpdate, 5);
-    MemEdit::CodeCave(NukedCClientSocketConnect, dwCClientSocketConnect, 5);
     MemEdit::CodeCave(NukedCLoginSendCheckPasswordPacket, dwCLoginSendCheckPasswordPacket, 5);
 
-    INITMAPLEHOOK(_CClient__Connect, _CClientSocket__Connect_t, CClient__Connect_Hook, 0x00494D2F);
+    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
+    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, 0x00494D2F);
 
     // CLogin::SendCheckPasswordPacket auth patches
     MemEdit::WriteBytes(dwSendCheckPasswordPacketFirstJump, new BYTE[6]{0xE9, 0xC1, 0x01, 0x00, 0x00, 0x90}, 6);
