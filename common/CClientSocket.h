@@ -15,6 +15,7 @@ struct __POSITION {
 
 class CClientSocket {
 public:
+
     struct CONNECTCONTEXT {
         ZList<ZInetAddr> lAddr;
         __POSITION *posList;
@@ -34,6 +35,5 @@ public:
     unsigned int m_uSeqRcv;
     ZXString<char> m_URLGuestIDRegistration;
     int m_bIsGuestID;
-
-    ~CClientSocket() = default;
+    virtual ~CClientSocket() = default;
 };
