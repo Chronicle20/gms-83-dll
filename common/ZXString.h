@@ -56,8 +56,91 @@ public:
         size_t nByteLen;
     };
 
-private:
-    T* m_pStr; // needs to be initialized to zero when hooking sometimes
+    void GetBuffer(const char *src, size_t size) {
+        ((VOID(_fastcall * )(ZXString<T> * , PVOID, const char *src, size_t size))0x00414617)(this, NULL, src, size);
+    }
+
+    T* GetBuffer(size_t nMinLength, BOOL bRetain)
+    {
+        ZXString<T>::_ZXStringData* pCurData;
+        ZXString<T>::_ZXStringData* pNewData;
+        size_t nStrLen;
+
+        if (this->m_pStr)
+        {
+            pCurData = this->GetData();
+
+            if (pCurData)
+            {
+                if (pCurData->nRef <= 1 && pCurData->nCap >= nMinLength)
+                {
+                    pCurData->nRef = -1;
+                    return this->m_pStr;
+                }
+
+                nStrLen = pCurData->nByteLen >> (sizeof(T) - 1);
+            }
+            else
+            {
+                nStrLen = 0;
+            }
+        }
+        else
+        {
+            nStrLen = 0;
+            pCurData = nullptr;
+        }
+
+        if (nStrLen < nMinLength) nStrLen = nMinLength;
+
+        pNewData = this->Alloc(nStrLen);
+
+        pNewData->nRef = -1;
+        this->m_pStr = reinterpret_cast<T*>(&pNewData[1]);
+
+        if (bRetain && pCurData)
+        {
+            size_t nSize = sizeof(T) * (pCurData->nByteLen >> (sizeof(T) - 1)) + sizeof(T);
+
+            memcpy(reinterpret_cast<T*>(&pNewData[1]), reinterpret_cast<T*>(&pCurData[1]), nSize);
+            pNewData->nByteLen = pCurData->nByteLen;
+        }
+        else
+        {
+            pNewData->nByteLen = 0;
+            *this->m_pStr = 0;
+        }
+
+        if (pCurData)
+        {
+            if (InterlockedDecrement(&pCurData->nRef) <= 0)
+            {
+                ZAllocEx<ZAllocStrSelector<T>>::GetInstance()->Free((void**)pCurData);
+            }
+        }
+
+        return this->m_pStr;
+    }
+
+    void ReleaseBuffer(size_t nLength)
+    {
+        ZXString<T>::_ZXStringData* pData = this->GetData();
+
+        pData->nRef = 1;
+
+        if (nLength == -1)
+        {
+            pData->nByteLen = sizeof(T) * this->TStrLen(reinterpret_cast<T*>(&pData[1]));
+        }
+        else
+        {
+            this->m_pStr[nLength] = 0;
+            pData->nByteLen = sizeof(T) * nLength;
+        }
+    }
+
+    T* m_pStr;
+    // needs to be initialized to zero when hooking sometimes
 
 public:
     // ------------------------------------------------------ Constructors
@@ -95,13 +178,13 @@ public:
     /// Destroys the ZXString object.
     /// Free's any memory used by the ZXString object if it's references are <= 1 (including this instance).
     /// </summary>
-    ~ZXString()
-    {
-        if (this->m_pStr)
-        {
-            this->Release();
-        }
-    }
+//    ~ZXString()
+//    {
+//        if (this->m_pStr)
+//        {
+//            this->Release();
+//        }
+//    }
 
     // ------------------------------------------------------ Operator Overloading
 
@@ -424,85 +507,6 @@ private:
         }
 
         return nullptr;
-    }
-
-    T* GetBuffer(size_t nMinLength, BOOL bRetain)
-    {
-        ZXString<T>::_ZXStringData* pCurData;
-        ZXString<T>::_ZXStringData* pNewData;
-        size_t nStrLen;
-
-        if (this->m_pStr)
-        {
-            pCurData = this->GetData();
-
-            if (pCurData)
-            {
-                if (pCurData->nRef <= 1 && pCurData->nCap >= nMinLength)
-                {
-                    pCurData->nRef = -1;
-                    return this->m_pStr;
-                }
-
-                nStrLen = pCurData->nByteLen >> (sizeof(T) - 1);
-            }
-            else
-            {
-                nStrLen = 0;
-            }
-        }
-        else
-        {
-            nStrLen = 0;
-            pCurData = nullptr;
-        }
-
-        if (nStrLen < nMinLength) nStrLen = nMinLength;
-
-        pNewData = this->Alloc(nStrLen);
-
-        pNewData->nRef = -1;
-        this->m_pStr = reinterpret_cast<T*>(&pNewData[1]);
-
-        if (bRetain && pCurData)
-        {
-            size_t nSize = sizeof(T) * (pCurData->nByteLen >> (sizeof(T) - 1)) + sizeof(T);
-
-            memcpy(reinterpret_cast<T*>(&pNewData[1]), reinterpret_cast<T*>(&pCurData[1]), nSize);
-            pNewData->nByteLen = pCurData->nByteLen;
-        }
-        else
-        {
-            pNewData->nByteLen = 0;
-            *this->m_pStr = 0;
-        }
-
-        if (pCurData)
-        {
-            if (InterlockedDecrement(&pCurData->nRef) <= 0)
-            {
-                ZAllocEx<ZAllocStrSelector<T>>::GetInstance()->Free((void**)pCurData);
-            }
-        }
-
-        return this->m_pStr;
-    }
-
-    void ReleaseBuffer(size_t nLength)
-    {
-        ZXString<T>::_ZXStringData* pData = this->GetData();
-
-        pData->nRef = 1;
-
-        if (nLength == -1)
-        {
-            pData->nByteLen = sizeof(T) * this->TStrLen(reinterpret_cast<T*>(&pData[1]));
-        }
-        else
-        {
-            this->m_pStr[nLength] = 0;
-            pData->nByteLen = sizeof(T) * nLength;
-        }
     }
 
     ZXString<T>::_ZXStringData* Alloc(size_t nCap)

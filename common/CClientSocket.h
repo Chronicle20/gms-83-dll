@@ -1,6 +1,9 @@
 #pragma once
 
-#include "TSingleton.h"
+// Exclude rarely-used stuff from Windows headers
+// Important to define this before Windows.h is included in a project because of linker issues with the WinSock2 lib
+#define WIN32_LEAN_AND_MEAN
+
 #include "CInPacket.h"
 #include "ZList.h"
 #include "ZSocketBase.h"
@@ -9,6 +12,7 @@
 #include "ZXString.h"
 #include "ZRef.h"
 #include "ZSocketBuffer.h"
+#include "COutPacket.h"
 
 struct __POSITION {
 };
@@ -35,5 +39,10 @@ public:
     unsigned int m_uSeqRcv;
     ZXString<char> m_URLGuestIDRegistration;
     int m_bIsGuestID;
+
     virtual ~CClientSocket() = default;
+
+    static CClientSocket *GetInstance();
+
+    void SendPacket(COutPacket *oPacket);
 };

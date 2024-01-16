@@ -13,14 +13,19 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <winsock2.h>
-#include <ws2tcpip.h>
 #include <windows.h>
 #include "CClientSocket.h"
 #include <memedit.h>
-#include <ws2ipdef.h>
 #include <timeapi.h>
 #include "logger.h"
 #include "hooker.h"
+#include "CLogin.h"
+#include "CSystemInfo.h"
+#include "COutPacket.h"
+#include "TSingleton.h"
+#include "CWvsApp.h"
+#include "CConfig.h"
+#include "CUITitle.h"
 
 const DWORD dwCClientSocketProcessPacket = 0x004965F1;
 const DWORD dwCSecurityClientOnPacketCall = dwCClientSocketProcessPacket + 0x7F;
@@ -122,6 +127,7 @@ const DWORD dw5FDF26 = 0x005FDF26;
 const DWORD dwA54B90 = 0x00A54B90;
 const DWORD dwA54BD0 = 0x00A54BD0;
 const DWORD dwA54EB0 = 0x00A54EB0;
+const DWORD dwA54FB0 = 0x00A54FB0;
 const DWORD dw5F6CFB = 0x005F6CFB;
 const DWORD dwA54BC0 = 0x00A54BC0;
 const DWORD dwCOutPacketConstructor = 0x006EC9CE;
@@ -935,139 +941,30 @@ __declspec(naked) void NukedCWvsAppCallUpdate() {
     }
 }
 
-__declspec(naked) void NukedCLoginSendCheckPasswordPacket() {
-    __asm {
-            mov eax, dword ptr ds :[0x00AE7DF2]
-            call dwEH_prolog
-            sub esp, 1012
-            push ebx
-            push esi
-            push edi
-            mov esi, ecx
-            xor edi, edi
-            cmp[esi+170h], edi
-            jnz label5F6B53
-            push 1
-            pop ebx
-            lea ecx,[esi+18Ch]
-            mov[esi+170h], ebx
-            call dw5FDDE3
-            lea ecx,[esi+204h]
-            call dw5FDF26
-            jmp label5F6B5D
-
-            label5F6B53:
-            jmp dword ptr[dwNukedCLoginSendCheckPasswordPacketReturn]
-
-            label5F6B5D:
-            lea ecx,[ebp-4Ch]
-            call dwA54B90
-            lea ecx,[ebp-4Ch]
-            mov dword ptr[ebp-4], 2
-            call dwA54BD0
-            push ebx
-            lea ecx,[ebp-1Ch]
-            call dwCOutPacketConstructor
-            push ecx
-            mov ecx, esp
-            mov[ebp-28h], esp
-            or esi, 0FFFFFFFFh
-            push esi
-            push dword ptr[ebp+8]
-            mov byte ptr[ebp-4], 3
-            mov[ecx], edi
-            call dwZXStringGetBuffer
-            lea ecx,[ebp-1Ch]
-            call dwCOutPacketEncodeStr
-            push ecx
-            mov ecx, esp
-            mov[ebp-60h], esp
-            push esi
-            push dword ptr[ebp+0Ch]
-            nop
-            nop
-            nop
-            nop
-            mov[ecx], edi
-            call dwZXStringGetBuffer
-            lea ecx,[ebp - 1Ch]
-            call dwCOutPacketEncodeStr
-            push 10h
-            lea ecx,[ebp-4Ch]
-            call dwA54EB0
-            push eax
-            lea ecx,[ebp-1Ch]
-            call dwCOutPacketEncodeBuffer
-            lea ecx,[ebp-4Ch]
-            call dwA54EB0
-            push eax
-            lea ecx,[ebp-1Ch]
-            call dwCOutPacketEncode4
-            mov eax, dword ptr ds :[0x00BE7B38]
-            push dword ptr[eax+24h]
-            lea ecx,[ebp-1Ch]
-            call dwCOutPacketEncode1
-            push edi
-            lea ecx,[ebp - 1Ch]
-            call dwCOutPacketEncode1
-            push edi
-            lea ecx,[ebp - 1Ch]
-            call dwCOutPacketEncode1
-            mov ecx, dword ptr ds :[0x00BEBF9C]
-            call dw5F6CFB
-            push eax
-            lea ecx,[ebp-1Ch]
-            call dwCOutPacketEncode4
-            mov ecx, dword ptr ds :[0x00BE7914]
-            lea eax,[ebp-1Ch]
-            push eax
-            call dwCClientSocketSendPacket
-            mov eax, dword ptr ds :[0x00BE7918]
-            push esi
-            push dword ptr[ebp+8]
-            lea ecx,[eax+2048h]
-            call dwZXStringGetBuffer
-            mov eax, dword ptr ds :[0x00BEDA60]
-            cmp eax, edi
-            jz short label5F6C48
-            lea ecx,[eax+4]
-            mov eax,[ecx]
-            call dword ptr[eax+34h]
-
-            label5F6C48:
-            lea ecx,[ebp-18h]
-            mov byte ptr[ebp-4], 2
-            call ZArrayRemoveAll
-            lea ecx,[ebp-4Ch]
-            mov[ebp-4], esi
-            call dwA54BC0
-            mov eax, ebx
-            jmp dword ptr[dwNukedCLoginSendCheckPasswordPacketReturn]
-    }
-}
-
-const DWORD dwSendCheckPasswordPacket = 0x005F6952;
-const DWORD dwSendCheckPasswordPacketFirstJump = dwSendCheckPasswordPacket + 0x42;
-const DWORD dwSendCheckPasswordPacketSecondChange = dwSendCheckPasswordPacket + 0x252;
-
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
 typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
+
 _CClientSocket__Connect_addr_t _CClient__Connect_addr;
 
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)
-typedef VOID(__fastcall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, PVOID edx, CClientSocket::CONNECTCONTEXT *ctx);
-_CClientSocket__Connect_ctx_t  _CClient__Connect_ctx;
+typedef VOID(__fastcall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, PVOID edx,
+                                                        CClientSocket::CONNECTCONTEXT *ctx);
+
+_CClientSocket__Connect_ctx_t _CClient__Connect_ctx;
 
 // void __thiscall CClientSocket::ClearSendReceiveCtx(CClientSocket *this)
 typedef VOID(__fastcall *_CClientSocket__ClearSendReceiveCtx_t)(CClientSocket *pThis, PVOID edx);
+
 _CClientSocket__ClearSendReceiveCtx_t _CClientSocket__ClearSendReceiveCtx = reinterpret_cast<_CClientSocket__ClearSendReceiveCtx_t>(0x004969EE);
 
 // void __thiscall ZSocketBase::CloseSocket(ZSocketBase *this)
 typedef VOID(__fastcall *_ZSocketBase__CloseSocket_t)(ZSocketBase *pThis, PVOID edx);
+
 _ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(0x00494857);
 
 // int __thiscall CClientSocket::OnConnect(CClientSocket *this, int bSuccess)
 typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
+
 _CClientSocket__OnConnect_t _CClientSocket__OnConnect = reinterpret_cast<_CClientSocket__OnConnect_t>(0x00494ED1);
 
 VOID __fastcall CClient__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr) {
@@ -1083,7 +980,7 @@ VOID __fastcall CClient__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, cons
     pThis->m_tTimeout = timeGetTime() + 5000;
 
     if (WSAAsyncSelect(pThis->m_sock._m_hSocket, pThis->m_hWnd, WM_USER + 1, 0x33) == -1 ||
-        connect(pThis->m_sock._m_hSocket, reinterpret_cast<const sockaddr*>(pAddr), sizeof(*pAddr)) != -1 ||
+        connect(pThis->m_sock._m_hSocket, reinterpret_cast<const sockaddr *>(pAddr), sizeof(*pAddr)) != -1 ||
         WSAGetLastError() != WSAEWOULDBLOCK) {
         _CClientSocket__OnConnect(pThis, edx, 0);
     }
@@ -1096,7 +993,51 @@ VOID __fastcall CClient__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx, CClie
     pThis->m_ctxConnect.posList = ctx->posList;
     pThis->m_ctxConnect.bLogin = ctx->bLogin;
     pThis->m_ctxConnect.posList = reinterpret_cast<__POSITION *>(pThis->m_ctxConnect.lAddr.GetHeadPosition());
+    pThis->m_addr = *pThis->m_ctxConnect.lAddr.GetHeadPosition();
     CClient__Connect_Addr_Hook(pThis, edx, &pThis->m_addr);
+}
+
+// int __thiscall CLogin::SendCheckPasswordPacket(CLogin *this, char *sID, char *sPasswd)
+typedef INT(__fastcall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, PVOID edx, char *sID, char *sPasswd);
+
+_CLogin__SendCheckPasswordPacket_t _CLogin__SendCheckPasswordPacket;
+
+ZXString<char> *GetCUITitleInstance() {
+    return reinterpret_cast<ZXString<char> *>(*(void **) 0x00BEDA60);
+}
+
+INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, char *sID, char *sPasswd) {
+    if (pThis->m_bRequestSent) {
+        return 0;
+    }
+    pThis->m_bRequestSent = 1;
+    pThis->m_WorldItem.RemoveAll();
+    pThis->m_aBalloon.RemoveAll();
+
+    auto systemInfo = CSystemInfo();
+    systemInfo.Init();
+    auto cOutPacket = COutPacket(1);
+
+    ZXString<char> tempString = ZXString<char>(sID, 0xFFFFFFFF);
+    cOutPacket.EncodeStr(tempString);
+
+    ZXString<char> tempString2 = ZXString<char>(sPasswd, 0xFFFFFFFF);
+    cOutPacket.EncodeStr(tempString2);
+
+    cOutPacket.EncodeBuffer(systemInfo.GetMachineId(), 16);
+    int gameRoomClient = systemInfo.GetGameRoomClient();
+    Log("GRC %d, GRC PTR %d", gameRoomClient, &gameRoomClient);
+    cOutPacket.Encode4(gameRoomClient);
+    cOutPacket.Encode1(CWvsApp::GetInstance()->m_nGameStartMode);
+    cOutPacket.Encode1(0);
+    cOutPacket.Encode1(0);
+    cOutPacket.Encode4(CConfig::GetInstance()->GetPartnerCode());
+    CClientSocket::GetInstance()->SendPacket(&cOutPacket);
+    //((ZXString<char>) reinterpret_cast<ZXString<char> *>(CWvsContext::GetInstance()->m_bFirstUserLoad)) = sID;
+//    //something CUITitle
+//
+    cOutPacket.m_aSendBuff.RemoveAll();
+    return 1;
 }
 
 // main thread
@@ -1112,15 +1053,11 @@ VOID __stdcall MainProc() {
     MemEdit::CodeCave(NukedCWvsAppInitializeInput, dwCWvsAppInitializeInput, 5);
     MemEdit::CodeCave(NukedCWvsAppRun, dwCWvsAppRun, 5);
     MemEdit::CodeCave(NukedCWvsAppCallUpdate, dwCWvsAppCallUpdate, 5);
-    MemEdit::CodeCave(NukedCLoginSendCheckPasswordPacket, dwCLoginSendCheckPasswordPacket, 5);
 
     INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
     INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, 0x00494D2F);
-
-    // CLogin::SendCheckPasswordPacket auth patches
-    MemEdit::WriteBytes(dwSendCheckPasswordPacketFirstJump, new BYTE[6]{0xE9, 0xC1, 0x01, 0x00, 0x00, 0x90}, 6);
-    MemEdit::WriteBytes(dwSendCheckPasswordPacketSecondChange, new BYTE[7]{0xFF, 0x75, 0x0C, 0x90, 0x90, 0x90, 0x90},
-                        7);
+    INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
+                  CLogin__SendCheckPasswordPacket_Hook, 0x005F6952);
 }
 
 // dll entry point

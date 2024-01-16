@@ -6,6 +6,12 @@ add_library(bypass SHARED
         ${CMAKE_SOURCE_DIR}/common/memedit.cpp
         ${CMAKE_SOURCE_DIR}/common/hooker.cpp
         ${CMAKE_SOURCE_DIR}/common/logger.cpp
+        ${CMAKE_SOURCE_DIR}/common/CClientSocket.cpp
+        ${CMAKE_SOURCE_DIR}/common/CConfig.cpp
+        ${CMAKE_SOURCE_DIR}/common/COutPacket.cpp
+        ${CMAKE_SOURCE_DIR}/common/CSystemInfo.cpp
+        ${CMAKE_SOURCE_DIR}/common/CWvsApp.cpp
+        ${CMAKE_SOURCE_DIR}/common/CWvsContext.cpp
 )
 
 # Set additional include directories if needed
@@ -16,6 +22,7 @@ target_link_libraries(bypass PRIVATE ${CMAKE_SOURCE_DIR}/common/detours.lib)
 if (WIN32)
     target_link_libraries(bypass PRIVATE Ws2_32.lib)
     target_link_libraries(bypass PRIVATE winmm.lib)
+    target_link_libraries(bypass PRIVATE comsuppw.lib)
 endif()
 
 set_target_properties(bypass PROPERTIES OUTPUT_NAME "bypass-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")

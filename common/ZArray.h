@@ -280,21 +280,23 @@ public:
 	/// </summary>
 	void RemoveAll()
 	{
-		if (this->a)
-		{
-			/* Get pointer to allocation base  (array base - 4 bytes) */
-			DWORD* pAllocationBasePointer = &reinterpret_cast<DWORD*>(this->a)[-1];
-			size_t nMaxIndex = *pAllocationBasePointer - 1;
-
-			/* Call destructor  */
-			T* start = this->a;
-			T* end = reinterpret_cast<T*>(&this->a[nMaxIndex]);
-			this->Destroy(start, end);
-
-			/* Free array allocation */
-			delete pAllocationBasePointer;
-			this->a = nullptr;
-		}
+        ((VOID(_fastcall * )(ZArray<T> * , PVOID))
+        0x00428CF1)(this, NULL);
+//		if (this->a)
+//		{
+//			/* Get pointer to allocation base  (array base - 4 bytes) */
+//			DWORD* pAllocationBasePointer = &reinterpret_cast<DWORD*>(this->a)[-1];
+//			size_t nMaxIndex = *pAllocationBasePointer - 1;
+//
+//			/* Call destructor  */
+//			T* start = this->a;
+//			T* end = reinterpret_cast<T*>(&this->a[nMaxIndex]);
+//			this->Destroy(start, end);
+//
+//			/* Free array allocation */
+//			delete pAllocationBasePointer;
+//			this->a = nullptr;
+//		}
 	}
 
 private:
