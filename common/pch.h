@@ -36,6 +36,7 @@
 #include "ZRef.h"
 #include "ZMap.h"
 #include "ZList.h"
+#include "ZPair.h"
 
 #include "IGObj.h"
 #include "IUIMsgHandler.h"
@@ -94,9 +95,22 @@
 #include "CMapLoadable.h"
 
 #include "TSecType.h"
-
 #include "ExtendSP.h"
+
 #include "GW_CharacterStat.h"
+#include "GW_ItemSlotBase.h"
+#include "GW_MiniGameRecord.h"
+#include "GW_CoupleRecord.h"
+#include "GW_FriendRecord.h"
+#include "GW_NewYearCardRecord.h"
+#include "GW_MarriageRecord.h"
+#include "GW_WildHunterInfo.h"
+#include "GW_MonsterBookCard.h"
+#include "EquippedSetItem.h"
+#include "CSimpleStrMap.h"
+#include "Additional.h"
+
+#include "FontType.h"
 #include "AvatarLook.h"
 #include "AvatarData.h"
 #include "CAvatar.h"
@@ -106,6 +120,9 @@
 #include "CUIToolTip.h"
 #include "CCtrlButton.h"
 #include "CCtrlEdit.h"
+#include "CCtrlComboBoxSelect.h"
+#include "CCtrlScrollBar.h"
+#include "CCtrlComboBox.h"
 #include "CUILoginStart.h"
 #include "RecommendWorldMsg.h"
 #include "CFadeWnd.h"
@@ -122,6 +139,10 @@
 #include "CUITitle.h"
 #include "CWndMan.h"
 #include "CWvsApp.h"
+
+#include "CUIWnd.h"
+#include "CCtrlTab.h"
+#include "CCtrlCheckBox.h"
 
 #include "WebCookie.h"
 #include "CharacterData.h"

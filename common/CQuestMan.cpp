@@ -11,15 +11,15 @@ CQuestMan *CQuestMan::GetInstance() {
 
 int CQuestMan::LoadDemand() {
     return ((int(_fastcall * )(CQuestMan * , PVOID))
-    0x0071D8DF)(this, NULL);
+    0x0071D8DF)(this, nullptr);
 }
 
 void CQuestMan::LoadPartyQuestInfo() {
     ((VOID(_fastcall * )(CQuestMan * , PVOID))
-    0x00723341)(this, NULL);
+    0x00723341)(this, nullptr);
 }
 
 void CQuestMan::LoadExclusive() {
     ((VOID(_fastcall * )(CQuestMan * , PVOID))
-    0x007247A1)(this, NULL);
+    0x007247A1)(this, nullptr);
 }

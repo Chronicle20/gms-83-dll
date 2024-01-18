@@ -1,5 +1,3 @@
-#include "ZArray.h"
-
 struct GW_NewYearCardRecord {
     unsigned int m_dwSN;
     unsigned int m_dwSenderID;

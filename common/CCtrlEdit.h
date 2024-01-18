@@ -1,4 +1,4 @@
-class CCtrlComboBox{};
+struct CCtrlComboBox;
 
 struct CCtrlEdit : CCtrlWnd {
     struct CEditCaret {

@@ -1,6 +1,3 @@
-#include "CCtrlWnd.h"
-#include "ZXString.h"
-
 struct CCtrlScrollBar : CCtrlWnd {
     int m_nWheelRange;
     int m_nCurPos;

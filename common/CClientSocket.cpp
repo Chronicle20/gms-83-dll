@@ -14,10 +14,10 @@ void CClientSocket::CreateInstance() {
 // _CClientSocket__SendPacket_t _CClientSocket__SendPacket = reinterpret_cast<_CClientSocket__SendPacket_t>(0x0049637B);
 void CClientSocket::SendPacket(COutPacket *oPacket) {
     ((VOID(_fastcall * )(CClientSocket * , PVOID, COutPacket*))
-    0x0049637B)(this, NULL, oPacket);
+    0x0049637B)(this, nullptr, oPacket);
 }
 
 void CClientSocket::ManipulatePacket() {
     ((VOID(_fastcall * )(CClientSocket * , PVOID))
-    0x0049651D)(this, NULL);
+    0x0049651D)(this, nullptr);
 }

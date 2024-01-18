@@ -223,7 +223,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
             } while (!*pbTerminate);
         } else if (dwRet == 3) {
             do {
-                if ( !PeekMessageA(&msg, 0, 0, 0, 1u) ) {
+                if ( !PeekMessageA(&msg, nullptr, 0, 0, 1u) ) {
                     break;
                 }
                 TranslateMessage(&msg);
@@ -285,11 +285,6 @@ void GetSEPrivilege() {
 typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
 _CWvsApp__SetUp_t _CWvsApp__SetUp;
 
-void newCLogo(CLogo * logo) {
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    0x0062ECE2)(logo, NULL);
-}
-
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     pThis->InitializeAuth();
     auto time = timeGetTime();
@@ -326,7 +321,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     Sleep(300);
     pThis->InitializeGameData();
     pThis->CreateWndManager();
-    CConfig::GetInstance()->ApplySysOpt(0, 0);
+    CConfig::GetInstance()->ApplySysOpt(nullptr, 0);
     CActionMan::CreateInstance();
     CActionMan::GetInstance()->Init();
     CAnimationDisplayer::CreateInstance();
@@ -346,10 +341,10 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     }
     CRadioManager::CreateInstance();
     char sModulePath[260];
-    GetModuleFileNameA(0, sModulePath, 260);
-    pThis->Dir_BackSlashToSlash(sModulePath);
-    pThis->Dir_upDir(sModulePath);
-    pThis->Dir_SlashToBackSlash(sModulePath);
+    GetModuleFileNameA(nullptr, sModulePath, 260);
+    CWvsApp::Dir_BackSlashToSlash(sModulePath);
+    CWvsApp::Dir_upDir(sModulePath);
+    CWvsApp::Dir_SlashToBackSlash(sModulePath);
 
     ZXString<char> tempString = ZXString<char>(sModulePath, 0xFFFFFFFF);
     CConfig::GetInstance()->CheckExecPathReg(tempString);

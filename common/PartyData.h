@@ -1,4 +1,3 @@
-#include "ZXString.h"
 #include "PartyMember.h"
 
 struct PARTYDATA {

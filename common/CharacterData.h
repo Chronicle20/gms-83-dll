@@ -1,23 +1,5 @@
 #pragma once
 
-#include "GW_CharacterStat.h"
-#include "GW_ItemSlotBase.h"
-#include "GW_MiniGameRecord.h"
-#include "GW_CoupleRecord.h"
-#include "GW_FriendRecord.h"
-#include "GW_NewYearCardRecord.h"
-#include "GW_MarriageRecord.h"
-#include "GW_WildHunterInfo.h"
-#include "GW_MonsterBookCard.h"
-#include "EquippedSetItem.h"
-#include "CSimpleStrMap.h"
-#include "Additional.h"
-#include "ZMap.h"
-#include "ZList.h"
-#include "ZRef.h"
-#include "ZArray.h"
-#include "ZPair.h"
-
 struct CharacterData {
     GW_CharacterStat characterStat;
     ZRef <GW_ItemSlotBase> aEquipped[60];

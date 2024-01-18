@@ -1,5 +1,3 @@
-#include "ZArray.h"
-
 class GW_CoupleRecord {
     unsigned int dwPairCharacterID;
     char sPairCharacterName[13];

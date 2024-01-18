@@ -1,7 +1,3 @@
-#include "CCtrlWnd.h"
-#include "FontType.h"
-#include "CCtrlComboBox.h"
-
 struct CCtrlComboBoxSelect : CCtrlWnd {
     int m_nSelect;
     int m_nSelectMax;

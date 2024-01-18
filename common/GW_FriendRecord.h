@@ -1,5 +1,3 @@
-#include "ZArray.h"
-
 struct GW_FriendRecord {
     unsigned int dwPairCharacterID;
     char sPairCharacterName[13];

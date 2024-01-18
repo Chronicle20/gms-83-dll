@@ -11,5 +11,5 @@ CMapleTVMan *CMapleTVMan::GetInstance() {
 
 void CMapleTVMan::Init() {
     ((VOID(_fastcall * )(CMapleTVMan * , PVOID))
-    0x00636F4E)(this, NULL);
+    0x00636F4E)(this, nullptr);
 }
