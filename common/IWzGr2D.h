@@ -13,7 +13,7 @@ DECLARE_INTERFACE_(IWzGr2D, IUnknown) {
 
     STDMETHOD_(ULONG, Release)(THIS) PURE;
 
-// ** ISample methods ***
+// ** IWzGr2D methods ***
     STDMETHOD(Initialize)(THIS_ unsigned int, unsigned int, tagVARIANT, tagVARIANT, tagVARIANT) PURE;
 
     STDMETHOD(Uninitialize)(THIS) PURE;

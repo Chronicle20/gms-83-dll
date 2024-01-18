@@ -76,9 +76,6 @@ const DWORD dwCConfigCheckExecPathReg = 0x0049CCF3;
 const DWORD dwCLogoCLogo = 0x0062ECE2;
 const DWORD dwset_stage = 0x00777347;
 
-const DWORD dwCInputSystemCInputSystem = 0x009F821F;
-const DWORD dwCInputSystemCreateInstance = 0x009F9A6A;
-const DWORD dwCInputSystemInit = 0x00599EBF;
 const DWORD dwZAllocAnonSelectorAlloc = 0x00403065;
 
 const DWORD dwCActionManInit = 0x00406ABD;
@@ -370,52 +367,6 @@ __declspec(naked) void NukedCWvsAppSetup() {
             jmp short label16
             label16:
             jmp dword ptr[dwNukedCWvsAppSetupReturn]
-    }
-}
-
-__declspec(naked) void NukedCWvsAppInitializeInput() {
-    __asm {
-            mov eax, dword ptr ds :[0x00AE812D]
-            call dwEH_prolog
-            sub esp, 198h
-            push ebx
-            push esi
-            push edi
-            mov[ebp-1A0h], ecx
-            jmp short label3
-            label3:
-            push 9D0h
-        //mov ecx, dword ptr ds : [0x00BF0B00]
-            mov eax, dword ptr[0x00BF0B00]
-            mov ecx, eax
-            call dwZAllocAnonSelectorAlloc
-            mov[ebp-190h], eax
-            and dword ptr[ebp-4], 0
-            cmp dword ptr[ebp-190h], 0
-            jz label1
-            mov ecx,[ebp-190h]
-            call dwCInputSystemCInputSystem
-            mov[ebp-1A4h], eax
-            jmp label2
-            label1:
-            and dword ptr[ebp-1A4h], 0
-            label2:
-            mov eax,[ebp- 1A4h]
-            mov[ebp-18Ch], eax
-            or dword ptr[ebp-4], 0FFFFFFFFh
-            mov eax,[ebp-1A0h]
-            mov eax,[eax + 4]
-            mov[ebp-194h], eax
-            mov eax,[ebp-1A0h]
-            add eax, 54h
-            push eax
-            push dword ptr[ebp-194h]
-            call dwCInputSystemCreateInstance
-            mov ecx, eax
-            call dwCInputSystemInit
-            jmp label4
-            label4:
-            jmp dword ptr[dwNukedCWvsAppInitializeInputReturn]
     }
 }
 
@@ -910,6 +861,19 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
     CActionMan::GetInstance()->SweepCache();
 }
 
+// void __stdcall TSingleton<CInputSystem>::CreateInstance()
+typedef VOID(__stdcall *_TSingleton_CInputSystem__CreateInstance_t)();
+_TSingleton_CInputSystem__CreateInstance_t _TSingleton_CInputSystem__CreateInstance = reinterpret_cast<_TSingleton_CInputSystem__CreateInstance_t>(0x009F9A6A);
+
+// void __thiscall CWvsApp::InitializeInput(CWvsApp *this)
+typedef VOID(__fastcall *_CWvsApp__InitializeInput_t)(CWvsApp *pThis, PVOID edx);
+_CWvsApp__InitializeInput_t _CWvsApp__InitializeInput;
+
+VOID __fastcall CWvsApp__InitializeInput_Hook(CWvsApp *pThis, PVOID edx) {
+    _TSingleton_CInputSystem__CreateInstance();
+    CInputSystem::GetInstance()->Init(pThis->m_hWnd, pThis->m_ahInput);
+}
+
 // main thread
 VOID __stdcall MainProc() {
     // Window Mode Magic
@@ -920,7 +884,6 @@ VOID __stdcall MainProc() {
 
     // Nuke CWvsApp::Setup
     MemEdit::CodeCave(NukedCWvsAppSetup, dwCWvsAppSetUp, 5);
-    MemEdit::CodeCave(NukedCWvsAppInitializeInput, dwCWvsAppInitializeInput, 5);
     MemEdit::CodeCave(NukedCWvsAppRun, dwCWvsAppRun, 5);
 
     INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
@@ -928,6 +891,7 @@ VOID __stdcall MainProc() {
     INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
                   CLogin__SendCheckPasswordPacket_Hook, 0x005F6952);
     INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x009F84D0);
+    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x009F7CE1);
 }
 
 // dll entry point

@@ -27,6 +27,9 @@ public:
     int m_tLastServerIPCheck2;
     int m_tLastGGHookingAPICheck;
     int m_tLastSecurityCheck;
+    void *m_ahInput[3];
+    int dummy22;
+    int dummy23;
 
     static CWvsApp* GetInstance();
 };

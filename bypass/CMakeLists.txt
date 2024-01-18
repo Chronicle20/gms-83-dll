@@ -14,6 +14,8 @@ add_library(bypass SHARED
         ${CMAKE_SOURCE_DIR}/common/CWvsContext.cpp
         ${CMAKE_SOURCE_DIR}/common/CActionMan.cpp
         ${CMAKE_SOURCE_DIR}/common/CLogin.cpp
+        ${CMAKE_SOURCE_DIR}/common/CInputSystem.cpp
+
 )
 
 # Set additional include directories if needed

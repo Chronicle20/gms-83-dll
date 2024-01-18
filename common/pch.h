@@ -17,6 +17,9 @@
 #include "ZXString.h"
 #include "ZArray.h"
 
+#include "DiDeviceInstanceA.h"
+#include "IDirectInputDevice8A.h"
+#include "IDirectInput8A.h"
 #include "IDraggable.h"
 #include "IUIMsgHandler.h"
 #include "IWzSerialize.h"
@@ -30,6 +33,7 @@
 #include "CClientSocket.h"
 #include "CConfig.h"
 #include "CLogin.h"
+#include "CInputSystem.h"
 #include "COutPacket.h"
 #include "CSystemInfo.h"
 #include "CUITitle.h"
