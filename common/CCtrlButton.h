@@ -1,7 +1,4 @@
 #pragma once
-#include "CCtrlWnd.h"
-#include "ZXString.h"
-#include "CUIToolTip.h"
 
 /*
 00000000 CCtrlButton     struc; (sizeof = 0xADC, align = 0x4, copyof_1539)

@@ -1,5 +1,4 @@
 #pragma once
-#include "ZXString.h"
 
 /*/
 00000000 RECOMMENDWORLDMSG struc; (sizeof = 0x8, align = 0x4, copyof_4932)

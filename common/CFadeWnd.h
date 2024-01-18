@@ -1,6 +1,4 @@
 #pragma once
-#include "CDialog.h"
-#include "ZXString.h"
 
 /*
 00000000 CFadeWnd        struc ; (sizeof=0xF4, align=0x4, copyof_3078)

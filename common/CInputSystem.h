@@ -1,7 +1,5 @@
 #pragma once
 
-#include "IsMsg.h"
-
 class CInputSystem {
 
 public:

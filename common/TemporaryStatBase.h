@@ -1,5 +1,3 @@
-#include "ZFatalSection.h"
-#include "ZRefCounted.h"
 
 template<typename T>
 class TemporaryStatBase : ZRefCounted {

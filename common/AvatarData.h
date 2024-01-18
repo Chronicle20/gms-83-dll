@@ -1,6 +1,4 @@
 #pragma once
-#include "AvatarLook.h"
-#include "GW_CharacterStat.h"
 
 /*
 00000000 AvatarData      struc ; (sizeof=0x2FE, copyof_4916)

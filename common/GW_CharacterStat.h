@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ExtendSP.h"
 
 /*
 00000000 GW_CharacterStat struc; (sizeof = 0xF9, copyof_1764)

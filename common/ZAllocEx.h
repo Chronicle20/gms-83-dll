@@ -1,15 +1,4 @@
 #pragma once
-#include "logger.h"
-#include "ZXString.h"
-#include "ZAllocAnonSelector.h"
-#include "ZAllocBase.h"
-#include "ZAllocStrSelector.h"
-#include <intrin.h>
-#include <mutex>
-#include <thread>
-#include <windows.h>
-#include <heapapi.h>
-#include "ZFatalSection.h"
 
 // fix returnaddress func
 // https://docs.microsoft.com/en-us/cpp/intrinsics/returnaddress?view=msvc-160

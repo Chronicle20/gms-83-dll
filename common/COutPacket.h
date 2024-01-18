@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ZArray.h"
-
 class COutPacket {
 public:
     bool m_bLoopback;

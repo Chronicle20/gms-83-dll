@@ -1,10 +1,5 @@
 #pragma once
 
-#include <Windows.h>
-#include <stdio.h>
-#include "asserts.h"
-#include "ZAllocEx.h"
-
 template<typename T> struct ZAllocEx;
 template<typename T> struct ZAllocStrSelector;
 

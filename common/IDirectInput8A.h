@@ -1,5 +1,3 @@
-#include <unknwn.h>
-
 #undef  INTERFACE
 #define INTERFACE   IDirectInput8A
 

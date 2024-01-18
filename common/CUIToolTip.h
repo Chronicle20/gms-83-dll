@@ -1,11 +1,5 @@
 #pragma once
 
-#include "ZXString.h"
-#include "IWzGr2DLayer.h"
-#include "IWzFont.h"
-#include "IWzCanvas.h"
-#include "IWzProperty.h"
-
 /*
 00000000 CUIToolTip      struc; (sizeof = 0xA48, align = 0x4, copyof_1535)
 00000000 vfptr           dd ? ; offset

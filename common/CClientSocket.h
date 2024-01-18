@@ -1,15 +1,5 @@
 #pragma once
 
-#include "CInPacket.h"
-#include "ZList.h"
-#include "ZSocketBase.h"
-#include "ZInetAddr.h"
-#include "ZFatalSection.h"
-#include "ZXString.h"
-#include "ZRef.h"
-#include "ZSocketBuffer.h"
-#include "COutPacket.h"
-
 struct __POSITION {
 };
 
@@ -39,6 +29,8 @@ public:
     virtual ~CClientSocket() = default;
 
     static CClientSocket *GetInstance();
+
+    static void CreateInstance();
 
     void SendPacket(COutPacket *oPacket);
 

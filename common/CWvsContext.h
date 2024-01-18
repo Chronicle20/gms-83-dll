@@ -1,27 +1,5 @@
 #pragma once
 
-#include "TSecType.h"
-#include "ZXString.h"
-#include "IWzGr2DLayer.h"
-#include "ZMap.h"
-#include "ZList.h"
-#include "ZRef.h"
-#include "WebCookie.h"
-#include "CharacterData.h"
-#include "IWzProperty.h"
-#include "BasicStat.h"
-#include "SecondaryStat.h"
-#include "CTemporaryStatView.h"
-#include "ForcedStat.h"
-#include "PartyData.h"
-#include "GW_Friend.h"
-#include "PartySearchSetting.h"
-#include "CPartySearchRemoCon.h"
-#include "GuildData.h"
-#include "AllianceData.h"
-#include "CalcDamage.h"
-#include "CUIBattleRecord.h"
-
 class CWvsContext {
 public:
     virtual ~CWvsContext() = default;

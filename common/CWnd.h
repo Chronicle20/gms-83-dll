@@ -1,10 +1,7 @@
 #pragma once
 
-#include "IGObj.h"
-#include "IUIMsgHandler.h"
 #include "IWzGr2DLayer.h"
 #include "IWzCanvas.h"
-#include "ZRefCounted.h"
 #include "CCtrlWnd.h"
 #include "ZList.h"
 #include "ZRef.h"

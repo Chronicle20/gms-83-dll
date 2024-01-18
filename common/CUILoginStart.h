@@ -1,6 +1,4 @@
 #pragma once
-#include "CDialog.h"
-#include "CCtrlButton.h"
 
 /*
 00000000 CUILoginStart   struc; (sizeof = 0x11C, align = 0x4, copyof_4926)

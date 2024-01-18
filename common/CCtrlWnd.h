@@ -1,8 +1,5 @@
 #pragma once
 
-#include "IGObj.h"
-#include "IUIMsgHandler.h"
-#include "ZRefCounted.h"
 #include "IWzVector2D.h"
 
 /*

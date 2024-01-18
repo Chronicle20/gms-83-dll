@@ -1,13 +1,5 @@
 #pragma once
 
-#include "ZXString.h"
-#include "ZArray.h"
-#include "ZMap.h"
-#include "ConfigGameOpt.h"
-#include "ConfigSysOpt.h"
-#include "ConfigJoypad.h"
-#include "FunckeyMapped.h"
-
 class CConfig {
 public:
     virtual ~CConfig() = default;
@@ -42,6 +34,11 @@ public:
     int m_nLastConnectedVersion;
     int m_tStartTime;
 
-    static CConfig* GetInstance();
+    static CConfig *GetInstance();
+
     INT GetPartnerCode();
+
+    void ApplySysOpt(int *pSysOpt, int bApplyVideo);
+
+    void CheckExecPathReg(ZXString<char> sModulePath);
 };

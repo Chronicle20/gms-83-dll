@@ -1,4 +1,3 @@
-#include "ZArray.h"
 
 struct CInPacket {
     int m_bLoopback;

@@ -1,5 +1,3 @@
-#include "ZRefCounted.h"
-#include "TSecType.h"
 
 struct GW_ItemSlotBase : ZRefCounted {
     TSecType<long> nItemID;

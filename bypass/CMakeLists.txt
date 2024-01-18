@@ -13,9 +13,19 @@ add_library(bypass SHARED
         ${CMAKE_SOURCE_DIR}/common/CWvsApp.cpp
         ${CMAKE_SOURCE_DIR}/common/CWvsContext.cpp
         ${CMAKE_SOURCE_DIR}/common/CActionMan.cpp
-        ${CMAKE_SOURCE_DIR}/common/CLogin.cpp
         ${CMAKE_SOURCE_DIR}/common/CInputSystem.cpp
-
+        ${CMAKE_SOURCE_DIR}/common/CSecurityClient.cpp
+        ${CMAKE_SOURCE_DIR}/common/CFuncKeyMappedMan.cpp
+        ${CMAKE_SOURCE_DIR}/common/CQuickslotKeyMappedMan.cpp
+        ${CMAKE_SOURCE_DIR}/common/CAnimationDisplayer.cpp
+        ${CMAKE_SOURCE_DIR}/common/CMacroSysMan.cpp
+        ${CMAKE_SOURCE_DIR}/common/CMapleTVMan.cpp
+        ${CMAKE_SOURCE_DIR}/common/CQuestMan.cpp
+        ${CMAKE_SOURCE_DIR}/common/CMonsterBookMan.cpp
+        ${CMAKE_SOURCE_DIR}/common/CRadioManager.cpp
+        ${CMAKE_SOURCE_DIR}/common/CStage.cpp
+        ${CMAKE_SOURCE_DIR}/common/CLogin.cpp
+        ${CMAKE_SOURCE_DIR}/common/CLogo.cpp
 )
 
 # Set additional include directories if needed

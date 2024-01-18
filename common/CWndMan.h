@@ -1,7 +1,5 @@
 #pragma once
 
-#include "CWnd.h"
-
 class CWndMan {
 public:
     static CWnd **s_Update() {

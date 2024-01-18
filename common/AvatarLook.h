@@ -1,5 +1,4 @@
 #pragma once
-#include "ZRefCounted.h"
 
 /*
 00000000 AvatarLook      struc ; (sizeof=0x205, copyof_1995)

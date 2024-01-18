@@ -1,10 +1,5 @@
 #pragma once
 
-#include "ZRefCounted.h"
-#include "ZRefCountedDummy.h"
-#include "ZRefCountedAccessor.h"
-#include <type_traits>
-
 // ZRef is a smart pointer wrapper class that MapleStory uses to manage memory.
 // If the object passed to the ZRef template is a ZRefCounted object, it will treat it normally,
 //	otherwise it will add ZRefCountedDummy as an additional wrapper level to simulate a

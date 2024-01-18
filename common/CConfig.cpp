@@ -13,3 +13,14 @@ INT CConfig::GetPartnerCode() {
     return ((INT(_fastcall * )(CConfig * , PVOID))
     0x005F6CFB)(this, NULL);
 }
+
+// void __thiscall CConfig::ApplySysOpt(CConfig *this, CONFIG_SYSOPT *pSysOpt, int bApplyVideo)
+void CConfig::ApplySysOpt(int* pSysOpt, int bApplyVideo) {
+    ((VOID(_fastcall * )(CConfig * , PVOID, int* pSysOpt, int bApplyVideo))
+    0x0049EA33)(this, NULL, pSysOpt, bApplyVideo);
+}
+
+void CConfig::CheckExecPathReg(ZXString<char> sModulePath) {
+    ((VOID(_fastcall * )(CConfig * , PVOID, ZXString<char> sModulePath))
+    0x0049CCF3)(this, NULL, sModulePath);
+}

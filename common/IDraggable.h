@@ -1,7 +1,4 @@
 #pragma once
-#include "ZRefCounted.h"
-#include "FunckeyMapped.h"
-#include "IUIMsgHandler.h"
 
 /*
 00000000 IDraggable      struc; (sizeof = 0x18, align = 0x4, copyof_1424)
@@ -13,7 +10,7 @@
 00000017                 db ? ; undefined
 00000018 IDraggable      ends
 */
-class IDraggable : ZRefCounted
+class IDraggable : public ZRefCounted
 {
     //m_pLayer
     FUNCKEY_MAPPED m_OldIcon;

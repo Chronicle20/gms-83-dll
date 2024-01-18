@@ -1,14 +1,5 @@
 #pragma once
 
-#include "CMapLoadable.h"
-#include "AvatarData.h"
-#include "ZFatalSection.h"
-#include "CAvatar.h"
-#include "CUILoginStart.h"
-#include "CFadeWnd.h"
-#include "RecommendWorldMsg.h"
-#include "ZFatalSection.h"
-
 class CConnectionNoticeDlg;
 
 /*

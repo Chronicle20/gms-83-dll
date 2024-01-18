@@ -17,338 +17,14 @@
 const DWORD dwCClientSocketProcessPacket = 0x004965F1;
 const DWORD dwCSecurityClientOnPacketCall = dwCClientSocketProcessPacket + 0x7F;
 
-const DWORD dwCSecurityClientCreateInstance = 0x009F9F42;
-const DWORD dwCSecurityClientInitModule = 0x00A4BB2B;
-const DWORD dwCSecurityClientStartModule = 0x00A4BD91;
-
 const DWORD dwCWvsAppInitializeGr2D = 0x009F7A3B;
-
 const DWORD dwFixFullScreen = dwCWvsAppInitializeGr2D + 0x60; // 0x009F7A9B
 const DWORD dwFixFullScreenReturn = dwCWvsAppInitializeGr2D + 0x65;
-
-const DWORD dwCWvsAppSetUp = 0x009F5239;
-const DWORD dwNukedCWvsAppSetupReturn = dwCWvsAppSetUp + 0xA08;
-
-const DWORD dwCWvsAppInitializeInput = 0x009F7CE1;
-const DWORD dwNukedCWvsAppInitializeInputReturn = dwCWvsAppInitializeInput + 0x52F;
-
-const DWORD dwCWvsAppRun = 0x009F5C50;
-const DWORD dwNukedCWvsAppRunReturn = dwCWvsAppRun + 0xD2F; //D2F
-
-const DWORD dwCClientSocketConnect = 0x00494CA3;
-const DWORD dwNukedCClientSocketConnectReturn = dwCClientSocketConnect + 0x5F; //D2F
-
-const DWORD dwCWvsAppCallUpdate = 0x009F84D0;
-const DWORD dwNukedCWvsAppCallUpdateReturn = dwCWvsAppCallUpdate + 0x680;
-
-const DWORD dwEH_prolog = 0x00A60B98;
-const DWORD dwCWvsAppInitializeAuth = 0x009F7097;
-const DWORD dwSrand = 0x00A61C60;
-const DWORD dwGetSEPrivilege = 0x0044E824;
-const DWORD dwCWvsAppInitializePCOM = 0x009F6D77;
-const DWORD dwCWvsAppCreateMainWindow = 0x009F6D97;
-const DWORD dwCClientSocketCreateInstance = 0x009F9E53;
-const DWORD dwCWvsAppConnectLogin = 0x009F6F27;
-const DWORD dwCFuncKeyMappedManCreateInstance = 0x009F9E98;
-const DWORD dwCQuickslotKeyMappedManCreateInstance = 0x009FA0CB;
-const DWORD dwCMacroSysManCreateInstance = 0x009F9EEE;
-const DWORD dwCWvsAppInitializeResMan = 0x009F7159;
-const DWORD dwCWvsAppInitializeSound = 0x009F82BC;
-const DWORD dwCWvsAppInitializeGameData = 0x009F8B61;
-const DWORD dwCWvsAppCreateWndManager = 0x009F7034;
-const DWORD dwCConfigApplySysOpt = 0x0049EA33;
-const DWORD dwCActionManCreateInstance = 0x009F9DA6;
-const DWORD dwCMapleTVManInit = 0x00636F4E;
-const DWORD dwCQuestManCreateInstance = 0x009F9AC2;
-const DWORD dwCQuestManLoadDemand = 0x0071D8DF;
-const DWORD dwCxxThrowException = 0x00A60BB7;
-const DWORD dwCQuestManLoadPartyQuestInfo = 0x00723341;
-const DWORD dwCQuestManLoadExclusive = 0x007247A1;
-const DWORD dwCMonsterBookManCreateInstance = 0x009F9B73;
-const DWORD dwCMonsterBookManLoadBook = 0x0068487C;
-const DWORD dwCRadioManagerCreateInstance = 0x009FA078;
-const DWORD dwCWvsAppDir_BackSlashToSlash = 0x009F95FE;
-const DWORD dwCWvsAppDir_upDir = 0x009F9644;
-const DWORD dwCWvsAppDir_SlashToBackSlash = 0x009F9621;
-const DWORD dwZXStringCharGetBuffer = 0x00414617;
-const DWORD dwCConfigGetInstance = 0x00538C98;
-const DWORD dwCConfigCheckExecPathReg = 0x0049CCF3;
-const DWORD dwCLogoCLogo = 0x0062ECE2;
-const DWORD dwset_stage = 0x00777347;
-
-const DWORD dwZAllocAnonSelectorAlloc = 0x00403065;
-
-const DWORD dwCActionManInit = 0x00406ABD;
-const DWORD dwCAnimationDisplayerCreateInstance = 0x009F9DFC;
-const DWORD dwCMapleTVManCreateInstance = 0x009F9F87;
 
 __declspec(naked) void FixFullScreen() {
     __asm {
             mov eax, 0
             jmp dword ptr[dwFixFullScreenReturn]
-    }
-}
-
-__declspec(naked) void NukedCWvsAppSetup() {
-    __asm {
-            mov eax, dword ptr ds :[0x00AE7DF2]
-            call dwEH_prolog
-            sub esp, 1012
-            push ebx
-            push esi
-            push edi
-            mov[ebp-1008], ecx
-            mov ecx,[ebp-1008]
-            call dwCWvsAppInitializeAuth
-            call dword ptr ds :[0x00BF060C] //timeGetTime
-            push eax
-            call dwSrand
-            pop ecx
-            call dwGetSEPrivilege
-            jmp label21
-            label21:
-        // CSecurityClient crap
-            xor eax, eax
-            cmp dword ptr ds :[0x00BEC3A8], 0
-            setnz al
-            test eax, eax
-            jnz short label20
-            call dwCSecurityClientCreateInstance
-            label20:
-            xor eax, eax
-            cmp dword ptr ds :[0x00BEC3A8], 0
-            setnz al
-            test eax, eax
-            jmp short label22
-            mov ecx, dword ptr ds :[0x00BEC3A8]
-            call dwCSecurityClientInitModule
-            label22:
-            xor eax, eax
-            cmp dword ptr ds :[0x00BEC3A8], 0
-            setnz al
-            test eax, eax
-            jmp short label23
-            mov ecx, dword ptr ds :[0x00BEC3A8]
-            call dwCSecurityClientStartModule
-            label23:
-            mov dword ptr ds:[0x00BF1AC8], 16
-            mov ecx,[ebp-1008]
-            call dwCWvsAppInitializePCOM
-            mov ecx,[ebp-1008]
-            call dwCWvsAppCreateMainWindow
-            call dwCClientSocketCreateInstance
-            mov ecx,[ebp-1008]
-            call dwCWvsAppConnectLogin
-            call dwCFuncKeyMappedManCreateInstance
-            call dwCQuickslotKeyMappedManCreateInstance
-            call dwCMacroSysManCreateInstance
-            mov ecx,[ebp-1008]
-            call dwCWvsAppInitializeResMan
-            lea eax,[ebp-400]
-            push eax
-            call dword ptr ds :[0x00BF0448]
-            push eax
-            call dword ptr ds :[0x00BF0444]
-            mov eax, 0x00BE7918
-            mov eax,[eax+14320]
-            mov[ebp-944], eax
-            cmp dword ptr[ebp-944], 0
-            jz short label1
-            push 32
-        //mov ecx, dword ptr ds : [0x00BF0B00]
-            mov eax, dword ptr[0x00BF0B00]
-            mov ecx, eax
-            call dwZAllocAnonSelectorAlloc
-            mov[ebp-872], eax
-            and dword ptr[ebp-4], 0
-            cmp dword ptr[ebp-872], 0
-            jz short label2
-            sub esp, 16
-            lea esi,[ebp-400]
-            mov edi, esp
-            movsd
-            movsd
-            movsd
-            movsd
-            mov ecx,[ebp-872]
-            call dword ptr ds :[0x0042C3DE]
-            mov[ebp-1012], eax
-            jmp short label3
-            label2:
-            and dword ptr[ebp-1012], 0
-            label3:
-            mov eax,[ebp-1012]
-            mov[ebp-868], eax
-            or dword ptr[ebp-4], 4294967295
-            label1:
-            mov ecx,[ebp-1008]
-            call dwCWvsAppInitializeGr2D
-            mov ecx,[ebp - 1008]
-            call dwCWvsAppInitializeInput
-            push 300
-            call dword ptr ds :[0x00BF02F4]
-            mov ecx,[ebp-1008]
-            call dwCWvsAppInitializeSound
-            push 300
-            call dword ptr ds :[0x00BF02F4]
-            mov ecx,[ebp - 1008]
-            call dwCWvsAppInitializeGameData
-            mov ecx,[ebp - 1008]
-            call dwCWvsAppCreateWndManager
-            push 0
-            push 0
-            mov ecx, dword ptr ds :[0x00BEBF9C]
-            call dwCConfigApplySysOpt
-            call dwCActionManCreateInstance
-            mov ecx, eax
-            call dwCActionManInit
-            call dwCAnimationDisplayerCreateInstance
-            call dwCMapleTVManCreateInstance
-            mov ecx, eax
-            call dwCMapleTVManInit
-            call dwCQuestManCreateInstance
-            mov ecx, eax
-            call dwCQuestManLoadDemand
-            test eax, eax
-            jnz short label4
-            mov dword ptr[ebp-880], 570425350
-            lea eax,[ebp-880]
-            mov[ebp-1016], eax
-            mov dword ptr[ebp-4], 1
-            mov eax,[ebp-1016]
-            mov eax,[eax]
-            mov[ebp-876], eax
-            push 11814752
-            lea eax,[ebp-876]
-            push eax
-            call dwCxxThrowException
-            label4:
-            mov ecx, dword ptr ds :[0x00BED614]
-            call dwCQuestManLoadPartyQuestInfo
-            mov ecx, dword ptr ds :[0x00BED614]
-            call dwCQuestManLoadExclusive
-            call dwCMonsterBookManCreateInstance
-            mov ecx, eax
-            call dwCMonsterBookManLoadBook
-            test eax, eax
-            jnz short label5
-            mov dword ptr[ebp - 888], 570425350
-            lea eax,[ebp - 888]
-            mov[ebp - 1020], eax
-            mov dword ptr[ebp - 4], 2
-            mov eax,[ebp - 1020]
-            mov eax,[eax]
-            mov[ebp - 884], eax
-            push 11814752
-            lea eax,[ebp - 884]
-            push eax
-            call dwCxxThrowException
-            label5:
-            call dwCRadioManagerCreateInstance
-            push 260
-            lea eax,[ebp-292]
-            push eax
-            push 0
-            call dword ptr ds :[0x00BF028C]
-            lea eax,[ebp-292]
-            push eax
-            call dwCWvsAppDir_BackSlashToSlash
-            pop ecx
-            lea eax,[ebp-292]
-            push eax
-            call dwCWvsAppDir_upDir
-            pop ecx
-            lea eax,[ebp - 292]
-            push eax
-            call dwCWvsAppDir_SlashToBackSlash
-            pop ecx
-            push ecx
-            mov eax, esp
-            mov[ebp-892], esp
-            mov[ebp-1004], eax
-            mov eax,[ebp-1004]
-            and dword ptr[eax], 0
-            push 4294967295
-            lea eax,[ebp-292]
-            push eax
-            mov ecx,[ebp-1004]
-            call dwZXStringCharGetBuffer
-            mov dword ptr[ebp-4], 3
-            call dwCConfigGetInstance
-            mov ecx, eax
-            or dword ptr[ebp-4], 4294967295
-            call dwCConfigCheckExecPathReg
-            push 56
-        //mov ecx, dword ptr ds : [0x00BF0B00]
-            mov eax, dword ptr[0x00BF0B00]
-            mov ecx, eax
-            call dwZAllocAnonSelectorAlloc
-            mov[ebp-900], eax
-            mov dword ptr[ebp-4], 4
-            cmp dword ptr[ebp-900], 0
-            jz short label6
-            mov ecx,[ebp-900]
-            call dwCLogoCLogo
-            mov[ebp-1024], eax
-            jmp short label7
-            label6:
-            and dword ptr[ebp-1024], 0
-            label7:
-            mov eax,[ebp-1024]
-            mov[ebp-896], eax
-            or dword ptr[ebp-4], 4294967295
-            push 0
-            push dword ptr[ebp-896]
-            call dwset_stage
-            pop ecx
-            pop ecx
-            mov dword ptr[ebp-808], 3708088046
-            and dword ptr[ebp-312], 0
-            jmp short label8
-            label15:
-            mov eax,[ebp-312]
-            inc eax
-            mov[ebp-312], eax
-            label8:
-            cmp dword ptr[ebp-312], 256
-            jge label9
-            mov eax,[ebp-312]
-            mov[ebp-860], eax
-            mov dword ptr[ebp-864], 8
-            jmp short label13
-            label14:
-            mov eax,[ebp-864]
-            dec eax
-            mov[ebp-864], eax
-            label13:
-            cmp dword ptr[ebp-864], 0
-            jle short label10
-            mov eax,[ebp-860]
-            and eax, 1
-            test eax, eax
-            jz short label12
-            mov eax,[ebp-860]
-            shr eax, 1
-            mov ecx,[ebp-808]
-            sub ecx, 5421
-            xor eax, ecx
-            mov[ebp-860], eax
-            jmp short label11
-            label12:
-            mov eax,[ebp-860]
-            shr eax, 1
-            mov[ebp-860], eax
-            label11:
-            jmp short label14
-            label10:
-            mov eax,[ebp-312]
-            mov ecx,[ebp-860]
-            mov dword ptr ds :[0x00BF167C][eax*4], ecx
-            jmp label15
-            label9:
-            jmp short label16
-            label16:
-            jmp dword ptr[dwNukedCWvsAppSetupReturn]
     }
 }
 
@@ -460,6 +136,10 @@ CStage *get_stage() {
     return reinterpret_cast<CStage *>(*(void **) 0x00BEDED4);
 }
 
+// void __cdecl set_stage(CStage *pStage, void *pParam)
+typedef VOID(__cdecl *_set_stage_t)(CStage *pStage, void *pParam);
+_set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(0x00777347);
+
 IWzGr2D *get_gr() {
     return reinterpret_cast<IWzGr2D *>(*(uint32_t **) 0x00BF14EC);
 }
@@ -519,9 +199,6 @@ VOID __fastcall CWvsApp__InitializeInput_Hook(CWvsApp *pThis, PVOID edx) {
 typedef VOID(__stdcall *_CWvsApp__Run_t)(CWvsApp *pThis, int *pbTerminate);
 
 _CWvsApp__Run_t _CWvsApp__Run;
-
-// void CWndMan::RedrawInvalidatedWindows()
-
 
 VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
     tagMSG msg{};
@@ -596,6 +273,106 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
     }
 }
 
+void GetSEPrivilege() {
+    ((VOID **(_fastcall * )())
+    0x0044E824)();
+}
+
+// void __thiscall CWvsApp::SetUp(CWvsApp *this)
+typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
+_CWvsApp__SetUp_t _CWvsApp__SetUp;
+
+void newCLogo(CLogo * logo) {
+    ((VOID(_fastcall * )(CLogo * , PVOID))
+    0x0062ECE2)(logo, NULL);
+}
+
+VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
+    pThis->InitializeAuth();
+    auto time = timeGetTime();
+    srand(time);
+    GetSEPrivilege();
+    CSecurityClient::CreateInstance();
+    // dword_BF1AC8 = 0x10;
+    pThis->InitializePCOM();
+    pThis->CreateMainWindow();
+    CClientSocket::CreateInstance();
+    pThis->ConnectLogin();
+    CFuncKeyMappedMan::CreateInstance();
+    CQuickslotKeyMappedMan::CreateInstance();
+    CMacroSysMan::CreateInstance();
+    pThis->InitializeResMan();
+
+//    dword_BF0444(v2);
+//    if ( *((_DWORD *)dword_BE7918 + 3580) )
+//    {
+//        v23 = ZAllocEx<ZAllocAnonSelector>::Alloc(dword_BF0B00, 0x20u);
+//        v31 = 0;
+//        if ( v23 )
+//            v12 = sub_42C3DE(v23, v3, v28[0], v28[1], v28[2], v28[3]);
+//        else
+//            v12 = 0;
+//        v24 = v12;
+//        v31 = -1;
+//    }
+
+    pThis->InitializeGr2D();
+    pThis->InitializeInput();
+    Sleep(300);
+    pThis->InitializeSound();
+    Sleep(300);
+    pThis->InitializeGameData();
+    pThis->CreateWndManager();
+    CConfig::GetInstance()->ApplySysOpt(0, 0);
+    CActionMan::CreateInstance();
+    CActionMan::GetInstance()->Init();
+    CAnimationDisplayer::CreateInstance();
+    CMapleTVMan::CreateInstance();
+    CMapleTVMan::GetInstance()->Init();
+    CQuestMan::CreateInstance();
+    if (!CQuestMan::GetInstance()->LoadDemand()) {
+        Log("Throw error regarding CQuestMan::LoadDemand");
+        return;
+    }
+    CQuestMan::GetInstance()->LoadPartyQuestInfo();
+    CQuestMan::GetInstance()->LoadExclusive();
+    CMonsterBookMan::CreateInstance();
+    if (!CMonsterBookMan::GetInstance()->LoadBook()) {
+        Log("Throw error regarding CMonsterBookMan::LoadBook");
+        return;
+    }
+    CRadioManager::CreateInstance();
+    char sModulePath[260];
+    GetModuleFileNameA(0, sModulePath, 260);
+    pThis->Dir_BackSlashToSlash(sModulePath);
+    pThis->Dir_upDir(sModulePath);
+    pThis->Dir_SlashToBackSlash(sModulePath);
+
+    ZXString<char> tempString = ZXString<char>(sModulePath, 0xFFFFFFFF);
+    CConfig::GetInstance()->CheckExecPathReg(tempString);
+
+    PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(56u);
+    CStage * cLogo;
+    if (ret) {
+        cLogo = new (ret) CLogo();
+    } else {
+        cLogo = nullptr;
+    }
+    _set_stage(cLogo, nullptr);
+//    poly = -586093038;
+//    for ( ii = 0; ii < 256; ++ii )
+//    {
+//        crc32 = ii;
+//        for ( i = 8; i > 0; --i )
+//        {
+//            if ( (crc32 & 1) != 0 )
+//                crc32 = (poly - 401) ^ (crc32 >> 1);
+//            else
+//                crc32 >>= 1;
+//        }
+//        g_crc32Table[ii] = crc32;
+}
+
 // main thread
 VOID __stdcall MainProc() {
     // Window Mode Magic
@@ -604,9 +381,6 @@ VOID __stdcall MainProc() {
     // Noop Call to CSecurityClient::OnPacket
     MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 12);
 
-    // Nuke CWvsApp::Setup
-    MemEdit::CodeCave(NukedCWvsAppSetup, dwCWvsAppSetUp, 5);
-
     INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
     INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, 0x00494D2F);
     INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
@@ -614,6 +388,7 @@ VOID __stdcall MainProc() {
     INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x009F84D0);
     INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x009F7CE1);
     INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, 0x009F5C50);
+    INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, 0x009F5239);
 }
 
 // dll entry point

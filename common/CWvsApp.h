@@ -1,8 +1,5 @@
 #pragma once
 
-#include "ZXString.h"
-#include "ZArray.h"
-
 class CWvsApp {
 public:
     virtual ~CWvsApp() = default;
@@ -34,4 +31,30 @@ public:
     static CWvsApp* GetInstance();
 
     void ISMsgProc(unsigned int message, unsigned int wParam, int lParam);
+
+    void InitializeAuth();
+
+    void InitializePCOM();
+
+    void CreateMainWindow();
+
+    void ConnectLogin();
+
+    void InitializeResMan();
+
+    void InitializeGr2D();
+
+    void InitializeInput();
+
+    void InitializeSound();
+
+    void InitializeGameData();
+
+    void CreateWndManager();
+
+    static void Dir_BackSlashToSlash(char string[260]);
+
+    static void Dir_upDir(char string[260]);
+
+    static void Dir_SlashToBackSlash(char string[260]);
 };

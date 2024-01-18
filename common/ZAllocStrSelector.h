@@ -1,6 +1,4 @@
 #pragma once
-#include "ZAllocBase.h"
-#include "ZXString.h"
 
 /* forward declare zxstring for compiler happiness */
 template<typename T> class ZXString;

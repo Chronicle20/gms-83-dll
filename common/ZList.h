@@ -1,6 +1,4 @@
 #pragma once
-#include "ZRefCountedAccessor.h"
-#include "ZRefCountedDummy.h"
 
 /// <summary>
 /// Emulation of MapleStory's implementation of a doubly linked list template.

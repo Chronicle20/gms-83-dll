@@ -1,16 +1,5 @@
 #pragma once
 
-#include "CStage.h"
-#include "ZXString.h"
-#include "ZList.h"
-#include "ZArray.h"
-#include "ZRef.h"
-#include "ZMap.h"
-#include "ZRefCounted.h"
-#include "IWzProperty.h"
-#include "IWzGr2DLayer.h"
-#include "IWzCanvas.h"
-
 /*
 00000000 CMapLoadable    struc; (sizeof = 0x148, align = 0x4, copyof_3709)
 00000000 baseclass_0     CStage ?

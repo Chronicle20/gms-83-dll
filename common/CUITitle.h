@@ -1,9 +1,3 @@
-#include "CFadeWnd.h"
-#include "CLogin.h"
-#include "IWzCanvas.h"
-#include "ZRef.h"
-#include "CCtrlButton.h"
-#include "CCtrlEdit.h"
 
 class CUITitle : CFadeWnd {
     CLogin *m_pLogin;
