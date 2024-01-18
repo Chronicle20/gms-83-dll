@@ -153,7 +153,7 @@ public:
     /// </summary>
     /// <param name="val">String to pass to object.</param>
     /// <param name="n">Length of string. If -1, string length will be automatically calculated.</param>
-    ZXString(const T* s, int n = -1)
+    explicit ZXString(const T* s, int n = -1)
     {
         this->m_pStr = nullptr;
         this->Assign(s, n);
@@ -163,7 +163,7 @@ public:
     /// Constructs a ZXString object.
     /// </summary>
     /// <param name="s">An existing ZXString object.</param>
-    ZXString(ZXString<T>* s)
+    explicit ZXString(ZXString<T>* s)
     {
         this->m_pStr = nullptr;
         this->Assign(s);
