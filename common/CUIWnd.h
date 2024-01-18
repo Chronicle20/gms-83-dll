@@ -1,8 +1,3 @@
-#include "CWnd.h"
-#include "CCtrlButton.h"
-#include "ZArray.h"
-#include "ZXString.h"
-
 struct CUIWnd : CWnd {
     ZRef<CCtrlButton> m_pBtClose;
     CUIToolTip m_uiToolTip;

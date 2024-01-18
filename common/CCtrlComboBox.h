@@ -1,13 +1,3 @@
-#include "CCtrlWnd.h"
-#include "ZRef.h"
-#include "IWzCanvas.h"
-#include "IWzFont.h"
-#include "CCtrlEdit.h"
-#include "FontType.h"
-#include <comdef.h>
-#include "CCtrlComboBoxSelect.h"
-#include "CCtrlScrollBar.h"
-
 struct CCtrlComboBox : CCtrlWnd {
     struct ITEM_INFO {
         ZXString<char> sItemName;

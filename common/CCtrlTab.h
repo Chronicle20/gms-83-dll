@@ -1,9 +1,3 @@
-#include "CCtrlWnd.h"
-#include "IWzFont.h"
-#include "ZXString.h"
-#include "IWzCanvas.h"
-#include "ZList.h"
-
 struct CCtrlTab : CCtrlWnd {
     struct TABINFO {
         int bCanvas;

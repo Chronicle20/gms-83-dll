@@ -1,5 +1,4 @@
 #pragma once
-#include "CWnd.h"
 
 /*
 00000000 CDialog         struc; (sizeof = 0x90, align = 0x4, copyof_1529)

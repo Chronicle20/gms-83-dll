@@ -1,10 +1,21 @@
-#pragma once
+#undef  INTERFACE
+#define INTERFACE   IWzSerialize
 
-/*
-00000000 IWzSerialize    struc; (sizeof = 0x4, align = 0x4, copyof_1418)
-00000000 baseclass_0     IUnknown2 ?
-00000004 IWzSerialize    ends
-*/
-class IWzSerialize : public IUnknown
-{
+DECLARE_INTERFACE_(IWzSerialize, IUnknown) {
+    BEGIN_INTERFACE
+
+// *** IUnknown methods ***
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+// ** IWzSerialize methods ***
+
+    STDMETHOD(GetpersistentUOL)(THIS_  wchar_t **) PURE;
+
+    STDMETHOD(Serialize)(THIS_ IWzArchive *) PURE;
+
+    END_INTERFACE
 };

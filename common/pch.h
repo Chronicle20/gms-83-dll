@@ -50,14 +50,23 @@
 #include "FunckeyMapped.h"
 #include "IDraggable.h"
 
+#include "IWzArchive.h"
 #include "IWzSerialize.h"
+#include "CanvasDitherType.h"
+#include "CanvasLevelMap.h"
+#include "CanvasPixelFormat.h"
+#include "IWzRawCanvas.h"
+#include "IWzProperty.h"
+#include "CanvasAlphaType.h"
+#include "IWzFont.h"
+#include "IWzCanvas.h"
+#include "IWzRawCanvasAllocator.h"
 #include "IWzShape2D.h"
 #include "IWzVector2D.h"
+#include "LayerBlendType.h"
+#include "Gr2DAniType.h"
 #include "IWzGr2DLayer.h"
 #include "IWzGr2D.h"
-#include "IWzCanvas.h"
-#include "IWzProperty.h"
-#include "IWzFont.h"
 
 #include "CActionMan.h"
 
@@ -91,6 +100,8 @@
 #include "AvatarLook.h"
 #include "AvatarData.h"
 #include "CAvatar.h"
+#include "CCtrlWnd.h"
+#include "CWnd.h"
 #include "CDialog.h"
 #include "CUIToolTip.h"
 #include "CCtrlButton.h"
@@ -127,5 +138,6 @@
 #include "CalcDamage.h"
 #include "CUIBattleRecord.h"
 #include "CWvsContext.h"
+
 
 #include "TSingleton.h"

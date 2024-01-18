@@ -1,8 +1,3 @@
-#include "CCtrlWnd.h"
-#include "ZXString.h"
-#include "IWzFont.h"
-#include "IWzCanvas.h"
-
 struct CCtrlCheckBox : CCtrlWnd {
     int m_nCheckBoxState;
     int m_nArrange;

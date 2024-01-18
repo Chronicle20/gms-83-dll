@@ -1,10 +1,3 @@
-#include "CCtrlWnd.h"
-#include "ZXString.h"
-#include "ZArray.h"
-#include "IWzFont.h"
-#include "IWzCanvas.h"
-#include "CWnd.h"
-
 class CCtrlComboBox{};
 
 struct CCtrlEdit : CCtrlWnd {

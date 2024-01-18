@@ -1,12 +1,5 @@
 #pragma once
 
-#include "IWzGr2DLayer.h"
-#include "IWzCanvas.h"
-#include "CCtrlWnd.h"
-#include "ZList.h"
-#include "ZRef.h"
-#include "TSecType.h"
-
 /*
 00000000 CWnd            struc; (sizeof = 0x80, align = 0x4, copyof_1443)
 00000000 baseclass_0     IGObj ?

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "IWzVector2D.h"
-
 /*
 00000000 CCtrlWnd        struc; (sizeof = 0x34, align = 0x4, copyof_1444)
 00000000 baseclass_0     IGObj ?
