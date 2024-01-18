@@ -6,41 +6,41 @@ public:
 
     void Update() override;
 
-    void OnKey(IUIMsgHandler *, unsigned int, unsigned int) override;
+    void OnKey(unsigned int, unsigned int) override;
 
-    int OnSetFocus(IUIMsgHandler *, int) override;
+    int OnSetFocus(int) override;
 
-    void OnMouseButton(IUIMsgHandler *, unsigned int, unsigned int, int, int) override;
+    void OnMouseButton(unsigned int, unsigned int, int, int) override;
 
-    int OnMouseMove(IUIMsgHandler *, int, int) override;
+    int OnMouseMove(int, int) override;
 
-    int OnMouseWheel(IUIMsgHandler *, int, int, int) override;
+    int OnMouseWheel(int, int, int) override;
 
-    void OnDraggableMove(IUIMsgHandler *, int, int *, int, int) override;
+    void OnDraggableMove(int, int *, int, int) override;
 
-    void SetEnable(IUIMsgHandler *, int) override;
+    void SetEnable(int) override;
 
-    int IsEnabled(IUIMsgHandler *) override;
+    int IsEnabled() override;
 
-    void SetShow(IUIMsgHandler *, int) override;
+    void SetShow(int) override;
 
-    int IsShown(IUIMsgHandler *) override;
+    int IsShown() override;
 
-    int GetAbsLeft(IUIMsgHandler *) override;
+    int GetAbsLeft() override;
 
-    int GetAbsTop(IUIMsgHandler *) override;
+    int GetAbsTop() override;
 
-    void ClearToolTip(IUIMsgHandler *) override;
+    void ClearToolTip() override;
 
-    void OnIMEModeChange(IUIMsgHandler *, char) override;
+    void OnIMEModeChange(char) override;
 
-    void OnIMEResult(IUIMsgHandler *, const char *) override;
+    void OnIMEResult(const char *) override;
 
-    void OnIMEComp(IUIMsgHandler *, const char *, ZArray<unsigned long> *, unsigned int, int,
+    void OnIMEComp(const char *, ZArray<unsigned long> *, unsigned int, int,
                             ZList<ZXString<char> > *, int, int, int) override;
 
-    const CRTTI *GetRTTI(IUIMsgHandler *) override;
+    const CRTTI *GetRTTI() override;
 
-    int IsKindOf(IUIMsgHandler *, const CRTTI *) override;
+    int IsKindOf(const CRTTI *) override;
 };
 

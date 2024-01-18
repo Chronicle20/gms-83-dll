@@ -55,11 +55,11 @@
 struct GW_CharacterStat {
     unsigned int dwCharacterID;
     char sCharacterName[13];
-    char nGender;
-    char nSkin;
+    unsigned __int8 nGender;
+    unsigned __int8 nSkin;
     int nFace;
     int nHair;
-    LARGE_INTEGER liPetLockerSN[3];
+    _LARGE_INTEGER liPetLockerSN[3];
     unsigned __int8 _ZtlSecureTear_nLevel[2];
     unsigned int _ZtlSecureTear_nLevel_CS;
     __int16 _ZtlSecureTear_nJob[2];

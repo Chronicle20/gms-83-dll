@@ -14,7 +14,7 @@
 */
 struct AvatarLook : ZRefCounted
 {
-    int nGender;
+    unsigned __int8 nGender;
     int nSkin;
     int nFace;
     int nWeaponStickerID;

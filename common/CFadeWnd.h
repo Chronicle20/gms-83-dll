@@ -27,7 +27,7 @@
 000000F0 m_dwFriendID    dd ?
 000000F4 CFadeWnd        ends
 */
-class CFadeWnd : CDialog
+class CFadeWnd : public CDialog
 {
     int m_a0;
     int m_a;

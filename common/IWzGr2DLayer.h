@@ -5,6 +5,6 @@
 00000000 baseclass_0     IWzVector2D ?
 00000004 IWzGr2DLayer    ends
 */
-class IWzGr2DLayer : IWzVector2D
+class IWzGr2DLayer : public IWzVector2D
 {
 };

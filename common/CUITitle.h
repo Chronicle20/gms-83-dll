@@ -1,5 +1,5 @@
 
-class CUITitle : CFadeWnd {
+class CUITitle : public CFadeWnd {
     CLogin *m_pLogin;
     int m_bRememberMailAddr;
     IWzCanvas* m_pCanvasRMA[2];
@@ -14,4 +14,7 @@ class CUITitle : CFadeWnd {
     ZRef <CCtrlEdit> m_pEditID;
     ZRef <CCtrlEdit> m_pEditPasswd;
     CUIToolTip m_uiToolTipTitle;
+
+public:
+    static CUITitle* GetInstance();
 };

@@ -5,6 +5,6 @@
 00000000 baseclass_0     IUnknown2 ?
 00000004 IWzSerialize    ends
 */
-class IWzSerialize : IUnknown
+class IWzSerialize : public IUnknown
 {
 };

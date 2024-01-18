@@ -177,8 +177,6 @@ public:
         ZXString<char> sItemName;
     };
 
-    virtual ~CLogin() = default;
-
     ZRef<CConnectionNoticeDlg> m_pConnectionDlg;
     int m_bIsWaitingVAC;
     int m_bIsVACDlgOn;
@@ -195,7 +193,7 @@ public:
     ZFatalSection m_lock_Avatar;
     ZFatalSection m_lock_CountSvr;
     ZFatalSection m_lock_Character;
-    IWzGr2DLayer *m_pLayerBook;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerBook;
     int m_nLoginStep;
     int m_tStepChanging;
     int m_bRequestSent;

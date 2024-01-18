@@ -121,8 +121,11 @@ INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, ch
     cOutPacket.Encode4(CConfig::GetInstance()->GetPartnerCode());
     CClientSocket::GetInstance()->SendPacket(&cOutPacket);
     //((ZXString<char>) reinterpret_cast<ZXString<char> *>(CWvsContext::GetInstance()->m_bFirstUserLoad)) = sID;
-//    //something CUITitle
-//
+    CUITitle* cuiTitle = CUITitle::GetInstance();
+    if (cuiTitle) {
+        cuiTitle->ClearToolTip();
+    }
+
     cOutPacket.m_aSendBuff.RemoveAll();
     return 1;
 }

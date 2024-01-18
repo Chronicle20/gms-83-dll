@@ -5,6 +5,6 @@
 00000000 baseclass_0     IWzSerialize ?
 00000004 IWzShape2D      ends
 */
-class IWzShape2D : IWzSerialize
+class IWzShape2D : public IWzSerialize
 {
 };

@@ -5,6 +5,6 @@
 00000000 baseclass_0     IWzShape2D ?
 00000004 IWzVector2D     ends
 */
-class IWzVector2D : IWzShape2D
+class IWzVector2D : public IWzShape2D
 {
 };

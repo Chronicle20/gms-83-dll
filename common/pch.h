@@ -81,6 +81,7 @@
 #include "CFuncKeyMappedMan.h"
 #include "CQuickslotKeyMappedMan.h"
 #include "CStage.h"
+#include "CWvsPhysicalSpace2D.h"
 #include "CMapLoadable.h"
 
 #include "TSecType.h"
@@ -98,6 +99,7 @@
 #include "RecommendWorldMsg.h"
 #include "CFadeWnd.h"
 #include "CLogin.h"
+#include "CConnectionNoticeDlg.h"
 
 #include "CLogo.h"
 

@@ -11,7 +11,7 @@
 struct SPSet
 {
     unsigned __int8 _ZtlSecureTear_nJobLevel[2];
-    unsigned int _ZtlSecureTear_nJobLevel_CS;
+    __unaligned __declspec(align(1)) unsigned int _ZtlSecureTear_nJobLevel_CS;
     unsigned __int8 _ZtlSecureTear_nSP[2];
     unsigned int _ZtlSecureTear_nSP_CS;
 };

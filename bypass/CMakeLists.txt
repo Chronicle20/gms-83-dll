@@ -26,6 +26,7 @@ add_library(bypass SHARED
         ${CMAKE_SOURCE_DIR}/common/CStage.cpp
         ${CMAKE_SOURCE_DIR}/common/CLogin.cpp
         ${CMAKE_SOURCE_DIR}/common/CLogo.cpp
+        ${CMAKE_SOURCE_DIR}/common/CUITitle.cpp
 )
 
 # Set additional include directories if needed

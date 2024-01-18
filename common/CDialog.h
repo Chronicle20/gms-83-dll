@@ -9,7 +9,7 @@
 00000088 m_pChildModal   ZRef<CDialog> ?
 00000090 CDialog         ends
 */
-class CDialog : CWnd
+class CDialog : public CWnd
 {
     int m_nRet;
     bool m_bTerminate;

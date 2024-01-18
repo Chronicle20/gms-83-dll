@@ -10,7 +10,7 @@
 */
 class CStage : public IGObj, public IUIMsgHandler, public INetMsgHandler, public ZRefCounted {
 public:
-    void OnMouseEnter(IUIMsgHandler *, int) override;
+    void OnMouseEnter(int) override;
 
-    void OnPacket(INetMsgHandler *, int, CInPacket *) override;
+    void OnPacket(int, CInPacket *) override;
 };

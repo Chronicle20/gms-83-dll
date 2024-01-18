@@ -53,7 +53,7 @@ public:
     00000038 CMapLoadable::OBSTACLE ends
     */
     struct OBSTACLE :ZRefCounted {
-        IWzGr2DLayer *pLayer;
+        _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> pLayer;
         bool bFlip;
         int nDamage;
         int nMobDamage;
@@ -63,7 +63,7 @@ public:
         int nForceHP;
         ZXString<char> sName;
         unsigned int dwTargetField;
-        bool bSafeZoneByMob;
+        int bSafeZoneByMob;
     };
 
     /*
@@ -74,9 +74,9 @@ public:
     0000001C CMapLoadable::OBSTACLE_INFO ends
     */
     struct OBSTACLE_INFO {
-        RECT rcObs;
-        POINT vecForce;
-        OBSTACLE *pObstacle;
+        tagRECT rcObs;
+        tagPOINT vecForce;
+        const OBSTACLE *pObstacle;
     };
 
     /*
@@ -128,26 +128,24 @@ public:
         bool bLastFrameUpdated;
     };
 
-    virtual ~CMapLoadable() = default;
-
     int m_nJukeBoxItemID;
     int m_tNextMusic;
     int m_bJukeBoxPlaying;
     unsigned int m_unWeatherSoundCookie;
-    ZXString<unsigned short> m_sChangedBgmUOL;
-    IWzProperty *m_pPropFieldInfo;
-    IWzProperty *m_pPropField;
-    int m_bField;
-    int *m_pSpace2D; // ZRef<CWvsPhysicalSpace2D>
-    ZList<IWzGr2DLayer *> m_lpLayerGen;
-    ZList<IWzGr2DLayer *> m_lpLayerObj;
-    ZList<IWzGr2DLayer *> m_lpLayerTransient;
+    //ZXString<unsigned short> m_sChangedBgmUOL;
+    _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pPropFieldInfo;
+    _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pPropField;
+    //int m_bField;// not in v83
+    //ZRef<CWvsPhysicalSpace2D> m_pSpace2D;
+    ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerGen;
+    ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerObj;
+    ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerTransient;
     ZList<ZRef<CMapLoadable::OBSTACLE>> m_lpObstacle;
     ZList<ZRef<CMapLoadable::REFLECTION_INFO> > m_lpRefInfo;
     //ZList<CMapLoadable::VISIBLE_BY_QUEST> m_lVisibleByQuest; not in v83
     ZMap<char const *, CMapLoadable::CHANGING_OBJECT, ZXString<char>> m_mNamedObj;
-    ZMap<char const *, ZRef<ZList<IWzGr2DLayer *>>, ZXString<char> > m_mTagedObj;
-    ZMap<long, ZRef<ZList<IWzGr2DLayer *>>, long> m_mlLayerBack;
+    ZMap<char const *, ZRef<ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>>>, ZXString<char> > m_mTagedObj;
+    ZMap<long, ZRef<ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>>>, long> m_mlLayerBack;
     //ZList<IWzGr2DLayer*> m_lpLayerLetterBox; not in v83
     int m_nMagLevel_Obj;
     int m_nMagLevel_Back;

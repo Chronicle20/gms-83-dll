@@ -10,7 +10,7 @@ class ZList : ZRefCountedAccessor<T>, ZRefCountedAccessor<ZRefCountedDummy<T>>
 #define ZLIST_INVALID_INDEX -1
 
 private:
-	char gap4[1];
+    char gap4;
 	size_t m_uCount;
 	T* m_pHead;
 	T* m_pTail;
