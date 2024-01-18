@@ -1,4 +1,4 @@
-#include "CClientSocket.h"
+#include "pch.h"
 
 CClientSocket *CClientSocket::GetInstance() {
     return reinterpret_cast<CClientSocket *>(*(void **) 0x00BE7914);

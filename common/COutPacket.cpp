@@ -1,4 +1,4 @@
-#include "COutPacket.h"
+#include "pch.h"
 
 // void __thiscall COutPacket::COutPacket(COutPacket *this, int nType)
 // typedef VOID(__fastcall *_COutPacket__COutPacket_t)(COutPacket *pThis, PVOID edx, int nType);

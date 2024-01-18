@@ -12,15 +12,21 @@ public:
     unsigned int m_dwMainThreadId;
     HHOOK__ *m_hHook;
     int m_bWin9x;
-    int m_nOSVersion;
+    int m_tUpdateTime;
     int m_bFirstUpdate;
     ZXString<char> m_sCmdLine;
     int m_nGameStartMode;
     int m_bAutoConnect;
-    int m_bShowAdBalloon;
-    int m_bExitByTitleEscape;
-    HRESULT m_hrZExceptionCode;
-    HRESULT m_hrComErrorCode;
+    int dummy11;
+    int dummy12;
+    int dummy13;
+    int dummy14;
+    int dummy15;
+    int dummy16;
+    int m_tLastServerIPCheck;
+    int m_tLastServerIPCheck2;
+    int m_tLastGGHookingAPICheck;
+    int m_tLastSecurityCheck;
 
     static CWvsApp* GetInstance();
 };

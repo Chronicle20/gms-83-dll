@@ -1,5 +1,4 @@
 #pragma once
-#include "IWzVector2D.h"
 
 /*
 00000000 IWzGr2DLayer    struc ; (sizeof=0x4, align=0x4, copyof_1421)

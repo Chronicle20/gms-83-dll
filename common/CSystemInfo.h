@@ -1,7 +1,5 @@
 #pragma once
 
-#include <windows.h>
-
 class CSystemInfo {
 public:
     virtual ~CSystemInfo() = default;

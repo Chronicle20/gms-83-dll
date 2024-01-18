@@ -90,8 +90,10 @@ class CConnectionNoticeDlg;
 000002C4 m_bCanHaveExtraChar dd ?
 000002C8 CLogin          ends
 */
-class CLogin : CMapLoadable {
+class CLogin : public CMapLoadable {
 public:
+    void Update() override;
+
     /*
     00000000 CLogin::RANK    struc; (sizeof = 0x10, align = 0x4, copyof_4908)
     00000000 nWorldRank      dd ?

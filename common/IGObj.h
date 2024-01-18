@@ -1,6 +1,6 @@
 #pragma once
 
-class IGObj {
+interface IGObj {
 public:
-    virtual ~IGObj() = default;
+    virtual void Update() = 0;
 };

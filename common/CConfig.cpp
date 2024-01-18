@@ -1,4 +1,4 @@
-#include "CConfig.h"
+#include "pch.h"
 
 CConfig *CConfig::GetInstance() {
     return reinterpret_cast<CConfig *>(*(void **) 0x00BEBF9C);

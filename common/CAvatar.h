@@ -4,7 +4,6 @@
 #include "ZArray.h"
 #include "IWzVector2D.h"
 #include "IWzGr2DLayer.h"
-#include <comdef.h>
 
 /*
 00000000 CAvatar         struc ; (sizeof=0x1940, align=0x4, copyof_1993)

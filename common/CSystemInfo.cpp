@@ -1,4 +1,4 @@
-#include "CSystemInfo.h"
+#include "pch.h"
 
 // void __thiscall CSystemInfo::CSystemInfo(CSystemInfo *this)
 CSystemInfo::CSystemInfo() {

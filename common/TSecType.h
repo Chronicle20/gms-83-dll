@@ -1,7 +1,5 @@
 #pragma once
 
-#include <windows.h>
-
 template <typename T>
 struct TSecData
 {

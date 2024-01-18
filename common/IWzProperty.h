@@ -1,6 +1,5 @@
 #pragma once
 #include "IWzSerialize.h"
-#include "IUnknown2.h"
 
 /*
 00000000 IWzProperty     struc; (sizeof = 0x4, align = 0x4, copyof_1523)

@@ -7,25 +7,12 @@
 
  You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
  */
+#include "pch.h"
 
-// Exclude rarely-used stuff from Windows headers
-// Important to define this before Windows.h is included in a project because of linker issues with the WinSock2 lib
-#define WIN32_LEAN_AND_MEAN
-
-#include <winsock2.h>
-#include <windows.h>
-#include "CClientSocket.h"
 #include <memedit.h>
 #include <timeapi.h>
 #include "logger.h"
 #include "hooker.h"
-#include "CLogin.h"
-#include "CSystemInfo.h"
-#include "COutPacket.h"
-#include "TSingleton.h"
-#include "CWvsApp.h"
-#include "CConfig.h"
-#include "CUITitle.h"
 
 const DWORD dwCClientSocketProcessPacket = 0x004965F1;
 const DWORD dwCSecurityClientOnPacketCall = dwCClientSocketProcessPacket + 0x7F;
@@ -56,7 +43,6 @@ const DWORD dwNukedCWvsAppCallUpdateReturn = dwCWvsAppCallUpdate + 0x680;
 
 const DWORD dwEH_prolog = 0x00A60B98;
 const DWORD dwCWvsAppInitializeAuth = 0x009F7097;
-const DWORD dwTimeGetTime = 0x00BF060C;
 const DWORD dwSrand = 0x00A61C60;
 const DWORD dwGetSEPrivilege = 0x0044E824;
 const DWORD dwCWvsAppInitializePCOM = 0x009F6D77;
@@ -116,36 +102,6 @@ const DWORD dwIWzGr2DGetnextRenderTime = 0x009F6990;
 const DWORD dwCWndManRedrawInvalidatedWindows = 0x009E4547;
 const DWORD dwIWzGr2DRenderFrame = 0x00777326;
 const DWORD dwA61DF2 = 0x00A61DF2;
-
-const DWORD dw494D07 = 0x00494D07;
-
-const DWORD dwCLoginSendCheckPasswordPacket = 0x005F6952;
-const DWORD dwNukedCLoginSendCheckPasswordPacketReturn = dwCLoginSendCheckPasswordPacket + 0x30F;
-
-const DWORD dw5FDDE3 = 0x005FDDE3;
-const DWORD dw5FDF26 = 0x005FDF26;
-const DWORD dwA54B90 = 0x00A54B90;
-const DWORD dwA54BD0 = 0x00A54BD0;
-const DWORD dwA54EB0 = 0x00A54EB0;
-const DWORD dwA54FB0 = 0x00A54FB0;
-const DWORD dw5F6CFB = 0x005F6CFB;
-const DWORD dwA54BC0 = 0x00A54BC0;
-const DWORD dwCOutPacketConstructor = 0x006EC9CE;
-const DWORD dwZXStringGetBuffer = 0x00414617;
-const DWORD dwCOutPacketEncodeStr = 0x0046F3CF;
-const DWORD dwCOutPacketEncodeBuffer = 0x0046C00C;
-const DWORD dwCOutPacketEncode4 = 0x004065A6;
-const DWORD dwCOutPacketEncode1 = 0x00406549;
-const DWORD dwCClientSocketSendPacket = 0x0049637B;
-const DWORD ZArrayRemoveAll = 0x00428CF1;
-
-const DWORD dw494D2F = 0x00494D2F;
-const DWORD dwNuked494D2FReturn = dw494D2F;
-
-const DWORD dwCClientSocketClearSendReceiveCtx = 0x004969EE;
-const DWORD dw494857 = 0x00494857;
-
-const DWORD dwCClientSocketOnConnect = 0x00494ED1;
 
 __declspec(naked) void FixFullScreen() {
     __asm {
@@ -806,141 +762,6 @@ __declspec(naked) void NukedCWvsAppRun() {
     }
 }
 
-__declspec(naked) void NukedCWvsAppCallUpdate() {
-    __asm {
-            mov eax, dword ptr ds :[0x00AE823A]
-            call dwEH_prolog
-            sub esp, 200h
-            push ebx
-            push esi
-            push edi
-            mov[ebp-204h], ecx
-            jmp short label1
-
-            label1:
-            mov eax,[ebp-204h]
-            cmp dword ptr[eax+1Ch], 0
-            jz short label2
-
-            mov eax,[ebp-204h]
-            mov ecx,[ebp+8]
-            mov[eax+18h], ecx
-            mov eax,[ebp-204h]
-            mov ecx,[ebp+8]
-            mov[eax+44h], ecx
-            mov eax,[ebp-204h]
-            mov ecx,[ebp+8]
-            mov[eax + 48h], ecx
-            mov eax,[ebp - 204h]
-            mov ecx,[ebp + 8]
-            mov[eax + 4Ch], ecx
-            mov eax,[ebp - 204h]
-            mov ecx,[ebp + 8]
-            mov[eax + 50h], ecx
-            mov eax,[ebp - 204h]
-            and dword ptr[eax+1Ch], 0
-
-            label2:
-            mov eax,[ebp-204h]
-            mov ecx,[ebp+8]
-            sub ecx,[eax+18h]
-            test ecx, ecx
-            jle label4
-
-            mov eax, dword ptr ds :[0x00BEDED4]
-            mov[ebp-14h], eax
-            lea ecx,[ebp-18h]
-            call dwZRefCStage
-
-            and dword ptr[ebp-4], 0
-            mov eax,[ebp-14h]
-            mov[ebp-1C0h], eax
-            cmp dword ptr[ebp-1C0h], 0
-            jz short label5
-
-            mov eax,[ebp-1C4h]
-            mov[ebp-208h], eax
-            mov eax,[ebp-14h]
-            mov[ebp-208h], eax
-            mov eax,[ebp-208h]
-            mov eax,[eax]
-            mov ecx,[ebp-208h]
-            call dword ptr[eax]
-
-            label5:
-            call dwCWndManSUpdate
-            mov eax,[ebp-204h]
-            mov eax,[eax+18h]
-            add eax, 1Eh
-            mov ecx,[ebp-204h]
-            mov[ecx+18h], eax
-            mov eax,[ebp-204h]
-            mov ecx,[ebp+8]
-            sub ecx,[eax+18h]
-            test ecx, ecx
-            jle short label6
-
-            cmp dword ptr ds :[0x00BF14EC], 0
-            jnz short label7
-
-            push 80004003h
-            call dwComIssueError
-            label7:
-            mov eax,[ebp-204h]
-            mov eax,[eax+18h]
-            mov[ebp-1D0h], eax
-            mov eax, dword ptr ds :[0x00BF14EC]
-            mov[ebp-1CCh], eax
-            push dword ptr[ebp-1D0h]
-            mov eax,[ebp-1CCh]
-            mov eax,[eax]
-            push dword ptr[ebp-1CCh]
-            call dword ptr[eax+18h]
-
-            mov[ebp-1C8h], eax
-            cmp dword ptr[ebp-1C8h], 0
-            jge short label6
-
-            push 0BD83B0h
-            push dword ptr[ebp-1CCh]
-            push dword ptr[ebp-1C8h]
-            call dwComIssueErrorEx
-            label6:
-            or dword ptr[ebp-4], 0FFFFFFFFh
-            lea ecx,[ebp-18h]
-            call dwZRefCStageDestructor
-            jmp label2
-
-            label4:
-            cmp dword ptr ds :[0x00BF14EC], 0
-            jnz short label9
-            push 80004003h
-            call dwComIssueError
-
-            label9:
-            mov eax, dword ptr ds :[0x00BF14EC]
-            mov[ebp-200h], eax
-            push dword ptr[ebp+8]
-            mov eax,[ebp-200h]
-            mov eax,[eax]
-            push dword ptr[ebp-200h]
-            call dword ptr[eax+18h]
-            mov[ebp-1FCh], eax
-            cmp dword ptr[ebp-1FCh], 0
-            jge short label8
-
-            push 0BD83B0h
-            push dword ptr[ebp-200h]
-            push dword ptr[ebp-1FCh]
-            call dwComIssueErrorEx
-
-            label8:
-            mov ecx, dword ptr ds :[0x00BE78D4]
-            call dwCActionManSweepCache
-            jmp dword ptr[dwNukedCWvsAppCallUpdateReturn]
-    }
-}
-
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
 typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
 
@@ -1040,6 +861,55 @@ INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, ch
     return 1;
 }
 
+// void __thiscall CWvsApp::CallUpdate(CWvsApp *this, int tCurTime)
+typedef VOID(__fastcall *_CWvsApp__CallUpdate_t)(CWvsApp *pThis, PVOID edx, int tCurTime);
+
+_CWvsApp__CallUpdate_t _CWvsApp__CallUpdate;
+
+CStage *get_stage() {
+    return reinterpret_cast<CStage *>(*(void **) 0x00BEDED4);
+}
+
+IWzGr2D* get_gr() {
+    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) 0x00BF14EC);
+}
+
+VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
+    if (pThis->m_bFirstUpdate) {
+        pThis->m_tUpdateTime = tCurTime;
+        pThis->m_tLastServerIPCheck = tCurTime;
+        pThis->m_tLastServerIPCheck2 = tCurTime;
+        pThis->m_tLastGGHookingAPICheck = tCurTime;
+        pThis->m_tLastSecurityCheck = tCurTime;
+        pThis->m_bFirstUpdate = 0;
+    }
+
+    while (tCurTime - pThis->m_tUpdateTime > 0) {
+        CStage* stage = get_stage();
+        if (stage) {
+            stage->Update();
+        }
+
+        CWndMan::s_Update();
+        pThis->m_tUpdateTime += 30;
+        if (tCurTime - pThis->m_tUpdateTime > 0) {
+            auto gr = get_gr();
+            auto hr = gr->UpdateCurrentTime(pThis->m_tUpdateTime);
+            if (FAILED(hr)) {
+                Log("Some sort of com error");
+                return;
+            }
+        }
+    }
+    auto gr = get_gr();
+    auto hr = gr->UpdateCurrentTime(tCurTime);
+    if (FAILED(hr)) {
+        Log("Some sort of com error");
+        return;
+    }
+    CActionMan::GetInstance()->SweepCache();
+}
+
 // main thread
 VOID __stdcall MainProc() {
     // Window Mode Magic
@@ -1052,12 +922,12 @@ VOID __stdcall MainProc() {
     MemEdit::CodeCave(NukedCWvsAppSetup, dwCWvsAppSetUp, 5);
     MemEdit::CodeCave(NukedCWvsAppInitializeInput, dwCWvsAppInitializeInput, 5);
     MemEdit::CodeCave(NukedCWvsAppRun, dwCWvsAppRun, 5);
-    MemEdit::CodeCave(NukedCWvsAppCallUpdate, dwCWvsAppCallUpdate, 5);
 
     INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
     INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, 0x00494D2F);
     INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
                   CLogin__SendCheckPasswordPacket_Hook, 0x005F6952);
+    INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x009F84D0);
 }
 
 // dll entry point

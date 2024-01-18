@@ -8,7 +8,6 @@
 #include "ConfigJoypad.h"
 #include "FunckeyMapped.h"
 
-
 class CConfig {
 public:
     virtual ~CConfig() = default;

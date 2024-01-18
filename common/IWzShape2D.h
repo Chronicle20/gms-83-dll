@@ -1,5 +1,4 @@
 #pragma once
-#include "IWzSerialize.h"
 
 /*
 00000000 IWzShape2D      struc; (sizeof = 0x4, align = 0x4, copyof_1419)

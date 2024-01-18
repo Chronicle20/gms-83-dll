@@ -13,7 +13,7 @@
 0000000C baseclass_c     ZRefCounted ?
 00000018 CStage          ends
 */
-class CStage : IGObj, IUIMsgHandler, INetMsgHandler, public ZRefCounted {
+class CStage : public IGObj, IUIMsgHandler, INetMsgHandler, public ZRefCounted {
 public:
-    virtual ~CStage() = default;
+    virtual void Update();
 };

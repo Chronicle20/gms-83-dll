@@ -21,6 +21,6 @@ class IDraggable : ZRefCounted
     int Unknown2;
     int Unknown3;
 
-    virtual int OnDoubleClicked(IDraggable* this) = 0;
-    virtual int OnDropped(IDraggable* this, IUIMsgHandler* pFrom, IUIMsgHandler* pTo, int rx, int ry) = 0;
+    virtual int OnDoubleClicked(IDraggable*) = 0;
+    virtual int OnDropped(IDraggable*, IUIMsgHandler* pFrom, IUIMsgHandler* pTo, int rx, int ry) = 0;
 };

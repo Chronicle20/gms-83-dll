@@ -2,5 +2,5 @@
 
 class INetMsgHandler {
 public:
-    virtual ~INetMsgHandler() = default;
+    virtual void OnPacket(INetMsgHandler *, int, CInPacket *) = 0;
 };

@@ -10,7 +10,6 @@
 #include "IWzProperty.h"
 #include "IWzGr2DLayer.h"
 #include "IWzCanvas.h"
-#include <comdef.h>
 
 /*
 00000000 CMapLoadable    struc; (sizeof = 0x148, align = 0x4, copyof_3709)
@@ -46,7 +45,7 @@
 00000144 m_tPlayHoldedBGM dd ?
 00000148 CMapLoadable    ends
 */
-class CMapLoadable : CStage {
+class CMapLoadable : public CStage {
 public:
     /*
     00000000 CMapLoadable::OBSTACLE struc; (sizeof = 0x38, align = 0x4, copyof_3663)

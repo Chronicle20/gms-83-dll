@@ -1,5 +1,4 @@
 #pragma once
-#include "IWzShape2D.h"
 
 /*
 00000000 IWzVector2D     struc ; (sizeof=0x4, align=0x4, copyof_1420)

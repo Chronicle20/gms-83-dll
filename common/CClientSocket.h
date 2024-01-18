@@ -1,9 +1,5 @@
 #pragma once
 
-// Exclude rarely-used stuff from Windows headers
-// Important to define this before Windows.h is included in a project because of linker issues with the WinSock2 lib
-#define WIN32_LEAN_AND_MEAN
-
 #include "CInPacket.h"
 #include "ZList.h"
 #include "ZSocketBase.h"
