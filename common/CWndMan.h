@@ -8,4 +8,9 @@ public:
         return ((CWnd **(_fastcall * )())
         0x009E47C3)();
     }
+
+    static void RedrawInvalidatedWindows() {
+        ((VOID **(_fastcall * )())
+        0x009E4547)();
+    }
 };

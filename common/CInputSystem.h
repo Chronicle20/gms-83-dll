@@ -14,4 +14,10 @@ public:
     }
 
     void Init(HWND__ *, void **);
+
+    void UpdateDevice(int nDeviceIndex);
+
+    int GetISMessage(ISMSG *pISMsg);
+
+    int GenerateAutoKeyDown(ISMSG *pISMsg);
 };

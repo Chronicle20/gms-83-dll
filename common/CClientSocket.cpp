@@ -11,3 +11,8 @@ void CClientSocket::SendPacket(COutPacket *oPacket) {
     ((VOID(_fastcall * )(CClientSocket * , PVOID, COutPacket*))
     0x0049637B)(this, NULL, oPacket);
 }
+
+void CClientSocket::ManipulatePacket() {
+    ((VOID(_fastcall * )(CClientSocket * , PVOID))
+    0x0049651D)(this, NULL);
+}

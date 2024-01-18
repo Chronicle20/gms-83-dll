@@ -41,4 +41,6 @@ public:
     static CClientSocket *GetInstance();
 
     void SendPacket(COutPacket *oPacket);
+
+    void ManipulatePacket();
 };

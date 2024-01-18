@@ -19,8 +19,8 @@ public:
     int m_bAutoConnect;
     int dummy11;
     int dummy12;
-    int dummy13;
-    int dummy14;
+    HRESULT m_hrZExceptionCode;
+    HRESULT m_hrComErrorCode;
     int dummy15;
     int dummy16;
     int m_tLastServerIPCheck;
@@ -32,4 +32,6 @@ public:
     int dummy23;
 
     static CWvsApp* GetInstance();
+
+    void ISMsgProc(unsigned int message, unsigned int wParam, int lParam);
 };

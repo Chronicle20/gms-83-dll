@@ -82,24 +82,6 @@ const DWORD dwCActionManInit = 0x00406ABD;
 const DWORD dwCAnimationDisplayerCreateInstance = 0x009F9DFC;
 const DWORD dwCMapleTVManCreateInstance = 0x009F9F87;
 
-const DWORD dwZRefCStage = 0x00496B68;
-const DWORD dwCWndManSUpdate = 0x009E47C3;
-const DWORD dwComIssueError = 0x00A5FDE4;
-const DWORD dwComIssueErrorEx = 0x00A5FDF2;
-const DWORD dwZRefCStageDestructor = 0x00496B85;
-const DWORD dwCActionManSweepCache = 0x00411BBB;
-
-const DWORD dwCClientSocketManipulatePacket = 0x0049651D;
-const DWORD dwCInputSystemUpdateDevice = 0x0059A2E9;
-const DWORD dwCInputSystemGetISMessage = 0x0059A306;
-const DWORD dwCWvsAppISMsgProc = 0x009F97B7;
-const DWORD dwCPatchExceptionCPatchException = 0x0051E834;
-const DWORD dwCInputSystemGenerateAutoKeyDown = 0x0059B2D2;
-const DWORD dwIWzGr2DGetnextRenderTime = 0x009F6990;
-const DWORD dwCWndManRedrawInvalidatedWindows = 0x009E4547;
-const DWORD dwIWzGr2DRenderFrame = 0x00777326;
-const DWORD dwA61DF2 = 0x00A61DF2;
-
 __declspec(naked) void FixFullScreen() {
     __asm {
             mov eax, 0
@@ -370,349 +352,6 @@ __declspec(naked) void NukedCWvsAppSetup() {
     }
 }
 
-__declspec(naked) void NukedCWvsAppRun() {
-    __asm {
-            mov eax, dword ptr[0x00AE7E2C]
-            call dwEH_prolog
-
-            sub esp, 0D3Ch
-            push ebx
-            push esi
-            push edi
-            mov[ebp-0D30h], ecx
-            and dword ptr[ebp-9Ch], 0
-
-            push 6
-            pop ecx
-            xor eax, eax
-            lea edi,[ebp-98h]
-            rep stosd
-            and dword ptr[ebp-28h], 0
-            xor eax, eax
-            lea edi,[ebp-24h]
-            stosd
-            stosd
-            xor eax, eax
-            cmp dword ptr ds :[0x00BE7914], 0
-            setnz al
-            test eax, eax
-            jz short label9F5CA3
-            mov ecx, dword ptr ds :[0x00BE7914]
-            call dwCClientSocketManipulatePacket
-
-            label9F5CA3:
-            jmp label9F5FDB
-
-            label9F5FDB:
-            and dword ptr[ebp-2Ch], 0
-
-            label9F5FDF:
-            push 0FFh
-            push 0
-            push 0
-            mov eax,[ebp-0D30h]
-            add eax, 54h
-            push eax
-            push 3
-            call dword ptr ds :[0x00BF04EC]
-
-            mov[ebp-0A8h], eax
-            mov eax,[ebp-0A8h]
-            mov[ebp-0D34h], eax
-            cmp dword ptr[ebp-0D34h], 0
-            jb label9F62BB
-
-            cmp dword ptr[ebp-0D34h], 2
-            jbe label9F6030
-
-            cmp dword ptr[ebp-0D34h], 3
-            jz short label9F6079
-
-            jmp label9F62BB
-
-            label9F6030:
-            push dword ptr[ebp-0A8h]
-            mov ecx, dword ptr ds :[0x00BEC33C]
-            call dwCInputSystemUpdateDevice
-
-            label9F6041 :
-            lea eax,[ebp-28h]
-            push eax
-            mov ecx, dword ptr ds :[0x00BEC33C]
-            call dwCInputSystemGetISMessage
-            test eax, eax
-            jz short label9F6074
-
-            push dword ptr[ebp-20h]
-            push dword ptr[ebp-24h]
-            push dword ptr[ebp-28h]
-            mov ecx,[ebp-0D30h]
-            call dwCWvsAppISMsgProc
-
-            mov eax,[ebp+8]
-            cmp dword ptr[eax], 0
-            jz short label9F6072
-            jmp label9F6074
-
-            label9F6072 :
-            jmp short label9F6041
-
-            label9F6074 :
-            jmp label9F694D
-
-            label9F6079:
-            push 1
-            push 0
-            push 0
-            push 0
-            lea eax,[ebp-9Ch]
-            push eax
-            call dword ptr ds :[0x00BF04E8]
-            test eax, eax
-            jz label9F62B6
-            lea eax,[ebp-9Ch]
-            push eax
-            call dword ptr ds :[0x00BF0430]
-            lea eax,[ebp-9Ch]
-            push eax
-            call dword ptr ds :[0x00BF042C]
-            mov eax,[ebp-0D30h]
-            cmp dword ptr[eax+38h], 0
-            jnz short label9F60C5
-            and dword ptr[ebp-0D04h], 0
-            jmp short label9F60F2
-
-            label9F60C5:
-            mov eax,[ebp-0D30h]
-            mov eax,[eax+38h]
-            mov[ebp-0ACh], eax
-            mov eax,[ebp-0D30h]
-            and dword ptr[eax+38h], 0
-            mov eax,[ebp-0D30h]
-            and dword ptr[eax+34h], 0
-            mov dword ptr[ebp-0D04h], 1
-
-            label9F60F2:
-            cmp dword ptr[ebp-0D04h], 0
-            jz short label9F6108
-            push 0
-            push dword ptr[ebp-0ACh]
-            call dwComIssueError
-
-            label9F6108:
-            mov eax,[ebp-0D30h]
-            cmp dword ptr[eax+34h], 0
-            jnz short label9F611D
-            and dword ptr[ebp-0D08h], 0
-            jmp short label9F614A
-
-            label9F611D:
-            mov eax,[ebp-0D30h]
-            mov eax,[eax+34h]
-            mov[ebp-0ACh], eax
-            mov eax,[ebp-0D30h]
-            and dword ptr[eax+38h], 0
-            mov eax,[ebp-0D30h]
-            and dword ptr[eax+34h], 0
-            mov dword ptr[ebp-0D08h], 1
-
-            label9F614A:
-            cmp dword ptr[ebp-0D08h], 0
-            jz label9F629E
-
-            cmp dword ptr[ebp-0ACh], 0x20000000
-
-            jnz short label9F61B1
-
-            mov eax,[ebp-0D30h]
-            push dword ptr[eax+40h]
-            lea ecx,[ebp-0CE8h]
-            call dwCPatchExceptionCPatchException
-
-            mov[ebp-0D38h], eax
-            mov eax,[ebp-0D38h]
-            mov[ebp-0D3Ch], eax
-
-            and dword ptr[ebp-4], 0
-            mov esi,[ebp-0D3Ch]
-            mov ecx, 142h
-            lea edi,[ebp-7E0h]
-            rep movsd
-            push 0B52FC8h
-            lea eax,[ebp-7E0h]
-            push eax
-            call dwCxxThrowException
-
-            label9F61B1:
-            cmp dword ptr[ebp-0ACh], 0x21000000
-
-            jl short label9F6213
-
-            cmp dword ptr[ebp-0ACh], 0x21000006
-
-            jg short label9F6213
-
-            mov eax,[ebp-0ACh]
-            mov[ebp-0D0Ch], eax
-            mov eax,[ebp-0D0Ch]
-            mov[ebp-0CF0h], eax
-            lea eax,[ebp-0CF0h]
-            mov[ebp-0D40h], eax
-            mov dword ptr[ebp-4], 1
-            mov eax,[ebp-0D40h]
-            mov eax,[eax]
-            mov[ebp-0CECh], eax
-            push 11831384 //AVCDisconnectException
-            lea eax,[ebp-0CECh]
-            push eax
-            call dwCxxThrowException
-
-            label9F6213:
-            cmp dword ptr[ebp-0ACh], 0x22000000
-            jl short label9F6275
-
-            cmp dword ptr[ebp-0ACh], 0x2200000D
-
-            jg short label9F6275
-
-            mov eax,[ebp - 0ACh]
-            mov[ebp - 0D10h], eax
-            mov eax,[ebp - 0D10h]
-            mov[ebp - 0CF8h], eax
-            lea eax,[ebp - 0CF8h]
-            mov[ebp - 0D44h], eax
-            mov dword ptr[ebp - 4], 2
-            mov eax,[ebp - 0D44h]
-            mov eax,[eax]
-            mov[ebp - 0CF4h], eax
-            push 0B44760h
-            lea eax,[ebp - 0CF4h]
-            push eax
-            call dwCxxThrowException
-
-            label9F6275:
-            mov eax,[ebp - 0ACh]
-            mov[ebp - 0D00h], eax
-            mov eax,[ebp - 0D00h]
-            mov[ebp - 0CFCh], eax
-        //push offset AVCDisconnectException
-            push    0B44EE0h
-            lea eax,[ebp - 0CFCh]
-            push eax
-            call dwCxxThrowException
-
-            label9F629E:
-            mov eax,[ebp+8]
-            cmp dword ptr[eax], 0
-            jnz short label9F62AF
-            cmp dword ptr[ebp-98h], 12h
-            jnz short label9F62B1
-
-            label9F62AF:
-            jmp short label9F62B6
-
-            label9F62B1:
-            jmp label9F6079
-
-            label9F62B6:
-            jmp label9F694D
-
-            label9F62BB:
-            lea eax,[ebp-28h]
-            push eax
-            mov ecx, dword ptr ds :[0x00BEC33C]
-            call dwCInputSystemGenerateAutoKeyDown
-            test eax, eax
-            jz short label9F62E2
-
-            push dword ptr[ebp-20h]
-            push dword ptr[ebp-24h]
-            push dword ptr[ebp-28h]
-            mov ecx,[ebp-0D30h]
-            call dwCWvsAppISMsgProc
-
-            label9F62E2:
-            mov ecx, dword ptr ds :[0x00BEC3A8]
-            nop
-            nop
-            nop
-            nop
-            nop
-            xor eax, eax
-            test eax, eax
-            jz short label9F62FD
-            push 80004003h
-            call dwComIssueError
-
-            label9F62FD:
-            xor eax, eax
-            cmp dword ptr ds :[0x00BF14EC], 0
-            setz al
-            movzx eax, al
-            neg eax
-            sbb eax, eax
-            inc eax
-            movzx eax, al
-            test eax, eax
-            jz label9F6945
-            jmp short label9F632E
-
-            label9F632E:
-            cmp dword ptr ds :[0x00BF14EC], 0
-            jnz short label9F6341
-            push 80004003h
-            call dwComIssueError
-
-            label9F6341:
-            mov ecx, dword ptr ds :[0x00BF14EC]
-            call dwIWzGr2DGetnextRenderTime
-            mov[ebp-0B0h], eax
-            push dword ptr[ebp-0B0h]
-            mov ecx,[ebp-0D30h]
-            call dwCWvsAppCallUpdate
-            call dwCWndManRedrawInvalidatedWindows
-            cmp dword ptr ds :[0x00BF14EC], 0
-            jnz short label9F637B
-            push 80004003h
-            call dwComIssueError
-
-            label9F637B:
-            mov ecx, dword ptr ds :[0x00BF14EC]
-            call dwIWzGr2DRenderFrame
-            jmp label9F6945
-
-            label9F6945:
-            push 1
-            call dword ptr ds :[0x00BF02F4]
-
-            label9F694D:
-            mov eax,[ebp+8]
-            cmp dword ptr[eax], 0
-            jnz short label9F695E
-
-            cmp dword ptr[ebp-98h], 12h
-            jnz short label9F6960
-
-            label9F695E:
-            jmp short label9F6965
-
-            label9F6960:
-            jmp label9F5FDF
-
-            label9F6965:
-            push dword ptr[ebp-34h]
-            call dwA61DF2
-            pop ecx
-            cmp dword ptr[ebp-98h], 12h
-            jnz short label9F697
-            push 0
-            call dword ptr ds :[0x00BF041C]
-
-            label9F697:
-            jmp dword ptr[dwNukedCWvsAppRunReturn]
-    }
-}
-
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
 typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
 
@@ -821,7 +460,7 @@ CStage *get_stage() {
     return reinterpret_cast<CStage *>(*(void **) 0x00BEDED4);
 }
 
-IWzGr2D* get_gr() {
+IWzGr2D *get_gr() {
     return reinterpret_cast<IWzGr2D *>(*(uint32_t **) 0x00BF14EC);
 }
 
@@ -836,7 +475,7 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
     }
 
     while (tCurTime - pThis->m_tUpdateTime > 0) {
-        CStage* stage = get_stage();
+        CStage *stage = get_stage();
         if (stage) {
             stage->Update();
         }
@@ -863,15 +502,98 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
 
 // void __stdcall TSingleton<CInputSystem>::CreateInstance()
 typedef VOID(__stdcall *_TSingleton_CInputSystem__CreateInstance_t)();
+
 _TSingleton_CInputSystem__CreateInstance_t _TSingleton_CInputSystem__CreateInstance = reinterpret_cast<_TSingleton_CInputSystem__CreateInstance_t>(0x009F9A6A);
 
 // void __thiscall CWvsApp::InitializeInput(CWvsApp *this)
 typedef VOID(__fastcall *_CWvsApp__InitializeInput_t)(CWvsApp *pThis, PVOID edx);
+
 _CWvsApp__InitializeInput_t _CWvsApp__InitializeInput;
 
 VOID __fastcall CWvsApp__InitializeInput_Hook(CWvsApp *pThis, PVOID edx) {
     _TSingleton_CInputSystem__CreateInstance();
     CInputSystem::GetInstance()->Init(pThis->m_hWnd, pThis->m_ahInput);
+}
+
+// void __thiscall CWvsApp::Run(CWvsApp *this, int *pbTerminate)
+typedef VOID(__stdcall *_CWvsApp__Run_t)(CWvsApp *pThis, int *pbTerminate);
+
+_CWvsApp__Run_t _CWvsApp__Run;
+
+// void CWndMan::RedrawInvalidatedWindows()
+
+
+VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
+    tagMSG msg{};
+    ISMSG isMsg{};
+    memset(&msg, 0, sizeof(msg));
+    memset(&isMsg, 0, sizeof(isMsg));
+    if (CClientSocket::GetInstance()) {
+        CClientSocket::GetInstance()->ManipulatePacket();
+    }
+    do {
+        auto dwRet = MsgWaitForMultipleObjects(3u, pThis->m_ahInput, 0, 0, 0xFFu);
+        if (dwRet <= 2) {
+            CInputSystem::GetInstance()->UpdateDevice(dwRet);
+            do {
+                if (!CInputSystem::GetInstance()->GetISMessage(&isMsg)) {
+                    break;
+                }
+                pThis->ISMsgProc(isMsg.message, isMsg.wParam, isMsg.lParam);
+            } while (!*pbTerminate);
+        } else if (dwRet == 3) {
+            do {
+                if ( !PeekMessageA(&msg, 0, 0, 0, 1u) ) {
+                    break;
+                }
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
+                int isError = 0;
+                int m_hrComErrorCode = 0;
+                if (pThis->m_hrComErrorCode) {
+                    m_hrComErrorCode = pThis->m_hrComErrorCode;
+                    pThis->m_hrComErrorCode = 0;
+                    pThis->m_hrZExceptionCode = 0;
+                    isError = 1;
+                }
+                if (isError) {
+                    Log("Do proper _com_raise_error");
+                    return;
+                }
+                if (pThis->m_hrZExceptionCode) {
+                    m_hrComErrorCode = pThis->m_hrZExceptionCode;
+                    pThis->m_hrComErrorCode = 0;
+                    pThis->m_hrZExceptionCode = 0;
+                    isError = 1;
+                }
+                if (isError) {
+                    Log("Do proper _com_raise_error");
+                    return;
+                }
+            } while ( !*pbTerminate && msg.message != 18 );
+        } else {
+            if (CInputSystem::GetInstance()->GenerateAutoKeyDown(&isMsg)) {
+                pThis->ISMsgProc(isMsg.message, isMsg.wParam, isMsg.lParam);
+            }
+            auto tCurTime = 0;
+            auto hr = get_gr()->GetnextRenderTime(&tCurTime);
+            if (FAILED(hr)) {
+                Log("Do proper _com_raise_errorex");
+                return;
+            }
+            CWvsApp__CallUpdate_Hook(pThis, edx, tCurTime);
+            CWndMan::RedrawInvalidatedWindows();
+            hr = get_gr()->RenderFrame();
+            if (FAILED(hr)) {
+                Log("Do proper _com_raise_errorex");
+                return;
+            }
+            Sleep(1u);
+        }
+    } while (!*pbTerminate && msg.message != 18);
+    if (msg.message == 18) {
+        PostQuitMessage(0);
+    }
 }
 
 // main thread
@@ -884,7 +606,6 @@ VOID __stdcall MainProc() {
 
     // Nuke CWvsApp::Setup
     MemEdit::CodeCave(NukedCWvsAppSetup, dwCWvsAppSetUp, 5);
-    MemEdit::CodeCave(NukedCWvsAppRun, dwCWvsAppRun, 5);
 
     INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
     INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, 0x00494D2F);
@@ -892,6 +613,7 @@ VOID __stdcall MainProc() {
                   CLogin__SendCheckPasswordPacket_Hook, 0x005F6952);
     INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x009F84D0);
     INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x009F7CE1);
+    INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, 0x009F5C50);
 }
 
 // dll entry point
