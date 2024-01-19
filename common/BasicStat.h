@@ -1,0 +1,22 @@
+struct BasicStat {
+    int _ZtlSecureTear_nGender[2];
+    unsigned int _ZtlSecureTear_nGender_CS;
+    int _ZtlSecureTear_nLevel[2];
+    unsigned int _ZtlSecureTear_nLevel_CS;
+    int _ZtlSecureTear_nJob[2];
+    unsigned int _ZtlSecureTear_nJob_CS;
+    int _ZtlSecureTear_nSTR[2];
+    unsigned int _ZtlSecureTear_nSTR_CS;
+    int _ZtlSecureTear_nDEX[2];
+    unsigned int _ZtlSecureTear_nDEX_CS;
+    int _ZtlSecureTear_nINT[2];
+    unsigned int _ZtlSecureTear_nINT_CS;
+    int _ZtlSecureTear_nLUK[2];
+    unsigned int _ZtlSecureTear_nLUK_CS;
+    int _ZtlSecureTear_nPOP[2];
+    unsigned int _ZtlSecureTear_nPOP_CS;
+    int _ZtlSecureTear_nMHP[2];
+    unsigned int _ZtlSecureTear_nMHP_CS;
+    int _ZtlSecureTear_nMMP[2];
+    unsigned int _ZtlSecureTear_nMMP_CS;
+};

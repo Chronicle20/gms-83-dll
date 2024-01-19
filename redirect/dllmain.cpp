@@ -1,3 +1,12 @@
+/*
+ This file is part of GMS-83-DLL.
+
+ GMS-83-DLL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+ GMS-83-DLL is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
+ */
 
 // Exclude rarely-used stuff from Windows headers
 // Important to define this before Windows.h is included in a project because of linker issues with the WinSock2 lib
@@ -12,12 +21,14 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <sstream>
 
 SOCKET m_GameSock = INVALID_SOCKET;
 WSPPROC_TABLE m_ProcTable = {nullptr};
 
 std::vector<std::string> originalIps;
 std::string redirectIp;
+std::string redirectPort;
 
 std::map<std::string, std::string> parseINI(const std::string &filePath) {
     std::map<std::string, std::string> iniData;
@@ -67,6 +78,20 @@ INT WSPAPI WSPConnect_Hook(SOCKET s, const struct sockaddr *name, int namelen, L
         }
     }
 
+    u_short nPort = ntohs(service->sin_port);
+    u_short defaultPort = 8484;
+    if (nPort == defaultPort) {
+        std::istringstream iss(redirectPort);
+        int intValue;
+        if (iss >> intValue) {
+            Log("Port Replaced: %d -> %d", defaultPort, intValue);
+            service->sin_port = htons(intValue);
+            m_GameSock = s;
+        } else {
+            Log("Invalid redirectPort");
+        }
+    }
+
     return m_ProcTable.lpWSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS,
                                     lpGQOS, lpErrno);
 }
@@ -93,8 +118,19 @@ INT WSPAPI WSPGetPeerName_Hook(SOCKET s, struct sockaddr *name, LPINT namelen, L
     }
 
     service->sin_addr.S_un.S_addr = inet_addr(redirectIp.c_str());
+    Log("WSPGetPeerName => IP Replaced: %s -> %s", redirectIp.c_str(), szAddr);
 
-    Log("WSPGetPeerName => IP Replaced: %s -> %s on port %d", redirectIp.c_str(), szAddr, nPort);
+    u_short defaultPort = 8484;
+    if (nPort == defaultPort) {
+        std::istringstream iss(redirectPort);
+        int intValue;
+        if (iss >> intValue) {
+            Log("WSPGetPeerName => Port Replaced: %d -> %d", defaultPort, intValue);
+            service->sin_port = htons(intValue);
+        } else {
+            Log("WSPGetPeerName => Invalid redirectPort");
+        }
+    }
     return nRet;
 }
 
@@ -138,6 +174,7 @@ VOID __stdcall MainProc() {
     originalIps.push_back(iniData["Main.OriginalIP2"]);
     originalIps.push_back(iniData["Main.OriginalIP3"]);
     redirectIp = iniData["Main.RedirectIP"];
+    redirectPort = iniData["Main.RedirectPort"];
 
     INITWINHOOK("MSWSOCK", "WSPStartup", WSPStartup_Original, WSPStartup_t, WSPStartup_Hook);
 }
