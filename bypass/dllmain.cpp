@@ -20,10 +20,10 @@ const DWORD dwCSecurityClientCreateInstance = 0x009F9F42;
 const DWORD dwCSecurityClientInitModule = 0x00A4BB2B;
 const DWORD dwCSecurityClientStartModule = 0x00A4BD91;
 
-const DWORD dwCWvsAppInitializeGr2D = 0x009F7A3B;
+const DWORD dwCWvsAppInitializeGr2D = 0x00A8B61A;
 
-const DWORD dwFixFullScreen = dwCWvsAppInitializeGr2D + 0x60; // 0x009F7A9B
-const DWORD dwFixFullScreenReturn = dwCWvsAppInitializeGr2D + 0x65;
+const DWORD dwFixFullScreen = dwCWvsAppInitializeGr2D + 0x94; // 0x009F7A9B
+const DWORD dwFixFullScreenReturn = dwCWvsAppInitializeGr2D + 0x99;
 
 const DWORD dwCWvsAppSetUp = 0x009F5239;
 const DWORD dwNukedCWvsAppSetupReturn = dwCWvsAppSetUp + 0xA08;
@@ -1165,21 +1165,21 @@ VOID __stdcall MainProc()
     // Window Mode Magic
     MemEdit::CodeCave(FixFullScreen, dwFixFullScreen, 5);
 
-    // Noop Call to CSecurityClient::OnPacket
-    MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 12);
-
-    // Nuke CWvsApp::Setup
-    MemEdit::CodeCave(NukedCWvsAppSetup, dwCWvsAppSetUp, 5);
-    MemEdit::CodeCave(NukedCWvsAppInitializeInput, dwCWvsAppInitializeInput, 5);
-    MemEdit::CodeCave(NukedCWvsAppRun, dwCWvsAppRun, 5);
-    MemEdit::CodeCave(NukedCWvsAppCallUpdate, dwCWvsAppCallUpdate, 5);
-    MemEdit::CodeCave(NukedCClientSocketConnect, dwCClientSocketConnect, 5);
-    MemEdit::CodeCave(NukedCLoginSendCheckPasswordPacket, dwCLoginSendCheckPasswordPacket, 5);
-    MemEdit::CodeCave(NukedCClientSocketConnect2, dw494D2F, 6);
-
-    // CLogin::SendCheckPasswordPacket auth patches
-    MemEdit::WriteBytes(dwSendCheckPasswordPacketFirstJump, new BYTE[6]{0xE9, 0xC1, 0x01, 0x00, 0x00, 0x90}, 6);
-    MemEdit::WriteBytes(dwSendCheckPasswordPacketSecondChange, new BYTE[7]{0xFF, 0x75, 0x0C, 0x90, 0x90, 0x90, 0x90}, 7);
+//    // Noop Call to CSecurityClient::OnPacket
+//    MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 12);
+//
+//    // Nuke CWvsApp::Setup
+//    MemEdit::CodeCave(NukedCWvsAppSetup, dwCWvsAppSetUp, 5);
+//    MemEdit::CodeCave(NukedCWvsAppInitializeInput, dwCWvsAppInitializeInput, 5);
+//    MemEdit::CodeCave(NukedCWvsAppRun, dwCWvsAppRun, 5);
+//    MemEdit::CodeCave(NukedCWvsAppCallUpdate, dwCWvsAppCallUpdate, 5);
+//    MemEdit::CodeCave(NukedCClientSocketConnect, dwCClientSocketConnect, 5);
+//    MemEdit::CodeCave(NukedCLoginSendCheckPasswordPacket, dwCLoginSendCheckPasswordPacket, 5);
+//    MemEdit::CodeCave(NukedCClientSocketConnect2, dw494D2F, 6);
+//
+//    // CLogin::SendCheckPasswordPacket auth patches
+//    MemEdit::WriteBytes(dwSendCheckPasswordPacketFirstJump, new BYTE[6]{0xE9, 0xC1, 0x01, 0x00, 0x00, 0x90}, 6);
+//    MemEdit::WriteBytes(dwSendCheckPasswordPacketSecondChange, new BYTE[7]{0xFF, 0x75, 0x0C, 0x90, 0x90, 0x90, 0x90}, 7);
 }
 
 // dll entry point
