@@ -35,6 +35,10 @@ Removes the display of the MapleStory patcher window on launch.
 ### redirect
 Redirect IP the game uses for socket connections. Provided configuration produces a "localhost".
 
+### super-tubi
+Removes cooldown imposed by the client when performing actions simultaneously.
+ex. Not being able to attack while your pet is looting.
+
 ## Notes
 
 - I use CLion with a VisualStudio(2022 x86) Toolchain. Other IDEs are possible. 
