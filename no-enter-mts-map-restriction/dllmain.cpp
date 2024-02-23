@@ -11,7 +11,7 @@
 #include <Windows.h>
 #include <memedit.h>
 
-const DWORD dwSendMigrateToITCRequest = 0x00A12522;
+const DWORD dwSendMigrateToITCRequest = 0x00AA7F49;
 
 // main thread
 VOID __stdcall MainProc() {

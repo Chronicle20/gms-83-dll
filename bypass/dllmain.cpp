@@ -11,18 +11,14 @@
 
 #include <memedit.h>
 #include <timeapi.h>
+#include <WS2tcpip.h>
 #include "logger.h"
 #include "hooker.h"
 
-const DWORD dwCClientSocketProcessPacket = 0x004965F1;
-const DWORD dwCSecurityClientOnPacketCall = dwCClientSocketProcessPacket + 0x7F;
-
-const DWORD dwCSecurityClientCreateInstance = 0x009F9F42;
-const DWORD dwCSecurityClientInitModule = 0x00A4BB2B;
-const DWORD dwCSecurityClientStartModule = 0x00A4BD91;
+const DWORD dwCClientSocketProcessPacket = 0x004A8622;
+const DWORD dwCSecurityClientOnPacketCall = dwCClientSocketProcessPacket + 0x93;
 
 const DWORD dwCWvsAppInitializeGr2D = 0x00A8B61A;
-
 const DWORD dwFixFullScreen = dwCWvsAppInitializeGr2D + 0x94; // 0x009F7A9B
 const DWORD dwFixFullScreenReturn = dwCWvsAppInitializeGr2D + 0x99;
 
@@ -36,30 +32,224 @@ __declspec(naked) void FixFullScreen() {
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
 typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
 
-_CClientSocket__Connect_addr_t _CClient__Connect_addr;
+_CClientSocket__Connect_addr_t _CClientSocket__Connect_addr;
 
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)
 typedef VOID(__fastcall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, PVOID edx,
                                                         CClientSocket::CONNECTCONTEXT *ctx);
 
-_CClientSocket__Connect_ctx_t _CClient__Connect_ctx;
+_CClientSocket__Connect_ctx_t _CClientSocket__Connect_ctx;
 
 // void __thiscall CClientSocket::ClearSendReceiveCtx(CClientSocket *this)
 typedef VOID(__fastcall *_CClientSocket__ClearSendReceiveCtx_t)(CClientSocket *pThis, PVOID edx);
 
-_CClientSocket__ClearSendReceiveCtx_t _CClientSocket__ClearSendReceiveCtx = reinterpret_cast<_CClientSocket__ClearSendReceiveCtx_t>(0x004969EE);
+_CClientSocket__ClearSendReceiveCtx_t _CClientSocket__ClearSendReceiveCtx = reinterpret_cast<_CClientSocket__ClearSendReceiveCtx_t>(0x004A8A51);
 
 // void __thiscall ZSocketBase::CloseSocket(ZSocketBase *this)
 typedef VOID(__fastcall *_ZSocketBase__CloseSocket_t)(ZSocketBase *pThis, PVOID edx);
 
-_ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(0x00494857);
+_ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(0x004A67C5);
 
 // int __thiscall CClientSocket::OnConnect(CClientSocket *this, int bSuccess)
 typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
 
-_CClientSocket__OnConnect_t _CClientSocket__OnConnect = reinterpret_cast<_CClientSocket__OnConnect_t>(0x00494ED1);
+_CClientSocket__OnConnect_t _CClientSocket__OnConnect;
 
-VOID __fastcall CClient__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr) {
+VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
+
+typedef VOID(__fastcall *_ZRef_ZSocketBuffer__Destructor_t)(ZRef<ZSocketBuffer> *pThis, PVOID edx, int a1);
+
+_ZRef_ZSocketBuffer__Destructor_t _ZRef_ZSocketBuffer__Destructor = reinterpret_cast<_ZRef_ZSocketBuffer__Destructor_t>(0x004A8C8D);
+
+INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, int bSuccess) {
+    Log("CClientSocket::OnConnect(CClientSocket *this, int bSuccess)");
+    if (!pThis->m_ctxConnect.lAddr.GetCount()) {
+        Log("CClientSocket::GetCount() 0");
+        return 0;
+    }
+    if (!bSuccess) {
+        if (!pThis->m_ctxConnect.posList) {
+            pThis->Close();
+            if (pThis->m_ctxConnect.bLogin) {
+                // some login specific exception.
+                Log("CClientSocket::OnConnect 570425345");
+                return 0;
+            }
+            // some other specific exception.
+            Log("CClientSocket::OnConnect 553648129");
+            return 0;
+        }
+        Log("CClientSocket::OnConnect CClientSocket__Connect_Addr_Hook");
+        //TODO do i really care to do the loadbalancing logic?
+        CClientSocket__Connect_Addr_Hook(pThis, edx, pThis->m_ctxConnect.lAddr.GetHeadPosition());
+        return 0;
+    }
+
+    Log("CClientSocket::OnConnect ZSocketBuffer::Alloc");
+    int BUFFER_SIZE = 1460;
+    ZSocketBuffer *buf = ZSocketBuffer::Alloc(BUFFER_SIZE);
+    ZRef<ZSocketBuffer> pBuff = ZRef<ZSocketBuffer>();
+    pBuff.p = buf;
+    if (buf->m_nRef) {
+        InterlockedIncrement(&buf->m_nRef);
+    }
+    char *buffer = buf->buf;
+    char *accumulatedBuf = buffer;
+    int bLenRead = 0;
+    Log("CClientSocket::OnConnect Start Recv Loop");
+    int src = 0;
+    int something = 40;
+    int bytesReceived;
+    while (true) {
+        do {
+            while (true) {
+                while (true) {
+                    int lenToRead = 0;
+                    if (bLenRead) {
+                        lenToRead = src;
+                    } else {
+                        lenToRead = 2;
+                    }
+                    bytesReceived = recv(pThis->m_sock._m_hSocket, accumulatedBuf, lenToRead, 0);
+                    if (bytesReceived != -1) {
+                        Log("CClientSocket::OnConnect breaking 1");
+                        break;
+                    }
+                    int wsaLastError = WSAGetLastError();
+                    Log("CClientSocket::OnConnect wsaLastError=[%d]", wsaLastError);
+                    if (wsaLastError == WSAEWOULDBLOCK) {
+                        Sleep(500);
+                        if (--something >= 0) {
+                            continue;
+                        }
+                    }
+                    bytesReceived = 0;
+                    Log("CClientSocket::OnConnect breaking 2");
+                    break;
+                }
+                accumulatedBuf += bytesReceived;
+                Log("CClientSocket::OnConnect bytesReceived=[%d] totalBytesReceived=[%d]", bytesReceived,
+                    accumulatedBuf - buffer);
+                if (!bytesReceived) {
+                    Log("CClientSocket::OnConnect dipping 1");
+                    CClientSocket__OnConnect_Hook(pThis, edx, 0);
+                    _ZRef_ZSocketBuffer__Destructor(&pBuff, edx, 0);
+                    return 0;
+                }
+                if (!bLenRead) {
+                    break;
+                }
+                if (accumulatedBuf - buffer == src) {
+                    goto label_26;
+                }
+            }
+        } while (accumulatedBuf - buffer != 2);
+        src = *buffer;
+        if (src > buf->len) {
+            break;
+        }
+        bLenRead = 1;
+        accumulatedBuf = buffer;
+    }
+    bytesReceived = 0;
+    label_26:
+    if (!bytesReceived) {
+        Log("CClientSocket::OnConnect dipping 2");
+        CClientSocket__OnConnect_Hook(pThis, edx, 0);
+        _ZRef_ZSocketBuffer__Destructor(&pBuff, edx, 0);
+        return 0;
+    }
+
+    Log("CClientSocket::OnConnect Recv Decoding");
+    unsigned short majorVersion;
+    char *result = &buffer[CIOBufferManipulator::Decode2(&majorVersion, buffer, accumulatedBuf - buffer)];
+    Log("CClientSocket::OnConnect majorVersion=[%d]", majorVersion);
+    ZXString<char> minorVersion = ZXString<char>();
+    result = &result[CIOBufferManipulator::DecodeStr(&minorVersion, result, accumulatedBuf - result)];
+    Log("CClientSocket::OnConnect minorVersion=[%s]", minorVersion.m_pStr);
+    int version = atoi(minorVersion.m_pStr);
+    minorVersion.Empty();
+    Log("CClientSocket::OnConnect version=[%d]", version);
+    unsigned int uSeqSnd;
+    result = &result[CIOBufferManipulator::Decode4(&uSeqSnd, result, accumulatedBuf - result)];
+    unsigned int uSeqRcv;
+    result = &result[CIOBufferManipulator::Decode4(&uSeqRcv, result, accumulatedBuf - result)];
+    unsigned char nVersionHeader;
+    result = &result[CIOBufferManipulator::Decode1(&nVersionHeader, result, accumulatedBuf - result)];
+    if (result < accumulatedBuf) {
+        // throw an exception.
+        return 0;
+    }
+    Log("CClientSocket::OnConnect nVersionHeader=[%d]", nVersionHeader);
+    Log("CClientSocket::OnConnect m_uSeqSnd=[%d] m_uSeqRcv=[%d]", uSeqSnd, uSeqRcv);
+    pThis->m_uSeqSnd = uSeqSnd;
+    pThis->m_uSeqRcv = uSeqRcv;
+
+    int nGameStartMode = CWvsApp::GetInstance()->m_nGameStartMode;
+    Log("CClientSocket::OnConnect m_nGameStartMode=[%d]", nGameStartMode);
+    if (nGameStartMode != 1) {
+        if (nGameStartMode == 2) {
+            nGameStartMode = 0;
+        } else {
+            Log("CClientSocket::OnConnect dipping 3");
+            _ZRef_ZSocketBuffer__Destructor(&pBuff, edx, 0);
+            return 0;
+        }
+    }
+    if (nVersionHeader != 8) {
+        throw std::invalid_argument("570425351");
+    }
+    if (majorVersion > 87) {
+        throw std::invalid_argument("CPatchException");
+    }
+    if (majorVersion != 87) {
+        throw std::invalid_argument("570425351");
+    }
+    if (version > 1) {
+        throw std::invalid_argument("CPatchException");
+    }
+    if (!version) {
+        throw std::invalid_argument("570425351");
+    }
+    _CClientSocket__ClearSendReceiveCtx(pThis, edx);
+    pThis->m_ctxConnect.lAddr.RemoveAll();
+    pThis->m_ctxConnect.posList = 0;
+    socklen_t peerAddrLen = sizeof(pThis->m_addr);
+    if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr*>(&pThis->m_addr), &peerAddrLen) == -1) {
+        int lastError = WSAGetLastError();
+        throw std::invalid_argument("570425351");
+    }
+
+    //TODO check version stuff
+    if (pThis->m_ctxConnect.bLogin) {
+        Log("CClientSocket::OnConnect should be sending 0x19");
+        char * fileName = CWvsApp::GetExceptionFileName();
+
+    } else {
+        Log("CClientSocket::OnConnect accountId=[%d], worldId=[%d], channelId=[%d], characterId=[%d]",CWvsContext::GetInstance()->m_dwAccountId, CWvsContext::GetInstance()->m_nWorldID, CWvsContext::GetInstance()->m_nChannelID, CWvsContext::GetInstance()->m_dwCharacterId);
+        auto systemInfo = CSystemInfo();
+        systemInfo.Init();
+        auto cOutPacket = COutPacket(0x14);
+        cOutPacket.Encode4(CWvsContext::GetInstance()->m_dwCharacterId);
+        cOutPacket.EncodeBuffer(systemInfo.GetMachineId(), 16);
+        if (CWvsContext::GetInstance()->m_nSubGradeCode.GetData() >= 0) {
+            cOutPacket.Encode1(0);
+        } else {
+            cOutPacket.Encode1(1);
+        }
+        cOutPacket.Encode1(0);
+        cOutPacket.EncodeBuffer(CWvsContext::GetInstance()->m_aClientKey, 8);
+
+        CClientSocket::GetInstance()->SendPacket(&cOutPacket);
+        cOutPacket.m_aSendBuff.RemoveAll();
+    }
+
+    //_ZRef_ZSocketBuffer__Destructor(&pBuff, edx, 0);
+    return 1;
+}
+
+
+VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr) {
     Log("CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)");
     _CClientSocket__ClearSendReceiveCtx(pThis, edx);
     _ZSocketBase__CloseSocket(&(pThis->m_sock), edx);
@@ -74,11 +264,11 @@ VOID __fastcall CClient__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, cons
     if (WSAAsyncSelect(pThis->m_sock._m_hSocket, pThis->m_hWnd, WM_USER + 1, 0x33) == -1 ||
         connect(pThis->m_sock._m_hSocket, reinterpret_cast<const sockaddr *>(pAddr), sizeof(*pAddr)) != -1 ||
         WSAGetLastError() != WSAEWOULDBLOCK) {
-        _CClientSocket__OnConnect(pThis, edx, 0);
+        CClientSocket__OnConnect_Hook(pThis, edx, 0);
     }
 }
 
-VOID __fastcall CClient__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx, CClientSocket::CONNECTCONTEXT *ctx) {
+VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx, CClientSocket::CONNECTCONTEXT *ctx) {
     Log("CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)");
     pThis->m_ctxConnect.lAddr.RemoveAll();
     pThis->m_ctxConnect.lAddr.AddTail(&ctx->lAddr);
@@ -86,7 +276,7 @@ VOID __fastcall CClient__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx, CClie
     pThis->m_ctxConnect.bLogin = ctx->bLogin;
     pThis->m_ctxConnect.posList = reinterpret_cast<__POSITION *>(pThis->m_ctxConnect.lAddr.GetHeadPosition());
     pThis->m_addr = *pThis->m_ctxConnect.lAddr.GetHeadPosition();
-    CClient__Connect_Addr_Hook(pThis, edx, &pThis->m_addr);
+    CClientSocket__Connect_Addr_Hook(pThis, edx, &pThis->m_addr);
 }
 
 // int __thiscall CLogin::SendCheckPasswordPacket(CLogin *this, char *sID, char *sPasswd)
@@ -95,10 +285,11 @@ typedef INT(__fastcall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, PVOID
 _CLogin__SendCheckPasswordPacket_t _CLogin__SendCheckPasswordPacket;
 
 ZXString<char> *GetCUITitleInstance() {
-    return reinterpret_cast<ZXString<char> *>(*(void **) 0x00BEDA60);
+    return reinterpret_cast<ZXString<char> *>(*(void **) 0x00CA05AC);
 }
 
 INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, char *sID, char *sPasswd) {
+    Log("CLogin::SendCheckPasswordPacket(CLogin *pThis, PVOID edx, char *sID, char *sPasswd)");
     if (pThis->m_bRequestSent) {
         return 0;
     }
@@ -126,7 +317,7 @@ INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, ch
     cOutPacket.Encode4(CConfig::GetInstance()->GetPartnerCode());
     CClientSocket::GetInstance()->SendPacket(&cOutPacket);
     // ZXString<char>::GetBuffer(CWvsContext::GetInstance() + 8264, -1, sID, 0xFFFFFFFF);
-    CUITitle* cuiTitle = CUITitle::GetInstance();
+    CUITitle *cuiTitle = CUITitle::GetInstance();
     if (cuiTitle) {
         cuiTitle->ClearToolTip();
     }
@@ -141,18 +332,20 @@ typedef VOID(__fastcall *_CWvsApp__CallUpdate_t)(CWvsApp *pThis, PVOID edx, int 
 _CWvsApp__CallUpdate_t _CWvsApp__CallUpdate;
 
 CStage *get_stage() {
-    return reinterpret_cast<CStage *>(*(void **) 0x00BEDED4);
+    return reinterpret_cast<CStage *>(*(void **) 0x00CA0A44);
 }
 
 // void __cdecl set_stage(CStage *pStage, void *pParam)
 typedef VOID(__cdecl *_set_stage_t)(CStage *pStage, void *pParam);
-_set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(0x00777347);
+
+_set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(0x007C5646);
 
 IWzGr2D *get_gr() {
-    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) 0x00BF14EC);
+    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) 0x00CA4128);
 }
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
+    //Log("CWvsApp::CallUpdate(CWvsApp *pThis, PVOID edx, int tCurTime)");
     if (pThis->m_bFirstUpdate) {
         pThis->m_tUpdateTime = tCurTime;
         pThis->m_tLastServerIPCheck = tCurTime;
@@ -191,7 +384,7 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
 // void __stdcall TSingleton<CInputSystem>::CreateInstance()
 typedef VOID(__stdcall *_TSingleton_CInputSystem__CreateInstance_t)();
 
-_TSingleton_CInputSystem__CreateInstance_t _TSingleton_CInputSystem__CreateInstance = reinterpret_cast<_TSingleton_CInputSystem__CreateInstance_t>(0x009F9A6A);
+_TSingleton_CInputSystem__CreateInstance_t _TSingleton_CInputSystem__CreateInstance = reinterpret_cast<_TSingleton_CInputSystem__CreateInstance_t>(0x00A8E0D6);
 
 // void __thiscall CWvsApp::InitializeInput(CWvsApp *this)
 typedef VOID(__fastcall *_CWvsApp__InitializeInput_t)(CWvsApp *pThis, PVOID edx);
@@ -209,6 +402,7 @@ typedef VOID(__stdcall *_CWvsApp__Run_t)(CWvsApp *pThis, int *pbTerminate);
 _CWvsApp__Run_t _CWvsApp__Run;
 
 VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
+    Log("CWvsApp::Run(CWvsApp *pThis, PVOID edx, int *pbTerminate)");
     tagMSG msg{};
     ISMSG isMsg{};
     memset(&msg, 0, sizeof(msg));
@@ -218,6 +412,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
     }
     do {
         auto dwRet = MsgWaitForMultipleObjects(3u, pThis->m_ahInput, 0, 0, 0xFFu);
+        //Log("CWvsApp::Run dwRet=[%d]", dwRet);
         if (dwRet <= 2) {
             CInputSystem::GetInstance()->UpdateDevice(dwRet);
             do {
@@ -228,7 +423,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
             } while (!*pbTerminate);
         } else if (dwRet == 3) {
             do {
-                if ( !PeekMessageA(&msg, 0, 0, 0, 1u) ) {
+                if (!PeekMessageA(&msg, 0, 0, 0, 1u)) {
                     break;
                 }
                 TranslateMessage(&msg);
@@ -242,8 +437,8 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
                     isError = 1;
                 }
                 if (isError) {
-                    Log("Do proper _com_raise_error");
-                    return;
+                    Log("m_hrComErrorCode = [%d]", m_hrComErrorCode);
+                    _com_raise_error(m_hrComErrorCode);
                 }
                 if (pThis->m_hrZExceptionCode) {
                     m_hrComErrorCode = pThis->m_hrZExceptionCode;
@@ -252,10 +447,23 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
                     isError = 1;
                 }
                 if (isError) {
-                    Log("Do proper _com_raise_error");
-                    return;
+                    Log("m_hrComErrorCode = [%d]", m_hrComErrorCode);
+                    if (m_hrComErrorCode == 0x20000000) {
+                        Log("AVCPatchException");
+                        _com_raise_error(m_hrComErrorCode);
+                    }
+                    if ( m_hrComErrorCode >= 553648128 && m_hrComErrorCode <= 553648134) {
+                        Log("AVCDisconnectException");
+                        _com_raise_error(m_hrComErrorCode);
+                    }
+                    if ( m_hrComErrorCode >= 570425344 && m_hrComErrorCode <= 570425357 ) {
+                        Log("AVCTerminateException");
+                        _com_raise_error(m_hrComErrorCode);
+                    }
+                    Log("AVZException");
+                    _com_raise_error(m_hrComErrorCode);
                 }
-            } while ( !*pbTerminate && msg.message != 18 );
+            } while (!*pbTerminate && msg.message != 18);
         } else {
             if (CInputSystem::GetInstance()->GenerateAutoKeyDown(&isMsg)) {
                 pThis->ISMsgProc(isMsg.message, isMsg.wParam, isMsg.lParam);
@@ -282,24 +490,20 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
 }
 
 void GetSEPrivilege() {
-    ((VOID **(_fastcall * )())
-    0x0044E824)();
+    ((VOID * *(_fastcall * )())
+    0x0045B046)();
 }
 
 // void __thiscall CWvsApp::SetUp(CWvsApp *this)
 typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
-_CWvsApp__SetUp_t _CWvsApp__SetUp;
 
-void newCLogo(CLogo * logo) {
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    0x0062ECE2)(logo, NULL);
-}
+_CWvsApp__SetUp_t _CWvsApp__SetUp;
 
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     pThis->InitializeAuth();
     auto time = timeGetTime();
     srand(time);
-    GetSEPrivilege();
+//    GetSEPrivilege();
     CSecurityClient::CreateInstance();
     // dword_BF1AC8 = 0x10;
     pThis->InitializePCOM();
@@ -360,9 +564,9 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     CConfig::GetInstance()->CheckExecPathReg(tempString);
 
     PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(56u);
-    CStage * cLogo;
+    CStage *cLogo;
     if (ret) {
-        cLogo = new (ret) CLogo();
+        cLogo = new(ret) CLogo();
     } else {
         cLogo = nullptr;
     }
@@ -381,22 +585,118 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
 //        g_crc32Table[ii] = crc32;
 }
 
+
+// void __thiscall CWvsApp::SetUp(CWvsApp *this)
+typedef VOID(__stdcall *_CWvsApp__CWvsApp_t)(CWvsApp *pThis, const char *sCmdLine);
+
+_CWvsApp__CWvsApp_t _CWvsApp__CWvsApp;
+
+DWORD ResetLSP() {
+    return reinterpret_cast<DWORD>(*(void **) 0x00451212);
+}
+
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS)(HANDLE, PBOOL);
+
+// CWvsApp::CWvsApp
+VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
+    void **instance = reinterpret_cast<void **>(0x00C9A228);
+    *instance = &pThis->m_hWnd != 0 ? pThis : 0;
+
+    pThis->m_hWnd = 0;
+    pThis->m_bPCOMInitialized = 0;
+    pThis->m_hHook = 0;
+    pThis->m_tUpdateTime = 0;
+    pThis->m_bFirstUpdate = 1;
+    pThis->m_sCmdLine = ZXString<char>();
+    pThis->m_nGameStartMode = 0;
+    pThis->m_bAutoConnect = 1;
+    pThis->m_bShowAdBalloon = 0;
+    pThis->m_bExitByTitleEscape = 0;
+    pThis->m_hrZExceptionCode = 0;
+    pThis->m_hrComErrorCode = 0;
+    pThis->m_tNextSecurityCheck = 0;
+    pThis->m_pBackupBuffer = ZArray<unsigned char>();
+    pThis->m_dwBackupBufferSize = 0;
+    pThis->m_sCmdLine = ZXString<char>(sCmdLine, 0xFFFFFFFF);
+    pThis->m_sCmdLine = *pThis->m_sCmdLine.TrimRight("\" ")->TrimLeft("\" ");
+    pThis->m_pBackupBuffer.Alloc(0x1000);
+    ZXString<char> sToken = ZXString<char>();
+    pThis->GetCmdLine(&sToken, 0);
+
+    pThis->m_nGameStartMode = 2;
+    pThis->m_dwMainThreadId = GetCurrentThreadId();
+
+    OSVERSIONINFO ovi;
+    ZeroMemory(&ovi, sizeof(OSVERSIONINFO));
+    ovi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionExA(&ovi);
+    pThis->m_bWin9x = ovi.dwPlatformId == 1;
+    if (ovi.dwMajorVersion >= 6 && !pThis->m_nGameStartMode) {
+        pThis->m_nGameStartMode = 2;
+    }
+
+    int *g_dwTargetOS = reinterpret_cast<int *>(0x00C955A4);
+
+    if (ovi.dwMajorVersion < 5) {
+        *g_dwTargetOS = 1996;
+    }
+
+    BOOL bIsWow64 = FALSE;
+    LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
+            GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+    if (fnIsWow64Process) {
+        fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
+    }
+
+    if (bIsWow64) {
+        *g_dwTargetOS = 1996;
+    }
+    if (ovi.dwMajorVersion >= 6 && !bIsWow64) {
+        ResetLSP();
+    }
+    sToken.Empty();
+}
+
 // main thread
 VOID __stdcall MainProc() {
     // Window Mode Magic
     MemEdit::CodeCave(FixFullScreen, dwFixFullScreen, 5);
 
-    // Noop Call to CSecurityClient::OnPacket
-    MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 12);
+    // CWvsApp::CWvsApp
+    INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, 0x00A87A40);
 
-    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
-    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, 0x00494D2F);
+    // CWvsApp::SetUp
+    INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, 0x00A88159);
+
+    // CWvsApp::InitializeInput
+    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x00A8BA1B);
+
+    // CWvsApp::Run
+    INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, 0x00A88B81);
+
+    // CWvsApp::CallUpdate
+    INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x00A8C220);
+
+    // CActionMan::SweepCache - ???
+
+    // DR_check
+    MemEdit::WriteBytes(0x004A1AD3, new BYTE[3]{0x33, 0xC0, 0xC3}, 3);
+
+    // CClientSocket::OnAliveReq - think we're good here.
+    // CWvsContext::OnEnterField - think we're good here
+
+    // CLogin::SendCheckPasswordPacket
     INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
-                  CLogin__SendCheckPasswordPacket_Hook, 0x005F6952);
-    INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x009F84D0);
-    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x009F7CE1);
-    INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, 0x009F5C50);
-    INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, 0x009F5239);
+                  CLogin__SendCheckPasswordPacket_Hook, 0x0062DFB4);
+
+    // Noop Call to CSecurityClient::OnPacket
+    MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 16);
+
+    INITMAPLEHOOK(_CClientSocket__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook,
+                  0x004A6C1A);
+    INITMAPLEHOOK(_CClientSocket__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook,
+                  0x004A6CA6);
+    INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook, 0x004A6E5A);
 }
 
 // dll entry point

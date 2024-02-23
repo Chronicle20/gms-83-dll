@@ -52,7 +52,7 @@ public:
     };
 
     void GetBuffer(const char *src, size_t size) {
-        ((VOID(_fastcall * )(ZXString<T> * , PVOID, const char *src, size_t size))0x00414617)(this, NULL, src, size);
+        ((VOID(_fastcall * )(ZXString<T> * , PVOID, const char *src, size_t size))0x00417376)(this, NULL, src, size);
     }
 
     T* GetBuffer(size_t nMinLength, BOOL bRetain)
@@ -201,6 +201,16 @@ public:
     {
         this->Assign(s, -1);
         return this;
+    }
+
+    ZXString<char>* TrimRight(const char *s) {
+        return ((ZXString<char> *(_fastcall * )(ZXString<char> * , PVOID, const char *s))
+        0x0047F31F)(this, NULL, s);
+    }
+
+    ZXString<char>* TrimLeft(const char *s) {
+        return ((ZXString<char> *(_fastcall * )(ZXString<char> * , PVOID, const char *s))
+        0x0047F3D4)(this, NULL, s);
     }
 
     /// <summary>

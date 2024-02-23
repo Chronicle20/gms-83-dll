@@ -27,6 +27,8 @@ add_library(bypass SHARED
         ${CMAKE_SOURCE_DIR}/common/CLogin.cpp
         ${CMAKE_SOURCE_DIR}/common/CLogo.cpp
         ${CMAKE_SOURCE_DIR}/common/CUITitle.cpp
+        ${CMAKE_SOURCE_DIR}/common/ZSocketBuffer.cpp
+        ${CMAKE_SOURCE_DIR}/common/CIOBufferManipulator.cpp
 )
 
 # Set additional include directories if needed

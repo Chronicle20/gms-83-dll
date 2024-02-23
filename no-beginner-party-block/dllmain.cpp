@@ -11,12 +11,12 @@
 #include <Windows.h>
 #include <memedit.h>
 
-const DWORD dwSendJoinPartyMsg = 0x0052FECF;
-const DWORD dwSendCreateNewPartyMsg = 0x52FCE1;
+const DWORD dwSendJoinPartyMsg = 0x005570DF;
+const DWORD dwSendCreateNewPartyMsg = 0x00556EB0;
 
 // main thread
 VOID __stdcall MainProc() {
-    MemEdit::WriteBytes(dwSendJoinPartyMsg + 0x65, new BYTE[1]{0xEB}, 1);
+    MemEdit::WriteBytes(dwSendJoinPartyMsg + 0xA0, new BYTE[1]{0xEB}, 1);
     MemEdit::WriteBytes(dwSendCreateNewPartyMsg + 0xA4, new BYTE[1]{0xEB}, 1);
 }
 

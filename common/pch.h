@@ -73,6 +73,7 @@
 #include "ZInetAddr.h"
 #include "ZSocketBuffer.h"
 #include "ZSocketBase.h"
+#include "CIOBufferManipulator.h"
 #include "COutPacket.h"
 #include "CClientSocket.h"
 

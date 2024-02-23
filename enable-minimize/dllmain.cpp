@@ -58,7 +58,13 @@ HWND WINAPI CreateWindowExA_Hook(
     Log("[CreateWindowExA] => %s - %s", lpClassName, lpWindowName);
     dwExStyle = 0;
     dwStyle |= WS_MINIMIZEBOX; // enable minimize button
-    return CreateWindowExA_Original(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+    HWND hwnd = CreateWindowExA_Original(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+    Log("[CreateWindowExA] => HWND = %p", hwnd);
+    if (!hwnd) {
+        DWORD errorCode = GetLastError();
+        Log("[CreateWindowExA] => GetLastError = %p", errorCode);
+    }
+    return hwnd;
 }
 
 // main thread

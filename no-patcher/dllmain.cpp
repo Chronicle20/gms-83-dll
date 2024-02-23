@@ -11,8 +11,8 @@
 #include <Windows.h>
 #include <memedit.h>
 
-const DWORD dwWinMain = 0x009F19F2;
-const DWORD dwWinMainShowStartUpWndModalCall = dwWinMain + 0x212; // 0x009F1C04
+const DWORD dwWinMain = 0x00A841F4;
+const DWORD dwWinMainShowStartUpWndModalCall = dwWinMain + 0x241;
 
 // main thread
 VOID __stdcall MainProc()

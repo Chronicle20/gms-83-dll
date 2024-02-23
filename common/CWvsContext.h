@@ -2,7 +2,6 @@
 
 class CWvsContext {
 public:
-    virtual ~CWvsContext() = default;
 
     struct CFriend {
         ZArray<GW_Friend> m_aFriend;
@@ -17,6 +16,7 @@ public:
         int nCool;
         int nSkill;
     };
+    short vftable; // TODO this should really be a virtual destructor, but VS compiler pads to 8 bytes.
 
     int m_bFirstUserLoad;
     int m_bAvatarMegaphone;

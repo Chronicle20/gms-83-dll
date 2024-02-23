@@ -2,5 +2,5 @@
 
 void CFuncKeyMappedMan::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x009F9E98)();
+    0x00A8E504)();
 }
