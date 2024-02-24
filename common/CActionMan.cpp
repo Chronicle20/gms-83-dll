@@ -11,11 +11,11 @@ CActionMan *CActionMan::GetInstance() {
 
 void CActionMan::Init() {
     ((VOID(_fastcall * )(CActionMan * , PVOID))
-    0x00406D03)(this, NULL);
+    0x00406D03)(this, nullptr);
 }
 
 // void __thiscall CActionMan::SweepCache(CActionMan *this)
 void CActionMan::SweepCache() {
     ((VOID(_fastcall * )(CActionMan * , PVOID))
-    0x00411EEF)(this, NULL);
+    0x00411EEF)(this, nullptr);
 }

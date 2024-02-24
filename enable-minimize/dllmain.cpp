@@ -55,7 +55,7 @@ HWND WINAPI CreateWindowExA_Hook(
         LPVOID    lpParam
 )
 {
-    Log("[CreateWindowExA] => %s - %s", lpClassName, lpWindowName);
+    Log("[CreateWindowExA] => %s - %s at %dx%d", lpClassName, lpWindowName, nWidth, nHeight);
     dwExStyle = 0;
     dwStyle |= WS_MINIMIZEBOX; // enable minimize button
     HWND hwnd = CreateWindowExA_Original(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);

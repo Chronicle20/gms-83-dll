@@ -24,11 +24,11 @@ DWORD ijlWrite_Proc;
 BOOL InitializeIjl15()
 {
 	DWORD dw;
-	HANDLE hOrg = CreateFileA(LIB_NAME, (GENERIC_READ | GENERIC_WRITE), NULL, NULL, CREATE_ALWAYS, NULL, NULL);
+	HANDLE hOrg = CreateFileA(LIB_NAME, (GENERIC_READ | GENERIC_WRITE), NULL, nullptr, CREATE_ALWAYS, NULL, nullptr);
 
 	if (hOrg)
 	{
-		WriteFile(hOrg, g_Ijl15_Raw, sizeof(g_Ijl15_Raw), &dw, NULL);
+		WriteFile(hOrg, g_Ijl15_Raw, sizeof(g_Ijl15_Raw), &dw, nullptr);
 		CloseHandle(hOrg);
 	}
 	else

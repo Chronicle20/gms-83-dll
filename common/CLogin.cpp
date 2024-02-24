@@ -3,5 +3,5 @@
 
 void CLogin::Update() {
     ((VOID(_fastcall * )(CLogin * , PVOID))
-    0x0062C1C8)(this, NULL);
+    0x0062C1C8)(this, nullptr);
 }

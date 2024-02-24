@@ -8,62 +8,62 @@ CWvsApp *CWvsApp::GetInstance() {
 
 void CWvsApp::ISMsgProc(unsigned int message, unsigned int wParam, int lParam) {
     ((VOID(_fastcall * )(CWvsApp * , PVOID, unsigned int message, unsigned int wParam, int lParam))
-    0x00A8DC7D)(this, NULL, message, wParam, lParam);
+    0x00A8DC7D)(this, nullptr, message, wParam, lParam);
 }
 
 void CWvsApp::InitializeAuth() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8A5AD)(this, NULL);
+    0x00A8A5AD)(this, nullptr);
 }
 
 void CWvsApp::InitializePCOM() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8A162)(this, NULL);
+    0x00A8A162)(this, nullptr);
 }
 
 void CWvsApp::CreateMainWindow() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8A191)(this, NULL);
+    0x00A8A191)(this, nullptr);
 }
 
 void CWvsApp::ConnectLogin() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8A3A8)(this, NULL);
+    0x00A8A3A8)(this, nullptr);
 }
 
 void CWvsApp::InitializeResMan() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8A6A3)(this, NULL);
+    0x00A8A6A3)(this, nullptr);
 }
 
 void CWvsApp::InitializeGr2D() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8B61A)(this, NULL);
+    0x00A8B61A)(this, nullptr);
 }
 
 void CWvsApp::InitializeInput() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8BA1B)(this, NULL);
+    0x00A8BA1B)(this, nullptr);
 }
 
 void CWvsApp::InitializeSound() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8BFF6)(this, NULL);
+    0x00A8BFF6)(this, nullptr);
 }
 
 void CWvsApp::InitializeGameData() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8C8E7)(this, NULL);
+    0x00A8C8E7)(this, nullptr);
 }
 
 void CWvsApp::CreateWndManager() {
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
-    0x00A8A533)(this, NULL);
+    0x00A8A533)(this, nullptr);
 }
 
 ZXString<char> * CWvsApp::GetCmdLine(ZXString<char> *result, int nArg) {
     return ((ZXString<char> *(_fastcall * )(CWvsApp * , PVOID, ZXString<char> *result, int nArg))
-    0x00A8D77D)(this, NULL, result, nArg);
+    0x00A8D77D)(this, nullptr, result, nArg);
 }
 
 void CWvsApp::Dir_BackSlashToSlash(char *string) {

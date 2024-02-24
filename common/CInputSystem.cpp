@@ -8,20 +8,20 @@ CInputSystem *CInputSystem::GetInstance() {
 void CInputSystem::Init(HWND__ *hWnd, void **ahEvent) {
     ((VOID(_fastcall * )(CInputSystem * , PVOID, HWND__
                                                  * hWnd, void * *ahEvent))
-    0x005C9961)(this, NULL, hWnd, ahEvent);
+    0x005C9961)(this, nullptr, hWnd, ahEvent);
 }
 
 void CInputSystem::UpdateDevice(int nDeviceIndex) {
     ((VOID(_fastcall * )(CInputSystem * , PVOID, int nDeviceIndex))
-    0x005C9D8B)(this, NULL, nDeviceIndex);
+    0x005C9D8B)(this, nullptr, nDeviceIndex);
 }
 
 int CInputSystem::GetISMessage(ISMSG *pISMsg) {
     return ((int(_fastcall * )(CInputSystem * , PVOID, ISMSG *pISMsg))
-    0x005C9DA8)(this, NULL, pISMsg);
+    0x005C9DA8)(this, nullptr, pISMsg);
 }
 
 int CInputSystem::GenerateAutoKeyDown(ISMSG *pISMsg) {
     return ((int(_fastcall * )(CInputSystem * , PVOID, ISMSG *pISMsg))
-    0x005CAD74)(this, NULL, pISMsg);
+    0x005CAD74)(this, nullptr, pISMsg);
 }

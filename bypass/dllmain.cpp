@@ -18,17 +18,6 @@
 const DWORD dwCClientSocketProcessPacket = 0x004A8622;
 const DWORD dwCSecurityClientOnPacketCall = dwCClientSocketProcessPacket + 0x93;
 
-const DWORD dwCWvsAppInitializeGr2D = 0x00A8B61A;
-const DWORD dwFixFullScreen = dwCWvsAppInitializeGr2D + 0x94; // 0x009F7A9B
-const DWORD dwFixFullScreenReturn = dwCWvsAppInitializeGr2D + 0x99;
-
-__declspec(naked) void FixFullScreen() {
-    __asm {
-            mov eax, 0
-            jmp dword ptr[dwFixFullScreenReturn]
-    }
-}
-
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
 typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
 
@@ -40,26 +29,12 @@ typedef VOID(__fastcall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, PV
 
 _CClientSocket__Connect_ctx_t _CClientSocket__Connect_ctx;
 
-// void __thiscall CClientSocket::ClearSendReceiveCtx(CClientSocket *this)
-typedef VOID(__fastcall *_CClientSocket__ClearSendReceiveCtx_t)(CClientSocket *pThis, PVOID edx);
-
-_CClientSocket__ClearSendReceiveCtx_t _CClientSocket__ClearSendReceiveCtx = reinterpret_cast<_CClientSocket__ClearSendReceiveCtx_t>(0x004A8A51);
-
-// void __thiscall ZSocketBase::CloseSocket(ZSocketBase *this)
-typedef VOID(__fastcall *_ZSocketBase__CloseSocket_t)(ZSocketBase *pThis, PVOID edx);
-
-_ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(0x004A67C5);
-
 // int __thiscall CClientSocket::OnConnect(CClientSocket *this, int bSuccess)
 typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
 
 _CClientSocket__OnConnect_t _CClientSocket__OnConnect;
 
 VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
-
-typedef VOID(__fastcall *_ZRef_ZSocketBuffer__Destructor_t)(ZRef<ZSocketBuffer> *pThis, PVOID edx, int a1);
-
-_ZRef_ZSocketBuffer__Destructor_t _ZRef_ZSocketBuffer__Destructor = reinterpret_cast<_ZRef_ZSocketBuffer__Destructor_t>(0x004A8C8D);
 
 INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, int bSuccess) {
     Log("CClientSocket::OnConnect(CClientSocket *this, int bSuccess)");
@@ -133,7 +108,6 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
                 if (!bytesReceived) {
                     Log("CClientSocket::OnConnect dipping 1");
                     CClientSocket__OnConnect_Hook(pThis, edx, 0);
-                    _ZRef_ZSocketBuffer__Destructor(&pBuff, edx, 0);
                     return 0;
                 }
                 if (!bLenRead) {
@@ -156,7 +130,6 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     if (!bytesReceived) {
         Log("CClientSocket::OnConnect dipping 2");
         CClientSocket__OnConnect_Hook(pThis, edx, 0);
-        _ZRef_ZSocketBuffer__Destructor(&pBuff, edx, 0);
         return 0;
     }
 
@@ -192,7 +165,6 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
             nGameStartMode = 0;
         } else {
             Log("CClientSocket::OnConnect dipping 3");
-            _ZRef_ZSocketBuffer__Destructor(&pBuff, edx, 0);
             return 0;
         }
     }
@@ -211,7 +183,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     if (!version) {
         throw std::invalid_argument("570425351");
     }
-    _CClientSocket__ClearSendReceiveCtx(pThis, edx);
+    pThis->ClearSendReceiveCtx();
     pThis->m_ctxConnect.lAddr.RemoveAll();
     pThis->m_ctxConnect.posList = 0;
     socklen_t peerAddrLen = sizeof(pThis->m_addr);
@@ -251,8 +223,8 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
 
 VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr) {
     Log("CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)");
-    _CClientSocket__ClearSendReceiveCtx(pThis, edx);
-    _ZSocketBase__CloseSocket(&(pThis->m_sock), edx);
+    pThis->ClearSendReceiveCtx();
+    pThis->m_sock.CloseSocket();
 
     pThis->m_sock._m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (pThis->m_sock._m_hSocket == -1) {
@@ -283,10 +255,6 @@ VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx,
 typedef INT(__fastcall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, PVOID edx, char *sID, char *sPasswd);
 
 _CLogin__SendCheckPasswordPacket_t _CLogin__SendCheckPasswordPacket;
-
-ZXString<char> *GetCUITitleInstance() {
-    return reinterpret_cast<ZXString<char> *>(*(void **) 0x00CA05AC);
-}
 
 INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, char *sID, char *sPasswd) {
     Log("CLogin::SendCheckPasswordPacket(CLogin *pThis, PVOID edx, char *sID, char *sPasswd)");
@@ -489,11 +457,6 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
     }
 }
 
-void GetSEPrivilege() {
-    ((VOID * *(_fastcall * )())
-    0x0045B046)();
-}
-
 // void __thiscall CWvsApp::SetUp(CWvsApp *this)
 typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
 
@@ -555,10 +518,10 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     }
     CRadioManager::CreateInstance();
     char sModulePath[260];
-    GetModuleFileNameA(0, sModulePath, 260);
-    pThis->Dir_BackSlashToSlash(sModulePath);
-    pThis->Dir_upDir(sModulePath);
-    pThis->Dir_SlashToBackSlash(sModulePath);
+    GetModuleFileNameA(nullptr, sModulePath, 260);
+    CWvsApp::Dir_BackSlashToSlash(sModulePath);
+    CWvsApp::Dir_upDir(sModulePath);
+    CWvsApp::Dir_SlashToBackSlash(sModulePath);
 
     ZXString<char> tempString = ZXString<char>(sModulePath, 0xFFFFFFFF);
     CConfig::GetInstance()->CheckExecPathReg(tempString);
@@ -660,7 +623,8 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
 // main thread
 VOID __stdcall MainProc() {
     // Window Mode Magic
-    MemEdit::CodeCave(FixFullScreen, dwFixFullScreen, 5);
+    auto *instance = reinterpret_cast<unsigned int *>(0x00CA4708);
+    *instance = 0;
 
     // CWvsApp::CWvsApp
     INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, 0x00A87A40);

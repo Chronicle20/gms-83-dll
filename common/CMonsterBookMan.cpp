@@ -11,5 +11,5 @@ CMonsterBookMan *CMonsterBookMan::GetInstance() {
 
 bool CMonsterBookMan::LoadBook() {
     return ((bool (_fastcall * )(CMonsterBookMan * , PVOID))
-    0x006C118C)(this, NULL);
+    0x006C118C)(this, nullptr);
 }

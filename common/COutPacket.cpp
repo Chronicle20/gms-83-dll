@@ -5,7 +5,7 @@
 // _COutPacket__COutPacket_t _COutPacket__COutPacket = reinterpret_cast<_COutPacket__COutPacket_t>(0x006EC9CE);
 COutPacket::COutPacket(INT nType) {
     ((VOID(_fastcall * )(COutPacket * , PVOID, INT))
-    0x0072A686)(this, NULL, nType);
+    0x0072A686)(this, nullptr, nType);
 }
 
 
@@ -14,7 +14,7 @@ COutPacket::COutPacket(INT nType) {
 // _COutPacket__Encode1_t _COutPacket__Encode1 = reinterpret_cast<_COutPacket__Encode1_t>(0x00406549);
 void COutPacket::Encode1(unsigned char n) {
     ((VOID(_fastcall * )(COutPacket * , PVOID, unsigned __int8))
-    0x004066FD)(this, NULL, n);
+    0x004066FD)(this, nullptr, n);
 }
 
 // void __thiscall COutPacket::Encode4(COutPacket *this, unsigned int n)
@@ -22,7 +22,7 @@ void COutPacket::Encode1(unsigned char n) {
 // _COutPacket__Encode4_t _COutPacket__Encode4 = reinterpret_cast<_COutPacket__Encode4_t>(0x004065A6);
 void COutPacket::Encode4(UINT n) {
     ((VOID(_fastcall * )(COutPacket * , PVOID, unsigned int))
-    0x0040675A)(this, NULL, n);
+    0x0040675A)(this, nullptr, n);
 }
 
 
@@ -32,7 +32,7 @@ void COutPacket::Encode4(UINT n) {
 void COutPacket::EncodeStr(ZXString<char> s) {
     ((VOID(_fastcall * )(COutPacket * , PVOID, ZXString<char>
     s))
-    0x00479BAD)(this, NULL, s);
+    0x00479BAD)(this, nullptr, s);
 }
 
 
@@ -43,7 +43,7 @@ void COutPacket::EncodeBuffer(const void *p, unsigned int uSize) {
     ((VOID(_fastcall * )(COutPacket * , PVOID,
     const void *p,
     unsigned int uSize))
-    0x00475E91)(this, NULL, p, uSize);
+    0x00475E91)(this, nullptr, p, uSize);
 }
 
 COutPacket::~COutPacket() {

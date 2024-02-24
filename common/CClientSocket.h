@@ -37,4 +37,6 @@ public:
     void ManipulatePacket();
 
     void Close();
+
+    void ClearSendReceiveCtx();
 };
