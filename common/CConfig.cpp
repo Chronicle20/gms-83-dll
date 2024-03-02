@@ -5,8 +5,8 @@ CConfig *CConfig::GetInstance() {
 }
 
 CConfig::CConfig() {
-        ((VOID(_fastcall * )(CConfig * , PVOID))
-        0x004B8CA5)(this, nullptr);
+    ((VOID(_fastcall * )(CConfig * , PVOID))
+    0x004B8CA5)(this, nullptr);
 };
 
 // int __thiscall CConfig::GetPartnerCode(CConfig *this)
@@ -19,13 +19,17 @@ INT CConfig::GetPartnerCode() {
     0x0062E3F4)(this, nullptr);
 }
 
+typedef VOID(__thiscall *_CConfig__ApplySysOpt_t)(CConfig *pThis, int *pSysOpt, int bApplyVideo);
+
+_CConfig__ApplySysOpt_t _CConfig__ApplySysOpt = reinterpret_cast<_CConfig__ApplySysOpt_t>(0x004BB741);
+
 // void __thiscall CConfig::ApplySysOpt(CConfig *this, CONFIG_SYSOPT *pSysOpt, int bApplyVideo)
-void CConfig::ApplySysOpt(int* pSysOpt, int bApplyVideo) {
-    ((VOID(_fastcall * )(CConfig * , PVOID, int* pSysOpt, int bApplyVideo))
-    0x004BB741)(this, nullptr, pSysOpt, bApplyVideo);
+void CConfig::ApplySysOpt(int *pSysOpt, int bApplyVideo) {
+    _CConfig__ApplySysOpt(this, pSysOpt, bApplyVideo);
 }
 
 void CConfig::CheckExecPathReg(ZXString<char> sModulePath) {
-    ((VOID(_fastcall * )(CConfig * , PVOID, ZXString<char> sModulePath))
+    ((VOID(_fastcall * )(CConfig * , PVOID, ZXString<char>
+    sModulePath))
     0x004B98CD)(this, nullptr, sModulePath);
 }

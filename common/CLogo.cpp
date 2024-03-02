@@ -17,9 +17,11 @@ int CLogo::IsKindOf(const CRTTI *pRTTI) {
     0x006A0C03)(this, nullptr, pRTTI);
 }
 
+typedef VOID(__thiscall *_CLogo__Update_t)(CLogo *pThis);
+_CLogo__Update_t _CLogo__Update = reinterpret_cast<_CLogo__Update_t>(0x006A1069);
+
 void CLogo::Update() {
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    0x006A1069)(this, nullptr);
+    _CLogo__Update(this);
 }
 
 void CLogo::OnIMEComp(const char *, ZArray<unsigned long> *, unsigned int, int,
@@ -68,17 +70,23 @@ int CLogo::OnMouseMove(int, int) {
     return 0;
 }
 
+typedef VOID(__thiscall *_CLogo__OnMouseButton_t)(CLogo *pThis, unsigned int msg, unsigned int wParam, int rx, int ry);
+_CLogo__OnMouseButton_t _CLogo__OnMouseButton = reinterpret_cast<_CLogo__OnMouseButton_t>(0x006A1054);
+
 void CLogo::OnMouseButton(unsigned int msg, unsigned int wParam, int rx, int ry) {
-    ((VOID(_fastcall * )(CLogo * , PVOID, unsigned int, unsigned int, int, int))
-    0x006A1054)(this, nullptr, msg, wParam, rx, ry);
+    _CLogo__OnMouseButton(this, msg, wParam, rx, ry);
 }
+
+typedef INT(__thiscall *_CLogo__OnSetFocus_t)(CLogo *pThis, int bFocus);
+_CLogo__OnSetFocus_t _CLogo__OnSetFocus = reinterpret_cast<_CLogo__OnSetFocus_t>(0x006A0BF7);
 
 int CLogo::OnSetFocus(int bFocus) {
-    return ((int(_fastcall * )(CLogo * , PVOID, int))
-    0x006A0BF7)(this, nullptr, bFocus);
+    return _CLogo__OnSetFocus(this, bFocus);
 }
 
+typedef VOID(__thiscall *_CLogo__OnKey_t)(CLogo *pThis, unsigned int wParam, unsigned int lParam);
+_CLogo__OnKey_t _CLogo__OnKey = reinterpret_cast<_CLogo__OnKey_t>(0x006A102D);
+
 void CLogo::OnKey(unsigned int wParam, unsigned int lParam) {
-    ((VOID(_fastcall * )(CLogo * , PVOID, unsigned int, unsigned int))
-    0x006A102D)(this, nullptr, wParam, lParam);
+    _CLogo__OnKey(this, wParam, lParam);
 }

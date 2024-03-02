@@ -323,6 +323,7 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
 //        pThis->m_tLastGGHookingAPICheck = tCurTime;
 //        pThis->m_tLastSecurityCheck = tCurTime;
         pThis->m_bFirstUpdate = 0;
+        pThis->dummy21 = tCurTime;
     }
 
 //    Log("CWvsApp::CallUpdate => m_tUpdateTime=[%d], tCurTime=[%d])", pThis->m_tUpdateTime, tCurTime);
@@ -463,11 +464,11 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
 }
 
 // void __thiscall CWvsApp::SetUp(CWvsApp *this)
-typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
+typedef VOID(__fastcall *_CWvsApp__SetUp_t)(CWvsApp *pThis, PVOID edx);
 
 _CWvsApp__SetUp_t _CWvsApp__SetUp;
 
-VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
+VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(638u);
     CConfig *cConfig;
     if (ret) {
@@ -478,10 +479,12 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     auto time = timeGetTime();
     srand(time);
 //    GetSEPrivilege();
-    CSecurityClient::CreateInstance();
     // dword_BF1AC8 = 0x10;
     pThis->InitializePCOM();
     pThis->CreateMainWindow();
+
+    CSecurityClient::CreateInstance();
+
     CClientSocket::CreateInstance();
     pThis->ConnectLogin();
 
@@ -505,17 +508,15 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
 
     pThis->InitializeGr2D();
     pThis->InitializeInput();
-    Sleep(300);
+    Sleep(100);
     pThis->InitializeSound();
     Sleep(300);
-    pThis->InitializeGameData();
-    pThis->CreateWndManager();
-    CConfig::GetInstance()->ApplySysOpt(0, 0);
+
     CActionMan::CreateInstance();
     CActionMan::GetInstance()->Init();
-    CAnimationDisplayer::CreateInstance();
-    CMapleTVMan::CreateInstance();
-    CMapleTVMan::GetInstance()->Init();
+
+    pThis->InitializeGameData();
+
     CQuestMan::CreateInstance();
     if (!CQuestMan::GetInstance()->LoadDemand()) {
         Log("Throw error regarding CQuestMan::LoadDemand");
@@ -523,11 +524,21 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     }
     CQuestMan::GetInstance()->LoadPartyQuestInfo();
     CQuestMan::GetInstance()->LoadExclusive();
+
     CMonsterBookMan::CreateInstance();
     if (!CMonsterBookMan::GetInstance()->LoadBook()) {
         Log("Throw error regarding CMonsterBookMan::LoadBook");
         return;
     }
+
+    pThis->CreateWndManager();
+    CConfig::GetInstance()->ApplySysOpt(nullptr, 0);
+
+    CAnimationDisplayer::CreateInstance();
+    CMapleTVMan::CreateInstance();
+    //TODO look up what this is in CWvsApp
+    CMapleTVMan::GetInstance()->Init(0, 0);
+
     CRadioManager::CreateInstance();
     char sModulePath[260];
     GetModuleFileNameA(nullptr, sModulePath, 260);
@@ -592,6 +603,8 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
     pThis->m_tNextSecurityCheck = 0;
 //    pThis->m_pBackupBuffer = ZArray<unsigned char>();
 //    pThis->m_dwBackupBufferSize = 0;
+    pThis->m_sCmdLine = ZXString<char>(pThis->dummy16, 0xFFFFFFFF);
+    pThis->m_sCmdLine = ZXString<char>(pThis->dummy17, 0xFFFFFFFF);
     pThis->m_sCmdLine = ZXString<char>(sCmdLine, 0xFFFFFFFF);
     pThis->m_sCmdLine = *pThis->m_sCmdLine.TrimRight("\" ")->TrimLeft("\" ");
 //    pThis->m_pBackupBuffer.Alloc(0x1000);
@@ -638,7 +651,7 @@ VOID __stdcall MainProc() {
     MemEdit::WriteBytes(0x00ADA8D7+0x94, new BYTE[7]{0xC7, 0x45, 0xDC, 0x00, 0x00, 0x00, 0x00}, 7);
 
     // CWvsApp::CWvsApp
-    INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, 0x00AD73D7);
+    //INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, 0x00AD73D7);
 
     // CWvsApp::SetUp
     INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, 0x00AD7D58);

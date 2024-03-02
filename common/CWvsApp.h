@@ -14,10 +14,10 @@ public:
     ZXString<char> m_sCmdLine;
     int m_nGameStartMode;
     int m_bAutoConnect;
-    int dummy15;
-    int dummy16;
-    int dummy17;
     int dummy18;
+    int dummy15;
+    ZXString<char> dummy16;
+    ZXString<char> dummy17;
     int m_bShowAdBalloon;
     int m_bExitByTitleEscape;
     HRESULT m_hrZExceptionCode;

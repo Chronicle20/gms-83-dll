@@ -5,10 +5,11 @@ class CInputSystem {
 public:
     static CInputSystem *GetInstance();
 
+    typedef VOID(__thiscall *_CInputSystem__CInputSystem_t)(CInputSystem *pThis);
+    _CInputSystem__CInputSystem_t _CInputSystem__CInputSystem = reinterpret_cast<_CInputSystem__CInputSystem_t>(0x00ADAD17);
 
     CInputSystem() {
-        ((VOID(_fastcall * )(CInputSystem * , PVOID))
-        0x00ADAD17)(this, NULL);
+        _CInputSystem__CInputSystem(this);
     }
 
     void Init(HWND__ *, void **);

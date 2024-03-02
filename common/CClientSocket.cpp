@@ -4,9 +4,11 @@ CClientSocket *CClientSocket::GetInstance() {
     return reinterpret_cast<CClientSocket *>(*(void **) 0x00CD11F8);
 }
 
+typedef VOID(__cdecl *_CClientSocket__CreateInstance_t)();
+_CClientSocket__CreateInstance_t _CClientSocket__CreateInstance = reinterpret_cast<_CClientSocket__CreateInstance_t>(0x00ADCD78);
+
 void CClientSocket::CreateInstance() {
-    ((VOID * *(_fastcall * )())
-    0x00ADCD78)();
+    _CClientSocket__CreateInstance();
 }
 
 // void __fastcall CClientSocket::SendPacket(CClientSocket *this, int a2, COutPacket *oPacket)

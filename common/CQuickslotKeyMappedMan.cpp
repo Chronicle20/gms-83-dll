@@ -1,6 +1,8 @@
 #include "pch.h"
 
+typedef VOID(__cdecl *_CQuickslotKeyMappedMan__CreateInstance_t)();
+_CQuickslotKeyMappedMan__CreateInstance_t _CQuickslotKeyMappedMan__CreateInstance = reinterpret_cast<_CQuickslotKeyMappedMan__CreateInstance_t>(0x00ADCFDF);
+
 void CQuickslotKeyMappedMan::CreateInstance() {
-    ((VOID * *(_fastcall * )())
-    0x00ADCFDF)();
+    _CQuickslotKeyMappedMan__CreateInstance();
 }

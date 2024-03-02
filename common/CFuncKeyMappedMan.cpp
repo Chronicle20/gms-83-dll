@@ -1,6 +1,8 @@
 #include "pch.h"
 
+typedef VOID(__cdecl *_CFuncKeyMappedMan__CreateInstance_t)();
+_CFuncKeyMappedMan__CreateInstance_t _CFuncKeyMappedMan__CreateInstance = reinterpret_cast<_CFuncKeyMappedMan__CreateInstance_t>(0x00ADCDBD);
+
 void CFuncKeyMappedMan::CreateInstance() {
-    ((VOID * *(_fastcall * )())
-    0x00ADCDBD)();
+    _CFuncKeyMappedMan__CreateInstance();
 }

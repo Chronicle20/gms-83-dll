@@ -1,8 +1,10 @@
 #include "pch.h"
 
+typedef VOID(__cdecl *_CRadioManager__CreateInstance_t)();
+_CRadioManager__CreateInstance_t _CRadioManager__CreateInstance = reinterpret_cast<_CRadioManager__CreateInstance_t>(0x00ADCF8C);
+
 void CRadioManager::CreateInstance() {
-    ((VOID * *(_fastcall * )())
-    0x00ADCF8C)();
+    _CRadioManager__CreateInstance();
 }
 
 CRadioManager *CRadioManager::GetInstance() {
