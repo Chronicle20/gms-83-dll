@@ -1,14 +1,19 @@
 #include "pch.h"
 
 CConfig *CConfig::GetInstance() {
-    return reinterpret_cast<CConfig *>(*(void **) 0x00C9E68C);
+    return reinterpret_cast<CConfig *>(*(void **) 0x00CD5690);
 }
 
+CConfig::CConfig() {
+        ((VOID(_fastcall * )(CConfig * , PVOID))
+        0x004B8CA5)(this, nullptr);
+};
 
 // int __thiscall CConfig::GetPartnerCode(CConfig *this)
 //typedef INT(__fastcall *_CConfig__GetPartnerCode_t)(CConfig *pThis, PVOID edx);
 
 //_CConfig__GetPartnerCode_t _CConfig__GetPartnerCode = reinterpret_cast<_CConfig__GetPartnerCode_t>(0x005F6CFB);
+// TODO does not appear to exist in JMS 185
 INT CConfig::GetPartnerCode() {
     return ((INT(_fastcall * )(CConfig * , PVOID))
     0x0062E3F4)(this, nullptr);
@@ -17,10 +22,10 @@ INT CConfig::GetPartnerCode() {
 // void __thiscall CConfig::ApplySysOpt(CConfig *this, CONFIG_SYSOPT *pSysOpt, int bApplyVideo)
 void CConfig::ApplySysOpt(int* pSysOpt, int bApplyVideo) {
     ((VOID(_fastcall * )(CConfig * , PVOID, int* pSysOpt, int bApplyVideo))
-    0x004B0E34)(this, nullptr, pSysOpt, bApplyVideo);
+    0x004BB741)(this, nullptr, pSysOpt, bApplyVideo);
 }
 
 void CConfig::CheckExecPathReg(ZXString<char> sModulePath) {
     ((VOID(_fastcall * )(CConfig * , PVOID, ZXString<char> sModulePath))
-    0x004AF0E9)(this, nullptr, sModulePath);
+    0x004B98CD)(this, nullptr, sModulePath);
 }

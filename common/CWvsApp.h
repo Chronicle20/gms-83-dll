@@ -14,20 +14,19 @@ public:
     ZXString<char> m_sCmdLine;
     int m_nGameStartMode;
     int m_bAutoConnect;
+    int dummy15;
+    int dummy16;
+    int dummy17;
+    int dummy18;
     int m_bShowAdBalloon;
     int m_bExitByTitleEscape;
     HRESULT m_hrZExceptionCode;
     HRESULT m_hrComErrorCode;
-    unsigned int m_dwSecurityErrorCode;
-    int m_nTargetVersion;
-    int m_tLastServerIPCheck;
-    int m_tLastServerIPCheck2;
-    int m_tLastGGHookingAPICheck;
-    int m_tLastSecurityCheck;
+    int dummy19;
+    int dummy20;
+    int dummy21;
     void *m_ahInput[3];
     int m_tNextSecurityCheck;
-    ZArray<unsigned char> m_pBackupBuffer;
-    unsigned int m_dwBackupBufferSize;
 
     static CWvsApp* GetInstance();
 

@@ -1,12 +1,12 @@
 #include "pch.h"
 
 CClientSocket *CClientSocket::GetInstance() {
-    return reinterpret_cast<CClientSocket *>(*(void **) 0x00C9A004);
+    return reinterpret_cast<CClientSocket *>(*(void **) 0x00CD11F8);
 }
 
 void CClientSocket::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x00A8E4BF)();
+    0x00ADCD78)();
 }
 
 // void __fastcall CClientSocket::SendPacket(CClientSocket *this, int a2, COutPacket *oPacket)
@@ -14,20 +14,20 @@ void CClientSocket::CreateInstance() {
 // _CClientSocket__SendPacket_t _CClientSocket__SendPacket = reinterpret_cast<_CClientSocket__SendPacket_t>(0x0049637B);
 void CClientSocket::SendPacket(COutPacket *oPacket) {
     ((VOID(_fastcall * )(CClientSocket * , PVOID, COutPacket*))
-    0x004A83AC)(this, nullptr, oPacket);
+    0x004B14F7)(this, nullptr, oPacket);
 }
 
 void CClientSocket::ManipulatePacket() {
     ((VOID(_fastcall * )(CClientSocket * , PVOID))
-    0x004A854E)(this, nullptr);
+    0x004B1717)(this, nullptr);
 }
 
 void CClientSocket::Close() {
     ((VOID(_fastcall * )(CClientSocket * , PVOID))
-    0x004A839A)(this, nullptr);
+    0x004B14E5)(this, nullptr);
 }
 
 void CClientSocket::ClearSendReceiveCtx() {
     ((VOID(_fastcall * )(CClientSocket * , PVOID))
-    0x004A8A51)(this, nullptr);
+    0x004B1CD5)(this, nullptr);
 }

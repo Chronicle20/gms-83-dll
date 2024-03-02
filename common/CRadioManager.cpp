@@ -2,9 +2,9 @@
 
 void CRadioManager::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x00A8E708)();
+    0x00ADCF8C)();
 }
 
 CRadioManager *CRadioManager::GetInstance() {
-    return reinterpret_cast<CRadioManager *>(*(void **) 0x00C9EC04);
+    return reinterpret_cast<CRadioManager *>(*(void **) 0x00CD5C58);
 }

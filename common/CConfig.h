@@ -7,8 +7,10 @@ public:
     int m_bRememberMailAddr;
     ZXString<char> m_sLastMailAddr;
     ZXString<char> m_sLastConnectWorldName;
+    int dummy5;
     int m_nScr_RRate;
-    int m_bScr_FirstRun;
+    int dummy1;
+    int dummy2;
     int m_nPetConsumeItemID;
     int m_nPetConsumeMPItemID;
     CONFIG_GAMEOPT m_gameOpt;
@@ -23,16 +25,16 @@ public:
     HKEY__ *m_hKeyGlobal;
     HKEY__ *m_hKeyLastConnected;
     HKEY__ *m_hKeyCharacter;
-    int m_nUIWnd_X[43];
-    int m_nUIWnd_Y[43];
-    int m_nUIWnd_LargeX[43];
-    int m_nUIWnd_LargeY[43];
-    int m_nUIWnd_Option[43];
+    int m_nUIWnd_X[35];
+    int m_nUIWnd_Y[35];
+    int m_nUIWnd_Option[35];
     ZArray<unsigned char> m_abQuestInfoOption;
-    FUNCKEY_MAPPED m_aFuncKeyMapped_Reg[89];
+    FUNCKEY_MAPPED m_aFuncKeyMapped_Reg[94];
     int m_aDialogVisible[1];
     int m_nLastConnectedVersion;
     int m_tStartTime;
+
+    CConfig();
 
     static CConfig *GetInstance();
 

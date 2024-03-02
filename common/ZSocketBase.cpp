@@ -2,5 +2,5 @@
 
 void ZSocketBase::CloseSocket() {
     ((VOID(_fastcall * )(ZSocketBase * , PVOID))
-    0x004A67C5)(this, nullptr);
+    0x004AFC92)(this, nullptr);
 }

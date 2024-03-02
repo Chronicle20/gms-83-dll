@@ -19,4 +19,5 @@ class CONFIG_GAMEOPT
     int nGameOpt_ChatWndHeight;
     int nGameOpt_OpBoardIndex;
     int bGameOpt_FollowRequest;
+    int dummy1;
 };

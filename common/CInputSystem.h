@@ -8,7 +8,7 @@ public:
 
     CInputSystem() {
         ((VOID(_fastcall * )(CInputSystem * , PVOID))
-        0x009F821F)(this, NULL);
+        0x00ADAD17)(this, NULL);
     }
 
     void Init(HWND__ *, void **);

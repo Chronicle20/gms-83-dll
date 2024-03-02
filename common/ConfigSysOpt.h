@@ -11,7 +11,4 @@ class CONFIG_SYSOPT
     int nSysOpt_MPFlash;
     int bSysOpt_Tremble;
     int nSysOpt_MobInfo;
-    int bSysOpt_LargeScreen;
-    int bSysOpt_WindowedMode;
-    int bSysOpt_Minimap_Normal;
 };

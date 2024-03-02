@@ -2,5 +2,5 @@
 
 void CQuickslotKeyMappedMan::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x00A8E75B)();
+    0x00ADCFDF)();
 }

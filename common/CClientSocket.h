@@ -11,7 +11,7 @@ public:
         __POSITION *posList;
         int bLogin;
     };
-
+    char dummy1;
     HWND__ *m_hWnd;
     ZSocketBase m_sock;
     CClientSocket::CONNECTCONTEXT m_ctxConnect;

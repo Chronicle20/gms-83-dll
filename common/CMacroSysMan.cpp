@@ -2,5 +2,5 @@
 
 void CMacroSysMan::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x00A8E55A)();
+    0x00ADCE13)();
 }

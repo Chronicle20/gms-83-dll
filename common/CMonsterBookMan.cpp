@@ -2,14 +2,14 @@
 
 void CMonsterBookMan::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x00A8E1DF)();
+    0x00ADCA98)();
 }
 
 CMonsterBookMan *CMonsterBookMan::GetInstance() {
-    return reinterpret_cast<CMonsterBookMan *>(*(void **) 0x00CA012C);
+    return reinterpret_cast<CMonsterBookMan *>(*(void **) 0x00CD739C);
 }
 
 bool CMonsterBookMan::LoadBook() {
     return ((bool (_fastcall * )(CMonsterBookMan * , PVOID))
-    0x006C118C)(this, nullptr);
+    0x0070530E)(this, nullptr);
 }

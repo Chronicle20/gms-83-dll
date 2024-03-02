@@ -2,5 +2,5 @@
 
 void CAnimationDisplayer::CreateInstance() {
         ((VOID * *(_fastcall * )())
-        0x00A8E468)();
+        0x00ADCD21)();
 }

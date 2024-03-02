@@ -279,7 +279,7 @@ public:
 	void RemoveAll()
 	{
         ((VOID(_fastcall * )(ZArray<T> * , PVOID))
-        0x00429C86)(this, NULL);
+        0x0042B28B)(this, NULL);
 //		if (this->a)
 //		{
 //			/* Get pointer to allocation base  (array base - 4 bytes) */
