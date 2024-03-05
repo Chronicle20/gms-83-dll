@@ -1,20 +1,24 @@
 #include "pch.h"
 
+typedef VOID(__thiscall *_CLogo__CLogo_t)(CLogo *pThis);
+_CLogo__CLogo_t _CLogo__CLogo = reinterpret_cast<_CLogo__CLogo_t>(0x006A0BC2);
+
 CLogo::CLogo() {
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    0x006A0BC2)(this, nullptr);
+    _CLogo__CLogo(this);
 }
+
+typedef CRTTI *(__thiscall *_CLogo__GetRTTI_t)(CLogo *pThis);
+_CLogo__GetRTTI_t _CLogo__GetRTTI = reinterpret_cast<_CLogo__GetRTTI_t>(0x006A0BFD);
 
 const CRTTI *CLogo::GetRTTI() {
-    return ((const CRTTI *(_fastcall
-    * )(CLogo * , PVOID))
-    0x006A0BFD)(this, nullptr);
+    return _CLogo__GetRTTI(this);
 }
 
+typedef int(__thiscall *_CLogo__IsKindOf_t)(CLogo *pThis, const CRTTI *pRTTI);
+_CLogo__IsKindOf_t _CLogo__IsKindOf = reinterpret_cast<_CLogo__IsKindOf_t>(0x006A0C03);
+
 int CLogo::IsKindOf(const CRTTI *pRTTI) {
-    return ((int (_fastcall * )(CLogo * , PVOID,
-    const CRTTI *pRTTI))
-    0x006A0C03)(this, nullptr, pRTTI);
+    return _CLogo__IsKindOf(this, pRTTI);
 }
 
 typedef VOID(__thiscall *_CLogo__Update_t)(CLogo *pThis);

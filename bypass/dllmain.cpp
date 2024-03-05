@@ -311,7 +311,7 @@ typedef VOID(__cdecl *_set_stage_t)(CStage *pStage, void *pParam);
 _set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(0x007EFFC0);
 
 IWzGr2D *get_gr() {
-    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) 0x00CDB7E0);
+    return reinterpret_cast<IWzGr2D *>(*(void **) 0x00CDB7E0);
 }
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
@@ -469,7 +469,10 @@ typedef VOID(__fastcall *_CWvsApp__SetUp_t)(CWvsApp *pThis, PVOID edx);
 _CWvsApp__SetUp_t _CWvsApp__SetUp;
 
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
-    PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(638u);
+    Log("CWvsApp::SetUp(CWvsApp *this)");
+    CSecurityClient::CreateInstance();
+
+    PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(0x4ACu);
     CConfig *cConfig;
     if (ret) {
         cConfig = new(ret) CConfig();
@@ -483,34 +486,29 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     pThis->InitializePCOM();
     pThis->CreateMainWindow();
 
-    CSecurityClient::CreateInstance();
+    Log("CWvsApp::SetUp => m_hWnd=[%p]", pThis->m_hWnd);
 
     CClientSocket::CreateInstance();
     pThis->ConnectLogin();
+    CSecurityClient::GetInstance()->m_hMainWnd = pThis->m_hWnd;
 
     CFuncKeyMappedMan::CreateInstance();
     CQuickslotKeyMappedMan::CreateInstance();
     CMacroSysMan::CreateInstance();
     pThis->InitializeResMan();
-
-//    dword_BF0444(v2);
-//    if ( *((_DWORD *)dword_BE7918 + 3580) )
-//    {
-//        v23 = ZAllocEx<ZAllocAnonSelector>::Alloc(dword_BF0B00, 0x20u);
-//        v31 = 0;
-//        if ( v23 )
-//            v12 = sub_42C3DE(v23, v3, v28[0], v28[1], v28[2], v28[3]);
-//        else
-//            v12 = 0;
-//        v24 = v12;
-//        v31 = -1;
-//    }
-
     pThis->InitializeGr2D();
     pThis->InitializeInput();
+    ShowWindow(pThis->m_hWnd, 5);
+    UpdateWindow(pThis->m_hWnd);
+    SetForegroundWindow(pThis->m_hWnd);
+    auto hr = get_gr()->RenderFrame();
+    if (FAILED(hr)) {
+        Log("Do proper _com_raise_errorex");
+        return;
+    }
     Sleep(100);
     pThis->InitializeSound();
-    Sleep(300);
+    Sleep(100);
 
     CActionMan::CreateInstance();
     CActionMan::GetInstance()->Init();
@@ -537,7 +535,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     CAnimationDisplayer::CreateInstance();
     CMapleTVMan::CreateInstance();
     //TODO look up what this is in CWvsApp
-    CMapleTVMan::GetInstance()->Init(0, 0);
+    CMapleTVMan::GetInstance()->Init(pThis->dummy15, pThis->dummy18);
 
     CRadioManager::CreateInstance();
     char sModulePath[260];
@@ -549,7 +547,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     ZXString<char> tempString = ZXString<char>(sModulePath, 0xFFFFFFFF);
     CConfig::GetInstance()->CheckExecPathReg(tempString);
 
-    ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(56u);
+    ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(0x2Cu);
     CStage *cLogo;
     if (ret) {
         cLogo = new(ret) CLogo();
@@ -657,7 +655,7 @@ VOID __stdcall MainProc() {
     INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, 0x00AD7D58);
 
     // CWvsApp::InitializeInput
-    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x00ADACA5);
+    //INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x00ADACA5);
 
     // CWvsApp::Run
     INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, 0x00AD8328);
@@ -677,8 +675,8 @@ VOID __stdcall MainProc() {
     // CWvsContext::OnEnterField - think we're good here
 
     // CLogin::SendCheckPasswordPacket
-    INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
-                  CLogin__SendCheckPasswordPacket_Hook, 0x0066DA6A);
+//    INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
+//                  CLogin__SendCheckPasswordPacket_Hook, 0x0066DA6A);
 
     // Noop Call to CSecurityClient::OnPacket
 //    MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 16);

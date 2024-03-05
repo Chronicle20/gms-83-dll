@@ -18,8 +18,10 @@ void CActionMan::Init() {
     _CActionMan__Init(this);
 }
 
+typedef VOID(__thiscall *_CActionMan__SweepCache_t)(CActionMan *pThis);
+_CActionMan__SweepCache_t _CActionMan__SweepCache = reinterpret_cast<_CActionMan__SweepCache_t>(0x004123D3);
+
 // void __thiscall CActionMan::SweepCache(CActionMan *this)
 void CActionMan::SweepCache() {
-    ((VOID(_fastcall * )(CActionMan * , PVOID))
-    0x004123D3)(this, nullptr);
+    _CActionMan__SweepCache(this);
 }

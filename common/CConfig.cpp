@@ -28,8 +28,9 @@ void CConfig::ApplySysOpt(int *pSysOpt, int bApplyVideo) {
     _CConfig__ApplySysOpt(this, pSysOpt, bApplyVideo);
 }
 
+typedef VOID(__thiscall *_CConfig__CheckExecPathReg_t)(CConfig *pThis, ZXString<char> sModulePath);
+_CConfig__CheckExecPathReg_t _CConfig__CheckExecPathReg = reinterpret_cast<_CConfig__CheckExecPathReg_t>(0x004B98CD);
+
 void CConfig::CheckExecPathReg(ZXString<char> sModulePath) {
-    ((VOID(_fastcall * )(CConfig * , PVOID, ZXString<char>
-    sModulePath))
-    0x004B98CD)(this, nullptr, sModulePath);
+    _CConfig__CheckExecPathReg(this, sModulePath);
 }

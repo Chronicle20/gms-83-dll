@@ -1,7 +1,13 @@
 #include "pch.h"
 
+typedef VOID(__cdecl *_CSecurityClient__CreateInstance_t)();
+_CSecurityClient__CreateInstance_t _CSecurityClient__CreateInstance = reinterpret_cast<_CSecurityClient__CreateInstance_t>(0x00ADCE67);
+
 // void __stdcall TSingleton<CSecurityClient>::CreateInstance()
 void CSecurityClient::CreateInstance() {
-    ((VOID * *(_fastcall * )())
-    0x00ADCE67)();
+    _CSecurityClient__CreateInstance();
+}
+
+CSecurityClient *CSecurityClient::GetInstance() {
+    return reinterpret_cast<CSecurityClient *>(*(void **) 0x00CD5C44);
 }

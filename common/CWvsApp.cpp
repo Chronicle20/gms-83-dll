@@ -6,9 +6,11 @@ CWvsApp *CWvsApp::GetInstance() {
     return reinterpret_cast<CWvsApp *>(*(void **) 0x00CD5C40);
 }
 
+typedef VOID(__thiscall *_CWvsApp__ISMsgProc_t)(CWvsApp *pThis, unsigned int message, unsigned int wParam, int lParam);
+_CWvsApp__ISMsgProc_t _CWvsApp__ISMsgProc = reinterpret_cast<_CWvsApp__ISMsgProc_t>(0x00ADBE51);
+
 void CWvsApp::ISMsgProc(unsigned int message, unsigned int wParam, int lParam) {
-    ((VOID(_fastcall * )(CWvsApp * , PVOID, unsigned int message, unsigned int wParam, int lParam))
-    0x00ADBE51)(this, nullptr, message, wParam, lParam);
+    _CWvsApp__ISMsgProc(this, message, wParam, lParam);
 }
 
 //TODO I think this doesnt exist

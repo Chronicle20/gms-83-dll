@@ -30,6 +30,7 @@ add_library(bypass SHARED
         ${CMAKE_SOURCE_DIR}/common/ZSocketBuffer.cpp
         ${CMAKE_SOURCE_DIR}/common/CIOBufferManipulator.cpp
         ${CMAKE_SOURCE_DIR}/common/ZSocketBase.cpp
+        ${CMAKE_SOURCE_DIR}/common/CWndMan.cpp
 )
 
 # Set additional include directories if needed

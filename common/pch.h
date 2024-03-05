@@ -103,6 +103,7 @@
 #include "CAvatar.h"
 #include "CCtrlWnd.h"
 #include "CWnd.h"
+#include "CWndMan.h"
 #include "CDialog.h"
 #include "CUIToolTip.h"
 #include "CCtrlButton.h"
