@@ -8,9 +8,9 @@ public:
     ZXString<char> m_sLastMailAddr;
     ZXString<char> m_sLastConnectWorldName;
     int dummy5;
-    int m_nScr_RRate;
     int dummy1;
-    int dummy2;
+    int m_nScr_RRate;
+    int m_bScr_FirstRun;
     int m_nPetConsumeItemID;
     int m_nPetConsumeMPItemID;
     CONFIG_GAMEOPT m_gameOpt;

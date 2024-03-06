@@ -68,12 +68,12 @@ void CWvsApp::InitializeSound() {
     _CWvsApp__InitializeSound(this);
 }
 
-typedef VOID(__thiscall *_CWvsApp__InitializeGameData_t)(CWvsApp *pThis, PVOID first);
-_CWvsApp__InitializeGameData_t _CWvsApp__InitializeGameData = reinterpret_cast<_CWvsApp__InitializeGameData_t>(0x00ADAE26);
+typedef VOID(__thiscall *_CWvsApp__InitializeGameData_t)(CWvsApp *pThis);
+_CWvsApp__InitializeGameData_t _CWvsApp__InitializeGameData = reinterpret_cast<_CWvsApp__InitializeGameData_t>(0x00ADAFA1);
 
 void CWvsApp::InitializeGameData() {
     // feels like this needs to be unvirtualized
-    _CWvsApp__InitializeGameData(this, nullptr);
+    _CWvsApp__InitializeGameData(this);
 }
 
 typedef VOID(__thiscall *_CWvsApp__CreateWndManager_t)(CWvsApp *pThis);

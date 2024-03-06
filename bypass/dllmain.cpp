@@ -470,6 +470,10 @@ _CWvsApp__SetUp_t _CWvsApp__SetUp;
 
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     Log("CWvsApp::SetUp(CWvsApp *this)");
+
+    auto time = timeGetTime();
+    srand(time);
+
     CSecurityClient::CreateInstance();
 
     PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(0x4ACu);
@@ -478,11 +482,6 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
         cConfig = new(ret) CConfig();
     }
 
-//    pThis->InitializeAuth();
-    auto time = timeGetTime();
-    srand(time);
-//    GetSEPrivilege();
-    // dword_BF1AC8 = 0x10;
     pThis->InitializePCOM();
     pThis->CreateMainWindow();
 
@@ -510,10 +509,19 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     pThis->InitializeSound();
     Sleep(100);
 
+    pThis->InitializeGameData();
+    pThis->CreateWndManager();
+
+    CConfig::GetInstance()->ApplySysOpt(nullptr, 0);
+
     CActionMan::CreateInstance();
     CActionMan::GetInstance()->Init();
 
-    pThis->InitializeGameData();
+    CAnimationDisplayer::CreateInstance();
+
+    CMapleTVMan::CreateInstance();
+    //TODO look up what this is in CWvsApp
+    CMapleTVMan::GetInstance()->Init(pThis->dummy15, pThis->dummy18);
 
     CQuestMan::CreateInstance();
     if (!CQuestMan::GetInstance()->LoadDemand()) {
@@ -528,14 +536,6 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
         Log("Throw error regarding CMonsterBookMan::LoadBook");
         return;
     }
-
-    pThis->CreateWndManager();
-    CConfig::GetInstance()->ApplySysOpt(nullptr, 0);
-
-    CAnimationDisplayer::CreateInstance();
-    CMapleTVMan::CreateInstance();
-    //TODO look up what this is in CWvsApp
-    CMapleTVMan::GetInstance()->Init(pThis->dummy15, pThis->dummy18);
 
     CRadioManager::CreateInstance();
     char sModulePath[260];
@@ -555,92 +555,6 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
         cLogo = nullptr;
     }
     _set_stage(cLogo, nullptr);
-//    poly = -586093038;
-//    for ( ii = 0; ii < 256; ++ii )
-//    {
-//        crc32 = ii;
-//        for ( i = 8; i > 0; --i )
-//        {
-//            if ( (crc32 & 1) != 0 )
-//                crc32 = (poly - 401) ^ (crc32 >> 1);
-//            else
-//                crc32 >>= 1;
-//        }
-//        g_crc32Table[ii] = crc32;
-}
-
-
-// void __thiscall CWvsApp::SetUp(CWvsApp *this)
-typedef VOID(__stdcall *_CWvsApp__CWvsApp_t)(CWvsApp *pThis, const char *sCmdLine);
-
-_CWvsApp__CWvsApp_t _CWvsApp__CWvsApp;
-
-//DWORD ResetLSP() {
-//    return reinterpret_cast<DWORD>(*(void **) 0x00451212);
-//}
-
-typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS)(HANDLE, PBOOL);
-
-// CWvsApp::CWvsApp
-VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
-    void **instance = reinterpret_cast<void **>(0x00CD5C40);
-    *instance = &pThis->m_hWnd != 0 ? pThis : 0;
-
-    pThis->m_hWnd = 0;
-    pThis->m_bPCOMInitialized = 0;
-    pThis->m_hHook = 0;
-    pThis->m_tUpdateTime = 0;
-    pThis->m_bFirstUpdate = 1;
-    pThis->m_sCmdLine = ZXString<char>();
-    pThis->m_nGameStartMode = 0;
-    pThis->m_bAutoConnect = 1;
-    pThis->m_bShowAdBalloon = 0;
-    pThis->m_bExitByTitleEscape = 0;
-    pThis->m_hrZExceptionCode = 0;
-    pThis->m_hrComErrorCode = 0;
-    pThis->m_tNextSecurityCheck = 0;
-//    pThis->m_pBackupBuffer = ZArray<unsigned char>();
-//    pThis->m_dwBackupBufferSize = 0;
-    pThis->m_sCmdLine = ZXString<char>(pThis->dummy16, 0xFFFFFFFF);
-    pThis->m_sCmdLine = ZXString<char>(pThis->dummy17, 0xFFFFFFFF);
-    pThis->m_sCmdLine = ZXString<char>(sCmdLine, 0xFFFFFFFF);
-    pThis->m_sCmdLine = *pThis->m_sCmdLine.TrimRight("\" ")->TrimLeft("\" ");
-//    pThis->m_pBackupBuffer.Alloc(0x1000);
-    ZXString<char> sToken = ZXString<char>();
-    pThis->GetCmdLine(&sToken, 0);
-
-    pThis->m_nGameStartMode = 2;
-    pThis->m_dwMainThreadId = GetCurrentThreadId();
-
-    OSVERSIONINFO ovi;
-    ZeroMemory(&ovi, sizeof(OSVERSIONINFO));
-    ovi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionExA(&ovi);
-    pThis->m_bWin9x = ovi.dwPlatformId == 1;
-    if (ovi.dwMajorVersion >= 6 && !pThis->m_nGameStartMode) {
-        pThis->m_nGameStartMode = 2;
-    }
-
-//    int *g_dwTargetOS = reinterpret_cast<int *>(0x00C955A4);
-//
-//    if (ovi.dwMajorVersion < 5) {
-//        *g_dwTargetOS = 1996;
-//    }
-
-//    BOOL bIsWow64 = FALSE;
-//    LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
-//            GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
-//    if (fnIsWow64Process) {
-//        fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
-//    }
-
-//    if (bIsWow64) {
-//        *g_dwTargetOS = 1996;
-//    }
-//    if (ovi.dwMajorVersion >= 6 && !bIsWow64) {
-//        ResetLSP();
-//    }
-    sToken.Empty();
 }
 
 // main thread
@@ -648,20 +562,11 @@ VOID __stdcall MainProc() {
     // Window Mode Magic
     MemEdit::WriteBytes(0x00ADA8D7+0x94, new BYTE[7]{0xC7, 0x45, 0xDC, 0x00, 0x00, 0x00, 0x00}, 7);
 
-    // CWvsApp::CWvsApp
-    //INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, 0x00AD73D7);
-
     // CWvsApp::SetUp
     INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, 0x00AD7D58);
 
-    // CWvsApp::InitializeInput
-    //INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x00ADACA5);
-
     // CWvsApp::Run
     INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, 0x00AD8328);
-
-    // CWvsApp::CallUpdate
-    //INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x00A8C220);
 
     // CActionMan::SweepCache - ???
 
