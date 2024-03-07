@@ -573,6 +573,10 @@ VOID __stdcall MainProc() {
     // dunno, but need to noop
     MemEdit::WriteBytes(0x00B3B96B, new BYTE[1]{0xC3}, 1);
 
+    MemEdit::WriteBytes(0x00B3B5F7+0x19, new BYTE[2]{0x90, 0x90}, 2);
+
+    MemEdit::WriteBytes(0x004123D3+0x4D, new BYTE[5]{0xE9, 0x97, 0x00, 0x00, 0x00}, 5);
+
     // DR_check
     MemEdit::WriteBytes(0x004A9617, new BYTE[3]{0x33, 0xC0, 0xC3}, 3);
 
