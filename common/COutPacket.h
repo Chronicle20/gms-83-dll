@@ -11,6 +11,7 @@ public:
     ~COutPacket();
 
     VOID Encode1(unsigned __int8 n);
+    VOID Encode2(unsigned short n);
     VOID Encode4(UINT n);
     VOID EncodeStr(ZXString<char> s);
     VOID EncodeBuffer(const void *p, unsigned int uSize);

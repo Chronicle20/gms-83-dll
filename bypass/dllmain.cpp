@@ -204,11 +204,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
         auto cOutPacket = COutPacket(7);
         cOutPacket.Encode4(CWvsContext::GetInstance()->m_dwCharacterId);
         cOutPacket.EncodeBuffer(systemInfo.GetMachineId(), 16);
-        if (CWvsContext::GetInstance()->m_nSubGradeCode.GetData() >= 0) {
-            cOutPacket.Encode1(0);
-        } else {
-            cOutPacket.Encode1(1);
-        }
+        cOutPacket.Encode2(CConfig::GetInstance()->dummy1);
         cOutPacket.Encode1(0);
         cOutPacket.EncodeBuffer(CWvsContext::GetInstance()->m_aClientKey, 8);
 
@@ -426,11 +422,11 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
                         Log("AVCPatchException");
                         _com_raise_error(m_hrComErrorCode);
                     }
-                    if ( m_hrComErrorCode >= 553648128 && m_hrComErrorCode <= 553648134) {
+                    if ( m_hrComErrorCode >= 0x21000000 && m_hrComErrorCode <= 0x21000006) {
                         Log("AVCDisconnectException");
                         _com_raise_error(m_hrComErrorCode);
                     }
-                    if ( m_hrComErrorCode >= 570425344 && m_hrComErrorCode <= 570425357 ) {
+                    if ( m_hrComErrorCode >= 0x22000000 && m_hrComErrorCode <= 0x2200000E ) {
                         Log("AVCTerminateException");
                         _com_raise_error(m_hrComErrorCode);
                     }

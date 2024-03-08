@@ -8,13 +8,20 @@ COutPacket::COutPacket(INT nType) {
     0x0074B68D)(this, nullptr, nType);
 }
 
-
 // void __thiscall COutPacket::Encode1(COutPacket *this, unsigned __int8 n)
 // typedef VOID(__fastcall *_COutPacket__Encode1_t)(COutPacket *pThis, PVOID edx, unsigned __int8 n);
 // _COutPacket__Encode1_t _COutPacket__Encode1 = reinterpret_cast<_COutPacket__Encode1_t>(0x00406549);
 void COutPacket::Encode1(unsigned char n) {
     ((VOID(_fastcall * )(COutPacket * , PVOID, unsigned __int8))
     0x00406A4D)(this, nullptr, n);
+}
+
+// void __thiscall COutPacket::Encode1(COutPacket *this, unsigned __int8 n)
+// typedef VOID(__fastcall *_COutPacket__Encode1_t)(COutPacket *pThis, PVOID edx, unsigned __int8 n);
+// _COutPacket__Encode1_t _COutPacket__Encode1 = reinterpret_cast<_COutPacket__Encode1_t>(0x00406549);
+void COutPacket::Encode2(unsigned short n) {
+    ((VOID(_fastcall * )(COutPacket * , PVOID, unsigned short))
+    0x0042A5CC)(this, nullptr, n);
 }
 
 // void __thiscall COutPacket::Encode4(COutPacket *this, unsigned int n)
