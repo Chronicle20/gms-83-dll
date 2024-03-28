@@ -11,8 +11,8 @@
 #include <Windows.h>
 #include <memedit.h>
 
-const DWORD dwWinMain = 0x00A841F4;
-const DWORD dwWinMainShowADBalloonConditional = dwWinMain + 0xA0E;
+const DWORD dwWinMain = 0x00AD3033;
+const DWORD dwWinMainShowADBalloonConditional = dwWinMain + 0xA03;
 
 // main thread
 VOID __stdcall MainProc()
