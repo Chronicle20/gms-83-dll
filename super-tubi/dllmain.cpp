@@ -11,7 +11,7 @@
 #include <Windows.h>
 #include <memedit.h>
 
-const DWORD dwCanSendExclRequest = 0x00494BF2; // CWvsContext::CanSendExclRequest
+const DWORD dwCanSendExclRequest = 0x00499991; // CWvsContext::CanSendExclRequest
 const DWORD dwTubiCall = dwCanSendExclRequest + 0x3B;
 
 // main thread
