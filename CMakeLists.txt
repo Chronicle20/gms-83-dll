@@ -12,6 +12,7 @@ add_subdirectory(enable-minimize)
 add_subdirectory(no-beginner-party-block)
 add_subdirectory(no-enter-mts-map-restriction)
 add_subdirectory(no-ad-balloon)
+add_subdirectory(window-mode)
 
 # Custom target to package DLLs into a tar archive
 add_custom_target(package_dlls
@@ -26,6 +27,7 @@ add_custom_target(package_dlls
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-beginner-party-block>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-enter-mts-map-restriction>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-ad-balloon>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:window-mode>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
         COMMENT "Creating tar archive of DLL artifacts"
 )

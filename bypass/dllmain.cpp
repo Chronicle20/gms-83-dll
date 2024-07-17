@@ -17,17 +17,6 @@
 const DWORD dwCClientSocketProcessPacket = 0x004965F1;
 const DWORD dwCSecurityClientOnPacketCall = dwCClientSocketProcessPacket + 0x7F;
 
-const DWORD dwCWvsAppInitializeGr2D = 0x009F7A3B;
-const DWORD dwFixFullScreen = dwCWvsAppInitializeGr2D + 0x60; // 0x009F7A9B
-const DWORD dwFixFullScreenReturn = dwCWvsAppInitializeGr2D + 0x65;
-
-__declspec(naked) void FixFullScreen() {
-    __asm {
-            mov eax, 0
-            jmp dword ptr[dwFixFullScreenReturn]
-    }
-}
-
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
 typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
 
@@ -378,8 +367,6 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
 
 // main thread
 VOID __stdcall MainProc() {
-    // Window Mode Magic
-    MemEdit::CodeCave(FixFullScreen, dwFixFullScreen, 5);
 
     // Noop Call to CSecurityClient::OnPacket
     MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 12);
