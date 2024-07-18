@@ -369,16 +369,19 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
 VOID __stdcall MainProc() {
 
     // Noop Call to CSecurityClient::OnPacket
-    MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 12);
-
-    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
-    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, 0x00494D2F);
-    INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
-                  CLogin__SendCheckPasswordPacket_Hook, 0x005F6952);
-    INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x009F84D0);
-    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x009F7CE1);
-    INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, 0x009F5C50);
-    INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, 0x009F5239);
+//    MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 12);
+//
+//    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
+//    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, 0x00494D2F);
+//    INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
+//                  CLogin__SendCheckPasswordPacket_Hook, 0x005F6952);
+//    INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x009F84D0);
+//    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x009F7CE1);
+//    INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, 0x009F5C50);
+//    INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, 0x009F5239);
+    MemEdit::PatchNop(0x005D7CF4+0x24, 5); // CWvsApp::SetUp
+    MemEdit::PatchNop(0x005D7E02+0x121, 5); // CWvsApp::Run
+    MemEdit::PatchNop(0x005F2BD9+0x46, 5);
 }
 
 // dll entry point
