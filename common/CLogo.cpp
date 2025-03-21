@@ -1,25 +1,26 @@
 #include "pch.h"
+#include "memory_map.h"
 
 CLogo::CLogo() {
     ((VOID(_fastcall * )(CLogo * , PVOID))
-    0x0062ECE2)(this, NULL);
+    C_LOGO)(this, NULL);
 }
 
 const CRTTI *CLogo::GetRTTI() {
     return ((const CRTTI *(_fastcall
     * )(CLogo * , PVOID))
-    0x0062ED26)(this, NULL);
+    C_LOGO_GET_RTTI)(this, NULL);
 }
 
 int CLogo::IsKindOf(const CRTTI *pRTTI) {
     return ((int (_fastcall * )(CLogo * , PVOID,
     const CRTTI *pRTTI))
-    0x0062ED2C)(this, NULL, pRTTI);
+    C_LOGO_IS_KIND_OF)(this, NULL, pRTTI);
 }
 
 void CLogo::Update() {
     ((VOID(_fastcall * )(CLogo * , PVOID))
-    0x005F4C16)(this, NULL);
+    C_LOGO_UPDATE)(this, NULL);
 }
 
 void CLogo::OnIMEComp(const char *, ZArray<unsigned long> *, unsigned int, int,
@@ -70,15 +71,15 @@ int CLogo::OnMouseMove(int, int) {
 
 void CLogo::OnMouseButton(unsigned int msg, unsigned int wParam, int rx, int ry) {
     ((VOID(_fastcall * )(CLogo * , PVOID, unsigned int, unsigned int, int, int))
-    0x0062F2A1)(this, NULL, msg, wParam, rx, ry);
+    C_LOGO_ON_MOUSE_BUTTON)(this, NULL, msg, wParam, rx, ry);
 }
 
 int CLogo::OnSetFocus(int bFocus) {
     return ((int(_fastcall * )(CLogo * , PVOID, int))
-    0x0062ED20)(this, NULL, bFocus);
+    C_LOGO_ON_SET_FOCUS)(this, NULL, bFocus);
 }
 
 void CLogo::OnKey(unsigned int wParam, unsigned int lParam) {
     ((VOID(_fastcall * )(CLogo * , PVOID, unsigned int, unsigned int))
-    0x0062F27A)(this, NULL, wParam, lParam);
+    C_LOGO_ON_KEY)(this, NULL, wParam, lParam);
 }

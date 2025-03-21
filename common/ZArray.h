@@ -1,4 +1,5 @@
 #pragma once
+#include "memory_map.h"
 
 template <typename T>
 class ZArray
@@ -279,7 +280,7 @@ public:
 	void RemoveAll()
 	{
         ((VOID(_fastcall * )(ZArray<T> * , PVOID))
-        0x00428CF1)(this, NULL);
+        Z_ARRAY_REMOVE_ALL)(this, NULL);
 //		if (this->a)
 //		{
 //			/* Get pointer to allocation base  (array base - 4 bytes) */

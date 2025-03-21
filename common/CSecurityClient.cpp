@@ -1,7 +1,7 @@
 #include "pch.h"
+#include "memory_map.h"
 
-// void __stdcall TSingleton<CSecurityClient>::CreateInstance()
 void CSecurityClient::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x009F9F42)();
+            C_SECURITY_CLIENT_CREATE_INSTANCE)();
 }

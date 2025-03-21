@@ -10,14 +10,12 @@
 
 #include <Windows.h>
 #include <memedit.h>
-
-const DWORD dwSendJoinPartyMsg = 0x0052FECF;
-const DWORD dwSendCreateNewPartyMsg = 0x52FCE1;
+#include "memory_map.h"
 
 // main thread
 VOID __stdcall MainProc() {
-    MemEdit::WriteBytes(dwSendJoinPartyMsg + 0x65, new BYTE[1]{0xEB}, 1);
-    MemEdit::WriteBytes(dwSendCreateNewPartyMsg + 0xA4, new BYTE[1]{0xEB}, 1);
+    MemEdit::WriteBytes(C_FIELD_SEND_JOIN_PARTY_MSG + C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET, new BYTE[1]{0xEB}, 1);
+    MemEdit::WriteBytes(C_FIELD_SEND_CREATE_NEW_PARTY_MSG + C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET, new BYTE[1]{0xEB}, 1);
 }
 
 // dll entry point

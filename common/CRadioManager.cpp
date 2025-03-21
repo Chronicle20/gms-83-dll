@@ -1,10 +1,11 @@
 #include "pch.h"
+#include "memory_map.h"
 
 void CRadioManager::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x009FA078)();
+    C_RADIO_MANAGER_CREATE_INSTANCE)();
 }
 
 CRadioManager *CRadioManager::GetInstance() {
-    return reinterpret_cast<CRadioManager *>(*(void **) 0x00BF0B00);
+    return reinterpret_cast<CRadioManager *>(*(void **) C_RADIO_MANAGER_GET_INSTANCE);
 }

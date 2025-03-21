@@ -1,4 +1,5 @@
 #pragma once
+#include "memory_map.h"
 
 template<typename T> struct ZAllocEx;
 template<typename T> struct ZAllocStrSelector;
@@ -52,7 +53,7 @@ public:
     };
 
     void GetBuffer(const char *src, size_t size) {
-        ((VOID(_fastcall * )(ZXString<T> * , PVOID, const char *src, size_t size))0x00414617)(this, NULL, src, size);
+        ((VOID(_fastcall * )(ZXString<T> * , PVOID, const char *src, size_t size))Z_X_STRING_GET_BUFFER)(this, NULL, src, size);
     }
 
     T* GetBuffer(size_t nMinLength, BOOL bRetain)

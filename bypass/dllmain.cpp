@@ -8,14 +8,12 @@
  You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
  */
 #include "pch.h"
+#include "memory_map.h"
 
 #include <memedit.h>
 #include <timeapi.h>
 #include "logger.h"
 #include "hooker.h"
-
-const DWORD dwCClientSocketProcessPacket = 0x004965F1;
-const DWORD dwCSecurityClientOnPacketCall = dwCClientSocketProcessPacket + 0x7F;
 
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
 typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
@@ -31,17 +29,17 @@ _CClientSocket__Connect_ctx_t _CClient__Connect_ctx;
 // void __thiscall CClientSocket::ClearSendReceiveCtx(CClientSocket *this)
 typedef VOID(__fastcall *_CClientSocket__ClearSendReceiveCtx_t)(CClientSocket *pThis, PVOID edx);
 
-_CClientSocket__ClearSendReceiveCtx_t _CClientSocket__ClearSendReceiveCtx = reinterpret_cast<_CClientSocket__ClearSendReceiveCtx_t>(0x004969EE);
+_CClientSocket__ClearSendReceiveCtx_t _CClientSocket__ClearSendReceiveCtx = reinterpret_cast<_CClientSocket__ClearSendReceiveCtx_t>(C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX);
 
 // void __thiscall ZSocketBase::CloseSocket(ZSocketBase *this)
 typedef VOID(__fastcall *_ZSocketBase__CloseSocket_t)(ZSocketBase *pThis, PVOID edx);
 
-_ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(0x00494857);
+_ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(Z_SOCKET_BASE_CLOSE_SOCKET);
 
 // int __thiscall CClientSocket::OnConnect(CClientSocket *this, int bSuccess)
 typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
 
-_CClientSocket__OnConnect_t _CClientSocket__OnConnect = reinterpret_cast<_CClientSocket__OnConnect_t>(0x00494ED1);
+_CClientSocket__OnConnect_t _CClientSocket__OnConnect = reinterpret_cast<_CClientSocket__OnConnect_t>(C_CLIENT_SOCKET_ON_CONNECT);
 
 VOID __fastcall CClient__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr) {
     Log("CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)");
@@ -77,10 +75,6 @@ VOID __fastcall CClient__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx, CClie
 typedef INT(__fastcall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, PVOID edx, char *sID, char *sPasswd);
 
 _CLogin__SendCheckPasswordPacket_t _CLogin__SendCheckPasswordPacket;
-
-ZXString<char> *GetCUITitleInstance() {
-    return reinterpret_cast<ZXString<char> *>(*(void **) 0x00BEDA60);
-}
 
 INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, char *sID, char *sPasswd) {
     if (pThis->m_bRequestSent) {
@@ -125,15 +119,15 @@ typedef VOID(__fastcall *_CWvsApp__CallUpdate_t)(CWvsApp *pThis, PVOID edx, int 
 _CWvsApp__CallUpdate_t _CWvsApp__CallUpdate;
 
 CStage *get_stage() {
-    return reinterpret_cast<CStage *>(*(void **) 0x00BEDED4);
+    return reinterpret_cast<CStage *>(*(void **) GET_STAGE);
 }
 
 // void __cdecl set_stage(CStage *pStage, void *pParam)
 typedef VOID(__cdecl *_set_stage_t)(CStage *pStage, void *pParam);
-_set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(0x00777347);
+_set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(SET_STAGE);
 
 IWzGr2D *get_gr() {
-    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) 0x00BF14EC);
+    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) GET_GR);
 }
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
@@ -175,7 +169,7 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
 // void __stdcall TSingleton<CInputSystem>::CreateInstance()
 typedef VOID(__stdcall *_TSingleton_CInputSystem__CreateInstance_t)();
 
-_TSingleton_CInputSystem__CreateInstance_t _TSingleton_CInputSystem__CreateInstance = reinterpret_cast<_TSingleton_CInputSystem__CreateInstance_t>(0x009F9A6A);
+_TSingleton_CInputSystem__CreateInstance_t _TSingleton_CInputSystem__CreateInstance = reinterpret_cast<_TSingleton_CInputSystem__CreateInstance_t>(C_INPUT_SYSTEM_CREATE_INSTANCE);
 
 // void __thiscall CWvsApp::InitializeInput(CWvsApp *this)
 typedef VOID(__fastcall *_CWvsApp__InitializeInput_t)(CWvsApp *pThis, PVOID edx);
@@ -267,17 +261,12 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
 
 void GetSEPrivilege() {
     ((VOID **(_fastcall * )())
-    0x0044E824)();
+    GET_SE_PRIVILEGE)();
 }
 
 // void __thiscall CWvsApp::SetUp(CWvsApp *this)
 typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
 _CWvsApp__SetUp_t _CWvsApp__SetUp;
-
-void newCLogo(CLogo * logo) {
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    0x0062ECE2)(logo, NULL);
-}
 
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     pThis->InitializeAuth();
@@ -369,16 +358,16 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
 VOID __stdcall MainProc() {
 
     // Noop Call to CSecurityClient::OnPacket
-    MemEdit::PatchNop(dwCSecurityClientOnPacketCall, 12);
+    MemEdit::PatchNop(C_CLIENT_SOCKET_PROCESS_PACKET + C_CLIENT_SOCKET_PROCESS_PACKET_CALL_C_SECURITY_CLIENT_ON_PACKET_OFFSET, 12);
 
-    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, 0x00494CA3);
-    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, 0x00494D2F);
+    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClient__Connect_Ctx_Hook, C_CLIENT_CONNECT_CTX);
+    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClient__Connect_Addr_Hook, C_CLIENT_CONNECT_ADR);
     INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
-                  CLogin__SendCheckPasswordPacket_Hook, 0x005F6952);
-    INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, 0x009F84D0);
-    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, 0x009F7CE1);
-    INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, 0x009F5C50);
-    INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, 0x009F5239);
+                  CLogin__SendCheckPasswordPacket_Hook, C_LOGIN_SEND_CHECK_PASSWORD_PACKET);
+    INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, C_WVS_APP_CALL_UPDATE);
+    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, C_WVS_APP_INITIALIZE_INPUT);
+    INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
+    INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, C_WVS_APP_SET_UP);
 }
 
 // dll entry point

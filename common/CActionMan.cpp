@@ -1,21 +1,21 @@
 #include "pch.h"
+#include "memory_map.h"
 
 void CActionMan::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x009F9DA6)();
+    C_ACTION_MAN_CREATE_INSTANCE_ADDR)();
 }
 
 CActionMan *CActionMan::GetInstance() {
-    return reinterpret_cast<CActionMan *>(*(void **) 0x00BE78D4);
+    return reinterpret_cast<CActionMan *>(*(void **) C_ACTION_MAN_GET_INSTANCE_ADDR);
 }
 
 void CActionMan::Init() {
     ((VOID(_fastcall * )(CActionMan * , PVOID))
-    0x00406ABD)(this, NULL);
+    C_ACTION_MAN_INIT)(this, NULL);
 }
 
-// void __thiscall CActionMan::SweepCache(CActionMan *this)
 void CActionMan::SweepCache() {
     ((VOID(_fastcall * )(CActionMan * , PVOID))
-    0x00411BBB)(this, NULL);
+    C_ACTION_MAN_SWEEP_CACHE)(this, NULL);
 }

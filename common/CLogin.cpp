@@ -1,7 +1,8 @@
 #include "pch.h"
+#include "memory_map.h"
 #include "CLogin.h"
 
 void CLogin::Update() {
     ((VOID(_fastcall * )(CLogin * , PVOID))
-    0x005F4C16)(this, NULL);
+    C_LOGIN_UPDATE)(this, NULL);
 }

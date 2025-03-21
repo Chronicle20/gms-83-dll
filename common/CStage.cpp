@@ -1,11 +1,12 @@
 #include "pch.h"
+#include "memory_map.h"
 
 void CStage::OnMouseEnter(int bEnter) {
     ((VOID(_fastcall * )(CStage * , PVOID, int))
-    0x00775FC7)(this, NULL, bEnter);
+    C_STAGE_ON_MOUSE_ENTER)(this, NULL, bEnter);
 }
 
 void CStage::OnPacket(int nType, CInPacket * iPacket) {
     ((VOID(_fastcall * )(CStage * , PVOID, int, CInPacket *))
-    0x00775FE6)(this, NULL, nType, iPacket);
+    C_STAGE_ON_PACKET)(this, NULL, nType, iPacket);
 }

@@ -10,22 +10,19 @@
 
 #include <Windows.h>
 #include <memedit.h>
-
-const DWORD dwCWvsAppInitializeGr2D = 0x009F7A3B;
-const DWORD dwFixFullScreen = dwCWvsAppInitializeGr2D + 0x60; // 0x009F7A9B
-const DWORD dwFixFullScreenReturn = dwCWvsAppInitializeGr2D + 0x65;
+#include "memory_map.h"
 
 __declspec(naked) void FixFullScreen() {
     __asm {
             mov eax, 0
-            jmp dword ptr[dwFixFullScreenReturn]
+            jmp dword ptr[C_WVS_APP_INITIALIZE_GR2D + C_WVS_APP_INITIALIZE_GR2D_FULL_SCREEN_RETURN]
     }
 }
 
 // main thread
 VOID __stdcall MainProc() {
     // Window Mode Magic
-    MemEdit::CodeCave(FixFullScreen, dwFixFullScreen, 5);
+    MemEdit::CodeCave(FixFullScreen, C_WVS_APP_INITIALIZE_GR2D + C_WVS_APP_INITIALIZE_GR2D_FULL_SCREEN_OFFSET, 5);
 }
 
 // dll entry point

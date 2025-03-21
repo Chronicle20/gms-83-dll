@@ -10,15 +10,13 @@
 
 #include <Windows.h>
 #include <memedit.h>
-
-const DWORD dwWinMain = 0x009F19F2;
-const DWORD dwWinMainShowADBalloonConditional = dwWinMain + 0xA3D;
+#include "memory_map.h"
 
 // main thread
 VOID __stdcall MainProc()
 {
     // Noop Ad Balloon
-    MemEdit::WriteBytes(dwWinMainShowADBalloonConditional, new BYTE[1]{0xEB}, 1);
+    MemEdit::WriteBytes(WIN_MAIN + WIN_MAIN_AD_BALLOON_CONDITIONAL, new BYTE[1]{0xEB}, 1);
 }
 
 // dll entry point

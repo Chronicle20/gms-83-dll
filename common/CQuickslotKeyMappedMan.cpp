@@ -1,6 +1,7 @@
 #include "pch.h"
+#include "memory_map.h"
 
 void CQuickslotKeyMappedMan::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x009FA0CB)();
+            C_QUICKSLOT_KEY_MAPPED_MAN)();
 }

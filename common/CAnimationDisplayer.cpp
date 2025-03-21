@@ -1,6 +1,7 @@
 #include "pch.h"
+#include "memory_map.h"
 
 void CAnimationDisplayer::CreateInstance() {
         ((VOID * *(_fastcall * )())
-        0x009F9DFC)();
+                C_ANIMATION_DISPLAYER_CREATE_INSTANCE)();
 }
