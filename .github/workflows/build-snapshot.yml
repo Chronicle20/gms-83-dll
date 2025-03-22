@@ -17,7 +17,7 @@ jobs:
     name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up MSVC
         uses: microsoft/setup-msbuild@v1.3.3
       - name: Set up CMake
