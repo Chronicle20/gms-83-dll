@@ -19,7 +19,7 @@ jobs:
     name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set up MSVC
         uses: microsoft/setup-msbuild@v1.3.3
       - name: Set up CMake
@@ -54,7 +54,7 @@ jobs:
     name: Release ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Download artifact for this variant
         uses: actions/download-artifact@v3
         with:
