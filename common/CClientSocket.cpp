@@ -1,23 +1,37 @@
 #include "pch.h"
 
 CClientSocket *CClientSocket::GetInstance() {
-    return reinterpret_cast<CClientSocket *>(*(void **) 0x00BE7914);
+    return reinterpret_cast<CClientSocket *>(*(void **) C_CLIENT_SOCKET_GET_INSTANCE);
 }
 
 void CClientSocket::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x009F9E53)();
+    C_CLIENT_SOCKET_CREATE_INSTANCE)();
 }
 
-// void __fastcall CClientSocket::SendPacket(CClientSocket *this, int a2, COutPacket *oPacket)
-// typedef VOID(__fastcall *_CClientSocket__SendPacket_t)(CClientSocket *pThis, PVOID edx, COutPacket *oPacket);
-// _CClientSocket__SendPacket_t _CClientSocket__SendPacket = reinterpret_cast<_CClientSocket__SendPacket_t>(0x0049637B);
 void CClientSocket::SendPacket(COutPacket *oPacket) {
-    ((VOID(_fastcall * )(CClientSocket * , PVOID, COutPacket*))
-    0x0049637B)(this, NULL, oPacket);
+    ((VOID(_fastcall * )(CClientSocket * , PVOID, COutPacket * ))
+    C_CLIENT_SOCKET_SEND_PACKET)(this, NULL, oPacket);
 }
 
 void CClientSocket::ManipulatePacket() {
     ((VOID(_fastcall * )(CClientSocket * , PVOID))
-    0x0049651D)(this, NULL);
+    C_CLIENT_SOCKET_MANIPULATE_PACKET)(this, NULL);
+}
+
+void CClientSocket::Close() {
+    Log("CClientSocket::Close");
+    ((VOID(_fastcall * )(CClientSocket * , PVOID))
+    C_CLIENT_SOCKET_CLOSE)(this, nullptr);
+}
+
+void CClientSocket::ClearSendReceiveCtx() {
+    ((VOID(_fastcall * )(CClientSocket * , PVOID))
+    C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX)(this, nullptr);
+}
+
+void CClientSocket::ConnectLogin() {
+    Log("CClientSocket::ConnectLogin");
+    ((VOID(_fastcall * )(CClientSocket * , PVOID))
+    C_CLIENT_SOCKET_CONNECT_LOGIN)(this, nullptr);
 }

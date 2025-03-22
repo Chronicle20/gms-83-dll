@@ -1,4 +1,5 @@
 #pragma once
+#include "memory_map.h"
 
 template <typename T>
 class ZArray
@@ -279,7 +280,7 @@ public:
 	void RemoveAll()
 	{
         ((VOID(_fastcall * )(ZArray<T> * , PVOID))
-        0x00428CF1)(this, NULL);
+        Z_ARRAY_REMOVE_ALL)(this, NULL);
 //		if (this->a)
 //		{
 //			/* Get pointer to allocation base  (array base - 4 bytes) */
@@ -297,6 +298,25 @@ public:
 //		}
 	}
 
+    void Alloc(size_t uSize)
+    {
+        this->RemoveAll();
+
+        if (!uSize) return;
+
+        /* Allocate Desired Array Size + 4 bytes */
+        /* We casting to a dword so we can write and adjust the pointer easier */
+        DWORD* pAlloc = (DWORD*)ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(sizeof(T) * uSize + sizeof(PVOID));
+
+        /* Assign number of array items to array head */
+        *pAlloc = uSize;
+
+        /* Assign start of real allocated block to array pointer */
+        /* We take index 1 because index zero is the array item count */
+        pAlloc += 1;
+        this->a = reinterpret_cast<T*>(pAlloc);
+    }
+
 private:
 	static void Construct(T* start, T* end)
 	{
@@ -312,25 +332,6 @@ private:
 		{
 			i->~T();
 		}
-	}
-
-	void Alloc(size_t uSize)
-	{
-		this->RemoveAll();
-
-		if (!uSize) return;
-
-		/* Allocate Desired Array Size + 4 bytes */
-		/* We casting to a dword so we can write and adjust the pointer easier */
-		DWORD* pAlloc = (DWORD*)ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(sizeof(T) * uSize + sizeof(PVOID));
-
-		/* Assign number of array items to array head */
-		*pAlloc = uSize;
-
-		/* Assign start of real allocated block to array pointer */
-		/* We take index 1 because index zero is the array item count */
-		pAlloc += 1;
-		this->a = reinterpret_cast<T*>(pAlloc);
 	}
 
 	void Realloc(size_t u, int nMode)

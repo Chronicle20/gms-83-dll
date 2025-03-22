@@ -2,5 +2,5 @@
 
 void CMacroSysMan::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x009F9EEE)();
+    C_MACRO_SYS_MAN_CREATE_INSTANCE)();
 }

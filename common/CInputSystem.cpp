@@ -1,27 +1,27 @@
 #include "pch.h"
 
 CInputSystem *CInputSystem::GetInstance() {
-    return reinterpret_cast<CInputSystem *>(*(void **) 0x00BEC33C);
+    return reinterpret_cast<CInputSystem *>(*(void **) C_INPUT_SYSTEM_GET_INSTANCE);
 }
 
-//void __thiscall CInputSystem::Init(CInputSystem *this, HWND__ *hWnd, void **ahEvent)
 void CInputSystem::Init(HWND__ *hWnd, void **ahEvent) {
     ((VOID(_fastcall * )(CInputSystem * , PVOID, HWND__
                                                  * hWnd, void * *ahEvent))
-    0x00599EBF)(this, NULL, hWnd, ahEvent);
+    C_INPUT_SYSTEM_INIT)(this, NULL, hWnd, ahEvent);
 }
 
 void CInputSystem::UpdateDevice(int nDeviceIndex) {
-    ((VOID(_fastcall * )(CInputSystem * , PVOID, int nDeviceIndex))
-    0x0059A2E9)(this, NULL, nDeviceIndex);
+    ((VOID(_fastcall * )(CInputSystem * , PVOID, int
+    nDeviceIndex))
+    C_INPUT_SYSTEM_UPDATE_DEVICE)(this, NULL, nDeviceIndex);
 }
 
 int CInputSystem::GetISMessage(ISMSG *pISMsg) {
-    return ((int(_fastcall * )(CInputSystem * , PVOID, ISMSG *pISMsg))
-    0x0059A306)(this, NULL, pISMsg);
+    return ((int(_fastcall * )(CInputSystem * , PVOID, ISMSG * pISMsg))
+    C_INPUT_SYSTEM_GET_IS_MESSAGE)(this, NULL, pISMsg);
 }
 
 int CInputSystem::GenerateAutoKeyDown(ISMSG *pISMsg) {
-    return ((int(_fastcall * )(CInputSystem * , PVOID, ISMSG *pISMsg))
-    0x0059B2D2)(this, NULL, pISMsg);
+    return ((int(_fastcall * )(CInputSystem * , PVOID, ISMSG * pISMsg))
+    C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN)(this, NULL, pISMsg);
 }

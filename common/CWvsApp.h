@@ -14,19 +14,20 @@ public:
     ZXString<char> m_sCmdLine;
     int m_nGameStartMode;
     int m_bAutoConnect;
-    int dummy11;
-    int dummy12;
+    int m_bShowAdBalloon;
+    int m_bExitByTitleEscape;
     HRESULT m_hrZExceptionCode;
     HRESULT m_hrComErrorCode;
-    int dummy15;
-    int dummy16;
+    unsigned int m_dwSecurityErrorCode;
+    int m_nTargetVersion;
     int m_tLastServerIPCheck;
     int m_tLastServerIPCheck2;
     int m_tLastGGHookingAPICheck;
     int m_tLastSecurityCheck;
     void *m_ahInput[3];
-    int dummy22;
-    int dummy23;
+    int m_tNextSecurityCheck;
+    ZArray<unsigned char> m_pBackupBuffer;
+    unsigned int m_dwBackupBufferSize;
 
     static CWvsApp* GetInstance();
 
@@ -52,9 +53,13 @@ public:
 
     void CreateWndManager();
 
+    ZXString<char> * GetCmdLine(ZXString<char> *result, int nArg);
+
     static void Dir_BackSlashToSlash(char string[260]);
 
     static void Dir_upDir(char string[260]);
 
     static void Dir_SlashToBackSlash(char string[260]);
+
+    static char * GetExceptionFileName();
 };

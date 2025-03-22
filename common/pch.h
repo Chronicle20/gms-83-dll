@@ -21,6 +21,8 @@
 #include <thread>
 #include <heapapi.h>
 
+#include "memory_map.h"
+
 #include "ZXString.h"
 #include "ZAllocBase.h"
 #include "ZAllocAnonSelector.h"
@@ -73,6 +75,7 @@
 #include "ZInetAddr.h"
 #include "ZSocketBuffer.h"
 #include "ZSocketBase.h"
+#include "CIOBufferManipulator.h"
 #include "COutPacket.h"
 #include "CClientSocket.h"
 

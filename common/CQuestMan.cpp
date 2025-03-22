@@ -2,24 +2,24 @@
 
 void CQuestMan::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x009F9AC2)();
+    C_QUEST_MAN_CREATE_INSTANCE)();
 }
 
 CQuestMan *CQuestMan::GetInstance() {
-    return reinterpret_cast<CQuestMan *>(*(void **) 0x00BED614);
+    return reinterpret_cast<CQuestMan *>(*(void **) C_QUEST_MAN_GET_INSTANCE);
 }
 
 int CQuestMan::LoadDemand() {
     return ((int(_fastcall * )(CQuestMan * , PVOID))
-    0x0071D8DF)(this, NULL);
+    C_QUEST_MAN_LOAD_DEMAND)(this, NULL);
 }
 
 void CQuestMan::LoadPartyQuestInfo() {
     ((VOID(_fastcall * )(CQuestMan * , PVOID))
-    0x00723341)(this, NULL);
+    C_QUEST_MAN_LOAD_PARTY_QUEST_INFO)(this, NULL);
 }
 
 void CQuestMan::LoadExclusive() {
     ((VOID(_fastcall * )(CQuestMan * , PVOID))
-    0x007247A1)(this, NULL);
+    C_QUEST_MAN_LOAD_EXCLUSIVE)(this, NULL);
 }

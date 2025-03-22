@@ -10,15 +10,13 @@
 
 #include <Windows.h>
 #include <memedit.h>
-
-const DWORD dwWinMain = 0x009F19F2;
-const DWORD dwWinMainShowStartUpWndModalCall = dwWinMain + 0x212; // 0x009F1C04
+#include "memory_map.h"
 
 // main thread
 VOID __stdcall MainProc()
 {
     // Noop Patcher
-    MemEdit::PatchNop(dwWinMainShowStartUpWndModalCall, 5);
+    MemEdit::PatchNop(WIN_MAIN + WIN_MAIN_PATCHER_OFFSET, 5);
 }
 
 // dll entry point

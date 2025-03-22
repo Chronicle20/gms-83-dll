@@ -10,12 +10,11 @@
 
 #include <Windows.h>
 #include <memedit.h>
-
-const DWORD dwSendMigrateToITCRequest = 0x00A12522;
+#include "memory_map.h"
 
 // main thread
 VOID __stdcall MainProc() {
-    MemEdit::WriteBytes(dwSendMigrateToITCRequest + 0xE9, new BYTE[1]{0xEB}, 1);
+    MemEdit::WriteBytes(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST + C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET, new BYTE[1]{0xEB}, 1);
 }
 
 // dll entry point

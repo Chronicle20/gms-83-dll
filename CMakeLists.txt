@@ -3,6 +3,31 @@ project(gms_83_dll)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# Required build flags
+set(BUILD_REGION "" CACHE STRING "Game region (e.g., GMS, JMS)")
+set(BUILD_MAJOR_VERSION "" CACHE STRING "Game version (e.g., 83, 185)")
+set(BUILD_MINOR_VERSION "" CACHE STRING "Game version (e.g., 1, 2)")
+
+if (NOT BUILD_REGION OR NOT BUILD_MAJOR_VERSION OR NOT BUILD_MINOR_VERSION)
+    message(FATAL_ERROR "You must set all BUILD_REGION, BUILD_MAJOR_VERSION, BUILD_MINOR_VERSION")
+endif()
+
+set(MEMORY_MAP_FILE "${CMAKE_SOURCE_DIR}/memory_maps/${BUILD_REGION}/v${BUILD_MAJOR_VERSION}_${BUILD_MINOR_VERSION}.cmake")
+
+if (EXISTS ${MEMORY_MAP_FILE})
+    message(STATUS "Using memory map: ${MEMORY_MAP_FILE}")
+    include(${MEMORY_MAP_FILE})
+else()
+    message(FATAL_ERROR "Memory map not found at: ${MEMORY_MAP_FILE}")
+endif()
+
+# Generate memory_map.h
+configure_file(
+        ${CMAKE_SOURCE_DIR}/include/memory_map.h.in
+        ${CMAKE_BINARY_DIR}/generated/memory_map.h
+)
+include_directories(${CMAKE_BINARY_DIR}/generated)
+
 # Add subdirectories for each project
 add_subdirectory(proxy)
 add_subdirectory(bypass)

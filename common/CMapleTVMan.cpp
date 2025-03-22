@@ -2,14 +2,14 @@
 
 void CMapleTVMan::CreateInstance() {
     ((VOID * *(_fastcall * )())
-    0x009F9F87)();
+    C_MAPLE_TV_MAN_CREATE_INSTANCE)();
 }
 
 CMapleTVMan *CMapleTVMan::GetInstance() {
-    return reinterpret_cast<CMapleTVMan *>(*(void **) 0x00BED76C);
+    return reinterpret_cast<CMapleTVMan *>(*(void **) C_MAPLE_TV_MAN_GET_INSTANCE);
 }
 
 void CMapleTVMan::Init() {
     ((VOID(_fastcall * )(CMapleTVMan * , PVOID))
-    0x00636F4E)(this, NULL);
+    C_MAPLE_TV_MAN_INIT)(this, NULL);
 }
