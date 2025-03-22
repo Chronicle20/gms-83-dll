@@ -6,66 +6,69 @@ on:
       tag:
         description: 'Tag for the release (#.#.#)'
         required: true
-
 env:
   BUILD_TYPE: Release
-
 jobs:
   build:
     runs-on: windows-latest
-
+    strategy:
+      matrix:
+        config:
+          - { region: GMS, major: 83, minor: 1 }
+          - { region: GMS, major: 87, minor: 1 }
+    name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
       - name: Set up MSVC
         uses: microsoft/setup-msbuild@v1.3.1
-
       - name: Set up CMake
         run: |
           choco install cmake
         shell: pwsh
-
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G "Visual Studio 17" -A Win32
-
+        run: cmake -B build `
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} `
+          -G "Visual Studio 17" -A Win32 `
+          -DBUILD_REGION=${{ matrix.config.region }} `
+          -DBUILD_MAJOR_VERSION=${{ matrix.config.major }} `
+          -DBUILD_MINOR_VERSION=${{ matrix.config.minor }}
+        shell: pwsh
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
+        run: cmake --build build --config ${{env.BUILD_TYPE}}
       - name: Artifact Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target package_dlls
-
+        run: cmake --build build --config ${{env.BUILD_TYPE}} --target package_dlls
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          path: ${{github.workspace}}/build/artifacts/
-          name: artifacts-${{ github.event.inputs.tag }}
-
+          path: build/artifacts/
+          name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
   release:
     needs: build
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        config:
+          - { region: GMS, major: 83, minor: 1 }
+          - { region: GMS, major: 87, minor: 1 }
+    name: Release ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
+      - name: Download artifact for this variant
+        uses: actions/download-artifact@v3
         with:
-          name: artifacts-${{ github.event.inputs.tag }}
-          path: build
-
-      - name: Zip directory
+          name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
+          path: release_build
+      - name: Zip artifact
         run: |
-          cd build
-          zip -r artifacts-${{ github.event.inputs.tag }}.zip ./
-
+          zip -r artifact.zip ./release_build
       - name: Set up Git
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-
-      - name: Create Release
+      - name: Create GitHub Release (only once)
+        if: matrix.config.region == 'GMS' && matrix.config.major == 83 && matrix.config.minor == 1
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -77,14 +80,12 @@ jobs:
           prerelease: false
           body: |
             Release notes for version v${{ github.event.inputs.tag }}
-
-      - name: Upload Release Artifact
-        id: upload-release-asset
+      - name: Upload this variant to the release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/artifacts-${{ github.event.inputs.tag }}.zip
-          asset_name: artifacts-${{ github.event.inputs.tag }}.zip
-          asset_content_type: application/zip  # Adjust the content type based on your artifacts
+          upload_url: ${{ steps.create_release.outputs.upload_url || github.event.release.upload_url }}
+          asset_path: ./artifact.zip
+          asset_name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}.zip
+          asset_content_type: application/zip
