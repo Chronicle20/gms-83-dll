@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "memory_map.h"
 
 void CQuestMan::CreateInstance() {
     ((VOID * *(_fastcall * )())

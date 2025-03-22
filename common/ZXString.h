@@ -204,6 +204,16 @@ public:
         return this;
     }
 
+    ZXString<char>* TrimRight(const char *s) {
+        return ((ZXString<char> *(_fastcall * )(ZXString<char> * , PVOID, const char *s))
+        Z_X_STRING_TRIM_RIGHT)(this, NULL, s);
+    }
+
+    ZXString<char>* TrimLeft(const char *s) {
+        return ((ZXString<char> *(_fastcall * )(ZXString<char> * , PVOID, const char *s))
+        Z_X_STRING_TRIM_LEFT)(this, NULL, s);
+    }
+
     /// <summary>
     /// Appends characters to the end of the ZXString object.
     /// </summary>

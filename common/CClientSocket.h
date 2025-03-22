@@ -35,4 +35,10 @@ public:
     void SendPacket(COutPacket *oPacket);
 
     void ManipulatePacket();
+
+    void Close();
+
+    void ClearSendReceiveCtx();
+
+    void ConnectLogin();
 };

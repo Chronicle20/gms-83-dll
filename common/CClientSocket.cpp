@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "memory_map.h"
 
 CClientSocket *CClientSocket::GetInstance() {
     return reinterpret_cast<CClientSocket *>(*(void **) C_CLIENT_SOCKET_GET_INSTANCE);
@@ -18,4 +17,21 @@ void CClientSocket::SendPacket(COutPacket *oPacket) {
 void CClientSocket::ManipulatePacket() {
     ((VOID(_fastcall * )(CClientSocket * , PVOID))
     C_CLIENT_SOCKET_MANIPULATE_PACKET)(this, NULL);
+}
+
+void CClientSocket::Close() {
+    Log("CClientSocket::Close");
+    ((VOID(_fastcall * )(CClientSocket * , PVOID))
+    C_CLIENT_SOCKET_CLOSE)(this, nullptr);
+}
+
+void CClientSocket::ClearSendReceiveCtx() {
+    ((VOID(_fastcall * )(CClientSocket * , PVOID))
+    C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX)(this, nullptr);
+}
+
+void CClientSocket::ConnectLogin() {
+    Log("CClientSocket::ConnectLogin");
+    ((VOID(_fastcall * )(CClientSocket * , PVOID))
+    C_CLIENT_SOCKET_CONNECT_LOGIN)(this, nullptr);
 }

@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "memory_map.h"
 
 void CMonsterBookMan::CreateInstance() {
     ((VOID * *(_fastcall * )())

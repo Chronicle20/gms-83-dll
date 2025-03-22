@@ -9,20 +9,12 @@
  */
 
 #include <Windows.h>
-#include <memedit.h>
 #include "memory_map.h"
-
-__declspec(naked) void FixFullScreen() {
-    __asm {
-            mov eax, 0
-            jmp dword ptr[C_WVS_APP_INITIALIZE_GR2D + C_WVS_APP_INITIALIZE_GR2D_FULL_SCREEN_RETURN]
-    }
-}
 
 // main thread
 VOID __stdcall MainProc() {
-    // Window Mode Magic
-    MemEdit::CodeCave(FixFullScreen, C_WVS_APP_INITIALIZE_GR2D + C_WVS_APP_INITIALIZE_GR2D_FULL_SCREEN_OFFSET, 5);
+    auto *instance = reinterpret_cast<unsigned int *>(C_CONFIG_SYS_OPT_WINDOWED_MODE);
+    *instance = 0;
 }
 
 // dll entry point

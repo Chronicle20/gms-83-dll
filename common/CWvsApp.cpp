@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "memory_map.h"
 
 CWvsApp *CWvsApp::GetInstance() {
     return reinterpret_cast<CWvsApp *>(*(void **) C_WVS_APP_GET_INSTANCE);
@@ -26,6 +25,7 @@ void CWvsApp::CreateMainWindow() {
 }
 
 void CWvsApp::ConnectLogin() {
+    Log("CWvsApp::ConnectLogin");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_CONNECT_LOGIN)(this, NULL);
 }
@@ -60,6 +60,11 @@ void CWvsApp::CreateWndManager() {
     C_WVS_APP_CREATE_WND_MANAGER)(this, NULL);
 }
 
+ZXString<char> * CWvsApp::GetCmdLine(ZXString<char> *result, int nArg) {
+    return ((ZXString<char> *(_fastcall * )(CWvsApp * , PVOID, ZXString<char> *result, int nArg))
+    C_WVS_APP_GET_CMD_LINE)(this, nullptr, result, nArg);
+}
+
 void CWvsApp::Dir_BackSlashToSlash(char *string) {
     ((VOID * *(_fastcall * )(char *))
             C_WVS_APP_DIR_BACK_SLASH_TO_SLASH)(string);
@@ -73,4 +78,9 @@ void CWvsApp::Dir_upDir(char *string) {
 void CWvsApp::Dir_SlashToBackSlash(char *string) {
     ((VOID * *(_fastcall * )(char *))
     C_WVS_APP_DIR_SLASH_TO_BACK_SLASH)(string);
+}
+
+char *CWvsApp::GetExceptionFileName() {
+    return ((char *(_cdecl * )())
+    C_WVS_APP_GET_EXCEPTION_FILE_NAME)();
 }

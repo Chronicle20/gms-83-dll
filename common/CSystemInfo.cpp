@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "memory_map.h"
 
 CSystemInfo::CSystemInfo() {
     ((VOID(_fastcall * )(CSystemInfo * , PVOID))
