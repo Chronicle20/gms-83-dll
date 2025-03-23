@@ -10,16 +10,19 @@ void CWvsApp::ISMsgProc(unsigned int message, unsigned int wParam, int lParam) {
 }
 
 void CWvsApp::InitializeAuth() {
+    Log("CWvsApp::InitializeAuth");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_INITIALIZE_AUTH)(this, NULL);
 }
 
 void CWvsApp::InitializePCOM() {
+    Log("CWvsApp::InitializePCOM");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_INITIALIZE_PCOM)(this, NULL);
 }
 
 void CWvsApp::CreateMainWindow() {
+    Log("CWvsApp::CreateMainWindow");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_CREATE_MAIN_WINDOW)(this, NULL);
 }
@@ -31,31 +34,37 @@ void CWvsApp::ConnectLogin() {
 }
 
 void CWvsApp::InitializeResMan() {
+    Log("CWvsApp::InitializeResMan");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_INITIALIZE_RES_MAN)(this, NULL);
 }
 
 void CWvsApp::InitializeGr2D() {
+    Log("CWvsApp::InitializeGr2D");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_INITIALIZE_GR2D)(this, NULL);
 }
 
 void CWvsApp::InitializeInput() {
+    Log("CWvsApp::InitializeInput");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_INITIALIZE_INPUT)(this, NULL);
 }
 
 void CWvsApp::InitializeSound() {
+    Log("CWvsApp::InitializeSound");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_INITIALIZE_SOUND)(this, NULL);
 }
 
 void CWvsApp::InitializeGameData() {
+    Log("CWvsApp::InitializeGameData");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_INITIALIZE_GAME_DATA)(this, NULL);
 }
 
 void CWvsApp::CreateWndManager() {
+    Log("CWvsApp::CreateWndManager");
     ((VOID(_fastcall * )(CWvsApp * , PVOID))
     C_WVS_APP_CREATE_WND_MANAGER)(this, NULL);
 }

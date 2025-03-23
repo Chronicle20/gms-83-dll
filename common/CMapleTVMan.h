@@ -7,5 +7,6 @@ public:
 
     static CMapleTVMan *GetInstance();
 
-    void Init();
+    //void Init();
+    void Init(int something, int somethingElse);
 };

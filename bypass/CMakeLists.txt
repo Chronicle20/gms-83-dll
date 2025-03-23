@@ -10,6 +10,7 @@ add_library(bypass SHARED
         ${CMAKE_SOURCE_DIR}/common/CConfig.cpp
         ${CMAKE_SOURCE_DIR}/common/COutPacket.cpp
         ${CMAKE_SOURCE_DIR}/common/CSystemInfo.cpp
+        ${CMAKE_SOURCE_DIR}/common/CWndMan.cpp
         ${CMAKE_SOURCE_DIR}/common/CWvsApp.cpp
         ${CMAKE_SOURCE_DIR}/common/CWvsContext.cpp
         ${CMAKE_SOURCE_DIR}/common/CActionMan.cpp
