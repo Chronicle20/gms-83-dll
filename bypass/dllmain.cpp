@@ -651,7 +651,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     CConfig::GetInstance()->CheckExecPathReg(tempString);
 
 #if defined(REGION_GMS)
-    auto cloginSize = 56u;
+    auto cLoginSize = 56u;
 #elif defined(REGION_JMS)
     auto cLoginSize = 0x2Cu;
 #endif
