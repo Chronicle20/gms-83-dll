@@ -14,16 +14,28 @@ public:
     ZXString<char> m_sCmdLine;
     int m_nGameStartMode;
     int m_bAutoConnect;
+#if defined(REGION_JMS)
+    int dummy18;
+    int dummy15;
+    ZXString<char> dummy16;
+    ZXString<char> dummy17;
+#endif
     int m_bShowAdBalloon;
     int m_bExitByTitleEscape;
     HRESULT m_hrZExceptionCode;
     HRESULT m_hrComErrorCode;
+#if defined(REGION_GMS)
     unsigned int m_dwSecurityErrorCode;
     int m_nTargetVersion;
     int m_tLastServerIPCheck;
     int m_tLastServerIPCheck2;
     int m_tLastGGHookingAPICheck;
     int m_tLastSecurityCheck;
+#elif defined(REGION_JMS)
+    int dummy19;
+    int dummy20;
+    int dummy21;
+#endif
     void *m_ahInput[3];
     int m_tNextSecurityCheck;
     ZArray<unsigned char> m_pBackupBuffer;

@@ -19,4 +19,7 @@ class CONFIG_GAMEOPT
     int nGameOpt_ChatWndHeight;
     int nGameOpt_OpBoardIndex;
     int bGameOpt_FollowRequest;
+#if defined(REGION_GMS)
+    int dummy1;
+#endif
 };

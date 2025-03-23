@@ -21,10 +21,12 @@ public:
     int m_bFirstUserLoad;
     int m_bAvatarMegaphone;
     int m_tAM_LastUpdate;
+#if defined(REGION_GMS)
     int m_nTargetPosition_X;
     int m_nTargetPosition_Y;
     int m_bChaseEnable;
     int m_bPetHelpPopUpShown;
+#endif
     WEBCOOKIE m_Cookie;
     int m_bIsCookieValid;
     int m_bCookieLoadedByArgString;
@@ -32,26 +34,41 @@ public:
     unsigned int m_dwAccountId;
     int m_nGender;
     TSecType<unsigned char> m_nGradeCode;
+#if defined(REGION_GMS)
     TSecType<unsigned char> m_nSubGradeCode;
+#endif
     ZXString<char> m_sEMailAccount;
     ZXString<char> m_sNexonClubID;
+#if defined(REGION_JMS)
+    int dummy3;
+    int dummy4;
+#endif
     unsigned __int8 m_nCountryID;
     unsigned __int8 m_nPurchaseExp;
     int m_nWorldID;
     int m_nChannelID;
+#if defined(REGION_GMS)
     int m_bPremium;
     unsigned int m_ulPremiumArgument;
+#endif
     unsigned __int8 m_nChatBlockReason;
     _SYSTEMTIME m_dtChatUnblockDate;
     _SYSTEMTIME m_dtRegisterDate;
+#if defined(REGION_GMS)
+    // TODO this is inaccurate for JMS, but two INT are removed compared to GMS
     int m_nNumOfCharacter;
     int m_bThisAccountJustCreatedCharacter;
+#endif
     int m_bIsGuestAccount;
     int m_bManagerAccount;
+#if defined(REGION_GMS)
     int m_nCharacterCount;
     int m_nSlotCount;
+#endif
     unsigned __int8 m_aClientKey[8];
+#if defined(REGION_GMS)
     int m_bTesterAccount;
+#endif
     unsigned int m_dwCharacterId;
     int m_bExclRequestSent;
     int m_tExclRequestSent;
