@@ -9,12 +9,17 @@
  */
 
 #include <Windows.h>
+#include <memedit.h>
 #include "memory_map.h"
 
 // main thread
 VOID __stdcall MainProc() {
-    auto *instance = reinterpret_cast<unsigned int *>(C_CONFIG_SYS_OPT_WINDOWED_MODE);
-    *instance = 0;
+    if (strcmp(BUILD_REGION, "GMS") == 0) {
+        auto *instance = reinterpret_cast<unsigned int *>(C_CONFIG_SYS_OPT_WINDOWED_MODE);
+        *instance = 0;
+    } else if (strcmp(BUILD_REGION, "JMS") == 0) {
+        MemEdit::WriteBytes(0x00ADA8D7+0x94, new BYTE[7]{0xC7, 0x45, 0xDC, 0x00, 0x00, 0x00, 0x00}, 7);
+    }
 }
 
 // dll entry point

@@ -7,6 +7,9 @@ public:
 
     static CMapleTVMan *GetInstance();
 
-    //void Init();
+#if defined(REGION_GMS)
+    void Init();
+#elif defined(REGION_JMS)
     void Init(int something, int somethingElse);
+#endif
 };

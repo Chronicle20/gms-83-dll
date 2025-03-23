@@ -286,6 +286,7 @@ typedef INT(__fastcall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, PVOID
 _CLogin__SendCheckPasswordPacket_t _CLogin__SendCheckPasswordPacket;
 
 INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, char *sID, char *sPasswd) {
+    Log("CLogin::SendCheckPasswordPacket. ID [%s]. bRequestSent [%d].", sID, pThis->m_bRequestSent);
     if (pThis->m_bRequestSent) {
         return 0;
     }
@@ -341,14 +342,18 @@ typedef VOID(__fastcall *_CWvsApp__CallUpdate_t)(CWvsApp *pThis, PVOID edx, int 
 _CWvsApp__CallUpdate_t _CWvsApp__CallUpdate;
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
-    Log("CWvsApp::CallUpdate_Hook");
     if (pThis->m_bFirstUpdate) {
         pThis->m_tUpdateTime = tCurTime;
+#if defined(REGION_GMS)
         pThis->m_tLastServerIPCheck = tCurTime;
         pThis->m_tLastServerIPCheck2 = tCurTime;
         pThis->m_tLastGGHookingAPICheck = tCurTime;
         pThis->m_tLastSecurityCheck = tCurTime;
+#endif
         pThis->m_bFirstUpdate = 0;
+#if defined(REGION_JMS)
+        pThis->dummy21 = tCurTime;
+#endif
     }
 
     while (tCurTime - pThis->m_tUpdateTime > 0) {
@@ -553,16 +558,34 @@ _CWvsApp__SetUp_t _CWvsApp__SetUp;
 
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     Log("CWvsApp::SetUp");
+#if defined(REGION_GMS)
     pThis->InitializeAuth();
+#endif
+
     auto time = timeGetTime();
     srand(time);
+
+#if defined(REGION_GMS)
     GetSEPrivilege();
+#endif
+
     CSecurityClient::CreateInstance();
-    // dword_BF1AC8 = 0x10;
+
+#if defined(REGION_JMS)
+    PVOID cfgAlloc = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(0x4ACu);
+    CConfig *cConfig;
+    if (cfgAlloc) {
+        cConfig = new(cfgAlloc) CConfig();
+    }
+#endif
+
     pThis->InitializePCOM();
     pThis->CreateMainWindow();
+
     CClientSocket::CreateInstance();
     pThis->ConnectLogin();
+    CSecurityClient::GetInstance()->m_hMainWnd = pThis->m_hWnd;
+
     CFuncKeyMappedMan::CreateInstance();
     CQuickslotKeyMappedMan::CreateInstance();
     CMacroSysMan::CreateInstance();
@@ -570,17 +593,38 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     pThis->InitializeResMan();
     pThis->InitializeGr2D();
     pThis->InitializeInput();
+
+#if defined(REGION_JMS)
+    ShowWindow(pThis->m_hWnd, 5);
+    UpdateWindow(pThis->m_hWnd);
+    SetForegroundWindow(pThis->m_hWnd);
+    auto hr = get_gr()->RenderFrame();
+    if (FAILED(hr)) {
+        Log("Do proper _com_raise_errorex");
+        return;
+    }
+#endif
+
     Sleep(300);
     pThis->InitializeSound();
     Sleep(300);
     pThis->InitializeGameData();
     pThis->CreateWndManager();
-    CConfig::GetInstance()->ApplySysOpt(0, 0);
+
+    CConfig::GetInstance()->ApplySysOpt(nullptr, 0);
+
     CActionMan::CreateInstance();
     CActionMan::GetInstance()->Init();
+
     CAnimationDisplayer::CreateInstance();
+
     CMapleTVMan::CreateInstance();
+#if defined(REGION_GMS)
     CMapleTVMan::GetInstance()->Init();
+#elif defined(REGION_JMS)
+    CMapleTVMan::GetInstance()->Init(pThis->dummy15, pThis->dummy18);
+#endif
+
     CQuestMan::CreateInstance();
     if (!CQuestMan::GetInstance()->LoadDemand()) {
         Log("Throw error regarding CQuestMan::LoadDemand");
@@ -606,10 +650,15 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     ZXString<char> tempString = ZXString<char>(sModulePath, 0xFFFFFFFF);
     CConfig::GetInstance()->CheckExecPathReg(tempString);
 
-    PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(56u);
-    CStage * cLogo;
+#if defined(REGION_GMS)
+    auto cloginSize = 56u;
+#elif defined(REGION_JMS)
+    auto cLoginSize = 0x2Cu;
+#endif
+    PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(cLoginSize);
+    CStage *cLogo;
     if (ret) {
-        cLogo = new (ret) CLogo();
+        cLogo = new(ret) CLogo();
     } else {
         cLogo = nullptr;
     }
@@ -666,33 +715,38 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
         pThis->m_nGameStartMode = 2;
     }
 
-    int *g_dwTargetOS = reinterpret_cast<int *>(G_DW_TARGET_OS);
+    if (strcmp(BUILD_REGION, "GMS") == 0) {
+        int *g_dwTargetOS = reinterpret_cast<int *>(G_DW_TARGET_OS);
 
-    if (ovi.dwMajorVersion < 5) {
-        *g_dwTargetOS = 1996;
-    }
+        if (ovi.dwMajorVersion < 5) {
+            *g_dwTargetOS = 1996;
+        }
 
-    BOOL bIsWow64 = FALSE;
-    LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
-            GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
-    if (fnIsWow64Process) {
-        fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
-    }
+        BOOL bIsWow64 = FALSE;
+        LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
+                GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+        if (fnIsWow64Process) {
+            fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
+        }
 
-    if (bIsWow64) {
-        *g_dwTargetOS = 1996;
+        if (bIsWow64) {
+            *g_dwTargetOS = 1996;
+        }
+        if (ovi.dwMajorVersion >= 6 && !bIsWow64) {
+            ResetLSP();
+        }
+        sToken.Empty();
     }
-    if (ovi.dwMajorVersion >= 6 && !bIsWow64) {
-        ResetLSP();
-    }
-    sToken.Empty();
 }
 
 // main thread
 VOID __stdcall MainProc() {
 
+#if defined(REGION_GMS)
+    // TODO need better struct mapping.
     // CWvsApp::CWvsApp
     INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, C_WVS_APP);
+#endif
 
     // CWvsApp::SetUp
     INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, C_WVS_APP_SET_UP);
@@ -703,27 +757,51 @@ VOID __stdcall MainProc() {
     // CWvsApp::Run
     INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
 
+#if defined(REGION_JMS)
+    // TODO define these functions.
+    MemEdit::WriteBytes(0x00B3B96B, new BYTE[1]{0xC3}, 1);
+
+    MemEdit::WriteBytes(0x00B3B5F7 + 0x19, new BYTE[2]{0x90, 0x90}, 2);
+
+    MemEdit::WriteBytes(0x004123D3 + 0x4D, new BYTE[5]{0xE9, 0x97, 0x00, 0x00, 0x00}, 5);
+
+    MemEdit::WriteBytes(DR_CHECK, new BYTE[3]{0x33, 0xC0, 0xC3}, 3);
+#endif
+
     // CWvsApp::CallUpdate
     INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, C_WVS_APP_CALL_UPDATE);
 
     // CWvsApp::ConnectLogin
-    INITMAPLEHOOK(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t, CWvsApp__ConnectLogin_Hook, C_WVS_APP_CONNECT_LOGIN);
+    INITMAPLEHOOK(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t, CWvsApp__ConnectLogin_Hook,
+                  C_WVS_APP_CONNECT_LOGIN);
 
+#if defined(REGION_GMS)
+    // TODO need better struct mapping.
     // CLogin::SendCheckPasswordPacket
     INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
                   CLogin__SendCheckPasswordPacket_Hook, C_LOGIN_SEND_CHECK_PASSWORD_PACKET);
+#endif
 
+#if defined(REGION_GMS)
+    auto cSecClientOnPackOffset = 12;
+#elif defined(REGION_JMS)
+    auto cSecClientOnPackOffset = 16;
+#endif
+    // TODO need to migrate this to a NOOP of CSecurityClient::OnPacket
     // Noop Call to CSecurityClient::OnPacket
-    MemEdit::PatchNop(C_CLIENT_SOCKET_PROCESS_PACKET + C_CLIENT_SOCKET_PROCESS_PACKET_CALL_C_SECURITY_CLIENT_ON_PACKET_OFFSET, 12);
+    MemEdit::PatchNop(C_CLIENT_SOCKET_PROCESS_PACKET + C_CLIENT_SOCKET_PROCESS_PACKET_CALL_C_SECURITY_CLIENT_ON_PACKET_OFFSET, cSecClientOnPackOffset);
 
     // CClientSocket::Connect
-    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook, C_CLIENT_CONNECT_CTX);
+    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook,
+                  C_CLIENT_CONNECT_CTX);
 
     // CClientSocket::Connect
-    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook, C_CLIENT_CONNECT_ADR);
+    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook,
+                  C_CLIENT_CONNECT_ADR);
 
     // // CClientSocket::OnConnect
-    INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook, C_CLIENT_SOCKET_ON_CONNECT);
+    INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
+                  C_CLIENT_SOCKET_ON_CONNECT);
 }
 
 // dll entry point
