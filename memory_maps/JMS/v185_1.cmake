@@ -1,6 +1,3 @@
-set(REGION "JMS")
-set(MAJOR_VERSION 185)
-set(MINOR_VERSION 1)
 set(VERSION_HEADER 3)
 
 set(GET_SE_PRIVILEGE 0x00000000) # Does not exist in JMS

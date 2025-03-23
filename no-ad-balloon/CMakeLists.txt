@@ -9,5 +9,6 @@ add_library(no-ad-balloon SHARED
 # Set additional include directories if needed
 target_include_directories(no-ad-balloon PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(no-ad-balloon PRIVATE ${CMAKE_SOURCE_DIR}/common/detours.lib)
+target_link_libraries(no-ad-balloon PRIVATE build_config)
 
 set_target_properties(no-ad-balloon PROPERTIES OUTPUT_NAME "no-ad-balloon-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")

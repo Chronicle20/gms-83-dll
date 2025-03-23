@@ -178,10 +178,10 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     if (nVersionHeader != VERSION_HEADER) {
         throw std::invalid_argument("570425351");
     }
-    if (majorVersion > MAJOR_VERSION) {
+    if (majorVersion > BUILD_MAJOR_VERSION) {
         throw std::invalid_argument("CPatchException");
     }
-    if (majorVersion != MAJOR_VERSION) {
+    if (majorVersion != BUILD_MAJOR_VERSION) {
         throw std::invalid_argument("570425351");
     }
     if (version > MINOR_VERSION) {

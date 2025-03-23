@@ -9,5 +9,6 @@ add_library(no-beginner-party-block SHARED
 # Set additional include directories if needed
 target_include_directories(no-beginner-party-block PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(no-beginner-party-block PRIVATE ${CMAKE_SOURCE_DIR}/common/detours.lib)
+target_link_libraries(no-beginner-party-block PRIVATE build_config)
 
 set_target_properties(no-beginner-party-block PROPERTIES OUTPUT_NAME "no-beginner-party-block-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")

@@ -16,5 +16,6 @@ add_library(proxy SHARED
 # Set additional include directories if needed
 target_include_directories(proxy PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(proxy PRIVATE ${CMAKE_SOURCE_DIR}/common/detours.lib)
+target_link_libraries(proxy PRIVATE build_config)
 
 set_target_properties(proxy PROPERTIES OUTPUT_NAME "ijl15")
