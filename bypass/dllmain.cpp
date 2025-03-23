@@ -15,16 +15,15 @@
 #include "logger.h"
 #include "hooker.h"
 
-// void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
-typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
+// void __thiscall CSecurityClient::OnPacket(CSecurityClient *this, CInPacket *iPacket)
+typedef VOID(__fastcall *_CSecurityClient__OnPacket_t)(CSecurityClient *pThis, PVOID edx,
+                                                       CInPacket *iPacket);
 
-_CClientSocket__Connect_addr_t _CClient__Connect_addr;
+_CSecurityClient__OnPacket_t _CSecurityClient__OnPacket;
 
-// void __thiscall CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)
-typedef VOID(__fastcall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, PVOID edx,
-                                                        CClientSocket::CONNECTCONTEXT *ctx);
-
-_CClientSocket__Connect_ctx_t _CClient__Connect_ctx;
+VOID __fastcall CSecurityClient__OnPacket_Hook(CSecurityClient *pThis, PVOID edx,CInPacket *iPacket) {
+    Log("CSecurityClient::OnPacket.");
+}
 
 // void __thiscall CClientSocket::ClearSendReceiveCtx(CClientSocket *this)
 typedef VOID(__fastcall *_CClientSocket__ClearSendReceiveCtx_t)(CClientSocket *pThis, PVOID edx);
@@ -36,12 +35,17 @@ typedef VOID(__fastcall *_ZSocketBase__CloseSocket_t)(ZSocketBase *pThis, PVOID 
 
 _ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(Z_SOCKET_BASE_CLOSE_SOCKET);
 
+// void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
+typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
+
+_CClientSocket__Connect_addr_t _CClientSocket__Connect_addr;
+
+VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
+
 // int __thiscall CClientSocket::OnConnect(CClientSocket *this, int bSuccess)
 typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
 
 _CClientSocket__OnConnect_t _CClientSocket__OnConnect;
-
-VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
 
 INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, int bSuccess) {
     Log("CClientSocket::OnConnect(CClientSocket *this, int bSuccess). bSuccess [%d]", bSuccess);
@@ -267,6 +271,12 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx
     }
     Log("CClientSocket::Connect ADR Happy Path");
 }
+
+// void __thiscall CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)
+typedef VOID(__fastcall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, PVOID edx,
+                                                        CClientSocket::CONNECTCONTEXT *ctx);
+
+_CClientSocket__Connect_ctx_t _CClientSocket__Connect_ctx;
 
 VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx, CClientSocket::CONNECTCONTEXT *ctx) {
     Log("CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)");
@@ -783,22 +793,17 @@ VOID __stdcall MainProc() {
                   CLogin__SendCheckPasswordPacket_Hook, C_LOGIN_SEND_CHECK_PASSWORD_PACKET);
 #endif
 
-#if defined(REGION_GMS)
-    auto cSecClientOnPackOffset = 12;
-#elif defined(REGION_JMS)
-    auto cSecClientOnPackOffset = 16;
-#endif
-    // TODO need to migrate this to a NOOP of CSecurityClient::OnPacket
-    // Noop Call to CSecurityClient::OnPacket
-    MemEdit::PatchNop(C_CLIENT_SOCKET_PROCESS_PACKET + C_CLIENT_SOCKET_PROCESS_PACKET_CALL_C_SECURITY_CLIENT_ON_PACKET_OFFSET, cSecClientOnPackOffset);
+    // CSecurityClient::OnPacket
+    INITMAPLEHOOK(_CSecurityClient__OnPacket, _CSecurityClient__OnPacket_t, CSecurityClient__OnPacket_Hook,
+                  C_SECURITY_CLIENT_ON_PACKET);
 
     // CClientSocket::Connect
-    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook,
-                  C_CLIENT_CONNECT_CTX);
+    INITMAPLEHOOK(_CClientSocket__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook,
+                  C_CLIENT_SOCKET_CONNECT_CTX);
 
     // CClientSocket::Connect
-    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook,
-                  C_CLIENT_CONNECT_ADR);
+    INITMAPLEHOOK(_CClientSocket__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook,
+                  C_CLIENT_SOCKET_CONNECT_ADR);
 
     // // CClientSocket::OnConnect
     INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
