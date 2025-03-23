@@ -175,7 +175,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
             return 0;
         }
     }
-    if (nVersionHeader != 8) {
+    if (nVersionHeader != VERSION_HEADER) {
         throw std::invalid_argument("570425351");
     }
     if (majorVersion > MAJOR_VERSION) {
@@ -194,7 +194,8 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     pThis->m_ctxConnect.lAddr.RemoveAll();
     pThis->m_ctxConnect.posList = 0;
     socklen_t peerAddrLen = sizeof(pThis->m_addr);
-    if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr*>(&pThis->m_addr), &peerAddrLen) == -1) {
+    if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr *>(&pThis->m_addr), &peerAddrLen) ==
+        -1) {
         int lastError = WSAGetLastError();
         throw std::invalid_argument("570425351");
     }
@@ -202,10 +203,12 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     //TODO check version stuff
     if (pThis->m_ctxConnect.bLogin) {
         Log("CClientSocket::OnConnect should be sending 0x19");
-        char * fileName = CWvsApp::GetExceptionFileName();
+        char *fileName = CWvsApp::GetExceptionFileName();
 
     } else {
-        Log("CClientSocket::OnConnect accountId=[%d], worldId=[%d], channelId=[%d], characterId=[%d]",CWvsContext::GetInstance()->m_dwAccountId, CWvsContext::GetInstance()->m_nWorldID, CWvsContext::GetInstance()->m_nChannelID, CWvsContext::GetInstance()->m_dwCharacterId);
+        Log("CClientSocket::OnConnect accountId=[%d], worldId=[%d], channelId=[%d], characterId=[%d]",
+            CWvsContext::GetInstance()->m_dwAccountId, CWvsContext::GetInstance()->m_nWorldID,
+            CWvsContext::GetInstance()->m_nChannelID, CWvsContext::GetInstance()->m_dwCharacterId);
         auto systemInfo = CSystemInfo();
         systemInfo.Init();
         auto cOutPacket = COutPacket(0x14);
@@ -238,9 +241,7 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx
         return;
     }
 
-    int timeout = timeGetTime() + 5000;
-    Log("CClientSocket::Connect Setting timeout to [%d].", timeout);
-    pThis->m_tTimeout = timeout;
+    pThis->m_tTimeout = timeGetTime() + 5000;
     HWND hwnd = pThis->m_hWnd;
 
     unsigned int socketHandle = pThis->m_sock._m_hSocket;
@@ -251,7 +252,8 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx
     int connectResult = connect(socketHandle, reinterpret_cast<const sockaddr *>(pAddr), sizeof(sockaddr_in));
     int lastError = WSAGetLastError();
 
-    Log("CClientSocket::Connect ADR asyncResult [%d], connectResult [%d], lastError [%d].", asyncResult, connectResult, lastError);
+    Log("CClientSocket::Connect ADR asyncResult [%d], connectResult [%d], lastError [%d].", asyncResult, connectResult,
+        lastError);
 
     if (asyncResult == SOCKET_ERROR || connectResult != SOCKET_ERROR || lastError != WSAEWOULDBLOCK) {
         Log("CClientSocket::Connect ADR Try CClientSocket::OnConnect");
@@ -305,7 +307,7 @@ INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, ch
     cOutPacket.Encode4(CConfig::GetInstance()->GetPartnerCode());
     CClientSocket::GetInstance()->SendPacket(&cOutPacket);
     // ZXString<char>::GetBuffer(CWvsContext::GetInstance() + 8264, -1, sID, 0xFFFFFFFF);
-    CUITitle* cuiTitle = CUITitle::GetInstance();
+    CUITitle *cuiTitle = CUITitle::GetInstance();
     if (cuiTitle) {
         cuiTitle->ClearToolTip();
     }
@@ -320,6 +322,7 @@ CStage *get_stage() {
 
 // void __cdecl set_stage(CStage *pStage, void *pParam)
 typedef VOID(__cdecl *_set_stage_t)(CStage *pStage, void *pParam);
+
 _set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(SET_STAGE);
 
 IWzGr2D *get_gr() {
@@ -332,6 +335,7 @@ typedef VOID(__fastcall *_CWvsApp__CallUpdate_t)(CWvsApp *pThis, PVOID edx, int 
 _CWvsApp__CallUpdate_t _CWvsApp__CallUpdate;
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
+    Log("CWvsApp::CallUpdate_Hook");
     if (pThis->m_bFirstUpdate) {
         pThis->m_tUpdateTime = tCurTime;
         pThis->m_tLastServerIPCheck = tCurTime;
@@ -392,9 +396,7 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
                         Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 1");
                         CClientSocket__OnConnect_Hook(pSock, edx, 0);
                     }
-                }
-                else
-                {
+                } else {
                     WORD low = LOWORD(msg.lParam);
                     if (low != 16 && low != 1) {
                         Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 2");
@@ -407,20 +409,18 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
                         break;
                     }
                 }
-            }
-            else {
+            } else {
                 TranslateMessage(&msg);
                 DispatchMessageA(&msg);
 
-                if ((LONG)(timeGetTime() - pSock->m_tTimeout) > 0) {
+                if ((LONG) (timeGetTime() - pSock->m_tTimeout) > 0) {
                     Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 4. timeGetTime [%d], timeOut [%d].",
                         timeGetTime(), pSock->m_tTimeout);
                     CClientSocket__OnConnect_Hook(pSock, edx, 0);
                 }
             }
-        }
-        else {
-            if ((LONG)(timeGetTime() - pSock->m_tTimeout) > 0) {
+        } else {
+            if ((LONG) (timeGetTime() - pSock->m_tTimeout) > 0) {
                 Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 5");
                 CClientSocket__OnConnect_Hook(pSock, edx, 0);
             }
@@ -482,7 +482,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
             } while (!*pbTerminate);
         } else if (dwRet == 3) {
             do {
-                if ( !PeekMessageA(&msg, 0, 0, 0, 1u) ) {
+                if (!PeekMessageA(&msg, 0, 0, 0, 1u)) {
                     break;
                 }
                 TranslateMessage(&msg);
@@ -509,7 +509,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
                     Log("Do proper _com_raise_error");
                     return;
                 }
-            } while ( !*pbTerminate && msg.message != 18 );
+            } while (!*pbTerminate && msg.message != 18);
         } else {
             if (CInputSystem::GetInstance()->GenerateAutoKeyDown(&isMsg)) {
                 pThis->ISMsgProc(isMsg.message, isMsg.wParam, isMsg.lParam);
@@ -536,12 +536,13 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
 }
 
 void GetSEPrivilege() {
-    ((VOID **(_fastcall * )())
+    ((VOID * *(_fastcall * )())
     GET_SE_PRIVILEGE)();
 }
 
 // void __thiscall CWvsApp::SetUp(CWvsApp *this)
 typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
+
 _CWvsApp__SetUp_t _CWvsApp__SetUp;
 
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
@@ -559,21 +560,8 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     CFuncKeyMappedMan::CreateInstance();
     CQuickslotKeyMappedMan::CreateInstance();
     CMacroSysMan::CreateInstance();
+
     pThis->InitializeResMan();
-
-//    dword_BF0444(v2);
-//    if ( *((_DWORD *)dword_BE7918 + 3580) )
-//    {
-//        v23 = ZAllocEx<ZAllocAnonSelector>::Alloc(dword_BF0B00, 0x20u);
-//        v31 = 0;
-//        if ( v23 )
-//            v12 = sub_42C3DE(v23, v3, v28[0], v28[1], v28[2], v28[3]);
-//        else
-//            v12 = 0;
-//        v24 = v12;
-//        v31 = -1;
-//    }
-
     pThis->InitializeGr2D();
     pThis->InitializeInput();
     Sleep(300);
@@ -594,12 +582,15 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     }
     CQuestMan::GetInstance()->LoadPartyQuestInfo();
     CQuestMan::GetInstance()->LoadExclusive();
+
     CMonsterBookMan::CreateInstance();
     if (!CMonsterBookMan::GetInstance()->LoadBook()) {
         Log("Throw error regarding CMonsterBookMan::LoadBook");
         return;
     }
+
     CRadioManager::CreateInstance();
+
     char sModulePath[260];
     GetModuleFileNameA(0, sModulePath, 260);
     pThis->Dir_BackSlashToSlash(sModulePath);
@@ -617,18 +608,6 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
         cLogo = nullptr;
     }
     _set_stage(cLogo, nullptr);
-//    poly = -586093038;
-//    for ( ii = 0; ii < 256; ++ii )
-//    {
-//        crc32 = ii;
-//        for ( i = 8; i > 0; --i )
-//        {
-//            if ( (crc32 & 1) != 0 )
-//                crc32 = (poly - 401) ^ (crc32 >> 1);
-//            else
-//                crc32 >>= 1;
-//        }
-//        g_crc32Table[ii] = crc32;
 }
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS)(HANDLE, PBOOL);
