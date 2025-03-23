@@ -229,8 +229,10 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     cOutPacket.Encode2(CConfig::GetInstance()->dummy1);
 #endif
         cOutPacket.Encode1(0);
-        // TODO not sure if this exists in less than GMS 87. Needs proper CWvsContext Mapping
+        // TODO not sure if this exists in less than GMS 87 but greater than 83. Needs proper CWvsContext Mapping
+#if (defined(REGION_GMS) && MAJOR_VERSION > 83) || (defined(REGION_JMS))
         cOutPacket.EncodeBuffer(CWvsContext::GetInstance()->m_aClientKey, 8);
+#endif
 
         CClientSocket::GetInstance()->SendPacket(&cOutPacket);
         cOutPacket.m_aSendBuff.RemoveAll();
