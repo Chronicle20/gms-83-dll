@@ -17,9 +17,9 @@ jobs:
     name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up MSVC
-        uses: microsoft/setup-msbuild@v1.3.3
+        uses: microsoft/setup-msbuild@v2.0.0
       - name: Set up CMake
         run: |
           choco install cmake
@@ -37,7 +37,7 @@ jobs:
       - name: Artifact Build
         run: cmake --build build --config ${{env.BUILD_TYPE}} --target package_dlls
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: build/artifacts/
           name: snapshot-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}

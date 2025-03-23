@@ -15,9 +15,9 @@ jobs:
           - { region: GMS, major: 87, minor: 1 }
     name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up MSVC
-        uses: microsoft/setup-msbuild@v1.3.3
+        uses: microsoft/setup-msbuild@v2.0.0
       - name: Set up CMake
         run: |
           choco install cmake
