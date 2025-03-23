@@ -18,13 +18,17 @@ public:
         int nSkill;
     };
 
+#if defined(REGION_GMS) && MAJOR_VERSION >= 95
     int m_bFirstUserLoad;
+#endif
     int m_bAvatarMegaphone;
     int m_tAM_LastUpdate;
 #if defined(REGION_GMS)
     int m_nTargetPosition_X;
     int m_nTargetPosition_Y;
     int m_bChaseEnable;
+#endif
+#if defined(REGION_GMS) && MAJOR_VERSION >= 87
     int m_bPetHelpPopUpShown;
 #endif
     WEBCOOKIE m_Cookie;
@@ -36,43 +40,47 @@ public:
     TSecType<unsigned char> m_nGradeCode;
 #if defined(REGION_GMS)
     TSecType<unsigned char> m_nSubGradeCode;
+#elif defined(REGION_JMS)
+    int unk1;
+    int unk2;
+    int m_nNumOfCharacter;
 #endif
     ZXString<char> m_sEMailAccount;
     ZXString<char> m_sNexonClubID;
-#if defined(REGION_JMS)
-    int dummy3;
-    int dummy4;
-#endif
+#if defined(REGION_GMS)
     unsigned __int8 m_nCountryID;
+#endif
     unsigned __int8 m_nPurchaseExp;
     int m_nWorldID;
     int m_nChannelID;
-#if defined(REGION_GMS)
     int m_bPremium;
     unsigned int m_ulPremiumArgument;
-#endif
     unsigned __int8 m_nChatBlockReason;
     _SYSTEMTIME m_dtChatUnblockDate;
-    _SYSTEMTIME m_dtRegisterDate;
 #if defined(REGION_GMS)
-    // TODO this is inaccurate for JMS, but two INT are removed compared to GMS
+    _SYSTEMTIME m_dtRegisterDate;
     int m_nNumOfCharacter;
     int m_bThisAccountJustCreatedCharacter;
-#endif
     int m_bIsGuestAccount;
     int m_bManagerAccount;
-#if defined(REGION_GMS)
     int m_nCharacterCount;
     int m_nSlotCount;
+#elif defined(REGION_JMS)
+    int m_bManagerAccount;
+    int m_bTesterAccount;
+    int unk3;
 #endif
+#if (defined(REGION_GMS) && MAJOR_VERSION > 83) || (defined(REGION_JMS))
     unsigned __int8 m_aClientKey[8];
-#if defined(REGION_GMS)
+#endif
+#if defined(REGION_GMS) && MAJOR_VERSION >= 87
     int m_bTesterAccount;
 #endif
     unsigned int m_dwCharacterId;
     int m_bExclRequestSent;
     int m_tExclRequestSent;
     int m_tExclRequestSentQ[2];
+    // TODO this is as far as has been verified.
     ZRef<CharacterData> m_pCharacterData;
     BasicStat m_basicStat;
     SecondaryStat m_secondaryStat;
