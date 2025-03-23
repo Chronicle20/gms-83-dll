@@ -200,9 +200,9 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
         throw std::invalid_argument("570425351");
     }
 
-    //TODO check version stuff
     if (pThis->m_ctxConnect.bLogin) {
-        Log("CClientSocket::OnConnect should be sending 0x19");
+        Log("CClientSocket::OnConnect should be sending [%d]", CLIENT_START_ERROR);
+        // TODO relay CLIENT_START_ERROR
         char *fileName = CWvsApp::GetExceptionFileName();
 
     } else {
@@ -211,15 +211,21 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
             CWvsContext::GetInstance()->m_nChannelID, CWvsContext::GetInstance()->m_dwCharacterId);
         auto systemInfo = CSystemInfo();
         systemInfo.Init();
-        auto cOutPacket = COutPacket(0x14);
+        auto cOutPacket = COutPacket(PLAYER_LOGGED_IN);
         cOutPacket.Encode4(CWvsContext::GetInstance()->m_dwCharacterId);
         cOutPacket.EncodeBuffer(systemInfo.GetMachineId(), 16);
+#if defined(REGION_GMS)
+        // Is the user a GM?
         if (CWvsContext::GetInstance()->m_nSubGradeCode.GetData() >= 0) {
             cOutPacket.Encode1(0);
         } else {
             cOutPacket.Encode1(1);
         }
+#elif defined(REGION_JMS)
+    cOutPacket.Encode2(CConfig::GetInstance()->dummy1);
+#endif
         cOutPacket.Encode1(0);
+        // TODO not sure if this exists in less than GMS 87. Needs proper CWvsContext Mapping
         cOutPacket.EncodeBuffer(CWvsContext::GetInstance()->m_aClientKey, 8);
 
         CClientSocket::GetInstance()->SendPacket(&cOutPacket);
