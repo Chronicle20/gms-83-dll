@@ -584,6 +584,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
 
     CClientSocket::CreateInstance();
     pThis->ConnectLogin();
+
     CSecurityClient::GetInstance()->m_hMainWnd = pThis->m_hWnd;
 
     CFuncKeyMappedMan::CreateInstance();
