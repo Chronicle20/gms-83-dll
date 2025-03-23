@@ -13,10 +13,14 @@
 #include "memory_map.h"
 
 // main thread
-VOID __stdcall MainProc()
-{
+const DWORD dwLauncher = 0x007F3CE0;
+VOID __stdcall MainProc() {
     // Noop Patcher
-    MemEdit::PatchNop(WIN_MAIN + WIN_MAIN_PATCHER_OFFSET, 5);
+    if (strcmp(BUILD_REGION, "GMS") == 0) {
+        MemEdit::PatchNop(WIN_MAIN + WIN_MAIN_PATCHER_OFFSET, 5);
+    } else if (strcmp(BUILD_REGION, "JMS") == 0) {
+        MemEdit::WriteBytes(dwLauncher, new BYTE[6]{0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3}, 6);
+    }
 }
 
 // dll entry point

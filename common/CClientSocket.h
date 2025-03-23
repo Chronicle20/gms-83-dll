@@ -12,6 +12,9 @@ public:
         int bLogin;
     };
 
+#if defined(REGION_JMS)
+    char dummy1;
+#endif
     HWND__ *m_hWnd;
     ZSocketBase m_sock;
     CClientSocket::CONNECTCONTEXT m_ctxConnect;

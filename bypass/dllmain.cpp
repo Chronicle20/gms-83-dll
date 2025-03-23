@@ -175,13 +175,13 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
             return 0;
         }
     }
-    if (nVersionHeader != 8) {
+    if (nVersionHeader != VERSION_HEADER) {
         throw std::invalid_argument("570425351");
     }
-    if (majorVersion > MAJOR_VERSION) {
+    if (majorVersion > BUILD_MAJOR_VERSION) {
         throw std::invalid_argument("CPatchException");
     }
-    if (majorVersion != MAJOR_VERSION) {
+    if (majorVersion != BUILD_MAJOR_VERSION) {
         throw std::invalid_argument("570425351");
     }
     if (version > MINOR_VERSION) {
@@ -194,29 +194,38 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     pThis->m_ctxConnect.lAddr.RemoveAll();
     pThis->m_ctxConnect.posList = 0;
     socklen_t peerAddrLen = sizeof(pThis->m_addr);
-    if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr*>(&pThis->m_addr), &peerAddrLen) == -1) {
+    if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr *>(&pThis->m_addr), &peerAddrLen) ==
+        -1) {
         int lastError = WSAGetLastError();
         throw std::invalid_argument("570425351");
     }
 
-    //TODO check version stuff
     if (pThis->m_ctxConnect.bLogin) {
-        Log("CClientSocket::OnConnect should be sending 0x19");
-        char * fileName = CWvsApp::GetExceptionFileName();
+        Log("CClientSocket::OnConnect should be sending [%d]", CLIENT_START_ERROR);
+        // TODO relay CLIENT_START_ERROR
+        char *fileName = CWvsApp::GetExceptionFileName();
 
     } else {
-        Log("CClientSocket::OnConnect accountId=[%d], worldId=[%d], channelId=[%d], characterId=[%d]",CWvsContext::GetInstance()->m_dwAccountId, CWvsContext::GetInstance()->m_nWorldID, CWvsContext::GetInstance()->m_nChannelID, CWvsContext::GetInstance()->m_dwCharacterId);
+        Log("CClientSocket::OnConnect accountId=[%d], worldId=[%d], channelId=[%d], characterId=[%d]",
+            CWvsContext::GetInstance()->m_dwAccountId, CWvsContext::GetInstance()->m_nWorldID,
+            CWvsContext::GetInstance()->m_nChannelID, CWvsContext::GetInstance()->m_dwCharacterId);
         auto systemInfo = CSystemInfo();
         systemInfo.Init();
-        auto cOutPacket = COutPacket(0x14);
+        auto cOutPacket = COutPacket(PLAYER_LOGGED_IN);
         cOutPacket.Encode4(CWvsContext::GetInstance()->m_dwCharacterId);
         cOutPacket.EncodeBuffer(systemInfo.GetMachineId(), 16);
+#if defined(REGION_GMS)
+        // Is the user a GM?
         if (CWvsContext::GetInstance()->m_nSubGradeCode.GetData() >= 0) {
             cOutPacket.Encode1(0);
         } else {
             cOutPacket.Encode1(1);
         }
+#elif defined(REGION_JMS)
+    cOutPacket.Encode2(CConfig::GetInstance()->dummy1);
+#endif
         cOutPacket.Encode1(0);
+        // TODO not sure if this exists in less than GMS 87. Needs proper CWvsContext Mapping
         cOutPacket.EncodeBuffer(CWvsContext::GetInstance()->m_aClientKey, 8);
 
         CClientSocket::GetInstance()->SendPacket(&cOutPacket);
@@ -238,9 +247,7 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx
         return;
     }
 
-    int timeout = timeGetTime() + 5000;
-    Log("CClientSocket::Connect Setting timeout to [%d].", timeout);
-    pThis->m_tTimeout = timeout;
+    pThis->m_tTimeout = timeGetTime() + 5000;
     HWND hwnd = pThis->m_hWnd;
 
     unsigned int socketHandle = pThis->m_sock._m_hSocket;
@@ -251,7 +258,8 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx
     int connectResult = connect(socketHandle, reinterpret_cast<const sockaddr *>(pAddr), sizeof(sockaddr_in));
     int lastError = WSAGetLastError();
 
-    Log("CClientSocket::Connect ADR asyncResult [%d], connectResult [%d], lastError [%d].", asyncResult, connectResult, lastError);
+    Log("CClientSocket::Connect ADR asyncResult [%d], connectResult [%d], lastError [%d].", asyncResult, connectResult,
+        lastError);
 
     if (asyncResult == SOCKET_ERROR || connectResult != SOCKET_ERROR || lastError != WSAEWOULDBLOCK) {
         Log("CClientSocket::Connect ADR Try CClientSocket::OnConnect");
@@ -278,6 +286,7 @@ typedef INT(__fastcall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, PVOID
 _CLogin__SendCheckPasswordPacket_t _CLogin__SendCheckPasswordPacket;
 
 INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, char *sID, char *sPasswd) {
+    Log("CLogin::SendCheckPasswordPacket. ID [%s]. bRequestSent [%d].", sID, pThis->m_bRequestSent);
     if (pThis->m_bRequestSent) {
         return 0;
     }
@@ -305,7 +314,7 @@ INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, ch
     cOutPacket.Encode4(CConfig::GetInstance()->GetPartnerCode());
     CClientSocket::GetInstance()->SendPacket(&cOutPacket);
     // ZXString<char>::GetBuffer(CWvsContext::GetInstance() + 8264, -1, sID, 0xFFFFFFFF);
-    CUITitle* cuiTitle = CUITitle::GetInstance();
+    CUITitle *cuiTitle = CUITitle::GetInstance();
     if (cuiTitle) {
         cuiTitle->ClearToolTip();
     }
@@ -320,6 +329,7 @@ CStage *get_stage() {
 
 // void __cdecl set_stage(CStage *pStage, void *pParam)
 typedef VOID(__cdecl *_set_stage_t)(CStage *pStage, void *pParam);
+
 _set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(SET_STAGE);
 
 IWzGr2D *get_gr() {
@@ -334,11 +344,16 @@ _CWvsApp__CallUpdate_t _CWvsApp__CallUpdate;
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
     if (pThis->m_bFirstUpdate) {
         pThis->m_tUpdateTime = tCurTime;
+#if defined(REGION_GMS)
         pThis->m_tLastServerIPCheck = tCurTime;
         pThis->m_tLastServerIPCheck2 = tCurTime;
         pThis->m_tLastGGHookingAPICheck = tCurTime;
         pThis->m_tLastSecurityCheck = tCurTime;
+#endif
         pThis->m_bFirstUpdate = 0;
+#if defined(REGION_JMS)
+        pThis->dummy21 = tCurTime;
+#endif
     }
 
     while (tCurTime - pThis->m_tUpdateTime > 0) {
@@ -392,9 +407,7 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
                         Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 1");
                         CClientSocket__OnConnect_Hook(pSock, edx, 0);
                     }
-                }
-                else
-                {
+                } else {
                     WORD low = LOWORD(msg.lParam);
                     if (low != 16 && low != 1) {
                         Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 2");
@@ -407,20 +420,18 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
                         break;
                     }
                 }
-            }
-            else {
+            } else {
                 TranslateMessage(&msg);
                 DispatchMessageA(&msg);
 
-                if ((LONG)(timeGetTime() - pSock->m_tTimeout) > 0) {
+                if ((LONG) (timeGetTime() - pSock->m_tTimeout) > 0) {
                     Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 4. timeGetTime [%d], timeOut [%d].",
                         timeGetTime(), pSock->m_tTimeout);
                     CClientSocket__OnConnect_Hook(pSock, edx, 0);
                 }
             }
-        }
-        else {
-            if ((LONG)(timeGetTime() - pSock->m_tTimeout) > 0) {
+        } else {
+            if ((LONG) (timeGetTime() - pSock->m_tTimeout) > 0) {
                 Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 5");
                 CClientSocket__OnConnect_Hook(pSock, edx, 0);
             }
@@ -482,7 +493,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
             } while (!*pbTerminate);
         } else if (dwRet == 3) {
             do {
-                if ( !PeekMessageA(&msg, 0, 0, 0, 1u) ) {
+                if (!PeekMessageA(&msg, 0, 0, 0, 1u)) {
                     break;
                 }
                 TranslateMessage(&msg);
@@ -509,7 +520,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
                     Log("Do proper _com_raise_error");
                     return;
                 }
-            } while ( !*pbTerminate && msg.message != 18 );
+            } while (!*pbTerminate && msg.message != 18);
         } else {
             if (CInputSystem::GetInstance()->GenerateAutoKeyDown(&isMsg)) {
                 pThis->ISMsgProc(isMsg.message, isMsg.wParam, isMsg.lParam);
@@ -536,57 +547,85 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
 }
 
 void GetSEPrivilege() {
-    ((VOID **(_fastcall * )())
+    ((VOID * *(_fastcall * )())
     GET_SE_PRIVILEGE)();
 }
 
 // void __thiscall CWvsApp::SetUp(CWvsApp *this)
 typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
+
 _CWvsApp__SetUp_t _CWvsApp__SetUp;
 
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     Log("CWvsApp::SetUp");
+#if defined(REGION_GMS)
     pThis->InitializeAuth();
+#endif
+
     auto time = timeGetTime();
     srand(time);
+
+#if defined(REGION_GMS)
     GetSEPrivilege();
+#endif
+
     CSecurityClient::CreateInstance();
-    // dword_BF1AC8 = 0x10;
+
+#if defined(REGION_JMS)
+    PVOID cfgAlloc = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(0x4ACu);
+    CConfig *cConfig;
+    if (cfgAlloc) {
+        cConfig = new(cfgAlloc) CConfig();
+    }
+#endif
+
     pThis->InitializePCOM();
     pThis->CreateMainWindow();
+
     CClientSocket::CreateInstance();
     pThis->ConnectLogin();
+
+    CSecurityClient::GetInstance()->m_hMainWnd = pThis->m_hWnd;
+
     CFuncKeyMappedMan::CreateInstance();
     CQuickslotKeyMappedMan::CreateInstance();
     CMacroSysMan::CreateInstance();
+
     pThis->InitializeResMan();
-
-//    dword_BF0444(v2);
-//    if ( *((_DWORD *)dword_BE7918 + 3580) )
-//    {
-//        v23 = ZAllocEx<ZAllocAnonSelector>::Alloc(dword_BF0B00, 0x20u);
-//        v31 = 0;
-//        if ( v23 )
-//            v12 = sub_42C3DE(v23, v3, v28[0], v28[1], v28[2], v28[3]);
-//        else
-//            v12 = 0;
-//        v24 = v12;
-//        v31 = -1;
-//    }
-
     pThis->InitializeGr2D();
     pThis->InitializeInput();
+
+#if defined(REGION_JMS)
+    ShowWindow(pThis->m_hWnd, 5);
+    UpdateWindow(pThis->m_hWnd);
+    SetForegroundWindow(pThis->m_hWnd);
+    auto hr = get_gr()->RenderFrame();
+    if (FAILED(hr)) {
+        Log("Do proper _com_raise_errorex");
+        return;
+    }
+#endif
+
     Sleep(300);
     pThis->InitializeSound();
     Sleep(300);
     pThis->InitializeGameData();
     pThis->CreateWndManager();
-    CConfig::GetInstance()->ApplySysOpt(0, 0);
+
+    CConfig::GetInstance()->ApplySysOpt(nullptr, 0);
+
     CActionMan::CreateInstance();
     CActionMan::GetInstance()->Init();
+
     CAnimationDisplayer::CreateInstance();
+
     CMapleTVMan::CreateInstance();
+#if defined(REGION_GMS)
     CMapleTVMan::GetInstance()->Init();
+#elif defined(REGION_JMS)
+    CMapleTVMan::GetInstance()->Init(pThis->dummy15, pThis->dummy18);
+#endif
+
     CQuestMan::CreateInstance();
     if (!CQuestMan::GetInstance()->LoadDemand()) {
         Log("Throw error regarding CQuestMan::LoadDemand");
@@ -594,12 +633,15 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     }
     CQuestMan::GetInstance()->LoadPartyQuestInfo();
     CQuestMan::GetInstance()->LoadExclusive();
+
     CMonsterBookMan::CreateInstance();
     if (!CMonsterBookMan::GetInstance()->LoadBook()) {
         Log("Throw error regarding CMonsterBookMan::LoadBook");
         return;
     }
+
     CRadioManager::CreateInstance();
+
     char sModulePath[260];
     GetModuleFileNameA(0, sModulePath, 260);
     pThis->Dir_BackSlashToSlash(sModulePath);
@@ -609,26 +651,19 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     ZXString<char> tempString = ZXString<char>(sModulePath, 0xFFFFFFFF);
     CConfig::GetInstance()->CheckExecPathReg(tempString);
 
-    PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(56u);
-    CStage * cLogo;
+#if defined(REGION_GMS)
+    auto cLoginSize = 56u;
+#elif defined(REGION_JMS)
+    auto cLoginSize = 0x2Cu;
+#endif
+    PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(cLoginSize);
+    CStage *cLogo;
     if (ret) {
-        cLogo = new (ret) CLogo();
+        cLogo = new(ret) CLogo();
     } else {
         cLogo = nullptr;
     }
     _set_stage(cLogo, nullptr);
-//    poly = -586093038;
-//    for ( ii = 0; ii < 256; ++ii )
-//    {
-//        crc32 = ii;
-//        for ( i = 8; i > 0; --i )
-//        {
-//            if ( (crc32 & 1) != 0 )
-//                crc32 = (poly - 401) ^ (crc32 >> 1);
-//            else
-//                crc32 >>= 1;
-//        }
-//        g_crc32Table[ii] = crc32;
 }
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS)(HANDLE, PBOOL);
@@ -681,33 +716,38 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
         pThis->m_nGameStartMode = 2;
     }
 
-    int *g_dwTargetOS = reinterpret_cast<int *>(G_DW_TARGET_OS);
+    if (strcmp(BUILD_REGION, "GMS") == 0) {
+        int *g_dwTargetOS = reinterpret_cast<int *>(G_DW_TARGET_OS);
 
-    if (ovi.dwMajorVersion < 5) {
-        *g_dwTargetOS = 1996;
-    }
+        if (ovi.dwMajorVersion < 5) {
+            *g_dwTargetOS = 1996;
+        }
 
-    BOOL bIsWow64 = FALSE;
-    LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
-            GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
-    if (fnIsWow64Process) {
-        fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
-    }
+        BOOL bIsWow64 = FALSE;
+        LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
+                GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+        if (fnIsWow64Process) {
+            fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
+        }
 
-    if (bIsWow64) {
-        *g_dwTargetOS = 1996;
+        if (bIsWow64) {
+            *g_dwTargetOS = 1996;
+        }
+        if (ovi.dwMajorVersion >= 6 && !bIsWow64) {
+            ResetLSP();
+        }
+        sToken.Empty();
     }
-    if (ovi.dwMajorVersion >= 6 && !bIsWow64) {
-        ResetLSP();
-    }
-    sToken.Empty();
 }
 
 // main thread
 VOID __stdcall MainProc() {
 
+#if defined(REGION_GMS)
+    // TODO need better struct mapping.
     // CWvsApp::CWvsApp
     INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, C_WVS_APP);
+#endif
 
     // CWvsApp::SetUp
     INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, C_WVS_APP_SET_UP);
@@ -718,27 +758,51 @@ VOID __stdcall MainProc() {
     // CWvsApp::Run
     INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
 
+#if defined(REGION_JMS)
+    // TODO define these functions.
+    MemEdit::WriteBytes(0x00B3B96B, new BYTE[1]{0xC3}, 1);
+
+    MemEdit::WriteBytes(0x00B3B5F7 + 0x19, new BYTE[2]{0x90, 0x90}, 2);
+
+    MemEdit::WriteBytes(0x004123D3 + 0x4D, new BYTE[5]{0xE9, 0x97, 0x00, 0x00, 0x00}, 5);
+
+    MemEdit::WriteBytes(DR_CHECK, new BYTE[3]{0x33, 0xC0, 0xC3}, 3);
+#endif
+
     // CWvsApp::CallUpdate
     INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, C_WVS_APP_CALL_UPDATE);
 
     // CWvsApp::ConnectLogin
-    INITMAPLEHOOK(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t, CWvsApp__ConnectLogin_Hook, C_WVS_APP_CONNECT_LOGIN);
+    INITMAPLEHOOK(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t, CWvsApp__ConnectLogin_Hook,
+                  C_WVS_APP_CONNECT_LOGIN);
 
+#if defined(REGION_GMS)
+    // TODO need better struct mapping.
     // CLogin::SendCheckPasswordPacket
     INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
                   CLogin__SendCheckPasswordPacket_Hook, C_LOGIN_SEND_CHECK_PASSWORD_PACKET);
+#endif
 
+#if defined(REGION_GMS)
+    auto cSecClientOnPackOffset = 12;
+#elif defined(REGION_JMS)
+    auto cSecClientOnPackOffset = 16;
+#endif
+    // TODO need to migrate this to a NOOP of CSecurityClient::OnPacket
     // Noop Call to CSecurityClient::OnPacket
-    MemEdit::PatchNop(C_CLIENT_SOCKET_PROCESS_PACKET + C_CLIENT_SOCKET_PROCESS_PACKET_CALL_C_SECURITY_CLIENT_ON_PACKET_OFFSET, 12);
+    MemEdit::PatchNop(C_CLIENT_SOCKET_PROCESS_PACKET + C_CLIENT_SOCKET_PROCESS_PACKET_CALL_C_SECURITY_CLIENT_ON_PACKET_OFFSET, cSecClientOnPackOffset);
 
     // CClientSocket::Connect
-    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook, C_CLIENT_CONNECT_CTX);
+    INITMAPLEHOOK(_CClient__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook,
+                  C_CLIENT_CONNECT_CTX);
 
     // CClientSocket::Connect
-    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook, C_CLIENT_CONNECT_ADR);
+    INITMAPLEHOOK(_CClient__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook,
+                  C_CLIENT_CONNECT_ADR);
 
     // // CClientSocket::OnConnect
-    INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook, C_CLIENT_SOCKET_ON_CONNECT);
+    INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
+                  C_CLIENT_SOCKET_ON_CONNECT);
 }
 
 // dll entry point

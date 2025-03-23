@@ -10,6 +10,7 @@ add_library(bypass SHARED
         ${CMAKE_SOURCE_DIR}/common/CConfig.cpp
         ${CMAKE_SOURCE_DIR}/common/COutPacket.cpp
         ${CMAKE_SOURCE_DIR}/common/CSystemInfo.cpp
+        ${CMAKE_SOURCE_DIR}/common/CWndMan.cpp
         ${CMAKE_SOURCE_DIR}/common/CWvsApp.cpp
         ${CMAKE_SOURCE_DIR}/common/CWvsContext.cpp
         ${CMAKE_SOURCE_DIR}/common/CActionMan.cpp
@@ -35,6 +36,7 @@ add_library(bypass SHARED
 # Set additional include directories if needed
 target_include_directories(bypass PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(bypass PRIVATE ${CMAKE_SOURCE_DIR}/common/detours.lib)
+target_link_libraries(bypass PRIVATE build_config)
 
 # Link against Ws2_32.lib
 if (WIN32)

@@ -10,6 +10,11 @@ void COutPacket::Encode1(unsigned char n) {
     C_OUT_PACKET_ENCODE_1)(this, NULL, n);
 }
 
+void COutPacket::Encode2(unsigned short n) {
+    ((VOID(_fastcall * )(COutPacket * , PVOID, unsigned int))
+    C_OUT_PACKET_ENCODE_2)(this, NULL, n);
+}
+
 void COutPacket::Encode4(UINT n) {
     ((VOID(_fastcall * )(COutPacket * , PVOID, unsigned int))
     C_OUT_PACKET_ENCODE_4)(this, NULL, n);

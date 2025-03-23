@@ -1,6 +1,7 @@
 #include "pch.h"
 
 void CRadioManager::CreateInstance() {
+    Log("CRadioManager::CreateInstance");
     ((VOID * *(_fastcall * )())
     C_RADIO_MANAGER_CREATE_INSTANCE)();
 }

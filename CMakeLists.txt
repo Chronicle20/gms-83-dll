@@ -8,12 +8,13 @@ set(BUILD_REGION "" CACHE STRING "Game region (e.g., GMS, JMS)")
 set(BUILD_MAJOR_VERSION "" CACHE STRING "Game version (e.g., 83, 185)")
 set(BUILD_MINOR_VERSION "" CACHE STRING "Game version (e.g., 1, 2)")
 
+# Validate
 if (NOT BUILD_REGION OR NOT BUILD_MAJOR_VERSION OR NOT BUILD_MINOR_VERSION)
     message(FATAL_ERROR "You must set all BUILD_REGION, BUILD_MAJOR_VERSION, BUILD_MINOR_VERSION")
 endif()
 
+# Include region+version-specific memory map
 set(MEMORY_MAP_FILE "${CMAKE_SOURCE_DIR}/memory_maps/${BUILD_REGION}/v${BUILD_MAJOR_VERSION}_${BUILD_MINOR_VERSION}.cmake")
-
 if (EXISTS ${MEMORY_MAP_FILE})
     message(STATUS "Using memory map: ${MEMORY_MAP_FILE}")
     include(${MEMORY_MAP_FILE})
@@ -26,7 +27,30 @@ configure_file(
         ${CMAKE_SOURCE_DIR}/include/memory_map.h.in
         ${CMAKE_BINARY_DIR}/generated/memory_map.h
 )
-include_directories(${CMAKE_BINARY_DIR}/generated)
+
+# Define shared INTERFACE config for all subprojects
+add_library(build_config INTERFACE)
+
+# Set include path
+target_include_directories(build_config INTERFACE
+        ${CMAKE_BINARY_DIR}/generated
+)
+
+# Global compile definitions
+target_compile_definitions(build_config INTERFACE
+        BUILD_REGION="${BUILD_REGION}"
+        BUILD_MAJOR_VERSION=${BUILD_MAJOR_VERSION}
+        BUILD_MINOR_VERSION=${BUILD_MINOR_VERSION}
+)
+
+# Region macro for conditional compilation
+if (BUILD_REGION STREQUAL "GMS")
+    target_compile_definitions(build_config INTERFACE REGION_GMS)
+elseif (BUILD_REGION STREQUAL "JMS")
+    target_compile_definitions(build_config INTERFACE REGION_JMS)
+else()
+    message(FATAL_ERROR "Unsupported region: ${BUILD_REGION}")
+endif()
 
 # Add subdirectories for each project
 add_subdirectory(proxy)

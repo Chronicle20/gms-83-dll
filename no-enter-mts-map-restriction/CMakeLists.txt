@@ -9,5 +9,6 @@ add_library(no-enter-mts-map-restriction SHARED
 # Set additional include directories if needed
 target_include_directories(no-enter-mts-map-restriction PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(no-enter-mts-map-restriction PRIVATE ${CMAKE_SOURCE_DIR}/common/detours.lib)
+target_link_libraries(no-enter-mts-map-restriction PRIVATE build_config)
 
 set_target_properties(no-enter-mts-map-restriction PROPERTIES OUTPUT_NAME "no-enter-mts-map-restriction-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")

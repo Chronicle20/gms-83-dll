@@ -10,5 +10,6 @@ add_library(enable-minimize SHARED
 # Set additional include directories if needed
 target_include_directories(enable-minimize PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(enable-minimize PRIVATE ${CMAKE_SOURCE_DIR}/common/detours.lib)
+target_link_libraries(enable-minimize PRIVATE build_config)
 
 set_target_properties(enable-minimize PROPERTIES OUTPUT_NAME "enable-minimize-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")

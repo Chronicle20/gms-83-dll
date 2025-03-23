@@ -4,72 +4,19 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag for the release (#.#.#)'
+        description: 'Tag for the release (e.g. 1.2.3)'
         required: true
 env:
   BUILD_TYPE: Release
 jobs:
-  build:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        config:
-          - { region: GMS, major: 83, minor: 1 }
-          - { region: GMS, major: 87, minor: 1 }
-    name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up MSVC
-        uses: microsoft/setup-msbuild@v2.0.0
-      - name: Set up CMake
-        run: |
-          choco install cmake
-        shell: pwsh
-      - name: Configure CMake
-        run: cmake -B build `
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} `
-          -G "Visual Studio 17" -A Win32 `
-          -DBUILD_REGION=${{ matrix.config.region }} `
-          -DBUILD_MAJOR_VERSION=${{ matrix.config.major }} `
-          -DBUILD_MINOR_VERSION=${{ matrix.config.minor }}
-        shell: pwsh
-      - name: Build
-        run: cmake --build build --config ${{env.BUILD_TYPE}}
-      - name: Artifact Build
-        run: cmake --build build --config ${{env.BUILD_TYPE}} --target package_dlls
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          path: build/artifacts/
-          name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
-  release:
-    needs: build
+  # 🏷️ Create the GitHub Release (run once)
+  create_release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        config:
-          - { region: GMS, major: 83, minor: 1 }
-          - { region: GMS, major: 87, minor: 1 }
-    name: Release ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
+    outputs:
+      upload_url: ${{ steps.create.outputs.upload_url }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Download artifact for this variant
-        uses: actions/download-artifact@v4
-        with:
-          name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
-          path: release_build
-      - name: Zip artifact
-        run: |
-          zip -r artifact.zip ./release_build
-      - name: Set up Git
-        run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-      - name: Create GitHub Release (only once)
-        if: matrix.config.region == 'GMS' && matrix.config.major == 83 && matrix.config.minor == 1
-        id: create_release
+      - name: Create GitHub Release
+        id: create
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
@@ -79,13 +26,68 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            Release notes for version v${{ github.event.inputs.tag }}
-      - name: Upload this variant to the release
+            Multi-region release for version v${{ github.event.inputs.tag }}
+  # ⚙️ Matrix Build + Artifact Packaging
+  build:
+    needs: create_release
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        config:
+          - { region: GMS, major: 83, minor: 1 }
+          - { region: GMS, major: 87, minor: 1 }
+          - { region: JMS, major: 185, minor: 1 }
+    name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up MSVC
+        uses: microsoft/setup-msbuild@v2.0.0
+      - name: Set up CMake
+        run: choco install cmake
+        shell: pwsh
+      - name: Configure CMake
+        run: cmake -B build `
+          -G "Visual Studio 17" -A Win32 `
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
+          -DBUILD_REGION=${{ matrix.config.region }} `
+          -DBUILD_MAJOR_VERSION=${{ matrix.config.major }} `
+          -DBUILD_MINOR_VERSION=${{ matrix.config.minor }}
+        shell: pwsh
+      - name: Build
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+      - name: Package Artifacts
+        run: cmake --build build --config ${{ env.BUILD_TYPE }} --target package_dlls
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
+          path: build/artifacts/
+  # 📦 Upload artifacts to the release
+  upload:
+    needs: [create_release, build]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config:
+          - { region: GMS, major: 83, minor: 1 }
+          - { region: GMS, major: 87, minor: 1 }
+          - { region: JMS, major: 185, minor: 1 }
+    name: Upload ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
+          path: release_build
+      - name: Zip artifact
+        run: zip -r artifact.zip ./release_build
+      - name: Upload to GitHub Release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url || github.event.release.upload_url }}
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: ./artifact.zip
           asset_name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}.zip
           asset_content_type: application/zip

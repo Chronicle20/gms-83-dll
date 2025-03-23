@@ -1,6 +1,7 @@
 #include "pch.h"
 
 CLogo::CLogo() {
+    Log("CLogo::CLogo");
     ((VOID(_fastcall * )(CLogo * , PVOID))
     C_LOGO)(this, NULL);
 }
