@@ -348,6 +348,15 @@ IWzGr2D *get_gr() {
     return reinterpret_cast<IWzGr2D *>(*(uint32_t **) GET_GR);
 }
 
+// int __cdecl DR_check()
+typedef INT(__cdecl *_DR__check_t)();
+
+_DR__check_t _DR__check;
+
+INT __cdecl DR__check_Hook() {
+    return 0;
+}
+
 // void __thiscall CWvsApp::CallUpdate(CWvsApp *this, int tCurTime)
 typedef VOID(__fastcall *_CWvsApp__CallUpdate_t)(CWvsApp *pThis, PVOID edx, int tCurTime);
 
@@ -583,13 +592,11 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
 
     CSecurityClient::CreateInstance();
 
-#if defined(REGION_JMS)
-    PVOID cfgAlloc = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(0x4ACu);
+    PVOID cfgAlloc = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(sizeof(CConfig));
     CConfig *cConfig;
     if (cfgAlloc) {
         cConfig = new(cfgAlloc) CConfig();
     }
-#endif
 
     pThis->InitializePCOM();
     pThis->CreateMainWindow();
@@ -663,12 +670,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     ZXString<char> tempString = ZXString<char>(sModulePath, 0xFFFFFFFF);
     CConfig::GetInstance()->CheckExecPathReg(tempString);
 
-#if defined(REGION_GMS)
-    auto cLoginSize = 56u;
-#elif defined(REGION_JMS)
-    auto cLoginSize = 0x2Cu;
-#endif
-    PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(cLoginSize);
+    PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(sizeof(CLogo));
     CStage *cLogo;
     if (ret) {
         cLogo = new(ret) CLogo();
@@ -774,11 +776,9 @@ VOID __stdcall MainProc() {
     // TODO define these functions.
     MemEdit::WriteBytes(0x00B3B96B, new BYTE[1]{0xC3}, 1);
 
-    MemEdit::WriteBytes(0x00B3B5F7 + 0x19, new BYTE[2]{0x90, 0x90}, 2);
-
-    MemEdit::WriteBytes(0x004123D3 + 0x4D, new BYTE[5]{0xE9, 0x97, 0x00, 0x00, 0x00}, 5);
-
-    MemEdit::WriteBytes(DR_CHECK, new BYTE[3]{0x33, 0xC0, 0xC3}, 3);
+#endif
+#if (defined(REGION_GMS) && MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    INITMAPLEHOOK(_DR__check, _DR__check_t, DR__check_Hook, DR_CHECK);
 #endif
 
     // CWvsApp::CallUpdate
