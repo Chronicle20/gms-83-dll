@@ -453,7 +453,7 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
         }
     }
 
-    int handle = pSock->m_sock._m_hSocket;
+    auto handle = pSock->m_sock._m_hSocket;
     if (handle == 0 || handle == -1) {
         Log("CWvsApp::ConnectLogin_Hook Should issue exception here.");
 //        CTerminateException ex(570425345);
@@ -504,7 +504,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
             } while (!*pbTerminate);
         } else if (dwRet == 3) {
             do {
-                if (!PeekMessageA(&msg, 0, 0, 0, 1u)) {
+                if (!PeekMessageA(&msg, nullptr, 0, 0, 1u)) {
                     break;
                 }
                 TranslateMessage(&msg);
@@ -652,10 +652,10 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     CRadioManager::CreateInstance();
 
     char sModulePath[260];
-    GetModuleFileNameA(0, sModulePath, 260);
-    pThis->Dir_BackSlashToSlash(sModulePath);
-    pThis->Dir_upDir(sModulePath);
-    pThis->Dir_SlashToBackSlash(sModulePath);
+    GetModuleFileNameA(nullptr, sModulePath, 260);
+    CWvsApp::Dir_BackSlashToSlash(sModulePath);
+    CWvsApp::Dir_upDir(sModulePath);
+    CWvsApp::Dir_SlashToBackSlash(sModulePath);
 
     ZXString<char> tempString = ZXString<char>(sModulePath, 0xFFFFFFFF);
     CConfig::GetInstance()->CheckExecPathReg(tempString);
@@ -686,9 +686,9 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
     void **instance = reinterpret_cast<void **>(C_WVS_APP_INSTANCE);
     *instance = &pThis->m_hWnd != 0 ? pThis : 0;
 
-    pThis->m_hWnd = 0;
+    pThis->m_hWnd = nullptr;
     pThis->m_bPCOMInitialized = 0;
-    pThis->m_hHook = 0;
+    pThis->m_hHook = nullptr;
     pThis->m_tUpdateTime = 0;
     pThis->m_bFirstUpdate = 1;
     pThis->m_sCmdLine = ZXString<char>();
