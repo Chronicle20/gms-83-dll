@@ -362,12 +362,9 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
         pThis->m_tLastServerIPCheck = tCurTime;
         pThis->m_tLastServerIPCheck2 = tCurTime;
         pThis->m_tLastGGHookingAPICheck = tCurTime;
+#endif
         pThis->m_tLastSecurityCheck = tCurTime;
-#endif
         pThis->m_bFirstUpdate = 0;
-#if defined(REGION_JMS)
-        pThis->dummy21 = tCurTime;
-#endif
     }
 
     while (tCurTime - pThis->m_tUpdateTime > 0) {
@@ -635,7 +632,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
 #if defined(REGION_GMS)
     CMapleTVMan::GetInstance()->Init();
 #elif defined(REGION_JMS)
-    CMapleTVMan::GetInstance()->Init(pThis->dummy15, pThis->dummy18);
+    CMapleTVMan::GetInstance()->Init(pThis->unk1[1], pThis->unk1[0]);
 #endif
 
     CQuestMan::CreateInstance();
@@ -701,13 +698,17 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
     pThis->m_bExitByTitleEscape = 0;
     pThis->m_hrZExceptionCode = 0;
     pThis->m_hrComErrorCode = 0;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     pThis->m_tNextSecurityCheck = 0;
     pThis->m_pBackupBuffer = ZArray<unsigned char>();
     pThis->m_dwBackupBufferSize = 0;
+#endif
 
     pThis->m_sCmdLine = ZXString<char>(sCmdLine, 0xFFFFFFFF);
     pThis->m_sCmdLine = *pThis->m_sCmdLine.TrimRight("\" ")->TrimLeft("\" ");
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     pThis->m_pBackupBuffer.Alloc(0x1000);
+#endif
     ZXString<char> sToken = ZXString<char>();
     pThis->GetCmdLine(&sToken, 0);
 
@@ -723,38 +724,35 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
         pThis->m_nGameStartMode = 2;
     }
 
-    if (strcmp(BUILD_REGION, "GMS") == 0) {
-        int *g_dwTargetOS = reinterpret_cast<int *>(G_DW_TARGET_OS);
+#if defined(REGION_GMS)
+    int *g_dwTargetOS = reinterpret_cast<int *>(G_DW_TARGET_OS);
 
-        if (ovi.dwMajorVersion < 5) {
-            *g_dwTargetOS = 1996;
-        }
-
-        BOOL bIsWow64 = FALSE;
-        LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
-                GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
-        if (fnIsWow64Process) {
-            fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
-        }
-
-        if (bIsWow64) {
-            *g_dwTargetOS = 1996;
-        }
-        if (ovi.dwMajorVersion >= 6 && !bIsWow64) {
-            ResetLSP();
-        }
-        sToken.Empty();
+    if (ovi.dwMajorVersion < 5) {
+        *g_dwTargetOS = 1996;
     }
+
+    BOOL bIsWow64 = FALSE;
+    LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
+            GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+    if (fnIsWow64Process) {
+        fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
+    }
+
+    if (bIsWow64) {
+        *g_dwTargetOS = 1996;
+    }
+    if (ovi.dwMajorVersion >= 6 && !bIsWow64) {
+        ResetLSP();
+    }
+    sToken.Empty();
+#endif
 }
 
 // main thread
 VOID __stdcall MainProc() {
 
-#if defined(REGION_GMS)
-    // TODO need better struct mapping.
     // CWvsApp::CWvsApp
     INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, C_WVS_APP);
-#endif
 
     // CWvsApp::SetUp
     INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, C_WVS_APP_SET_UP);

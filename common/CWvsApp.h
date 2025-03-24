@@ -9,37 +9,49 @@ public:
     unsigned int m_dwMainThreadId;
     HHOOK__ *m_hHook;
     int m_bWin9x;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    int m_nOSVersion;
+    int m_nOSMinorVersion;
+    int m_nOSBuildNumber;
+    ZXString<char> m_sCSDVersion;
+    int m_b64BitInfo;
+#endif
     int m_tUpdateTime;
     int m_bFirstUpdate;
     ZXString<char> m_sCmdLine;
     int m_nGameStartMode;
     int m_bAutoConnect;
 #if defined(REGION_JMS)
-    int dummy18;
-    int dummy15;
-    ZXString<char> dummy16;
-    ZXString<char> dummy17;
+    int unk1[2];
+    ZXString<char> unk2[2];
 #endif
     int m_bShowAdBalloon;
     int m_bExitByTitleEscape;
     HRESULT m_hrZExceptionCode;
     HRESULT m_hrComErrorCode;
-#if defined(REGION_GMS)
     unsigned int m_dwSecurityErrorCode;
     int m_nTargetVersion;
+#if defined(REGION_GMS)
     int m_tLastServerIPCheck;
     int m_tLastServerIPCheck2;
     int m_tLastGGHookingAPICheck;
-    int m_tLastSecurityCheck;
-#elif defined(REGION_JMS)
-    int dummy19;
-    int dummy20;
-    int dummy21;
 #endif
+    int m_tLastSecurityCheck;
     void *m_ahInput[3];
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     int m_tNextSecurityCheck;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    bool m_bEnabledDX9;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     ZArray<unsigned char> m_pBackupBuffer;
     unsigned int m_dwBackupBufferSize;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    unsigned int m_dwClearStackLog;
+    int m_bWindowActive;
+#endif
 
     static CWvsApp* GetInstance();
 
