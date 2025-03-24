@@ -50,7 +50,6 @@ _CClientSocket__OnConnect_t _CClientSocket__OnConnect;
 INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, int bSuccess) {
     Log("CClientSocket::OnConnect(CClientSocket *this, int bSuccess). bSuccess [%d]", bSuccess);
     if (!pThis->m_ctxConnect.lAddr.GetCount()) {
-        Log("CClientSocket::GetCount() 0");
         return 0;
     }
     if (!bSuccess) {
@@ -65,24 +64,20 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
             Log("CClientSocket::OnConnect 553648129");
             return 0;
         }
-        Log("CClientSocket::OnConnect CClientSocket__Connect_Addr_Hook");
         //TODO do i really care to do the loadbalancing logic?
         CClientSocket__Connect_Addr_Hook(pThis, edx, pThis->m_ctxConnect.lAddr.GetHeadPosition());
         return 0;
     }
 
-    Log("CClientSocket::OnConnect ZSocketBuffer::Alloc");
     int BUFFER_SIZE = 1460;
-    ZSocketBuffer *buf = ZSocketBuffer::Alloc(BUFFER_SIZE);
     ZRef<ZSocketBuffer> pBuff = ZRef<ZSocketBuffer>();
-    pBuff.p = buf;
-    if (buf->m_nRef) {
-        InterlockedIncrement(&buf->m_nRef);
+    pBuff.p = ZSocketBuffer::Alloc(BUFFER_SIZE);
+    if (pBuff.p && pBuff.p->m_nRef) {
+        InterlockedIncrement(&pBuff.p->m_nRef);
     }
-    char *buffer = buf->buf;
+    char* buffer = pBuff.p->buf;
     char *accumulatedBuf = buffer;
     int bLenRead = 0;
-    Log("CClientSocket::OnConnect Start Recv Loop");
     int src = 0;
     int something = 40;
     int bytesReceived;
@@ -90,7 +85,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
         do {
             while (true) {
                 while (true) {
-                    int lenToRead = 0;
+                    int lenToRead;
                     if (bLenRead) {
                         lenToRead = src;
                     } else {
@@ -98,7 +93,6 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
                     }
                     bytesReceived = recv(pThis->m_sock._m_hSocket, accumulatedBuf, lenToRead, 0);
                     if (bytesReceived != -1) {
-                        Log("CClientSocket::OnConnect breaking 1");
                         break;
                     }
                     int wsaLastError = WSAGetLastError();
@@ -110,14 +104,10 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
                         }
                     }
                     bytesReceived = 0;
-                    Log("CClientSocket::OnConnect breaking 2");
                     break;
                 }
                 accumulatedBuf += bytesReceived;
-                Log("CClientSocket::OnConnect bytesReceived=[%d] totalBytesReceived=[%d]", bytesReceived,
-                    accumulatedBuf - buffer);
                 if (!bytesReceived) {
-                    Log("CClientSocket::OnConnect dipping 1");
                     CClientSocket__OnConnect_Hook(pThis, edx, 0);
                     return 0;
                 }
@@ -130,7 +120,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
             }
         } while (accumulatedBuf - buffer != 2);
         src = *buffer;
-        if (src > buf->len) {
+        if (src > pBuff.p->len) {
             break;
         }
         bLenRead = 1;
@@ -139,7 +129,6 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     bytesReceived = 0;
     label_26:
     if (!bytesReceived) {
-        Log("CClientSocket::OnConnect dipping 2");
         CClientSocket__OnConnect_Hook(pThis, edx, 0);
         return 0;
     }
@@ -175,7 +164,6 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
         if (nGameStartMode == 2) {
             nGameStartMode = 0;
         } else {
-            Log("CClientSocket::OnConnect dipping 3");
             return 0;
         }
     }
@@ -196,7 +184,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     }
     pThis->ClearSendReceiveCtx();
     pThis->m_ctxConnect.lAddr.RemoveAll();
-    pThis->m_ctxConnect.posList = 0;
+    pThis->m_ctxConnect.posList = nullptr;
     socklen_t peerAddrLen = sizeof(pThis->m_addr);
     if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr *>(&pThis->m_addr), &peerAddrLen) ==
         -1) {
