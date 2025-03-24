@@ -15,12 +15,12 @@ CMapleTVMan *CMapleTVMan::GetInstance() {
 void CMapleTVMan::Init() {
     Log("CMapleTVMan::Init");
     ((VOID(_fastcall * )(CMapleTVMan * , PVOID))
-    C_MAPLE_TV_MAN_INIT)(this, NULL);
+    C_MAPLE_TV_MAN_INIT)(this, nullptr);
 }
 #elif defined(REGION_JMS)
 void CMapleTVMan::Init(int something, int somethingElse) {
     Log("CMapleTVMan::Init");
     ((VOID(_fastcall * )(CMapleTVMan * , PVOID, int something, int somethingElse))
-    C_MAPLE_TV_MAN_INIT)(this, NULL, something, somethingElse);
+    C_MAPLE_TV_MAN_INIT)(this, nullptr, something, somethingElse);
 }
 #endif

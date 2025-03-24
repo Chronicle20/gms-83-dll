@@ -14,13 +14,13 @@ void CClientSocket::CreateInstance() {
 void CClientSocket::SendPacket(COutPacket *oPacket) {
     Log("CClientSocket::SendPacket");
     ((VOID(_fastcall * )(CClientSocket * , PVOID, COutPacket * ))
-    C_CLIENT_SOCKET_SEND_PACKET)(this, NULL, oPacket);
+    C_CLIENT_SOCKET_SEND_PACKET)(this, nullptr, oPacket);
 }
 
 void CClientSocket::ManipulatePacket() {
     Log("CClientSocket::ManipulatePacket");
     ((VOID(_fastcall * )(CClientSocket * , PVOID))
-    C_CLIENT_SOCKET_MANIPULATE_PACKET)(this, NULL);
+    C_CLIENT_SOCKET_MANIPULATE_PACKET)(this, nullptr);
 }
 
 void CClientSocket::Close() {

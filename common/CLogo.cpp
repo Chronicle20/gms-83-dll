@@ -3,24 +3,24 @@
 CLogo::CLogo() {
     Log("CLogo::CLogo");
     ((VOID(_fastcall * )(CLogo * , PVOID))
-    C_LOGO)(this, NULL);
+    C_LOGO)(this, nullptr);
 }
 
 const CRTTI *CLogo::GetRTTI() {
     return ((const CRTTI *(_fastcall
     * )(CLogo * , PVOID))
-    C_LOGO_GET_RTTI)(this, NULL);
+    C_LOGO_GET_RTTI)(this, nullptr);
 }
 
 int CLogo::IsKindOf(const CRTTI *pRTTI) {
     return ((int (_fastcall * )(CLogo * , PVOID,
     const CRTTI *pRTTI))
-    C_LOGO_IS_KIND_OF)(this, NULL, pRTTI);
+    C_LOGO_IS_KIND_OF)(this, nullptr, pRTTI);
 }
 
 void CLogo::Update() {
     ((VOID(_fastcall * )(CLogo * , PVOID))
-    C_LOGO_UPDATE)(this, NULL);
+    C_LOGO_UPDATE)(this, nullptr);
 }
 
 void CLogo::OnIMEComp(const char *, ZArray<unsigned long> *, unsigned int, int,
@@ -71,15 +71,15 @@ int CLogo::OnMouseMove(int, int) {
 
 void CLogo::OnMouseButton(unsigned int msg, unsigned int wParam, int rx, int ry) {
     ((VOID(_fastcall * )(CLogo * , PVOID, unsigned int, unsigned int, int, int))
-    C_LOGO_ON_MOUSE_BUTTON)(this, NULL, msg, wParam, rx, ry);
+    C_LOGO_ON_MOUSE_BUTTON)(this, nullptr, msg, wParam, rx, ry);
 }
 
 int CLogo::OnSetFocus(int bFocus) {
     return ((int(_fastcall * )(CLogo * , PVOID, int))
-    C_LOGO_ON_SET_FOCUS)(this, NULL, bFocus);
+    C_LOGO_ON_SET_FOCUS)(this, nullptr, bFocus);
 }
 
 void CLogo::OnKey(unsigned int wParam, unsigned int lParam) {
     ((VOID(_fastcall * )(CLogo * , PVOID, unsigned int, unsigned int))
-    C_LOGO_ON_KEY)(this, NULL, wParam, lParam);
+    C_LOGO_ON_KEY)(this, nullptr, wParam, lParam);
 }

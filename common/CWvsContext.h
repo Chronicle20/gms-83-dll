@@ -41,7 +41,7 @@ public:
 #if defined(REGION_GMS)
     TSecType<unsigned char> m_nSubGradeCode;
 #elif defined(REGION_JMS)
-    int unk1;
+    ZXString<char> unk1;
     int unk2;
     int m_nNumOfCharacter;
 #endif

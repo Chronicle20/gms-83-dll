@@ -166,6 +166,11 @@ public:
         ZXString<char> sMessage;
     };
 
+    struct RECOMMENDWORLDMSG {
+        int nWorldID;
+        ZXString<char> sMessage;
+    };
+
     /*
     00000000 CLogin::ASITEM  struc; (sizeof = 0x8, align = 0x4, copyof_4934)
     00000000 nItemId         dd ?
@@ -179,12 +184,16 @@ public:
 
     ZRef<CConnectionNoticeDlg> m_pConnectionDlg;
     int m_bIsWaitingVAC;
+#if defined(REGION_GMS)
     int m_bIsVACDlgOn;
+#endif
     int m_tSentTimeVACPacket;
     int m_nCountRelatedSvrs;
     int m_nCountCharacters;
     int m_nCountDataReceivedCharacters;
+#if defined(REGION_GMS)
     int m_bRecommandWorld;
+#endif
     ZArray<AvatarData> m_aAvatarDataVAC;
     ZArray<CLogin::RANK> m_aRankVAC;
     ZArray<unsigned long> m_adwCharacterID;
@@ -193,75 +202,84 @@ public:
     ZFatalSection m_lock_Avatar;
     ZFatalSection m_lock_CountSvr;
     ZFatalSection m_lock_Character;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerBook;
+#endif
+#if defined(REGION_JMS)
+    int unk1[5];
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+    int m_nFadeOutLoginStep;
+#endif
+    int m_tStartFadeOut;
     int m_nLoginStep;
     int m_tStepChanging;
     int m_bRequestSent;
-    int m_nFadeOutLoginStep;
-    int dummy1;
-    int dummy2;
-    unsigned __int8 dummy3;
+    unsigned __int8 m_bLoginOpt;
+    int m_bQuerySSNOnCreateNewCharacter;
+    int m_nSlotCount;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+    int m_nBuyCharCount;
+#endif
+    int m_nBaseStep;
     int m_bTerminate;
-    int dummy5;
+    IUIMsgHandler *m_pFocusedUI;
+#if defined(REGION_JMS)
+    int unk2;
+#endif
     ZArray<CLogin::WORLDITEM> m_WorldItem;
     int m_nCharSelected;
-    int dummy8;
-    int dummy9;
-    int dummy10;
-    int dummy11;
-    int dummy12;
-    int dummy13;
-    int dummy14;
-    int dummy15;
-    int dummy16;
-    int dummy17;
-    int dummy18;
-    int dummy19;
-    int dummy20;
-    int dummy21;
-    IWzGr2DLayer *m_pLayerLight;
-    IWzGr2DLayer *m_pLayerDust;
-    int dummy24;
+    ZArray<AvatarData> m_aAvatarData;
+    ZArray<CLogin::RANK> m_aRank;
+    ZArray<int> m_abOnFamily;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 83)
+    int unk3[5];
+#endif
+    ZList<CLogin::NEWEQUIP> m_lNewEquip;
+#if defined(REGION_GMS)
+    unsigned __int8 m_nRegStatID;
+#endif
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerLight;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerDust;
     ZRef<CAvatar> m_pNewAvatar;
-    int dummy26;
     ZRef<CUILoginStart> m_pLoginStart;
-    int dummy28;
-    int dummy29;
-    int dummy30;
-    int dummy31;
-    int dummy32;
+#if defined(REGION_GMS)
+    ZRef<CFadeWnd> m_pLoginDesc0;
+    ZRef<CFadeWnd> m_pLoginDesc1;
+#elif defined(REGION_JMS)
+    int unk4[9];
+#endif
     ZRef<CDialog> m_pChildModal;
-    int dummy34;
+    ZXString<char> m_sEventCharacterID;
     int m_nBalloonCount;
     ZArray<CLogin::BALLOON> m_aBalloon;
     int m_nLatestConnectedWorldID;
     int m_bRecommendWorldMsgLoaded;
-    ZArray<RecommendWorldMsg> m_aRecommendWorldMsg;
+    ZArray<RECOMMENDWORLDMSG> m_aRecommendWorldMsg;
     int m_nCurSelectedRace;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+    __int16 m_nCurSelectedSubJob;
+#endif
     ZXString<char> m_aCmd[5];
-    int m_nGender;
+#if defined(REGION_GMS)
+    unsigned int m_tFadeInRemain;
+    int m_bNeedAgreement;
+    unsigned __int8 m_nGender;
+#endif
+    int m_nSubStep;
+    int m_bSubStepChanged;
     ZXString<char> m_sCheckedName;
+#if defined(REGION_GMS)
     ZArray<CLogin::ASITEM> m_aMaleItem[9];
     ZArray<CLogin::ASITEM> m_aFemaleItem[9];
-    ZArray<AvatarData> m_aAvatarData;
-    ZArray<CLogin::RANK> m_aRank;
-    ZArray<int> m_abOnFamily;
-    ZList<CLogin::NEWEQUIP> m_lNewEquip;
-    unsigned __int8 m_nRegStatID;
-    ZRef<CFadeWnd> m_pLoginDesc0;
-    ZRef<CFadeWnd> m_pLoginDesc1;
-    ZXString<char> m_sEventCharacterID;
-    int m_nCurSelectedSubJob;
-    unsigned int Unknown7;
-    unsigned int Unknown8;
-    int m_tFadeInRemain;
-    bool m_bNeedAgreement;
-    unsigned int Unknown9;
-    unsigned int Unknown10;
-    unsigned int Unknown11;
-    int m_nSubStep;
-    bool m_bSubStepChanged;
-    bool m_bCharSale;
+#elif defined(REGION_JMS)
+    ZArray<CLogin::ASITEM> m_aItem[6];
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+    int m_bCharSale;
     int m_nCharSaleJob;
-    bool m_bCanHaveExtraChar;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    int m_bCanHaveExtraChar;
+#endif
 };

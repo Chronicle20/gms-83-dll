@@ -13,17 +13,17 @@ CQuestMan *CQuestMan::GetInstance() {
 int CQuestMan::LoadDemand() {
     Log("CQuestMan::LoadDemand");
     return ((int(_fastcall * )(CQuestMan * , PVOID))
-    C_QUEST_MAN_LOAD_DEMAND)(this, NULL);
+    C_QUEST_MAN_LOAD_DEMAND)(this, nullptr);
 }
 
 void CQuestMan::LoadPartyQuestInfo() {
     Log("CQuestMan::LoadPartyQuestInfo");
     ((VOID(_fastcall * )(CQuestMan * , PVOID))
-    C_QUEST_MAN_LOAD_PARTY_QUEST_INFO)(this, NULL);
+    C_QUEST_MAN_LOAD_PARTY_QUEST_INFO)(this, nullptr);
 }
 
 void CQuestMan::LoadExclusive() {
     Log("CQuestMan::LoadExclusive");
     ((VOID(_fastcall * )(CQuestMan * , PVOID))
-    C_QUEST_MAN_LOAD_EXCLUSIVE)(this, NULL);
+    C_QUEST_MAN_LOAD_EXCLUSIVE)(this, nullptr);
 }

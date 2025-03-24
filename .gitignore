@@ -31,5 +31,5 @@
 *.app
 .idea
 Testing
-cmake-build-debug-visual-studio
+cmake-*
 build

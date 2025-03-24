@@ -52,7 +52,7 @@ public:
     00000034 bSafeZoneByMob  dd ?
     00000038 CMapLoadable::OBSTACLE ends
     */
-    struct OBSTACLE :ZRefCounted {
+    struct OBSTACLE : ZRefCounted {
         _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> pLayer;
         bool bFlip;
         int nDamage;
@@ -128,25 +128,37 @@ public:
         bool bLastFrameUpdated;
     };
 
+    struct VISIBLE_BY_QUEST {
+        _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > pLayer;
+        ZArray<ZPair < unsigned short, long> > aQuestCond;
+    };
+
     int m_nJukeBoxItemID;
     int m_tNextMusic;
     int m_bJukeBoxPlaying;
     unsigned int m_unWeatherSoundCookie;
-    //ZXString<unsigned short> m_sChangedBgmUOL;
+    ZXString<unsigned short> m_sChangedBgmUOL;
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pPropFieldInfo;
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pPropField;
-    //int m_bField;// not in v83
-    //ZRef<CWvsPhysicalSpace2D> m_pSpace2D;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    int m_bField;
+#endif
+    ZRef<CWvsPhysicalSpace2D> m_pSpace2D;
     ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerGen;
     ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerObj;
     ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerTransient;
     ZList<ZRef<CMapLoadable::OBSTACLE>> m_lpObstacle;
     ZList<ZRef<CMapLoadable::REFLECTION_INFO> > m_lpRefInfo;
-    //ZList<CMapLoadable::VISIBLE_BY_QUEST> m_lVisibleByQuest; not in v83
+
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    ZList<CMapLoadable::VISIBLE_BY_QUEST> m_lVisibleByQuest;
+#endif
     ZMap<char const *, CMapLoadable::CHANGING_OBJECT, ZXString<char>> m_mNamedObj;
     ZMap<char const *, ZRef<ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>>>, ZXString<char> > m_mTagedObj;
     ZMap<long, ZRef<ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>>>, long> m_mlLayerBack;
-    //ZList<IWzGr2DLayer*> m_lpLayerLetterBox; not in v83
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    ZList<IWzGr2DLayer*> m_lpLayerLetterBox;
+#endif
     int m_nMagLevel_Obj;
     int m_nMagLevel_Back;
     tagRECT m_rcViewRange;
@@ -155,6 +167,8 @@ public:
     ZArray<CMapLoadable::OBSTACLE_INFO> m_aObstacleInfo;
     int m_tRestoreBgmVolume;
     int m_nRestoreBgmVolume;
-    //int m_bPlayHoldedBGM; not in v83
-    //int m_tPlayHoldedBGM; not in v83
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    int m_bPlayHoldedBGM;
+    int m_tPlayHoldedBGM;
+#endif
 };
