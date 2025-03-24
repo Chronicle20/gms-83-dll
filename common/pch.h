@@ -23,6 +23,7 @@
 
 #include "memory_map.h"
 
+#include "ZPair.h"
 #include "ZXString.h"
 #include "ZAllocBase.h"
 #include "ZAllocAnonSelector.h"

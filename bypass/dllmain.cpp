@@ -311,8 +311,13 @@ INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, ch
     cOutPacket.Encode1(CWvsApp::GetInstance()->m_nGameStartMode);
     cOutPacket.Encode1(0);
     cOutPacket.Encode1(0);
+#if defined(REGION_GMS)
     cOutPacket.Encode4(CConfig::GetInstance()->GetPartnerCode());
+#endif
     CClientSocket::GetInstance()->SendPacket(&cOutPacket);
+#if defined(REGION_JMS)
+    CWvsContext::GetInstance()->unk1.Assign(sID, 0xFFFFFFFF);
+#endif
     // ZXString<char>::GetBuffer(CWvsContext::GetInstance() + 8264, -1, sID, 0xFFFFFFFF);
     CUITitle *cuiTitle = CUITitle::GetInstance();
     if (cuiTitle) {
@@ -769,6 +774,10 @@ VOID __stdcall MainProc() {
     INITMAPLEHOOK(_DR__check, _DR__check_t, DR__check_Hook, DR_CHECK);
 #endif
 
+#if defined(REGION_JMS)
+    MemEdit::WriteBytes(0x00B3B5F7 + 0x19, new BYTE[2]{0x90, 0x90}, 2);
+#endif
+
     // CWvsApp::CallUpdate
     INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, C_WVS_APP_CALL_UPDATE);
 
@@ -776,12 +785,9 @@ VOID __stdcall MainProc() {
     INITMAPLEHOOK(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t, CWvsApp__ConnectLogin_Hook,
                   C_WVS_APP_CONNECT_LOGIN);
 
-#if defined(REGION_GMS)
-    // TODO need better struct mapping.
     // CLogin::SendCheckPasswordPacket
     INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
                   CLogin__SendCheckPasswordPacket_Hook, C_LOGIN_SEND_CHECK_PASSWORD_PACKET);
-#endif
 
     // CSecurityClient::OnPacket
     INITMAPLEHOOK(_CSecurityClient__OnPacket, _CSecurityClient__OnPacket_t, CSecurityClient__OnPacket_Hook,
