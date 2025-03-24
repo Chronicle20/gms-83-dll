@@ -694,6 +694,12 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
     pThis->m_sCmdLine = ZXString<char>();
     pThis->m_nGameStartMode = 0;
     pThis->m_bAutoConnect = 1;
+#if defined(REGION_JMS)
+    pThis->unk1[0] = 0;
+    pThis->unk1[1] = 0;
+    pThis->unk2[0] = ZXString<char>();
+    pThis->unk2[1] = ZXString<char>();
+#endif
     pThis->m_bShowAdBalloon = 0;
     pThis->m_bExitByTitleEscape = 0;
     pThis->m_hrZExceptionCode = 0;
@@ -704,7 +710,12 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
     pThis->m_dwBackupBufferSize = 0;
 #endif
 
+#if defined(REGION_JMS)
+    pThis->unk2[0] = ZXString<char>("", 0xFFFFFFFF);
+    pThis->unk2[0] = ZXString<char>("", 0xFFFFFFFF);
+#endif
     pThis->m_sCmdLine = ZXString<char>(sCmdLine, 0xFFFFFFFF);
+
     pThis->m_sCmdLine = *pThis->m_sCmdLine.TrimRight("\" ")->TrimLeft("\" ");
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     pThis->m_pBackupBuffer.Alloc(0x1000);
