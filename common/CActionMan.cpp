@@ -13,11 +13,11 @@ CActionMan *CActionMan::GetInstance() {
 void CActionMan::Init() {
     Log("CActionMan::Init");
     ((VOID(_fastcall * )(CActionMan * , PVOID))
-    C_ACTION_MAN_INIT)(this, NULL);
+    C_ACTION_MAN_INIT)(this, nullptr);
 }
 
 void CActionMan::SweepCache() {
     // High volume call
     ((VOID(_fastcall * )(CActionMan * , PVOID))
-    C_ACTION_MAN_SWEEP_CACHE)(this, NULL);
+    C_ACTION_MAN_SWEEP_CACHE)(this, nullptr);
 }
