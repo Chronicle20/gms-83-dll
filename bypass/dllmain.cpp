@@ -259,7 +259,6 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx
         Log("CClientSocket::Connect ADR Try CClientSocket::OnConnect");
         CClientSocket__OnConnect_Hook(pThis, edx, 0);
     }
-    Log("CClientSocket::Connect ADR Happy Path");
 }
 
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)
@@ -277,7 +276,6 @@ VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx,
     pThis->m_ctxConnect.posList = reinterpret_cast<__POSITION *>(pThis->m_ctxConnect.lAddr.GetHeadPosition());
     pThis->m_addr = *pThis->m_ctxConnect.lAddr.GetHeadPosition();
     CClientSocket__Connect_Addr_Hook(pThis, edx, &pThis->m_addr);
-    Log("CClientSocket::Connect CTX Happy Path");
 }
 
 // int __thiscall CLogin::SendCheckPasswordPacket(CLogin *this, char *sID, char *sPasswd)
