@@ -68,150 +68,192 @@ VOID __stdcall MainProc() {
     MemEdit::WriteInt(C_WVS_APP_CREATE_MAIN_WINDOW + 0x109 + 1, m_nGameWidth);
 
     //push 800
-    MemEdit::WriteInt(C_SLIDE_NOTICE +0x3E + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_SLIDE_NOTICE + 0x3E + 1, m_nGameWidth);
     //push 800
-    MemEdit::WriteInt(C_SLIDE_NOTICE_SET_MSG +0x5B9 + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_SLIDE_NOTICE_SET_MSG + 0x5B9 + 1, m_nGameWidth);
     //push 800
-    MemEdit::WriteInt(C_SLIDE_NOTICE_SET_MSG +0x709 + 2, m_nGameWidth);
+    MemEdit::WriteInt(C_SLIDE_NOTICE_SET_MSG + 0x709 + 2, m_nGameWidth);
 
     //push 600
-    MemEdit::WriteInt(C_SLIDE_NOTICE_ON_CREATE +0x33 + 1, m_nGameHeight);
+    MemEdit::WriteInt(C_SLIDE_NOTICE_ON_CREATE + 0x33 + 1, m_nGameHeight);
     //push 800 ; CWnd::GetCanvas
-    MemEdit::WriteInt(C_SLIDE_NOTICE_ON_CREATE +0x38 + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_SLIDE_NOTICE_ON_CREATE + 0x38 + 1, m_nGameWidth);
 
     //push -300
-    MemEdit::WriteInt(C_WND_MAN +0x243 + 1, floor(-m_nGameHeight / 2));
+    MemEdit::WriteInt(C_WND_MAN + 0x243 + 1, floor(-m_nGameHeight / 2));
     //push -400 ;
-    MemEdit::WriteInt(C_WND_MAN +0x249 + 1, floor(-m_nGameWidth / 2));
+    MemEdit::WriteInt(C_WND_MAN + 0x249 + 1, floor(-m_nGameWidth / 2));
 
     //lea eax,[esi+eax-600]
-    MemEdit::WriteInt(C_WND_ON_MOVE_WND +0x1199 + 3, m_nGameHeight);
+    MemEdit::WriteInt(C_WND_ON_MOVE_WND + 0x1199 + 3, m_nGameHeight);
     //mov ecx,800
-    MemEdit::WriteInt(C_WND_ON_MOVE_WND +0x1205 + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_WND_ON_MOVE_WND + 0x1205 + 1, m_nGameWidth);
     //lea eax,[ecx+eax-800]
-    MemEdit::WriteInt(C_WND_ON_MOVE_WND +0x1311 + 3, m_nGameWidth);
+    MemEdit::WriteInt(C_WND_ON_MOVE_WND + 0x1311 + 3, m_nGameWidth);
     //mov ecx,600	; IWzVector2D::RelMove
-    MemEdit::WriteInt(C_WND_ON_MOVE_WND +0x137B + 1, m_nGameHeight);
+    MemEdit::WriteInt(C_WND_ON_MOVE_WND + 0x137B + 1, m_nGameHeight);
 
     //mov edi,600
-    MemEdit::WriteInt(C_ANIMATION_DISPLAYER_REGISTER_FADE_IN_OUT_ANIMATION +0xAE + 1, m_nGameHeight);
+    MemEdit::WriteInt(C_ANIMATION_DISPLAYER_REGISTER_FADE_IN_OUT_ANIMATION + 0xAE + 1, m_nGameHeight);
     //mov esi,800 ; CreateWnd
-    MemEdit::WriteInt(C_ANIMATION_DISPLAYER_REGISTER_FADE_IN_OUT_ANIMATION +0xB4 + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_ANIMATION_DISPLAYER_REGISTER_FADE_IN_OUT_ANIMATION + 0xB4 + 1, m_nGameWidth);
     //push -300
-    MemEdit::WriteInt(C_ANIMATION_DISPLAYER_REGISTER_FADE_IN_OUT_ANIMATION +0x1E4 + 1, floor(-m_nGameHeight / 2));
+    MemEdit::WriteInt(C_ANIMATION_DISPLAYER_REGISTER_FADE_IN_OUT_ANIMATION + 0x1E4 + 1, floor(-m_nGameHeight / 2));
     //push -400 ; RelMove?
-    MemEdit::WriteInt(C_ANIMATION_DISPLAYER_REGISTER_FADE_IN_OUT_ANIMATION +0x1E9 + 1, floor(-m_nGameWidth / 2));
+    MemEdit::WriteInt(C_ANIMATION_DISPLAYER_REGISTER_FADE_IN_OUT_ANIMATION + 0x1E9 + 1, floor(-m_nGameWidth / 2));
 
     //mov [ebx+2364],300
     MemEdit::WriteInt(C_INPUT_SYSTEM_INIT + 0x1E3 + 6, floor(m_nGameHeight / 2));
     //mov [esi],400
     MemEdit::WriteInt(C_INPUT_SYSTEM_INIT + 0x1DD + 2, floor(m_nGameWidth / 2));
     //mov eax,600
-    MemEdit::WriteInt(C_INPUT_SYSTEM_SET_CURSOR_POS +0x2A + 1, m_nGameHeight);
+    MemEdit::WriteInt(C_INPUT_SYSTEM_SET_CURSOR_POS + 0x2A + 1, m_nGameHeight);
     //mov eax,800
-    MemEdit::WriteInt(C_INPUT_SYSTEM_SET_CURSOR_POS +0x11 + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_INPUT_SYSTEM_SET_CURSOR_POS + 0x11 + 1, m_nGameWidth);
     //mov ecx,600
-    MemEdit::WriteInt(C_INPUT_SYSTEM_UPDATE_MOUSE +0x124 + 1, m_nGameHeight);
+    MemEdit::WriteInt(C_INPUT_SYSTEM_UPDATE_MOUSE + 0x124 + 1, m_nGameHeight);
     //mov ecx,800
-    MemEdit::WriteInt(C_INPUT_SYSTEM_UPDATE_MOUSE +0x10B + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_INPUT_SYSTEM_UPDATE_MOUSE + 0x10B + 1, m_nGameWidth);
     //push -300
-    MemEdit::WriteInt(C_INPUT_SYSTEM_SET_CURSOR_VECTOR_POS +0x92 + 2, floor(-m_nGameHeight / 2));
+    MemEdit::WriteInt(C_INPUT_SYSTEM_SET_CURSOR_VECTOR_POS + 0x92 + 2, floor(-m_nGameHeight / 2));
     //push -400
-    MemEdit::WriteInt(C_INPUT_SYSTEM_SET_CURSOR_VECTOR_POS +0x9E + 2, floor(-m_nGameWidth / 2));
+    MemEdit::WriteInt(C_INPUT_SYSTEM_SET_CURSOR_VECTOR_POS + 0x9E + 2, floor(-m_nGameWidth / 2));
 
     //mov eax,599
-    MemEdit::WriteInt(C_UI_TOOLTIP_MAKE_LAYER +0x19E + 1, m_nGameWidth - 1);
+    MemEdit::WriteInt(C_UI_TOOLTIP_MAKE_LAYER + 0x19E + 1, m_nGameWidth - 1);
     //mov eax,799
-    MemEdit::WriteInt(C_UI_TOOLTIP_MAKE_LAYER +0x18B + 1, m_nGameWidth - 1);
+    MemEdit::WriteInt(C_UI_TOOLTIP_MAKE_LAYER + 0x18B + 1, m_nGameWidth - 1);
 
     //lea eax,[eax+ecx-797] ;
-    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_SHOW_TOOLTIP +0x48 + 3, -m_nGameWidth + 3);
+    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_SHOW_TOOLTIP + 0x48 + 3, -m_nGameWidth + 3);
 
-    //sub ebx,277 ;
-    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_ADJUST_POSITION +0xE7 + 2, (m_nGameHeight / 2) - 23);
+    //sub ebx,277
+    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_ADJUST_POSITION + 0xE7 + 2, (m_nGameHeight / 2) - 23);
     //lea eax,[eax+esi+397] ;
-    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_ADJUST_POSITION +0x105 + 3, (m_nGameWidth / 2) - 3);
-    //sub ebx,277 ;
-    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_ADJUST_POSITION +0x1F0 + 2, (m_nGameHeight / 2) - 23);
+    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_ADJUST_POSITION + 0x105 + 3, (m_nGameWidth / 2) - 3);
+    //sub ebx,277
+    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_ADJUST_POSITION + 0x1F0 + 2, (m_nGameHeight / 2) - 23);
     //lea eax,[eax+esi+397] ;
-    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_ADJUST_POSITION +0x20E + 3, (m_nGameWidth / 2) - 3);
+    MemEdit::WriteInt(C_TEMPORARY_STAT_VIEW_ADJUST_POSITION + 0x20E + 3, (m_nGameWidth / 2) - 3);
 
-    //mov eax,800 ; RelMove?
-    MemEdit::WriteInt(C_UI_TOOLTIP_SET_TOOLTIP_EQUIP_2 +0x1E1 + 1, m_nGameWidth);
+    //mov eax,800
+    MemEdit::WriteInt(C_UI_TOOLTIP_SET_TOOLTIP_EQUIP_2 + 0x1E1 + 1, m_nGameWidth);
     //mov eax,600
-    MemEdit::WriteInt(C_UI_TOOLTIP_SET_TOOLTIP_EQUIP_2 +0x1FD + 1, m_nGameHeight);
+    MemEdit::WriteInt(C_UI_TOOLTIP_SET_TOOLTIP_EQUIP_2 + 0x1FD + 1, m_nGameHeight);
 
     //mov ecx,600
-    MemEdit::WriteInt(C_UI_CONTEXT_MENU +0x145 + 1, m_nGameHeight);
+    MemEdit::WriteInt(C_UI_CONTEXT_MENU + 0x145 + 1, m_nGameHeight);
     //cmp edi,800
-    MemEdit::WriteInt(C_UI_CONTEXT_MENU +0x15A + 2, m_nGameWidth);
-    //mov edx,700 ;
-    MemEdit::WriteInt(C_UI_CONTEXT_MENU +0x162 + 1, m_nGameWidth - 100);
+    MemEdit::WriteInt(C_UI_CONTEXT_MENU + 0x15A + 2, m_nGameWidth);
+    //mov edx,700
+    MemEdit::WriteInt(C_UI_CONTEXT_MENU + 0x162 + 1, m_nGameWidth - 100);
 
     //mov edx,600
-    MemEdit::WriteInt(C_UTIL_DLG_EX +0x47 + 1, m_nGameHeight);
-    //mov edx,800 ;
-    MemEdit::WriteInt(C_UTIL_DLG_EX +0x3A + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_UTIL_DLG_EX + 0x47 + 1, m_nGameHeight);
+    //mov edx,800
+    MemEdit::WriteInt(C_UTIL_DLG_EX + 0x3A + 1, m_nGameWidth);
 
     //mov eax,600
-    MemEdit::WriteInt(C_REGISTER_SALE_ENTRY_DLG_ON_CREATE +0x2D5 + 1, m_nGameHeight);
-    //mov eax,800 ; RelMove?
-    MemEdit::WriteInt(C_REGISTER_SALE_ENTRY_DLG_ON_CREATE +0x2E5 + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_REGISTER_SALE_ENTRY_DLG_ON_CREATE + 0x2D5 + 1, m_nGameHeight);
+    //mov eax,800
+    MemEdit::WriteInt(C_REGISTER_SALE_ENTRY_DLG_ON_CREATE + 0x2E5 + 1, m_nGameWidth);
     //mov eax,600
-    MemEdit::WriteInt(C_REGISTER_SALE_ENTRY_DLG_ON_CREATE +0x2D5 + 1, m_nGameHeight);
-    //mov eax,800 ; RelMove?
-    MemEdit::WriteInt(C_REGISTER_SALE_ENTRY_DLG_ON_CREATE +0x2E5 + 1, m_nGameWidth);
+    MemEdit::WriteInt(C_REGISTER_SALE_ENTRY_DLG_ON_CREATE + 0x2D5 + 1, m_nGameHeight);
+    //mov eax,800
+    MemEdit::WriteInt(C_REGISTER_SALE_ENTRY_DLG_ON_CREATE + 0x2E5 + 1, m_nGameWidth);
 
     // Other dialogs OnCreate that need confirmation.
+    //5AAACC
+
 //    MemEdit::WriteInt(0x005AADAA + 1, m_nGameHeight);//mov eax,600
 //    MemEdit::WriteInt(0x005AADBA + 1, m_nGameWidth);    //mov eax,800 ; RelMove?
-//    MemEdit::WriteInt(0x005ABC65 + 1, m_nGameHeight);//mov eax,600
-//    MemEdit::WriteInt(0x005ABC75 + 1, m_nGameWidth);    //mov eax,800 ; RelMove?
-//    MemEdit::WriteInt(0x005ACB29 + 1, m_nGameHeight);//mov eax,600
-//    MemEdit::WriteInt(0x005ACB39 + 1, m_nGameWidth);    //mov eax,800 ; RelMove?
-//    MemEdit::WriteInt(0x005C187E + 1, m_nGameHeight);//mov eax,600
-//    MemEdit::WriteInt(0x005C188E + 1, m_nGameWidth);    //mov eax,800 ; RelMove?
-//    MemEdit::WriteInt(0x005C2D62 + 1, m_nGameHeight);//mov eax,600
-//    MemEdit::WriteInt(0x005C2D72 + 1, m_nGameWidth);    //mov eax,800 ; RelMove?
-//    MemEdit::WriteInt(0x007CF48F + 1, m_nGameHeight);//mov eax,600 ;
-//    MemEdit::WriteInt(0x007CF49D + 1, m_nGameWidth);    //mov eax,800 ; IWzVector2D::RelMove
-//    MemEdit::WriteInt(0x008A12F4 + 1, m_nGameHeight);//mov eax,600 ;
-//    MemEdit::WriteInt(0x008A1302 + 1, m_nGameWidth);    //mov eax,800 ; IWzVector2D::RelMove
-//    MemEdit::WriteInt(0x0062FC4A + 1, m_nGameHeight);//push 600
-//    MemEdit::WriteInt(0x0062FC4F + 1, m_nGameWidth);    //push 800 ; IWzGr2DLayer::Getcanvas
-//    MemEdit::WriteInt(0x0062FE63 + 1, m_nGameHeight);//push 600
-//    MemEdit::WriteInt(0x0062FE68 + 1, m_nGameWidth);    //push 800 ; IWzGr2DLayer::Getcanvas
-//    MemEdit::WriteInt(0x0046B85C + 1, m_nGameHeight);//mov eax,600
-//    MemEdit::WriteInt(0x0046B86A + 1, m_nGameWidth);    //mov eax,800 ; IWzVector2D::RelMove
+
+    //mov eax,600
+    MemEdit::WriteInt(C_WORLD_MAP_DLG_ON_CREATE + 0x2DE + 1, m_nGameHeight);
+    //mov eax,800
+    MemEdit::WriteInt(C_WORLD_MAP_DLG_ON_CREATE + 0x2EE + 1, m_nGameWidth);
+
+    //mov eax,600
+    MemEdit::WriteInt(C_REGISTER_AUCTION_ENTRY_DLG_ON_CREATE + 0x2DE + 1, m_nGameHeight);
+    //mov eax,800
+    MemEdit::WriteInt(C_REGISTER_AUCTION_ENTRY_DLG_ON_CREATE + 0x2EE + 1, m_nGameWidth);
+
+    //mov eax,600
+    MemEdit::WriteInt(C_ITC_WND_ITEM_DLG_ON_CREATE + 0x2DE + 1, m_nGameHeight);
+    //mov eax,800
+    MemEdit::WriteInt(C_ITC_WND_ITEM_DLG_ON_CREATE + 0x2EE + 1, m_nGameWidth);
+
+    //mov eax,600
+    MemEdit::WriteInt(C_ITC_BID_AUCTION_DLG_ON_CREATE + 0x2DE + 1, m_nGameHeight);
+    //mov eax,800
+    MemEdit::WriteInt(C_ITC_BID_AUCTION_DLG_ON_CREATE + 0x2EE + 1, m_nGameWidth);
+
+    //mov eax,600
+    MemEdit::WriteInt(C_UI_ADMIN_SHOP_WISH_LIST_SET_LAYER + 0x2F4 + 1, m_nGameHeight);
+    //mov eax,800
+    MemEdit::WriteInt(C_UI_ADMIN_SHOP_WISH_LIST_SET_LAYER + 0x302 + 1, m_nGameWidth);
+
+    //mov eax,600 ;
+    MemEdit::WriteInt(0x008A1000 + 0x2F4 + 1, m_nGameHeight);
+    //mov eax,800 ; IWzVector2D::RelMove
+    MemEdit::WriteInt(0x008A1000 + 0x302 + 1, m_nGameWidth);
+
+    //push 600
+    MemEdit::WriteInt(C_LOGO_DRAW_NX_LOGO + 0x61 + 1, m_nGameHeight);
+    //push 800 ; IWzGr2DLayer::Getcanvas
+    MemEdit::WriteInt(C_LOGO_DRAW_NX_LOGO + 0x66 + 1, m_nGameWidth);
+
+    //push 600
+    MemEdit::WriteInt(C_LOGO_DRAW_WZ_LOGO + 0x61 + 1, m_nGameHeight);
+    //push 800 ; IWzGr2DLayer::Getcanvas
+    MemEdit::WriteInt(C_LOGO_DRAW_WZ_LOGO + 0x66 + 1, m_nGameWidth);
+
+    //mov eax,600
+    MemEdit::WriteInt(C_CONFIRM_PURCHASE_DLG_SET_LAYER + 0x325 + 1, m_nGameHeight);
+    //mov eax,800
+    MemEdit::WriteInt(C_CONFIRM_PURCHASE_DLG_SET_LAYER + 0x333 + 1, m_nGameWidth);
 
     //mov ecx,600
-    MemEdit::WriteInt(C_UI_ART_SPEAKER_SAMPLE +0x1B8 + 1, m_nGameHeight);
+    MemEdit::WriteInt(C_UI_ART_SPEAKER_SAMPLE + 0x1B8 + 1, m_nGameHeight);
     //cmp edi,800
-    MemEdit::WriteInt(C_UI_ART_SPEAKER_SAMPLE +0x1CD + 2, m_nGameWidth);
+    MemEdit::WriteInt(C_UI_ART_SPEAKER_SAMPLE + 0x1CD + 2, m_nGameWidth);
     //mov edx,700 ;
-    MemEdit::WriteInt(C_UI_ART_SPEAKER_SAMPLE +0x1D5 + 1, m_nGameWidth - 100);
+    MemEdit::WriteInt(C_UI_ART_SPEAKER_SAMPLE + 0x1D5 + 1, m_nGameWidth - 100);
 
-    //CCtrlSelector::OnMouseButton
-//    MemEdit::WriteInt(0x004D9BD1 + 1, m_nGameWidth);    //push 800
-//    MemEdit::WriteInt(0x004D9C37 + 1, m_nGameWidth);    //push 800
-//    MemEdit::WriteInt(0x004D9C84 + 1, m_nGameWidth);    //push 800 ; StringPool#1443 (BtMouseCilck)
+    //push 800
+    MemEdit::WriteInt(C_CTRL_SELECTOR_ON_MOUSE_BUTTON + 0xF6 + 1, m_nGameWidth);
+    //push 800
+    MemEdit::WriteInt(C_CTRL_SELECTOR_ON_MOUSE_BUTTON + 0x15C + 1, m_nGameWidth);
+    //push 800 ; StringPool#1443 (BtMouseCilck)
+    MemEdit::WriteInt(C_CTRL_SELECTOR_ON_MOUSE_BUTTON + 0x1A9 + 1, m_nGameWidth);
 
+    //push 600
+    MemEdit::WriteInt(C_FIELD_LIMITED_VIEW_INIT + 0xB6 + 1, m_nGameHeight);
+    //mov edi,800
+    MemEdit::WriteInt(C_FIELD_LIMITED_VIEW_INIT + 0xBB + 1, m_nGameWidth);
+    //push 600 ; RelMove?
+    MemEdit::WriteInt(C_FIELD_LIMITED_VIEW_INIT + 0x132 + 1, m_nGameWidth);
 
-    // ?Init@CField_LimitedView@@UAEXPAX@Z
-//    MemEdit::WriteInt(0x0055B808 + 1, m_nGameHeight);//push 600
-//    MemEdit::WriteInt(0x0055B80D + 1, m_nGameWidth);    //mov edi,800
-//    MemEdit::WriteInt(0x0055B884 + 1, m_nGameWidth);    //push 600 ; RelMove?
+    //mov [ebp-16],800 ; CreateWnd
+    MemEdit::WriteInt(C_CTRL_EDIT_CREATE_IME_CAND_WND + 0x199 + 1, m_nGameWidth);
+    //cmp ecx,600
+    MemEdit::WriteInt(C_CTRL_EDIT_CREATE_IME_CAND_WND + 0x2FE + 2, m_nGameHeight);
+    //mov eax,800 ; CreateWnd
+    MemEdit::WriteInt(C_CTRL_EDIT_CREATE_IME_CAND_WND + 0x2E9 + 1, m_nGameWidth);
+    //cmp ecx,600
+    MemEdit::WriteInt(C_CTRL_EDIT_CREATE_IME_CAND_WND + 0x2FE + 1, m_nGameHeight);
+    //mov eax,800 ; CreateWnd
+    MemEdit::WriteInt(C_CTRL_EDIT_CREATE_IME_CAND_WND + 0x2E9 + 1, m_nGameWidth);
 
-//    //TODO explain these but they look good
-//    MemEdit::WriteInt(0x004CC160 + 1, m_nGameWidth);    //mov [ebp-16],800 ; CreateWnd
-//    MemEdit::WriteInt(0x004CC2C5 + 2, m_nGameHeight);//cmp ecx,600
-//    MemEdit::WriteInt(0x004CC2B0 + 1, m_nGameWidth);    //mov eax,800 ; CreateWnd
-//    MemEdit::WriteInt(0x004D59B2 + 1, m_nGameHeight);//mov eax,800
-//    MemEdit::WriteInt(0x004D599D + 1, m_nGameWidth);    //mov eax,800 ; CreateWnd
-//
-//    // Something MonsterBook related.
-//    MemEdit::WriteInt(0x0085F36C + 2, m_nGameWidth);    //cmp edx,800
-//    MemEdit::WriteInt(0x0085F374 + 1, m_nGameWidth - 80);    //mov ecx,720 ; CreateDlg
+    // Something MonsterBook related.
+    //cmp edx,600
+    MemEdit::WriteInt(0x0085F303 + 0x3E + 2, m_nGameHeight);
+    //mov eax, 231h
+    MemEdit::WriteInt(0x0085F303 + 0x5E + 1, m_nGameHeight - 39);
+    //cmp edx,800
+    MemEdit::WriteInt(0x0085F303 + 0x69 + 2, m_nGameWidth);
+    //mov ecx,720
+    MemEdit::WriteInt(0x0085F303 + 0x71 + 1, m_nGameWidth - 80);
 }
 
 // dll entry point
