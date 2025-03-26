@@ -1,5 +1,9 @@
 #include "pch.h"
 
+void CInputSystem::CreateInstance() {
+    reinterpret_cast<void (__fastcall *)()>(C_INPUT_SYSTEM_CREATE_INSTANCE)();
+}
+
 CInputSystem *CInputSystem::GetInstance() {
     // High volume call
     return reinterpret_cast<CInputSystem *>(*reinterpret_cast<void **>(C_INPUT_SYSTEM_GET_INSTANCE));

@@ -164,10 +164,10 @@ INT WSPAPI WSPStartup_Hook(WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPRO
 }
 
 // main thread
-VOID __stdcall MainProc() {
+DWORD WINAPI MainProc(LPVOID lpParam) {
     std::map<std::string, std::string> iniData = parseINI("edits/redirect.ini");
     if (iniData.empty()) {
-        return;
+        return -1;
     }
 
     originalIps.push_back(iniData["Main.OriginalIP1"]);
@@ -177,6 +177,7 @@ VOID __stdcall MainProc() {
     redirectPort = iniData["Main.RedirectPort"];
 
     INITWINHOOK("MSWSOCK", "WSPStartup", WSPStartup_Original, WSPStartup_t, WSPStartup_Hook);
+    return 0;
 }
 
 // dll entry point
@@ -184,7 +185,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH: {
             DisableThreadLibraryCalls(hModule);
-            CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE) &MainProc, nullptr, 0, nullptr);
+            CreateThread(nullptr, 0, &MainProc, nullptr, 0, nullptr);
             break;
         }
         case DLL_PROCESS_DETACH: {

@@ -53,8 +53,7 @@ HWND WINAPI CreateWindowExA_Hook(
         HMENU     hMenu,
         HINSTANCE hInstance,
         LPVOID    lpParam
-)
-{
+) {
     Log("[CreateWindowExA] => %s - %s", lpClassName, lpWindowName);
     dwExStyle = 0;
     dwStyle |= WS_MINIMIZEBOX; // enable minimize button
@@ -62,9 +61,9 @@ HWND WINAPI CreateWindowExA_Hook(
 }
 
 // main thread
-VOID __stdcall MainProc()
-{
+DWORD WINAPI MainProc(LPVOID lpParam) {
     INITWINHOOK("USER32", "CreateWindowExA", CreateWindowExA_Original, CreateWindowExA_t, CreateWindowExA_Hook);
+    return 0;
 }
 
 // dll entry point
@@ -72,7 +71,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH: {
             DisableThreadLibraryCalls(hModule);
-            CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE) &MainProc, nullptr, 0, nullptr);
+            CreateThread(nullptr, 0, &MainProc, nullptr, 0, nullptr);
             break;
         }
     }
