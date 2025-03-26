@@ -2,6 +2,5 @@
 #include "CLogin.h"
 
 void CLogin::Update() {
-    ((VOID(_fastcall * )(CLogin * , PVOID))
-    C_LOGIN_UPDATE)(this, nullptr);
+    reinterpret_cast<void (__fastcall *)(CLogin *, void *)>(C_LOGIN_UPDATE)(this, nullptr);
 }

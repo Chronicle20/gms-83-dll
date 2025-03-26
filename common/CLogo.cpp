@@ -2,47 +2,39 @@
 
 CLogo::CLogo() {
     Log("CLogo::CLogo");
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    C_LOGO)(this, nullptr);
+    reinterpret_cast<void (__fastcall *)(CLogo *, void *)>(C_LOGO)(this, nullptr);
 }
 
 const CRTTI *CLogo::GetRTTI() {
-    return ((const CRTTI *(_fastcall
-    * )(CLogo * , PVOID))
-    C_LOGO_GET_RTTI)(this, nullptr);
+    return reinterpret_cast<const CRTTI *(__fastcall *)(CLogo *, void *)>(C_LOGO_GET_RTTI)(this, nullptr);
 }
 
 int CLogo::IsKindOf(const CRTTI *pRTTI) {
-    return ((int (_fastcall * )(CLogo * , PVOID,
-    const CRTTI *pRTTI))
-    C_LOGO_IS_KIND_OF)(this, nullptr, pRTTI);
+    return reinterpret_cast<int (__fastcall *)(CLogo *, void *, const CRTTI *)>(C_LOGO_IS_KIND_OF)(this, nullptr,
+                                                                                                   pRTTI);
 }
 
 void CLogo::Init() {
     Log("CLogo::Init");
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    C_LOGO_INIT)(this, nullptr);
+    reinterpret_cast<void (__fastcall *)(CLogo *, void *)>(C_LOGO_INIT)(this, nullptr);
 }
 
 void CLogo::InitNXLogo() {
-    reinterpret_cast<void(__thiscall*)(CLogo*)>(C_LOGO_INIT_NX_LOGO)(this);
+    reinterpret_cast<void (__thiscall *)(CLogo *)>(C_LOGO_INIT_NX_LOGO)(this);
 }
 
 void CLogo::Update() {
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    C_LOGO_UPDATE)(this, nullptr);
+    reinterpret_cast<void (__fastcall *)(CLogo *, void *)>(C_LOGO_UPDATE)(this, nullptr);
 }
 
 void CLogo::LogoEnd() {
     Log("CLogo::ForcedEnd");
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    C_LOGO_LOGO_END)(this, nullptr);
+    reinterpret_cast<void (__fastcall *)(CLogo *, void *)>(C_LOGO_LOGO_END)(this, nullptr);
 }
 
 void CLogo::ForcedEnd() {
     Log("CLogo::ForcedEnd");
-    ((VOID(_fastcall * )(CLogo * , PVOID))
-    C_LOGO_FORCED_END)(this, nullptr);
+    reinterpret_cast<void (__fastcall *)(CLogo *, void *)>(C_LOGO_FORCED_END)(this, nullptr);
 }
 
 void CLogo::OnIMEComp(const char *, ZArray<unsigned long> *, unsigned int, int,
@@ -92,16 +84,16 @@ int CLogo::OnMouseMove(int, int) {
 }
 
 void CLogo::OnMouseButton(unsigned int msg, unsigned int wParam, int rx, int ry) {
-    ((VOID(_fastcall * )(CLogo * , PVOID, unsigned int, unsigned int, int, int))
-    C_LOGO_ON_MOUSE_BUTTON)(this, nullptr, msg, wParam, rx, ry);
+    reinterpret_cast<void (__fastcall *)(CLogo *, void *, unsigned int, unsigned int, int, int)>(
+            C_LOGO_ON_MOUSE_BUTTON)(this, nullptr, msg, wParam, rx, ry);
 }
 
 int CLogo::OnSetFocus(int bFocus) {
-    return ((int(_fastcall * )(CLogo * , PVOID, int))
-    C_LOGO_ON_SET_FOCUS)(this, nullptr, bFocus);
+    return reinterpret_cast<int (__fastcall *)(CLogo *, void *, int)>(
+            C_LOGO_ON_SET_FOCUS)(this, nullptr, bFocus);
 }
 
 void CLogo::OnKey(unsigned int wParam, unsigned int lParam) {
-    ((VOID(_fastcall * )(CLogo * , PVOID, unsigned int, unsigned int))
-    C_LOGO_ON_KEY)(this, nullptr, wParam, lParam);
+    reinterpret_cast<void (__fastcall *)(CLogo *, void *, unsigned int, unsigned int)>(
+            C_LOGO_ON_KEY)(this, nullptr, wParam, lParam);
 }

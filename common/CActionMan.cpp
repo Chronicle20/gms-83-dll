@@ -2,8 +2,7 @@
 
 void CActionMan::CreateInstance() {
     Log("CActionMan::CreateInstance");
-    ((VOID * *(_fastcall * )())
-    C_ACTION_MAN_CREATE_INSTANCE_ADDR)();
+    reinterpret_cast<void (__fastcall *)()>(C_ACTION_MAN_CREATE_INSTANCE_ADDR)();
 }
 
 CActionMan *CActionMan::GetInstance() {
@@ -12,12 +11,10 @@ CActionMan *CActionMan::GetInstance() {
 
 void CActionMan::Init() {
     Log("CActionMan::Init");
-    ((VOID(_fastcall * )(CActionMan * , PVOID))
-    C_ACTION_MAN_INIT)(this, nullptr);
+    reinterpret_cast<void (__fastcall *)(CActionMan *, void *)>(C_ACTION_MAN_INIT)(this, nullptr);
 }
 
 void CActionMan::SweepCache() {
     // High volume call
-    ((VOID(_fastcall * )(CActionMan * , PVOID))
-    C_ACTION_MAN_SWEEP_CACHE)(this, nullptr);
+    reinterpret_cast<void (__fastcall *)(CActionMan *, void *)>(C_ACTION_MAN_SWEEP_CACHE)(this, nullptr);
 }

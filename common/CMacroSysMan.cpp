@@ -1,6 +1,5 @@
 #include "pch.h"
 
 void CMacroSysMan::CreateInstance() {
-    ((VOID * *(_fastcall * )())
-    C_MACRO_SYS_MAN_CREATE_INSTANCE)();
+    reinterpret_cast<void (__fastcall *)()>(C_MACRO_SYS_MAN_CREATE_INSTANCE)();
 }
