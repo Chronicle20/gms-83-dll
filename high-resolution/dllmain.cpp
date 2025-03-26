@@ -53,6 +53,8 @@ VOID __stdcall MainProc() {
     if (iniData.empty()) {
         return;
     }
+    int originalHeight = 600;
+    int originalWidth = 800;
     int m_nGameHeight = std::stoi(iniData["Main.Height"]);
     int m_nGameWidth = std::stoi(iniData["Main.Width"]);
     Log("[high-resolution] : Setting game resolution to [%dx%d].", m_nGameWidth, m_nGameHeight);
@@ -269,82 +271,175 @@ VOID __stdcall MainProc() {
     //push    800
     MemEdit::WriteInt(C_UI_STATUS_BAR + 0x278 + 1, m_nGameWidth);
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x15E1 + 1, m_nGameHeight - (600 - 533));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x15E1 + 1, m_nGameHeight - (originalHeight - 533));
     MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x1B9E + 1, m_nGameHeight - 22);
     MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x1BA3 + 1, m_nGameWidth);
     MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x1E42 + 1, m_nGameHeight - 22);
     MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x1E47 + 1, m_nGameWidth);
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x22C9 + 1, m_nGameHeight - (600 - 567));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x25B3 + 1, m_nGameHeight - (600 - 581));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2802 + 1, m_nGameHeight - (600 - 581));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2A51 + 1, m_nGameHeight - (600 - 581));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2DFC + 1, m_nGameHeight - (600 - 543));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2EA4 + 1, m_nGameHeight - (600 - 543));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2F6D + 1, m_nGameHeight - (600 - 543));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x3035 + 1, m_nGameHeight - (600 - 543));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x30BC + 1, m_nGameHeight - (600 - 515));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x3143 + 1, m_nGameHeight - (600 - 515));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x31CA + 1, m_nGameHeight - (600 - 515));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x3251 + 1, m_nGameHeight - (600 - 515));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x32D8 + 1, m_nGameHeight - (600 - 515));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x33D4 + 1, m_nGameHeight - (600 - 515));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x34E4 + 1, m_nGameHeight - (600 - 515));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x22C9 + 1, m_nGameHeight - (originalHeight - 567));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x25B3 + 1, m_nGameHeight - (originalHeight - 581));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2802 + 1, m_nGameHeight - (originalHeight - 581));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2A51 + 1, m_nGameHeight - (originalHeight - 581));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2DFC + 1, m_nGameHeight - (originalHeight - 543));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2EA4 + 1, m_nGameHeight - (originalHeight - 543));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x2F6D + 1, m_nGameHeight - (originalHeight - 543));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x3035 + 1, m_nGameHeight - (originalHeight - 543));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x30BC + 1, m_nGameHeight - (originalHeight - 515));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x3143 + 1, m_nGameHeight - (originalHeight - 515));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x31CA + 1, m_nGameHeight - (originalHeight - 515));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x3251 + 1, m_nGameHeight - (originalHeight - 515));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x32D8 + 1, m_nGameHeight - (originalHeight - 515));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x33D4 + 1, m_nGameHeight - (originalHeight - 515));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_CREATE + 0x34E4 + 1, m_nGameHeight - (originalHeight - 515));
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_STATUS_VALUE + 0x3D + 1, m_nGameHeight - (600 - 578));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_STATUS_VALUE + 0x3D + 1, m_nGameHeight - (originalHeight - 578));
     MemEdit::WriteInt(C_UI_STATUS_BAR_SET_STATUS_VALUE + 0x42 + 1, m_nGameWidth);
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_STATUS_VALUE + 0x9B + 1, m_nGameHeight - (600 - 554));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_STATUS_VALUE + 0x119 + 1, m_nGameHeight - (600 - 545));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_STATUS_VALUE + 0x1B8 + 1, m_nGameHeight - (600 - 560));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_STATUS_VALUE + 0x9B + 1, m_nGameHeight - (originalHeight - 554));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_STATUS_VALUE + 0x119 + 1, m_nGameHeight - (originalHeight - 545));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_STATUS_VALUE + 0x1B8 + 1, m_nGameHeight - (originalHeight - 560));
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_MAKE_CTRL_EDIT + 0x6F + 1, m_nGameHeight - (600 - 520));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_MAKE_CTRL_EDIT + 0xDA + 1, m_nGameHeight - (600 - 515));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_MAKE_CTRL_EDIT + 0x6F + 1, m_nGameHeight - (originalHeight - 520));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_MAKE_CTRL_EDIT + 0xDA + 1, m_nGameHeight - (originalHeight - 515));
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_TOGGLE_QUICK_SLOT + 0x2D1 + 2, m_nGameHeight - (600 - 533));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_TOGGLE_QUICK_SLOT + 0x452 + 1, m_nGameHeight - (600 - 515));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_TOGGLE_QUICK_SLOT + 0x2D1 + 2, m_nGameHeight - (originalHeight - 533));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_TOGGLE_QUICK_SLOT + 0x452 + 1, m_nGameHeight - (originalHeight - 515));
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_TOGGLE_MAX_MIN_BUTTON + 0xAD + 1, m_nGameHeight - (600 - 519));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_TOGGLE_MAX_MIN_BUTTON + 0x13F + 1, m_nGameHeight - (600 - 519));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_TOGGLE_MAX_MIN_BUTTON + 0xAD + 1, m_nGameHeight - (originalHeight - 519));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_TOGGLE_MAX_MIN_BUTTON + 0x13F + 1, m_nGameHeight - (originalHeight - 519));
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x4C + 2, m_nGameHeight - (600 - 507));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x8E + 1, m_nGameHeight - (600 - 509));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x100 + 1, m_nGameHeight - (600 - 510));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x1B2 + 1, m_nGameHeight - (600 - 510));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x1DA + 1, m_nGameHeight - (600 - 513));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x4C + 2, m_nGameHeight - (originalHeight - 507));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x8E + 1, m_nGameHeight - (originalHeight - 509));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x100 + 1, m_nGameHeight - (originalHeight - 510));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x1B2 + 1, m_nGameHeight - (originalHeight - 510));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_CHAT_TYPE + 0x1DA + 1, m_nGameHeight - (originalHeight - 513));
 
     MemEdit::WriteInt(C_UI_STATUS_BAR_DRAW_BACKGROUND + 0x444 + 1, m_nGameHeight - (71 + 22));
     MemEdit::WriteInt(C_UI_STATUS_BAR_DRAW_BACKGROUND + 0x4B6 + 1, m_nGameHeight - (71 + 22));
     MemEdit::WriteInt(C_UI_STATUS_BAR_DRAW_BACKGROUND + 0x529 + 1, m_nGameHeight - (63 + 22));
     MemEdit::WriteInt(C_UI_STATUS_BAR_DRAW_BACKGROUND + 0x59F + 1, m_nGameHeight - (59 + 22));
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_HIT_TEST + 0x51 + 1, m_nGameHeight - (600 - 507));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_HIT_TEST + 0x76 + 1, m_nGameHeight - (600 - 580));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_HIT_TEST + 0x51 + 1, m_nGameHeight - (originalHeight - 507));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_HIT_TEST + 0x76 + 1, m_nGameHeight - (originalHeight - 580));
     MemEdit::WriteInt(C_UI_STATUS_BAR_HIT_TEST + 0xBC + 1, m_nGameHeight + 47);
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_MOUSE_MOVE + 0x47 + 3, m_nGameHeight - (600 - 580));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_MOUSE_MOVE + 0xCE + 1, m_nGameHeight - (600 - 580));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_MOUSE_MOVE + 0x47 + 3, m_nGameHeight - (originalHeight - 580));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_ON_MOUSE_MOVE + 0xCE + 1, m_nGameHeight - (originalHeight - 580));
 
-    // CUIStatusBar::SetButtonBlink not sure value
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x6F3 + 1, m_nGameHeight - (originalHeight - 581));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0xE73 + 1, m_nGameHeight - (originalHeight - 581));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x15BE + 1, m_nGameHeight - (originalHeight - 581));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x1C11 + 1, m_nGameHeight - (originalHeight - 581));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x1EC9 + 1, m_nGameHeight - (originalHeight - 544));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x1F58 + 1, m_nGameHeight - (originalHeight - 549));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x1FE7 + 1, m_nGameHeight - (originalHeight - 548));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x2110 + 1, m_nGameHeight - (originalHeight - 544));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x2404 + 1, m_nGameHeight - (originalHeight - 548));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x24BB + 1, m_nGameHeight - (originalHeight - 548));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x2734 + 1, m_nGameHeight - (originalHeight - 548));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x27E6 + 1, m_nGameHeight - (originalHeight - 548));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x2A59 + 1, m_nGameHeight - (originalHeight - 548));
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x6F3 + 1, m_nGameHeight - (600 - 581));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0xE73 + 1, m_nGameHeight - (600 - 581));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x15BE + 1, m_nGameHeight - (600 - 581));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x1C11 + 1, m_nGameHeight - (600 - 581));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x1EC9 + 1, m_nGameHeight - (600 - 544));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x1F58 + 1, m_nGameHeight - (600 - 549));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x1FE7 + 1, m_nGameHeight - (600 - 548));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x2110 + 1, m_nGameHeight - (600 - 544));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x2404 + 1, m_nGameHeight - (600 - 548));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x24BB + 1, m_nGameHeight - (600 - 548));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x2734 + 1, m_nGameHeight - (600 - 548));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x27E6 + 1, m_nGameHeight - (600 - 548));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_SET_NUMBER_VALUE + 0x2A59 + 1, m_nGameHeight - (600 - 548));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_PROCESS_TOOLTIP + 0xA1 + 3, m_nGameHeight - (originalHeight - 558));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_PROCESS_TOOLTIP + 0xAE + 3, m_nGameHeight - (originalHeight - 574));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_PROCESS_TOOLTIP + 0x163 + 3, m_nGameHeight - (originalHeight - 559));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_PROCESS_TOOLTIP + 0x170 + 3, m_nGameHeight - (originalHeight - 574));
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_PROCESS_TOOLTIP + 0xA1 + 3, m_nGameHeight - (600 - 558));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_PROCESS_TOOLTIP + 0xAE + 3, m_nGameHeight - (600 - 574));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_PROCESS_TOOLTIP + 0x163 + 3, m_nGameHeight - (600 - 559));
-    MemEdit::WriteInt(C_UI_STATUS_BAR_PROCESS_TOOLTIP + 0x170 + 3, m_nGameHeight - (600 - 574));
+    MemEdit::WriteInt(C_UI_STATUS_BAR_C_QUICK_SLOT_GET_INDEX_BY_POS + 0x19 + 2,
+                      -m_nGameHeight - (originalHeight - 427));
 
-    MemEdit::WriteInt(C_UI_STATUS_BAR_C_QUICK_SLOT_GET_INDEX_BY_POS + 0x19 + 2, -m_nGameHeight - (600 - 427));
+    MemEdit::WriteInt(C_UI_GAME_MENU + 0x57 + 1, m_nGameHeight - (originalHeight - 423));
+
+    MemEdit::WriteInt(C_UI_SHORT_CUT_MENU + 0x57 + 1, m_nGameHeight - (originalHeight - 296));
+
+    //0x009F7078
+    //0x009F7079
+    //0x009F707D
+    //0x009F707E
+    //0x00BE2738
+    //0x00BE273C
+    //0x00BE2DF0
+    //0x00BE2DF4
+    //522B2B
+    //52363F
+    //5336CA
+    //536428
+    //5AAACC
+    //5E3F76
+    //60D7F8
+    //61301F
+    //62F809
+    //744D77
+    //85F303
+    //89B76F
+    //8A1000
+    //991803
+    //992AEE
+    //9B7684
+    //CAvatarMegaphone::ByeAvatarMegaphone
+    //CAvatarMegaphone::HelloAvatarMegaphone
+    //CCashShop::Init
+    //CCreateGuildAgreeDlg::CCreateGuildAgreeDlg
+    //CCtrlMLEdit::CreateIMECandWnd
+    //CDialog::CreateDlg
+    //CField::DrawFearEffect
+    //CField::InitFearEffect
+    //CField::OnClock
+    //CField_LimitedView::Init
+    //CFloatNotice::CreateFloatNotice
+    //CITC::Close
+    //CITCBidAuctionDlg::OnCreate
+    //CITCWndItemDlg::OnCreate
+    //CLicenseDlg::CLicenseDlg
+    //CLogin::Init
+    //CLogin::OnSelectedCharChanged
+    //CLoginUtilDlg::Init
+    //CLogo::ForcedEnd
+    //CLogo::InitNXLogo
+    //CMapLoadable::PlayBGMFromMapInfo
+    //CMapLoadable::TransientLayer_FireCracker
+    //CMapLoadable::TransientLayer_NewYear
+    //CMapLoadable::TransientLayer_Weather
+    //CMob::GenerateMovePath
+    //CNpc::DrawMapleTVMessage
+    //CNoticeQuestProgress::CNoticeQuestProgress
+    //CNoticeQuestProgress::NoticeProgressChange
+    //CPinCodeDlg::Init
+    //CRegisterWishEntryDlg::OnCreate
+    //CSequencedKeyMan::Restore
+    //CTradingRoomDlg::OnCreate
+    //CUIAdminShopWishList::SetLayer
+    //CUIAvatar::CUIAvatar
+    //CUIEventAlarm::CreateEventAlarm
+    //CUIFadeYesNo::CreateAllianceInvite
+    //CUIFadeYesNo::CreateFamilyInvite
+    //CUIFadeYesNo::CreateFriendReg
+    //CUIFadeYesNo::CreateNewMemo
+    //CUIFadeYesNo::CreateNewYearCardArrived
+    //CUIFadeYesNo::CreateParcelAlarm
+    //CUIFadeYesNo::CreatePartyInvite
+    //CUIFadeYesNo::CreatePartyQuestAlarm
+    //CUIFadeYesNo::CreateQuestClear
+    //CUIFadeYesNo::CreateTradeInvite
+    //CUIFadeYesNo::CreateUserAlarm
+    //CUIRevive::CUIRevive
+    //CUIScreenMsg::CUIScreenMsg
+    //CUIScreenMsg::LayoutScrMsg
+    //CUIScreenMsg::ScrMsg_Add
+    //CUISoftKeyboard::CUISoftKeyboard
+    //CUIStat::CUIStat
+    //CUIStatDetail::CUIStatDetail
+    //CUIStatusBar::ChangeChatWndSize
+    //CUIStatusBar::FlashHPBar
+    //CUIStatusBar::FlashMPBar
+    //CUIStatusBar::SetButtonBlink
+    //CUser::ShowSkillEffect
+    //CUserLocal::TryDoingShootAttack
+    //CUserRemote::OnShootAttack
+    //CWvsApp::CleanUp
+    //CWvsContext::SetEventTimer
+    //CWvsPhysicalSpace2D::Load
+    //CWndSkillGuide::CWndSkillGuide
+    //sub_4199F4
 }
 
 // dll entry point
