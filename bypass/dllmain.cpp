@@ -23,16 +23,6 @@ VOID __fastcall CSecurityClient__OnPacket_Hook(CSecurityClient *pThis, PVOID edx
     Log("CSecurityClient::OnPacket.");
 }
 
-// void __thiscall CClientSocket::ClearSendReceiveCtx(CClientSocket *this)
-typedef VOID(__fastcall *_CClientSocket__ClearSendReceiveCtx_t)(CClientSocket *pThis, PVOID edx);
-
-_CClientSocket__ClearSendReceiveCtx_t _CClientSocket__ClearSendReceiveCtx = reinterpret_cast<_CClientSocket__ClearSendReceiveCtx_t>(C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX);
-
-// void __thiscall ZSocketBase::CloseSocket(ZSocketBase *this)
-typedef VOID(__fastcall *_ZSocketBase__CloseSocket_t)(ZSocketBase *pThis, PVOID edx);
-
-_ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(Z_SOCKET_BASE_CLOSE_SOCKET);
-
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
 typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
 
@@ -446,24 +436,17 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
     }
 }
 
-// void __stdcall TSingleton<CInputSystem>::CreateInstance()
-typedef VOID(__stdcall *_TSingleton_CInputSystem__CreateInstance_t)();
-
-_TSingleton_CInputSystem__CreateInstance_t _TSingleton_CInputSystem__CreateInstance = reinterpret_cast<_TSingleton_CInputSystem__CreateInstance_t>(C_INPUT_SYSTEM_CREATE_INSTANCE);
-
 // void __thiscall CWvsApp::InitializeInput(CWvsApp *this)
 typedef VOID(__fastcall *_CWvsApp__InitializeInput_t)(CWvsApp *pThis, PVOID edx);
 
 VOID __fastcall CWvsApp__InitializeInput_Hook(CWvsApp *pThis, PVOID edx) {
     Log("CWvsApp::InitializeInput");
-    _TSingleton_CInputSystem__CreateInstance();
+    CInputSystem::CreateInstance();
     CInputSystem::GetInstance()->Init(pThis->m_hWnd, pThis->m_ahInput);
 }
 
 // void __thiscall CWvsApp::Run(CWvsApp *this, int *pbTerminate)
 typedef VOID(__stdcall *_CWvsApp__Run_t)(CWvsApp *pThis, int *pbTerminate);
-
-_CWvsApp__Run_t _CWvsApp__Run;
 
 VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
     Log("CWvsApp::Run");
@@ -753,6 +736,7 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, C_WVS_APP_INITIALIZE_INPUT);
 
     // CWvsApp::Run
+    HOOKTYPEDEF_C(CWvsApp__Run);
     INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
 
 #if defined(REGION_JMS)
