@@ -19,33 +19,17 @@
 typedef VOID(__fastcall *_CSecurityClient__OnPacket_t)(CSecurityClient *pThis, PVOID edx,
                                                        CInPacket *iPacket);
 
-_CSecurityClient__OnPacket_t _CSecurityClient__OnPacket;
-
 VOID __fastcall CSecurityClient__OnPacket_Hook(CSecurityClient *pThis, PVOID edx,CInPacket *iPacket) {
     Log("CSecurityClient::OnPacket.");
 }
 
-// void __thiscall CClientSocket::ClearSendReceiveCtx(CClientSocket *this)
-typedef VOID(__fastcall *_CClientSocket__ClearSendReceiveCtx_t)(CClientSocket *pThis, PVOID edx);
-
-_CClientSocket__ClearSendReceiveCtx_t _CClientSocket__ClearSendReceiveCtx = reinterpret_cast<_CClientSocket__ClearSendReceiveCtx_t>(C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX);
-
-// void __thiscall ZSocketBase::CloseSocket(ZSocketBase *this)
-typedef VOID(__fastcall *_ZSocketBase__CloseSocket_t)(ZSocketBase *pThis, PVOID edx);
-
-_ZSocketBase__CloseSocket_t _ZSocketBase__CloseSocket = reinterpret_cast<_ZSocketBase__CloseSocket_t>(Z_SOCKET_BASE_CLOSE_SOCKET);
-
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
 typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
-
-_CClientSocket__Connect_addr_t _CClientSocket__Connect_addr;
 
 VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
 
 // int __thiscall CClientSocket::OnConnect(CClientSocket *this, int bSuccess)
 typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
-
-_CClientSocket__OnConnect_t _CClientSocket__OnConnect;
 
 INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, int bSuccess) {
     Log("CClientSocket::OnConnect(CClientSocket *this, int bSuccess). bSuccess [%d]", bSuccess);
@@ -266,8 +250,6 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx
 typedef VOID(__fastcall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, PVOID edx,
                                                         CClientSocket::CONNECTCONTEXT *ctx);
 
-_CClientSocket__Connect_ctx_t _CClientSocket__Connect_ctx;
-
 VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx, CClientSocket::CONNECTCONTEXT *ctx) {
     Log("CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)");
     pThis->m_ctxConnect.lAddr.RemoveAll();
@@ -282,8 +264,6 @@ VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx,
 
 // int __thiscall CLogin::SendCheckPasswordPacket(CLogin *this, char *sID, char *sPasswd)
 typedef INT(__fastcall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, PVOID edx, char *sID, char *sPasswd);
-
-_CLogin__SendCheckPasswordPacket_t _CLogin__SendCheckPasswordPacket;
 
 INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, char *sID, char *sPasswd) {
     Log("CLogin::SendCheckPasswordPacket. ID [%s]. bRequestSent [%d].", sID, pThis->m_bRequestSent);
@@ -344,16 +324,12 @@ IWzGr2D *get_gr() {
 // int __cdecl DR_check()
 typedef INT(__cdecl *_DR__check_t)();
 
-_DR__check_t _DR__check;
-
 INT __cdecl DR__check_Hook() {
     return 0;
 }
 
 // void __thiscall CWvsApp::CallUpdate(CWvsApp *this, int tCurTime)
 typedef VOID(__fastcall *_CWvsApp__CallUpdate_t)(CWvsApp *pThis, PVOID edx, int tCurTime);
-
-_CWvsApp__CallUpdate_t _CWvsApp__CallUpdate;
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
     if (pThis->m_bFirstUpdate) {
@@ -395,8 +371,6 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
 
 // void __thiscall CWvsApp::ConnectLogin(CWvsApp *this)
 typedef VOID(__fastcall *_CWvsApp__ConnectLogin_t)(CWvsApp *pThis, PVOID edx);
-
-_CWvsApp__ConnectLogin_t _CWvsApp__ConnectLogin;
 
 VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
     Log("CWvsApp::ConnectLogin_Hook");
@@ -462,26 +436,17 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
     }
 }
 
-// void __stdcall TSingleton<CInputSystem>::CreateInstance()
-typedef VOID(__stdcall *_TSingleton_CInputSystem__CreateInstance_t)();
-
-_TSingleton_CInputSystem__CreateInstance_t _TSingleton_CInputSystem__CreateInstance = reinterpret_cast<_TSingleton_CInputSystem__CreateInstance_t>(C_INPUT_SYSTEM_CREATE_INSTANCE);
-
 // void __thiscall CWvsApp::InitializeInput(CWvsApp *this)
 typedef VOID(__fastcall *_CWvsApp__InitializeInput_t)(CWvsApp *pThis, PVOID edx);
 
-_CWvsApp__InitializeInput_t _CWvsApp__InitializeInput;
-
 VOID __fastcall CWvsApp__InitializeInput_Hook(CWvsApp *pThis, PVOID edx) {
     Log("CWvsApp::InitializeInput");
-    _TSingleton_CInputSystem__CreateInstance();
+    CInputSystem::CreateInstance();
     CInputSystem::GetInstance()->Init(pThis->m_hWnd, pThis->m_ahInput);
 }
 
 // void __thiscall CWvsApp::Run(CWvsApp *this, int *pbTerminate)
 typedef VOID(__stdcall *_CWvsApp__Run_t)(CWvsApp *pThis, int *pbTerminate);
-
-_CWvsApp__Run_t _CWvsApp__Run;
 
 VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
     Log("CWvsApp::Run");
@@ -564,8 +529,6 @@ void GetSEPrivilege() {
 
 // void __thiscall CWvsApp::SetUp(CWvsApp *this)
 typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
-
-_CWvsApp__SetUp_t _CWvsApp__SetUp;
 
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     Log("CWvsApp::SetUp");
@@ -678,8 +641,6 @@ DWORD ResetLSP() {
 
 typedef VOID(__stdcall *_CWvsApp__CWvsApp_t)(CWvsApp *pThis, const char *sCmdLine);
 
-_CWvsApp__CWvsApp_t _CWvsApp__CWvsApp;
-
 // CWvsApp::CWvsApp
 VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
     Log("CWvsApp::CWvsApp");
@@ -743,7 +704,7 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
     }
 
     BOOL bIsWow64 = FALSE;
-    LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
+    auto fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
             GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
     if (fnIsWow64Process) {
         fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
@@ -760,18 +721,22 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
 }
 
 // main thread
-VOID __stdcall MainProc() {
+DWORD WINAPI MainProc(LPVOID lpParam) {
 
     // CWvsApp::CWvsApp
+    HOOKTYPEDEF_C(CWvsApp__CWvsApp);
     INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, C_WVS_APP);
 
     // CWvsApp::SetUp
+    HOOKTYPEDEF_C(CWvsApp__SetUp);
     INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, C_WVS_APP_SET_UP);
 
     // CWvsApp::InitializeInput
+    HOOKTYPEDEF_C(CWvsApp__InitializeInput);
     INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, C_WVS_APP_INITIALIZE_INPUT);
 
     // CWvsApp::Run
+    HOOKTYPEDEF_C(CWvsApp__Run);
     INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
 
 #if defined(REGION_JMS)
@@ -780,6 +745,7 @@ VOID __stdcall MainProc() {
 
 #endif
 #if (defined(REGION_GMS) && MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    HOOKTYPEDEF_C(DR__check);
     INITMAPLEHOOK(_DR__check, _DR__check_t, DR__check_Hook, DR_CHECK);
 #endif
 
@@ -788,31 +754,39 @@ VOID __stdcall MainProc() {
 #endif
 
     // CWvsApp::CallUpdate
+    HOOKTYPEDEF_C(CWvsApp__CallUpdate);
     INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, C_WVS_APP_CALL_UPDATE);
 
     // CWvsApp::ConnectLogin
+    HOOKTYPEDEF_C(CWvsApp__ConnectLogin);
     INITMAPLEHOOK(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t, CWvsApp__ConnectLogin_Hook,
                   C_WVS_APP_CONNECT_LOGIN);
 
     // CLogin::SendCheckPasswordPacket
+    HOOKTYPEDEF_C(CLogin__SendCheckPasswordPacket);
     INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
                   CLogin__SendCheckPasswordPacket_Hook, C_LOGIN_SEND_CHECK_PASSWORD_PACKET);
 
     // CSecurityClient::OnPacket
+    HOOKTYPEDEF_C(CSecurityClient__OnPacket);
     INITMAPLEHOOK(_CSecurityClient__OnPacket, _CSecurityClient__OnPacket_t, CSecurityClient__OnPacket_Hook,
                   C_SECURITY_CLIENT_ON_PACKET);
 
     // CClientSocket::Connect
+    HOOKTYPEDEF_C(CClientSocket__Connect_ctx);
     INITMAPLEHOOK(_CClientSocket__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook,
                   C_CLIENT_SOCKET_CONNECT_CTX);
 
     // CClientSocket::Connect
+    HOOKTYPEDEF_C(CClientSocket__Connect_addr);
     INITMAPLEHOOK(_CClientSocket__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook,
                   C_CLIENT_SOCKET_CONNECT_ADR);
 
     // // CClientSocket::OnConnect
+    HOOKTYPEDEF_C(CClientSocket__OnConnect);
     INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
                   C_CLIENT_SOCKET_ON_CONNECT);
+    return 0;
 }
 
 // dll entry point
@@ -820,7 +794,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH: {
             DisableThreadLibraryCalls(hModule);
-            CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE) &MainProc, nullptr, 0, nullptr);
+            CreateThread(nullptr, 0, &MainProc, nullptr, 0, nullptr);
             break;
         }
     }

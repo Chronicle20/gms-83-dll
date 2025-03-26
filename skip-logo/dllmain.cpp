@@ -15,8 +15,6 @@
 // void __thiscall CLogo::Init(CLogo *this)
 typedef VOID(__thiscall *_CLogo_Init_t)(CLogo *pThis, void *unused);
 
-HOOKTYPEDEF_C(CLogo_Init);
-
 VOID __fastcall CLogo_Init_Hook(CLogo *pThis, PVOID edx, void *unused) {
     Log("CLogo::Init");
     pThis->InitNXLogo();
@@ -36,8 +34,10 @@ VOID __fastcall CLogo_Init_Hook(CLogo *pThis, PVOID edx, void *unused) {
     pThis->LogoEnd();
 }
 
-VOID __stdcall MainProc() {
+DWORD WINAPI MainProc(LPVOID lpParam) {
+    HOOKTYPEDEF_C(CLogo_Init);
     INITMAPLEHOOK(_CLogo_Init, _CLogo_Init_t, CLogo_Init_Hook, C_LOGO_INIT);
+    return 0;
 }
 
 // dll entry point
@@ -45,7 +45,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH: {
             DisableThreadLibraryCalls(hModule);
-            CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE) &MainProc, nullptr, 0, nullptr);
+            CreateThread(nullptr, 0, &MainProc, nullptr, 0, nullptr);
             break;
         }
     }

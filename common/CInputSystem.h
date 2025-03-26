@@ -4,6 +4,8 @@
 class CInputSystem {
 
 public:
+    static void CreateInstance();
+
     static CInputSystem *GetInstance();
 
 
