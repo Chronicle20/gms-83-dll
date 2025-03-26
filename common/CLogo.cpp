@@ -18,9 +18,31 @@ int CLogo::IsKindOf(const CRTTI *pRTTI) {
     C_LOGO_IS_KIND_OF)(this, nullptr, pRTTI);
 }
 
+void CLogo::Init() {
+    Log("CLogo::Init");
+    ((VOID(_fastcall * )(CLogo * , PVOID))
+    C_LOGO_INIT)(this, nullptr);
+}
+
+void CLogo::InitNXLogo() {
+    reinterpret_cast<void(__thiscall*)(CLogo*)>(C_LOGO_INIT_NX_LOGO)(this);
+}
+
 void CLogo::Update() {
     ((VOID(_fastcall * )(CLogo * , PVOID))
     C_LOGO_UPDATE)(this, nullptr);
+}
+
+void CLogo::LogoEnd() {
+    Log("CLogo::ForcedEnd");
+    ((VOID(_fastcall * )(CLogo * , PVOID))
+    C_LOGO_LOGO_END)(this, nullptr);
+}
+
+void CLogo::ForcedEnd() {
+    Log("CLogo::ForcedEnd");
+    ((VOID(_fastcall * )(CLogo * , PVOID))
+    C_LOGO_FORCED_END)(this, nullptr);
 }
 
 void CLogo::OnIMEComp(const char *, ZArray<unsigned long> *, unsigned int, int,

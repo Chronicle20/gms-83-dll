@@ -30,7 +30,7 @@ void COutPacket::EncodeBuffer(const void *p, unsigned int uSize) {
     ((VOID(_fastcall * )(COutPacket * , PVOID,
     const void *p,
     unsigned int uSize))
-    C_OUT_PACKET_BUFFER)(this, nullptr, p, uSize);
+    C_OUT_PACKET_ENCODE_BUFFER)(this, nullptr, p, uSize);
 }
 
 COutPacket::~COutPacket() {

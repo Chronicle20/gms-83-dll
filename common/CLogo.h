@@ -34,6 +34,14 @@ public:
 
     CLogo();
 
+    void Init();
+
+    void InitNXLogo();
+
+    void LogoEnd();
+
+    void ForcedEnd();
+
     void Update() override;
 
     void OnKey(unsigned int, unsigned int) override;

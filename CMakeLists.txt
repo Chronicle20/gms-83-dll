@@ -62,6 +62,7 @@ add_subdirectory(no-enter-mts-map-restriction)
 add_subdirectory(no-ad-balloon)
 add_subdirectory(proxy)
 add_subdirectory(redirect)
+add_subdirectory(skip-logo)
 add_subdirectory(window-mode)
 
 # Custom target to package DLLs into a tar archive
@@ -77,8 +78,8 @@ add_custom_target(package_dlls
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-ad-balloon>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:proxy>" "${CMAKE_BINARY_DIR}/artifacts/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:redirect>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:skip-logo>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:window-mode>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/high-resolution/high-resolution.ini" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/redirect/redirect.ini" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
         COMMENT "Creating tar archive of DLL artifacts"
