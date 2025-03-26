@@ -19,4 +19,6 @@ public:
     int GetISMessage(ISMSG *pISMsg);
 
     int GenerateAutoKeyDown(ISMSG *pISMsg);
+
+    void ShowCursor(int bShow);
 };

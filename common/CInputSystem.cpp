@@ -30,3 +30,10 @@ int CInputSystem::GenerateAutoKeyDown(ISMSG *pISMsg) {
     return ((int(_fastcall * )(CInputSystem * , PVOID, ISMSG * pISMsg))
     C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN)(this, nullptr, pISMsg);
 }
+
+void CInputSystem::ShowCursor(int bShow) {
+    Log("CInputSystem::ShowCursor");
+    ((VOID(_fastcall * )(CInputSystem * , PVOID, int
+    nDeviceIndex))
+    C_INPUT_SYSTEM_SHOW_CURSOR)(this, nullptr, bShow);
+}
