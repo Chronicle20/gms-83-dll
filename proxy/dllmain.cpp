@@ -35,7 +35,7 @@ VOID MainFunc() {
     LoadDLLsFromDirectory("edits/");
 }
 
-VOID __stdcall MainProc() {
+DWORD WINAPI MainProc(LPVOID lpParam) {
     Log(__FUNCTION__);
 
     Common::CreateInstance
@@ -43,6 +43,7 @@ VOID __stdcall MainProc() {
                     TRUE,            // true if you want to hook windows libraries (besides mutex) set this to false if you already edited your IP into the client (eg v83 localhosts)
                     MainFunc        // function to be executed after client is unpacked
             );
+    return 0;
 }
 
 // dll entry point
@@ -50,7 +51,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH: {
             DisableThreadLibraryCalls(hModule);
-            CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE) &MainProc, nullptr, 0, nullptr);
+            CreateThread(nullptr, 0, &MainProc, nullptr, 0, nullptr);
             break;
         }
     }
