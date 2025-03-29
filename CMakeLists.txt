@@ -55,6 +55,7 @@ endif()
 # Add subdirectories for each project
 add_subdirectory(bypass)
 add_subdirectory(enable-minimize)
+add_subdirectory(high-resolution)
 add_subdirectory(no-patcher)
 add_subdirectory(no-beginner-party-block)
 add_subdirectory(no-enter-mts-map-restriction)
@@ -70,6 +71,7 @@ add_custom_target(package_dlls
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/artifacts/edits"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:bypass>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:enable-minimize>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:high-resolution>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-patcher>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-beginner-party-block>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-enter-mts-map-restriction>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
