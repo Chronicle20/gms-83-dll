@@ -1,4 +1,4 @@
-# GMS v83 Client Edit Collection
+# MS Client Edit Collection
 
 ## Overview
 A collection of GMS v83 Client Edits which can be loaded through the provided ijl15 proxy. The collection itself builds off of the fundamentals provided in the MapleClientCollection framework by MinimumDelta. The goal is that each DLL loaded provides clear and concise behavior. Opting in or out of functionality is handled through DLL deployment (or lack thereof).
