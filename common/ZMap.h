@@ -11,10 +11,9 @@ public:
         _PAIR* pNext;
         T key;
         V value;
-    } ** _m_apTable;
+    } ** m_apTable;
 
 private:
-    _PAIR** m_apTable;
     size_t m_uTableSize;
     size_t m_uCount;
     size_t m_uAutoGrowEvery128;
@@ -137,4 +136,4 @@ private:
 };
 
 assert_size(sizeof(ZMap<long, long, long>::_PAIR), 0x10)
-assert_size(sizeof(ZMap<long, long, long>), 0x1C)
+assert_size(sizeof(ZMap<long, long, long>), 0x18)
