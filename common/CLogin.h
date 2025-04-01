@@ -206,7 +206,7 @@ public:
     _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerBook;
 #endif
 #if defined(REGION_JMS)
-    int unk1[5];
+    int unk1[4];
 #endif
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     int m_nFadeOutLoginStep;
