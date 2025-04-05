@@ -1,41 +1,7 @@
 #pragma once
 
-/*
-00000000 CWnd            struc; (sizeof = 0x80, align = 0x4, copyof_1443)
-00000000 baseclass_0     IGObj ?
-00000004 baseclass_4     IUIMsgHandler ?
-00000008 baseclass_8     ZRefCounted ?
-00000014 m_dwWndKey      dd ?
-00000018 m_pLayer        _com_ptr_t<_com_IIID<IWzGr2DLayer, &_GUID_6dc8c7ce_8e81_4420_b4f6_4b60b7d5fcdf> > ?
-0000001C m_pAnimationLayer _com_ptr_t<_com_IIID<IWzGr2DLayer, &_GUID_6dc8c7ce_8e81_4420_b4f6_4b60b7d5fcdf> > ?
-00000020 m_pOverlabLayer _com_ptr_t<_com_IIID<IWzGr2DLayer, &_GUID_6dc8c7ce_8e81_4420_b4f6_4b60b7d5fcdf> > ?
-00000024 m_width         dd ?
-00000028 m_height        dd ?
-0000002C m_rcInvalidated tagRECT ?
-0000003C m_bScreenCoord  dd ?
-00000040 m_nBackgrndX    dd ?
-00000044 m_nBackgrndY    dd ?
-00000048 m_ptCursorRel   SECPOINT ?
-00000060 m_lpChildren    ZList<ZRef<CCtrlWnd> > ?
-00000074 m_pFocusChild   dd ? ; offset
-00000078 m_pBackgrnd     _com_ptr_t<_com_IIID<IWzCanvas, &_GUID_7600dc6c_9328_4bff_9624_5b0f5c01179e> > ?
-0000007C m_origin        dd ? ; enum CWnd::UIOrigin
-00000080 CWnd            ends
-*/
 class CWnd : public IGObj, public IUIMsgHandler, public ZRefCounted {
-    /*
-    FFFFFFFF ; enum CWnd::UIOrigin, copyof_38
-    FFFFFFFF Origin_LT        = 0
-    FFFFFFFF Origin_CT        = 1
-    FFFFFFFF Origin_RT        = 2
-    FFFFFFFF Origin_LC        = 3
-    FFFFFFFF Origin_CC        = 4
-    FFFFFFFF Origin_RC        = 5
-    FFFFFFFF Origin_LB        = 6
-    FFFFFFFF Origin_CB        = 7
-    FFFFFFFF Origin_RB        = 8
-    FFFFFFFF Origin_NUM       = 9
-    */
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     enum UIOrigin {
         Origin_LT = 0,
         Origin_CT = 1,
@@ -48,16 +14,28 @@ class CWnd : public IGObj, public IUIMsgHandler, public ZRefCounted {
         Origin_RB = 8,
         Origin_NUM = 9
     };
+#endif
 
-    unsigned long m_dwWndKey; // DWORD?
+    unsigned long m_dwWndKey;
     IWzGr2DLayer *m_pLayer;
     IWzGr2DLayer *m_pAnimationLayer;
     IWzGr2DLayer *m_pOverlabLayer;
+    int m_width;
+    int m_height;
+    tagRECT m_rcInvalidated;
+    int m_bScreenCoord;
     int m_nBackgrndX;
     int m_nBackgrndY;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     SECPOINT m_ptCursorRel;
+#else
+    int m_ptCursorRel_x;
+    int m_ptCursorRel_y;
+#endif
     ZList<ZRef<CCtrlWnd>> m_lpChildren;
     CCtrlWnd *m_pFocusChild;
     IWzCanvas *m_pBackgrnd;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     UIOrigin m_origin;
+#endif
 };
