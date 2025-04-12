@@ -35,7 +35,7 @@ class CWnd : public IGObj, public IUIMsgHandler, public ZRefCounted {
     ZList<ZRef<CCtrlWnd>> m_lpChildren;
     CCtrlWnd *m_pFocusChild;
     _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pBackgrnd;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     UIOrigin m_origin;
 #endif
 };
