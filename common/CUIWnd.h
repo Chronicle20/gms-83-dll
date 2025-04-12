@@ -7,11 +7,13 @@ struct CUIWnd : CWnd {
     int m_nBtCloseY;
     int m_nBackgrndX;
     int m_nBackgrndY;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int m_nSmallScreenX;
     int m_nSmallScreenY;
     int m_nLargeScreenX;
     int m_nLargeScreenY;
     bool m_bIsLargeMode;
+#endif
     bool m_bPosSave;
     bool m_bBackgrnd;
     int m_nOption;
