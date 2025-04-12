@@ -79,57 +79,74 @@ class CUIToolTip
         bool m_bMulti;
         int m_nSubType;
         ZXString<char> m_sSubContext;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
         bool m_bUseDotImage;
+#endif
     };
 
     //vfptr
     int m_nToolTipType;
     int m_nHeight;
     int m_nWidth;
-    IWzGr2DLayer* m_pLayer;
-    IWzGr2DLayer* m_pLayerAdditional;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayer;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 83) || defined(REGION_JMS)
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerAdditional;
+#endif
     int m_nLastX;
     int m_nLastY;
     int m_nLineNo;
     CUIToolTip::CLineInfo  m_aLineInfo[32];
     int m_nLineSeparated;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     int m_nOptionLineNo;
     CUIToolTip::CLineInfo  m_aOptionLineInfo[32];
-    IWzFont* m_pFontHL_White;
-    IWzFont* m_pFontHL_Gold;
-    IWzFont* m_pFontHL_Orange;
-    IWzFont* m_pFontHL_Gray;
-    IWzFont* m_pFontHL_Green;
-    IWzFont* m_pFontHL_Blue;
-    IWzFont* m_pFontHL_Violet;
-    IWzFont* m_pFontHL_Green2;
-    IWzFont* m_pFontHL_Excellent;
-    IWzFont* m_pFontHL_Special;
-    IWzFont* m_pFontGen_White;
-    IWzFont* m_pFontGen_Gray;
-    IWzFont* m_pFontGen_Gray2;
-    IWzFont* m_pFontGen_Red;
-    IWzFont* m_pFontGen_Orange;
-    IWzFont* m_pFontGen_Gold;
-    IWzFont* m_pFontGen_Purple;
-    IWzFont* m_pFontGen_Green;
-    IWzFont* m_pFontGen_Yellow;
-    IWzFont* m_pFontGen_Blue;
-    IWzFont* m_pFontGen_Unknown;
-    IWzFont* m_pFontH_White;
-    IWzFont* m_pFontStan_Prp;
-    IWzFont* m_pFontStan_Dsc;
-    IWzFont* m_pFontStan_Num;
-    IWzFont* m_pFontSkill_Prp;
-    IWzFont* m_pFontSkill_Dsc;
-    IWzCanvas* m_pCanvasEquip_ReqItem[6][2];
-    IWzProperty* m_pNumberCan;
-    IWzProperty* m_pNumberCannot;
-    IWzCanvas* m_pCanvasEquip_JobItem[6][2];
-    IWzCanvas* m_pCanvasDot[3];
-    IWzCanvas* m_pCanvasEquip_GrowthItem[4][2];
-    IWzProperty* m_pNumberGrowthEnable;
-    IWzProperty* m_pNumberGrowthDisable;
-    IWzCanvas* m_pCanvasEquip_Durability[2][2];
+#endif
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_White;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_Gold;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_Orange;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_Gray;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_Green;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_Blue;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_Violet;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_Green2;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_Excellent;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontHL_Special;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_White;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Gray;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Gray2;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Red;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Orange;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Gold;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Purple;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Green;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Yellow;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Blue;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Unknown;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontH_White;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontStan_Prp;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontStan_Dsc;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontStan_Num;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontSkill_Prp;
+    _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontSkill_Dsc;
+#endif
+    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_ReqItem[6][2];
+    _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberCan;
+    _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberCannot;
+
+#if defined(REGION_GMS)
+    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_JobItem[6][2];
+    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasDot[3];
+#endif
+    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_GrowthItem[4][2];
+    _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberGrowthEnable;
+    _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberGrowthDisable;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_Durability[2][2];
+#endif
     bool m_bIngoreWeddingInfo;
 };
