@@ -15,7 +15,9 @@ class CFadeWnd : public CDialog
     int m_tPhase;
     int m_tTimeOver;
     bool m_bClose;
+#if defined(REGION_GMS)
     bool m_bUserAlarm;
+#endif
     bool m_bOK;
     int m_nType;
     ZXString<char> m_sInviter;
