@@ -1,5 +1,9 @@
 
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
 class CUITitle : public CFadeWnd {
+#else
+class CUITitle : public CDialog {
+#endif
     CLogin *m_pLogin;
     int m_bRememberMailAddr;
     IWzCanvas* m_pCanvasRMA[2];
