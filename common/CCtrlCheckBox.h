@@ -1,4 +1,6 @@
-struct CCtrlCheckBox : CCtrlWnd {
+
+class CCtrlCheckBox : CCtrlWnd {
+public:
     int m_nCheckBoxState;
     int m_nArrange;
     int m_nBackColor;
@@ -10,6 +12,8 @@ struct CCtrlCheckBox : CCtrlWnd {
     int m_nFontHeight;
     int m_bDrawLineAtFocus;
     IWzCanvas *m_apCanvasCheckBox[4];
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int m_nTextOffsetX;
     int m_nTextOffsetY;
+#endif
 };
