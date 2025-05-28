@@ -728,6 +728,35 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, PVOID edx, const char *sCm
 #endif
 }
 
+// CFuncKeyMappedMan::CFuncKeyMappedMan
+typedef VOID(__thiscall *_CFuncKeyMappedMan__CFuncKeyMappedMan_t)(CFuncKeyMappedMan *pThis);
+
+VOID __fastcall CFuncKeyMappedMan__CFuncKeyMappedMan_Hook(CFuncKeyMappedMan *pThis, PVOID edx) {
+    CFuncKeyMappedMan *ms_pInstance;
+    if (reinterpret_cast<uintptr_t>(pThis) == static_cast<uintptr_t>(-4)) {
+        ms_pInstance = nullptr;
+    } else {
+        ms_pInstance = pThis;
+    }
+
+    memcpy(pThis->m_aFuncKeyMapped, reinterpret_cast<void *>(DEFAULT_FKM_INSTANCE_ADDR),
+           sizeof(pThis->m_aFuncKeyMapped));
+    memcpy(pThis->m_aFuncKeyMapped_Old, reinterpret_cast<void *>(DEFAULT_FKM_INSTANCE_ADDR),
+           sizeof(pThis->m_aFuncKeyMapped_Old));
+    memcpy(pThis->m_aQuickslotKeyMapped, reinterpret_cast<void *>(DEFAULT_QKM_INSTANCE_ADDR),
+           sizeof(pThis->m_aQuickslotKeyMapped));
+    memcpy(pThis->m_aQuickslotKeyMapped_Old, reinterpret_cast<void *>(DEFAULT_QKM_INSTANCE_ADDR),
+           sizeof(pThis->m_aQuickslotKeyMapped_Old));
+
+    pThis->m_nPetConsumeItemID = 0;
+    pThis->m_nPetConsumeMPItemID = 0;
+#if defined(REGION_GMS) && MAJOR_VERSION >= 111 || defined(REGION_JMS)
+    pThis->dummy1 = 0;
+#endif
+#if defined(REGION_JMS)
+    pThis->dummy2 = 0;
+#endif
+}
 
 // CeTracer::Run
 typedef VOID(__thiscall *_CeTracer__Run_t)(int *pThis);
@@ -740,6 +769,7 @@ typedef VOID(__cdecl *_SendHSLog_t)(char a1);
 
 VOID __fastcall SendHSLog_Hook(void* ecx, void* edx, char a1) {
 }
+
 // main thread
 DWORD WINAPI MainProc(LPVOID lpParam) {
 
@@ -807,6 +837,12 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     HOOKTYPEDEF_C(CClientSocket__OnConnect);
     INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
                   C_CLIENT_SOCKET_ON_CONNECT);
+
+    // CFuncKeyMappedMan::CFuncKeyMappedMan
+    HOOKTYPEDEF_C(CFuncKeyMappedMan__CFuncKeyMappedMan);
+    INITMAPLEHOOK(_CFuncKeyMappedMan__CFuncKeyMappedMan, _CFuncKeyMappedMan__CFuncKeyMappedMan_t,
+                  CFuncKeyMappedMan__CFuncKeyMappedMan_Hook, C_FUNC_KEY_MAPPED_MAN);
+
 #if (defined(REGION_GMS) && MAJOR_VERSION >= 95)
     // CeTracer::Run
     HOOKTYPEDEF_C(CeTracer__Run);
