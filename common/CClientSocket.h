@@ -19,6 +19,9 @@ public:
     ZSocketBase m_sock;
     CClientSocket::CONNECTCONTEXT m_ctxConnect;
     ZInetAddr m_addr;
+#if (defined(REGION_GMS) && MAJOR_VERSION > 111)
+    int dummy1;
+#endif
     int m_tTimeout;
     ZList<ZRef<ZSocketBuffer>> m_lpRecvBuff;
     ZList<ZRef<ZSocketBuffer>> m_lpSendBuff;

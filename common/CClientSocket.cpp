@@ -28,6 +28,7 @@ void CClientSocket::Close() {
     Log("CClientSocket::Close");
     reinterpret_cast<void (__fastcall *)(CClientSocket *, void *)>(
             C_CLIENT_SOCKET_CLOSE)(this, nullptr);
+    Log("CClientSocket::After Close");
 }
 
 void CClientSocket::ClearSendReceiveCtx() {

@@ -13,6 +13,7 @@ jobs:
         config:
           - { region: GMS, major: 83, minor: 1 }
           - { region: GMS, major: 87, minor: 1 }
+          - { region: GMS, major: 111, minor: 1 }
           - { region: JMS, major: 185, minor: 1 }
     name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
     steps:
