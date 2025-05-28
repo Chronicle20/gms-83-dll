@@ -544,11 +544,11 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
 
     CSecurityClient::CreateInstance();
 
-    PVOID cfgAlloc = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(sizeof(CConfig));
-    CConfig *cConfig;
-    if (cfgAlloc) {
-        cConfig = new(cfgAlloc) CConfig();
-    }
+//    PVOID cfgAlloc = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(sizeof(CConfig));
+//    CConfig *cConfig;
+//    if (cfgAlloc) {
+//        cConfig = new(cfgAlloc) CConfig();
+//    }
 
     pThis->InitializePCOM();
     pThis->CreateMainWindow();
