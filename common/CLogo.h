@@ -31,6 +31,9 @@ public:
     int m_bVideoMode;
     CLogo::VIDEO_STATE m_videoState;
 #endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    int dummy1;
+#endif
 
     CLogo();
 
