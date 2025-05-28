@@ -6,7 +6,7 @@ void CActionMan::CreateInstance() {
 }
 
 CActionMan *CActionMan::GetInstance() {
-    return reinterpret_cast<CActionMan *>(*(void **) C_ACTION_MAN_GET_INSTANCE_ADDR);
+    return reinterpret_cast<CActionMan *>(*(void **) C_ACTION_MAN_INSTANCE_ADDR);
 }
 
 void CActionMan::Init() {

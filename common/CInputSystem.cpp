@@ -6,7 +6,7 @@ void CInputSystem::CreateInstance() {
 
 CInputSystem *CInputSystem::GetInstance() {
     // High volume call
-    return reinterpret_cast<CInputSystem *>(*reinterpret_cast<void **>(C_INPUT_SYSTEM_GET_INSTANCE));
+    return reinterpret_cast<CInputSystem *>(*reinterpret_cast<void **>(C_INPUT_SYSTEM_INSTANCE_ADDR));
 }
 
 void CInputSystem::Init(HWND__ *hWnd, void **ahEvent) {

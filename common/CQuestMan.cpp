@@ -6,7 +6,7 @@ void CQuestMan::CreateInstance() {
 }
 
 CQuestMan *CQuestMan::GetInstance() {
-    return reinterpret_cast<CQuestMan *>(*reinterpret_cast<void **>(C_QUEST_MAN_GET_INSTANCE));
+    return reinterpret_cast<CQuestMan *>(*reinterpret_cast<void **>(C_QUEST_MAN_INSTANCE_ADDR));
 }
 
 int CQuestMan::LoadDemand() {

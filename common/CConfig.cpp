@@ -8,7 +8,7 @@ CConfig::CConfig() {
 
 CConfig *CConfig::GetInstance() {
     Log("CConfig::GetInstance");
-    return reinterpret_cast<CConfig *>(*reinterpret_cast<void **>(C_CONFIG_GET_INSTANCE));
+    return reinterpret_cast<CConfig *>(*reinterpret_cast<void **>(C_CONFIG_INSTANCE_ADDR));
 }
 
 INT CConfig::GetPartnerCode() {

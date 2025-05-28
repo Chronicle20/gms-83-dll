@@ -6,7 +6,7 @@ void CMonsterBookMan::CreateInstance() {
 }
 
 CMonsterBookMan *CMonsterBookMan::GetInstance() {
-    return reinterpret_cast<CMonsterBookMan *>(*reinterpret_cast<void **>(C_MONSTER_BOOK_MAN_GET_INSTANCE));
+    return reinterpret_cast<CMonsterBookMan *>(*reinterpret_cast<void **>(C_MONSTER_BOOK_MAN_INSTANCE_ADDR));
 }
 
 bool CMonsterBookMan::LoadBook() {

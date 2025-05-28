@@ -6,5 +6,5 @@ void CRadioManager::CreateInstance() {
 }
 
 CRadioManager *CRadioManager::GetInstance() {
-    return reinterpret_cast<CRadioManager *>(*reinterpret_cast<void **>(C_RADIO_MANAGER_GET_INSTANCE));
+    return reinterpret_cast<CRadioManager *>(*reinterpret_cast<void **>(C_RADIO_MANAGER_INSTANCE_ADDR));
 }

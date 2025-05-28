@@ -307,7 +307,7 @@ INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, char *sID, ch
 }
 
 CStage *get_stage() {
-    return reinterpret_cast<CStage *>(*(void **) GET_STAGE);
+    return reinterpret_cast<CStage *>(*(void **) STAGE_INSTANCE_ADDR);
 }
 
 // void __cdecl set_stage(CStage *pStage, void *pParam)
@@ -316,7 +316,7 @@ typedef VOID(__cdecl *_set_stage_t)(CStage *pStage, void *pParam);
 _set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(SET_STAGE);
 
 IWzGr2D *get_gr() {
-    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) GET_GR);
+    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) GR_INSTANCE_ADDR);
 }
 
 // int __cdecl DR_check()
@@ -645,7 +645,7 @@ typedef VOID(__thiscall *_CWvsApp__CWvsApp_t)(CWvsApp *pThis, const char *sCmdLi
 // CWvsApp::CWvsApp
 VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
     Log("CWvsApp::CWvsApp");
-    void **instance = reinterpret_cast<void **>(C_WVS_APP_INSTANCE);
+    void **instance = reinterpret_cast<void **>(C_WVS_APP_INSTANCE_ADDR);
     *instance = &pThis->m_hWnd != 0 ? pThis : 0;
 
     void* globalThis = *(void**)0x01002884;

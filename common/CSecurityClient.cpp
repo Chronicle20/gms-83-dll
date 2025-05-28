@@ -5,5 +5,5 @@ void CSecurityClient::CreateInstance() {
 }
 
 CSecurityClient *CSecurityClient::GetInstance() {
-    return reinterpret_cast<CSecurityClient *>(*reinterpret_cast<void **>(C_SECURITY_CLIENT_GET_INSTANCE));
+    return reinterpret_cast<CSecurityClient *>(*reinterpret_cast<void **>(C_SECURITY_CLIENT_INSTANCE_ADDR));
 }

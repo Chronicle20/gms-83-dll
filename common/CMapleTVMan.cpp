@@ -6,7 +6,7 @@ void CMapleTVMan::CreateInstance() {
 }
 
 CMapleTVMan *CMapleTVMan::GetInstance() {
-    return reinterpret_cast<CMapleTVMan *>(*reinterpret_cast<void **>(C_MAPLE_TV_MAN_GET_INSTANCE));
+    return reinterpret_cast<CMapleTVMan *>(*reinterpret_cast<void **>(C_MAPLE_TV_MAN_INSTANCE_ADDR));
 }
 
 
