@@ -20,6 +20,7 @@ add_library(bypass SHARED
         ${CMAKE_SOURCE_DIR}/common/CQuickslotKeyMappedMan.cpp
         ${CMAKE_SOURCE_DIR}/common/CAnimationDisplayer.cpp
         ${CMAKE_SOURCE_DIR}/common/CMacroSysMan.cpp
+        ${CMAKE_SOURCE_DIR}/common/CBattleRecordMan.cpp
         ${CMAKE_SOURCE_DIR}/common/CMapleTVMan.cpp
         ${CMAKE_SOURCE_DIR}/common/CQuestMan.cpp
         ${CMAKE_SOURCE_DIR}/common/CMonsterBookMan.cpp
