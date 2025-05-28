@@ -37,7 +37,6 @@ void CWvsApp::InitializeResMan() {
     Log("CWvsApp::InitializeResMan");
     reinterpret_cast<void (__fastcall *)(CWvsApp *, void *)>(
             C_WVS_APP_INITIALIZE_RES_MAN)(this, nullptr);
-    Log("CWvsApp::InitializeResMan Out");
 }
 
 void CWvsApp::InitializeGr2D() {
