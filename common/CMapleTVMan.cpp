@@ -2,7 +2,7 @@
 
 void CMapleTVMan::CreateInstance() {
     Log("CMapleTVMan::CreateInstance");
-    reinterpret_cast<void (__fastcall *)()>(C_MAPLE_TV_MAN_CREATE_INSTANCE)();
+    reinterpret_cast<void (__cdecl *)()>(C_MAPLE_TV_MAN_CREATE_INSTANCE)();
 }
 
 CMapleTVMan *CMapleTVMan::GetInstance() {

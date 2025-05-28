@@ -2,7 +2,7 @@
 
 void CQuestMan::CreateInstance() {
     Log("CQuestMan::CreateInstance");
-    reinterpret_cast<void (__fastcall *)()>(C_QUEST_MAN_CREATE_INSTANCE)();
+    reinterpret_cast<void (__cdecl *)()>(C_QUEST_MAN_CREATE_INSTANCE)();
 }
 
 CQuestMan *CQuestMan::GetInstance() {

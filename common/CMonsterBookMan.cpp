@@ -2,7 +2,7 @@
 
 void CMonsterBookMan::CreateInstance() {
     Log("CMonsterBookMan::CreateInstance");
-    reinterpret_cast<void (__fastcall *)()>(C_MONSTER_BOOK_MAN_CREATE_INSTANCE)();
+    reinterpret_cast<void (__cdecl *)()>(C_MONSTER_BOOK_MAN_CREATE_INSTANCE)();
 }
 
 CMonsterBookMan *CMonsterBookMan::GetInstance() {

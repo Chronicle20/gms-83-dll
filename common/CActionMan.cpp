@@ -2,7 +2,7 @@
 
 void CActionMan::CreateInstance() {
     Log("CActionMan::CreateInstance");
-    reinterpret_cast<void (__fastcall *)()>(C_ACTION_MAN_CREATE_INSTANCE_ADDR)();
+    reinterpret_cast<void (__cdecl *)()>(C_ACTION_MAN_CREATE_INSTANCE_ADDR)();
 }
 
 CActionMan *CActionMan::GetInstance() {

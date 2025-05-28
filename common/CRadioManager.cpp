@@ -2,7 +2,7 @@
 
 void CRadioManager::CreateInstance() {
     Log("CRadioManager::CreateInstance");
-    reinterpret_cast<void (__fastcall *)()>(C_RADIO_MANAGER_CREATE_INSTANCE)();
+    reinterpret_cast<void (__cdecl *)()>(C_RADIO_MANAGER_CREATE_INSTANCE)();
 }
 
 CRadioManager *CRadioManager::GetInstance() {

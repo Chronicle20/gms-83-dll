@@ -8,7 +8,7 @@ CClientSocket *CClientSocket::GetInstance() {
 
 void CClientSocket::CreateInstance() {
     Log("CClientSocket::CreateInstance");
-    reinterpret_cast<void (__fastcall *)()>(
+    reinterpret_cast<void (__cdecl *)()>(
             C_CLIENT_SOCKET_CREATE_INSTANCE)();
 }
 

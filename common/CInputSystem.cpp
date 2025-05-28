@@ -1,7 +1,7 @@
 #include "pch.h"
 
 void CInputSystem::CreateInstance() {
-    reinterpret_cast<void (__fastcall *)()>(C_INPUT_SYSTEM_CREATE_INSTANCE)();
+    reinterpret_cast<void (__cdecl *)()>(C_INPUT_SYSTEM_CREATE_INSTANCE)();
 }
 
 CInputSystem *CInputSystem::GetInstance() {
