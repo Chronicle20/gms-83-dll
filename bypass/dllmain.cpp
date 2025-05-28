@@ -58,7 +58,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     if (pBuff.p && pBuff.p->m_nRef) {
         InterlockedIncrement(&pBuff.p->m_nRef);
     }
-    char* buffer = pBuff.p->buf;
+    char *buffer = pBuff.p->buf;
     char *accumulatedBuf = buffer;
     int bLenRead = 0;
     int src = 0;
@@ -197,7 +197,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
             cOutPacket.Encode1(1);
         }
 #elif defined(REGION_JMS)
-    cOutPacket.Encode2(CConfig::GetInstance()->dummy1);
+        cOutPacket.Encode2(CConfig::GetInstance()->dummy1);
 #endif
         cOutPacket.Encode1(0);
         // TODO not sure if this exists in less than GMS 87 but greater than 83.
@@ -564,6 +564,10 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     CQuickslotKeyMappedMan::CreateInstance();
     CMacroSysMan::CreateInstance();
 
+#if (defined(REGION_GMS) && MAJOR_VERSION >= 95)
+    CBattleRecordMan::CreateInstance();
+#endif
+    
     pThis->InitializeResMan();
     pThis->InitializeGr2D();
     pThis->InitializeInput();
@@ -724,6 +728,18 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, PVOID edx, const char *sCm
 #endif
 }
 
+
+// CeTracer::Run
+typedef VOID(__thiscall *_CeTracer__Run_t)(int *pThis);
+
+VOID __fastcall CeTracer__Run_Hook(int *pThis, PVOID edx) {
+}
+
+// SendHSLog
+typedef VOID(__cdecl *_SendHSLog_t)(char a1);
+
+VOID __fastcall SendHSLog_Hook(void* ecx, void* edx, char a1) {
+}
 // main thread
 DWORD WINAPI MainProc(LPVOID lpParam) {
 
@@ -737,7 +753,8 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
 
     // CWvsApp::InitializeInput
     HOOKTYPEDEF_C(CWvsApp__InitializeInput);
-    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, C_WVS_APP_INITIALIZE_INPUT);
+    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook,
+                  C_WVS_APP_INITIALIZE_INPUT);
 
     // CWvsApp::Run
     HOOKTYPEDEF_C(CWvsApp__Run);
@@ -786,10 +803,21 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     INITMAPLEHOOK(_CClientSocket__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook,
                   C_CLIENT_SOCKET_CONNECT_ADR);
 
-    // // CClientSocket::OnConnect
+    // CClientSocket::OnConnect
     HOOKTYPEDEF_C(CClientSocket__OnConnect);
     INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
                   C_CLIENT_SOCKET_ON_CONNECT);
+#if (defined(REGION_GMS) && MAJOR_VERSION >= 95)
+    // CeTracer::Run
+    HOOKTYPEDEF_C(CeTracer__Run);
+    INITMAPLEHOOK(_CeTracer__Run, _CeTracer__Run_t, CeTracer__Run_Hook, CE_TRACER_RUN);
+#endif
+
+#if defined(REGION_GMS)
+    // SendHSLog
+    HOOKTYPEDEF_C(SendHSLog);
+    INITMAPLEHOOK(_SendHSLog, _SendHSLog_t, SendHSLog_Hook, SEND_HS_LOG);
+#endif
     return 0;
 }
 
