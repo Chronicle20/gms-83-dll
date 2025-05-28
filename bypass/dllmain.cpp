@@ -650,7 +650,7 @@ typedef VOID(__thiscall *_CWvsApp__CWvsApp_t)(CWvsApp *pThis, const char *sCmdLi
 VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, PVOID edx, const char *sCmdLine) {
     Log("CWvsApp::CWvsApp");
     void **instance = reinterpret_cast<void **>(C_WVS_APP_INSTANCE_ADDR);
-    *instance = &pThis->m_hWnd != 0 ? pThis : 0;
+    *instance = pThis;
 
 //    void* globalThis = *(void**)0x01002884;
 //    Log("global singleton = %p, hook pThis = %p", globalThis, pThis);
@@ -732,13 +732,12 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, PVOID edx, const char *sCm
 typedef VOID(__thiscall *_CFuncKeyMappedMan__CFuncKeyMappedMan_t)(CFuncKeyMappedMan *pThis);
 
 VOID __fastcall CFuncKeyMappedMan__CFuncKeyMappedMan_Hook(CFuncKeyMappedMan *pThis, PVOID edx) {
-    CFuncKeyMappedMan *ms_pInstance;
-    if (reinterpret_cast<uintptr_t>(pThis) == static_cast<uintptr_t>(-4)) {
-        ms_pInstance = nullptr;
-    } else {
-        ms_pInstance = pThis;
-    }
+    Log("CFuncKeyMappedMan::CFuncKeyMappedMan.");
 
+    void **instance = reinterpret_cast<void **>(C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR);
+    *instance = pThis;
+
+    *(void**)pThis = (void*)C_FUNC_KEY_MAPPED_MAN_VFTABLE;
     memcpy(pThis->m_aFuncKeyMapped, reinterpret_cast<void *>(DEFAULT_FKM_INSTANCE_ADDR),
            sizeof(pThis->m_aFuncKeyMapped));
     memcpy(pThis->m_aFuncKeyMapped_Old, reinterpret_cast<void *>(DEFAULT_FKM_INSTANCE_ADDR),

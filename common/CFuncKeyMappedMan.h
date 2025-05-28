@@ -2,7 +2,7 @@
 
 class CFuncKeyMappedMan {
 public:
-
+    virtual ~CFuncKeyMappedMan() = default;
 
 #if defined(REGION_GMS)
     FUNCKEY_MAPPED m_aFuncKeyMapped[89];
@@ -24,6 +24,8 @@ public:
 #if defined(REGION_GMS) && MAJOR_VERSION >= 95
     int m_nNormalAttackCode;
 #endif
+
+    CFuncKeyMappedMan();
 
     static void CreateInstance();
 };
