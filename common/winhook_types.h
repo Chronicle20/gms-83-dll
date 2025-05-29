@@ -46,6 +46,12 @@ extern GetProcAddress_t GetProcAddress_Original;
 typedef HANDLE(WINAPI* CreateMutexA_t)(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCSTR lpName);
 extern CreateMutexA_t CreateMutexA_Original;
 
+typedef VOID(WINAPI* GetStartupInfoA_t)(LPSTARTUPINFOA lpStartupInfo);
+extern GetStartupInfoA_t GetStartupInfoA_Original;
+
+typedef HMODULE (WINAPI* GetModuleHandleA_t)(LPCSTR lpModuleName);
+extern GetModuleHandleA_t GetModuleHandleA_Original;
+
 /// <summary>
 /// https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-openmutexw
 /// Please note: there is no microsoft doc for OpenMutexA, but OpenMutexW is the same except for the type of string passed (LPCSTR vs LPCWSTR)

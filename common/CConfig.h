@@ -54,7 +54,7 @@ public:
 
     INT GetPartnerCode();
 
-    void ApplySysOpt(int *pSysOpt, int bApplyVideo);
+    void ApplySysOpt(CONFIG_SYSOPT *pSysOpt, int bApplyVideo);
 
     void CheckExecPathReg(ZXString<char> sModulePath);
 };

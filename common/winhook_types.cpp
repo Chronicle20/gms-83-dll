@@ -14,6 +14,8 @@ CreateFileA_t CreateFileA_Original;
 WinExec_t WinExec_Original;
 GetProcAddress_t GetProcAddress_Original;
 CreateMutexA_t CreateMutexA_Original;
+GetStartupInfoA_t GetStartupInfoA_Original;
+GetModuleHandleA_t GetModuleHandleA_Original;
 OpenMutexA_t OpenMutexA_Original;
 WSPStartup_t WSPStartup_Original;
 RegisterClassExA_t RegisterClassExA_Original;

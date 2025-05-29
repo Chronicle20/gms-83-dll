@@ -3,12 +3,12 @@
 CClientSocket *CClientSocket::GetInstance() {
     Log("CClientSocket::GetInstance");
     return reinterpret_cast<CClientSocket *>(*reinterpret_cast<void **>(
-            C_CLIENT_SOCKET_GET_INSTANCE));
+            C_CLIENT_SOCKET_INSTANCE_ADDR));
 }
 
 void CClientSocket::CreateInstance() {
     Log("CClientSocket::CreateInstance");
-    reinterpret_cast<void (__fastcall *)()>(
+    reinterpret_cast<void (__cdecl *)()>(
             C_CLIENT_SOCKET_CREATE_INSTANCE)();
 }
 
@@ -28,6 +28,7 @@ void CClientSocket::Close() {
     Log("CClientSocket::Close");
     reinterpret_cast<void (__fastcall *)(CClientSocket *, void *)>(
             C_CLIENT_SOCKET_CLOSE)(this, nullptr);
+    Log("CClientSocket::After Close");
 }
 
 void CClientSocket::ClearSendReceiveCtx() {

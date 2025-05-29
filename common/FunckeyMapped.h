@@ -6,8 +6,10 @@
 00000001 nID             dd ?
 00000005 FUNCKEY_MAPPED  ends
 */
+#pragma pack(push, 1)
 class FUNCKEY_MAPPED
 {
-    int nType;
+    unsigned __int8 nType;
     int nID;
 };
+#pragma pack(pop)

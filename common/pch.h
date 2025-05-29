@@ -91,6 +91,7 @@
 #include "CMapleTVMan.h"
 #include "CAnimationDisplayer.h"
 #include "CMacroSysMan.h"
+#include "CBattleRecordMan.h"
 #include "CFuncKeyMappedMan.h"
 #include "CQuickslotKeyMappedMan.h"
 #include "CStage.h"

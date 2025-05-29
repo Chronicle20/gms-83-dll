@@ -2,11 +2,11 @@
 
 void CQuestMan::CreateInstance() {
     Log("CQuestMan::CreateInstance");
-    reinterpret_cast<void (__fastcall *)()>(C_QUEST_MAN_CREATE_INSTANCE)();
+    reinterpret_cast<void (__cdecl *)()>(C_QUEST_MAN_CREATE_INSTANCE)();
 }
 
 CQuestMan *CQuestMan::GetInstance() {
-    return reinterpret_cast<CQuestMan *>(*reinterpret_cast<void **>(C_QUEST_MAN_GET_INSTANCE));
+    return reinterpret_cast<CQuestMan *>(*reinterpret_cast<void **>(C_QUEST_MAN_INSTANCE_ADDR));
 }
 
 int CQuestMan::LoadDemand() {

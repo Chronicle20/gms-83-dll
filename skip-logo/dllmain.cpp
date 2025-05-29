@@ -17,7 +17,9 @@ typedef VOID(__thiscall *_CLogo_Init_t)(CLogo *pThis, void *unused);
 
 VOID __fastcall CLogo_Init_Hook(CLogo *pThis, PVOID edx, void *unused) {
     Log("CLogo::Init");
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111)
     pThis->InitNXLogo();
+#endif
     CInputSystem::GetInstance()->ShowCursor(0);
     auto m_nGameStartMode = CWvsApp::GetInstance()->m_nGameStartMode;
 

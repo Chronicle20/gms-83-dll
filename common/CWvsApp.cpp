@@ -1,7 +1,7 @@
 #include "pch.h"
 
 CWvsApp *CWvsApp::GetInstance() {
-    return reinterpret_cast<CWvsApp *>(*reinterpret_cast<void **>(C_WVS_APP_GET_INSTANCE));
+    return reinterpret_cast<CWvsApp *>(*reinterpret_cast<void **>(C_WVS_APP_INSTANCE_ADDR));
 }
 
 void CWvsApp::ISMsgProc(unsigned int message, unsigned int wParam, int lParam) {

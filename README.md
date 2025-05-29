@@ -37,7 +37,17 @@ Redirect IP the game uses for socket connections. Provided configuration produce
 
 ## Notes
 
-- I use CLion with a VisualStudio(2022 x86) Toolchain. Other IDEs are possible. 
+### Build Environment
+
+- I use CLion with a VisualStudio(2022 x86) Toolchain. Other IDEs are possible.
+
+### Adding a new version
+
+1. Copy cmake of an existing version to v(major_version)_(minor_version).cmake located in the expected region. 
+2. Clear all hex codes contained in the copied file. You will need to locate the functions in your version. Start with WinMain / CWVsApp related functions.
+3. Adjust .github/workflows to include the new version in the config matrix.
+4. Review header definitions of the following files. It is minimally important that these are accurate. CWvsApp, CLogin (CMapLoadable, CStage), CClientSocket (unlikely)
+5. Review .cpp files with defined(REGION_GMS) blocks. The version thresholds may or may not be completely accurate, and are only based off of existing reviewed versions.
 
 ## Credits
 The proxy and client edits provided in this collection were all made possible through efforts by the following individuals, as well as my RE efforts. If you feel someone is improperly credited, please reach out.

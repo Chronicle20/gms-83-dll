@@ -16,20 +16,19 @@
 #include "hooker.h"
 
 // void __thiscall CSecurityClient::OnPacket(CSecurityClient *this, CInPacket *iPacket)
-typedef VOID(__fastcall *_CSecurityClient__OnPacket_t)(CSecurityClient *pThis, PVOID edx,
-                                                       CInPacket *iPacket);
+typedef VOID(__thiscall *_CSecurityClient__OnPacket_t)(CSecurityClient *pThis, CInPacket *iPacket);
 
-VOID __fastcall CSecurityClient__OnPacket_Hook(CSecurityClient *pThis, PVOID edx,CInPacket *iPacket) {
+VOID __fastcall CSecurityClient__OnPacket_Hook(CSecurityClient *pThis, PVOID edx, CInPacket *iPacket) {
     Log("CSecurityClient::OnPacket.");
 }
 
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)
-typedef VOID(__fastcall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
+typedef VOID(__thiscall *_CClientSocket__Connect_addr_t)(CClientSocket *pThis, const sockaddr_in *pAddr);
 
 VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx, const sockaddr_in *pAddr);
 
 // int __thiscall CClientSocket::OnConnect(CClientSocket *this, int bSuccess)
-typedef INT(__fastcall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, PVOID edx, INT bSuccess);
+typedef INT(__thiscall *_CClientSocket__OnConnect_t)(CClientSocket *pThis, INT bSuccess);
 
 INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, int bSuccess) {
     Log("CClientSocket::OnConnect(CClientSocket *this, int bSuccess). bSuccess [%d]", bSuccess);
@@ -59,7 +58,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     if (pBuff.p && pBuff.p->m_nRef) {
         InterlockedIncrement(&pBuff.p->m_nRef);
     }
-    char* buffer = pBuff.p->buf;
+    char *buffer = pBuff.p->buf;
     char *accumulatedBuf = buffer;
     int bLenRead = 0;
     int src = 0;
@@ -198,7 +197,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
             cOutPacket.Encode1(1);
         }
 #elif defined(REGION_JMS)
-    cOutPacket.Encode2(CConfig::GetInstance()->dummy1);
+        cOutPacket.Encode2(CConfig::GetInstance()->dummy1);
 #endif
         cOutPacket.Encode1(0);
         // TODO not sure if this exists in less than GMS 87 but greater than 83.
@@ -247,8 +246,7 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket *pThis, PVOID edx
 }
 
 // void __thiscall CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)
-typedef VOID(__fastcall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, PVOID edx,
-                                                        CClientSocket::CONNECTCONTEXT *ctx);
+typedef VOID(__thiscall *_CClientSocket__Connect_ctx_t)(CClientSocket *pThis, CClientSocket::CONNECTCONTEXT *ctx);
 
 VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx, CClientSocket::CONNECTCONTEXT *ctx) {
     Log("CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)");
@@ -263,7 +261,7 @@ VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx,
 }
 
 // int __thiscall CLogin::SendCheckPasswordPacket(CLogin *this, char *sID, char *sPasswd)
-typedef INT(__fastcall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, PVOID edx, char *sID, char *sPasswd);
+typedef INT(__thiscall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, char *sID, char *sPasswd);
 
 INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, char *sID, char *sPasswd) {
     Log("CLogin::SendCheckPasswordPacket. ID [%s]. bRequestSent [%d].", sID, pThis->m_bRequestSent);
@@ -309,7 +307,7 @@ INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, ch
 }
 
 CStage *get_stage() {
-    return reinterpret_cast<CStage *>(*(void **) GET_STAGE);
+    return reinterpret_cast<CStage *>(*(void **) STAGE_INSTANCE_ADDR);
 }
 
 // void __cdecl set_stage(CStage *pStage, void *pParam)
@@ -318,7 +316,7 @@ typedef VOID(__cdecl *_set_stage_t)(CStage *pStage, void *pParam);
 _set_stage_t _set_stage = reinterpret_cast<_set_stage_t>(SET_STAGE);
 
 IWzGr2D *get_gr() {
-    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) GET_GR);
+    return reinterpret_cast<IWzGr2D *>(*(uint32_t **) GR_INSTANCE_ADDR);
 }
 
 // int __cdecl DR_check()
@@ -329,7 +327,7 @@ INT __cdecl DR__check_Hook() {
 }
 
 // void __thiscall CWvsApp::CallUpdate(CWvsApp *this, int tCurTime)
-typedef VOID(__fastcall *_CWvsApp__CallUpdate_t)(CWvsApp *pThis, PVOID edx, int tCurTime);
+typedef VOID(__thiscall *_CWvsApp__CallUpdate_t)(CWvsApp *pThis, int tCurTime);
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
     if (pThis->m_bFirstUpdate) {
@@ -370,12 +368,13 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
 }
 
 // void __thiscall CWvsApp::ConnectLogin(CWvsApp *this)
-typedef VOID(__fastcall *_CWvsApp__ConnectLogin_t)(CWvsApp *pThis, PVOID edx);
+typedef VOID(__thiscall *_CWvsApp__ConnectLogin_t)(CWvsApp *pThis);
 
 VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
-    Log("CWvsApp::ConnectLogin_Hook");
+    Log("CWvsApp::ConnectLogin");
     CClientSocket *pSock = CClientSocket::GetInstance();
     pSock->Close();
+    Log("CWvsApp::ConnectLogin Call CClientSocket::ConnectLogin");
     pSock->ConnectLogin();
 
     tagMSG msg{};
@@ -389,18 +388,18 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
                 int errorCode = HIWORD(msg.lParam);
                 if (errorCode) {
                     if (errorCode != 10038) {
-                        Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 1");
+                        Log("CWvsApp::ConnectLogin Call CClientSocket::OnConnect 1. ErrorCode [%d].", errorCode);
                         CClientSocket__OnConnect_Hook(pSock, edx, 0);
                     }
                 } else {
                     WORD low = LOWORD(msg.lParam);
                     if (low != 16 && low != 1) {
-                        Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 2");
+                        Log("CWvsApp::ConnectLogin Call CClientSocket::OnConnect 2. low [%d].", low);
                         CClientSocket__OnConnect_Hook(pSock, edx, 0);
                         continue;
                     }
 
-                    Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 3");
+                    Log("CWvsApp::ConnectLogin Call CClientSocket::OnConnect 3");
                     if (CClientSocket__OnConnect_Hook(pSock, edx, 1)) {
                         break;
                     }
@@ -410,14 +409,14 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
                 DispatchMessageA(&msg);
 
                 if ((LONG) (timeGetTime() - pSock->m_tTimeout) > 0) {
-                    Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 4. timeGetTime [%d], timeOut [%d].",
+                    Log("CWvsApp::ConnectLogin Call CClientSocket::OnConnect 4. timeGetTime [%d], timeOut [%d].",
                         timeGetTime(), pSock->m_tTimeout);
                     CClientSocket__OnConnect_Hook(pSock, edx, 0);
                 }
             }
         } else {
             if ((LONG) (timeGetTime() - pSock->m_tTimeout) > 0) {
-                Log("CWvsApp::ConnectLogin_Hook Call CClientSocket::OnConnect 5");
+                Log("CWvsApp::ConnectLogin Call CClientSocket::OnConnect 5");
                 CClientSocket__OnConnect_Hook(pSock, edx, 0);
             }
         }
@@ -429,7 +428,7 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
 
     auto handle = pSock->m_sock._m_hSocket;
     if (handle == 0 || handle == -1) {
-        Log("CWvsApp::ConnectLogin_Hook Should issue exception here.");
+        Log("CWvsApp::ConnectLogin Should issue exception here.");
 //        CTerminateException ex(570425345);
 //        int* exceptionObject = reinterpret_cast<int*>(&ex); // if needed
 //        _CxxThrowException(exceptionObject, &_TI3_AVCTerminateException__);
@@ -437,7 +436,7 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
 }
 
 // void __thiscall CWvsApp::InitializeInput(CWvsApp *this)
-typedef VOID(__fastcall *_CWvsApp__InitializeInput_t)(CWvsApp *pThis, PVOID edx);
+typedef VOID(__thiscall *_CWvsApp__InitializeInput_t)(CWvsApp *pThis);
 
 VOID __fastcall CWvsApp__InitializeInput_Hook(CWvsApp *pThis, PVOID edx) {
     Log("CWvsApp::InitializeInput");
@@ -446,7 +445,7 @@ VOID __fastcall CWvsApp__InitializeInput_Hook(CWvsApp *pThis, PVOID edx) {
 }
 
 // void __thiscall CWvsApp::Run(CWvsApp *this, int *pbTerminate)
-typedef VOID(__stdcall *_CWvsApp__Run_t)(CWvsApp *pThis, int *pbTerminate);
+typedef VOID(__thiscall *_CWvsApp__Run_t)(CWvsApp *pThis, int *pbTerminate);
 
 VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
     Log("CWvsApp::Run");
@@ -528,9 +527,9 @@ void GetSEPrivilege() {
 }
 
 // void __thiscall CWvsApp::SetUp(CWvsApp *this)
-typedef VOID(__stdcall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
+typedef VOID(__thiscall *_CWvsApp__SetUp_t)(CWvsApp *pThis);
 
-VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
+VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     Log("CWvsApp::SetUp");
 #if defined(REGION_GMS)
     pThis->InitializeAuth();
@@ -557,17 +556,23 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis) {
     CClientSocket::CreateInstance();
     pThis->ConnectLogin();
 
+    Log("CWvsApp::SetUp after CClientSocket::ConnectLogin");
+
     CSecurityClient::GetInstance()->m_hMainWnd = pThis->m_hWnd;
 
     CFuncKeyMappedMan::CreateInstance();
     CQuickslotKeyMappedMan::CreateInstance();
     CMacroSysMan::CreateInstance();
 
+#if (defined(REGION_GMS) && MAJOR_VERSION >= 95)
+    CBattleRecordMan::CreateInstance();
+#endif
+    
     pThis->InitializeResMan();
     pThis->InitializeGr2D();
     pThis->InitializeInput();
 
-#if defined(REGION_JMS)
+#if (defined(REGION_GMS) && MAJOR_VERSION >= 95) || defined(REGION_JMS)
     ShowWindow(pThis->m_hWnd, 5);
     UpdateWindow(pThis->m_hWnd);
     SetForegroundWindow(pThis->m_hWnd);
@@ -639,13 +644,16 @@ DWORD ResetLSP() {
     return reinterpret_cast<DWORD>(*(void **) RESET_LSP);
 }
 
-typedef VOID(__stdcall *_CWvsApp__CWvsApp_t)(CWvsApp *pThis, const char *sCmdLine);
+typedef VOID(__thiscall *_CWvsApp__CWvsApp_t)(CWvsApp *pThis, const char *sCmdLine);
 
 // CWvsApp::CWvsApp
-VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
+VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, PVOID edx, const char *sCmdLine) {
     Log("CWvsApp::CWvsApp");
-    void **instance = reinterpret_cast<void **>(C_WVS_APP_INSTANCE);
-    *instance = &pThis->m_hWnd != 0 ? pThis : 0;
+    void **instance = reinterpret_cast<void **>(C_WVS_APP_INSTANCE_ADDR);
+    *instance = pThis;
+
+//    void* globalThis = *(void**)0x01002884;
+//    Log("global singleton = %p, hook pThis = %p", globalThis, pThis);
 
     pThis->m_hWnd = nullptr;
     pThis->m_bPCOMInitialized = 0;
@@ -720,6 +728,47 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, const char *sCmdLine) {
 #endif
 }
 
+// CFuncKeyMappedMan::CFuncKeyMappedMan
+typedef VOID(__thiscall *_CFuncKeyMappedMan__CFuncKeyMappedMan_t)(CFuncKeyMappedMan *pThis);
+
+VOID __fastcall CFuncKeyMappedMan__CFuncKeyMappedMan_Hook(CFuncKeyMappedMan *pThis, PVOID edx) {
+    Log("CFuncKeyMappedMan::CFuncKeyMappedMan.");
+
+    void **instance = reinterpret_cast<void **>(C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR);
+    *instance = pThis;
+
+    *(void**)pThis = (void*)C_FUNC_KEY_MAPPED_MAN_VFTABLE;
+    memcpy(pThis->m_aFuncKeyMapped, reinterpret_cast<void *>(DEFAULT_FKM_INSTANCE_ADDR),
+           sizeof(pThis->m_aFuncKeyMapped));
+    memcpy(pThis->m_aFuncKeyMapped_Old, reinterpret_cast<void *>(DEFAULT_FKM_INSTANCE_ADDR),
+           sizeof(pThis->m_aFuncKeyMapped_Old));
+    memcpy(pThis->m_aQuickslotKeyMapped, reinterpret_cast<void *>(DEFAULT_QKM_INSTANCE_ADDR),
+           sizeof(pThis->m_aQuickslotKeyMapped));
+    memcpy(pThis->m_aQuickslotKeyMapped_Old, reinterpret_cast<void *>(DEFAULT_QKM_INSTANCE_ADDR),
+           sizeof(pThis->m_aQuickslotKeyMapped_Old));
+
+    pThis->m_nPetConsumeItemID = 0;
+    pThis->m_nPetConsumeMPItemID = 0;
+#if defined(REGION_GMS) && MAJOR_VERSION >= 111 || defined(REGION_JMS)
+    pThis->dummy1 = 0;
+#endif
+#if defined(REGION_JMS)
+    pThis->dummy2 = 0;
+#endif
+}
+
+// CeTracer::Run
+typedef VOID(__thiscall *_CeTracer__Run_t)(int *pThis);
+
+VOID __fastcall CeTracer__Run_Hook(int *pThis, PVOID edx) {
+}
+
+// SendHSLog
+typedef VOID(__cdecl *_SendHSLog_t)(char a1);
+
+VOID __fastcall SendHSLog_Hook(void* ecx, void* edx, char a1) {
+}
+
 // main thread
 DWORD WINAPI MainProc(LPVOID lpParam) {
 
@@ -733,7 +782,8 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
 
     // CWvsApp::InitializeInput
     HOOKTYPEDEF_C(CWvsApp__InitializeInput);
-    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook, C_WVS_APP_INITIALIZE_INPUT);
+    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook,
+                  C_WVS_APP_INITIALIZE_INPUT);
 
     // CWvsApp::Run
     HOOKTYPEDEF_C(CWvsApp__Run);
@@ -782,10 +832,27 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     INITMAPLEHOOK(_CClientSocket__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook,
                   C_CLIENT_SOCKET_CONNECT_ADR);
 
-    // // CClientSocket::OnConnect
+    // CClientSocket::OnConnect
     HOOKTYPEDEF_C(CClientSocket__OnConnect);
     INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
                   C_CLIENT_SOCKET_ON_CONNECT);
+
+    // CFuncKeyMappedMan::CFuncKeyMappedMan
+    HOOKTYPEDEF_C(CFuncKeyMappedMan__CFuncKeyMappedMan);
+    INITMAPLEHOOK(_CFuncKeyMappedMan__CFuncKeyMappedMan, _CFuncKeyMappedMan__CFuncKeyMappedMan_t,
+                  CFuncKeyMappedMan__CFuncKeyMappedMan_Hook, C_FUNC_KEY_MAPPED_MAN);
+
+#if (defined(REGION_GMS) && MAJOR_VERSION >= 95)
+    // CeTracer::Run
+    HOOKTYPEDEF_C(CeTracer__Run);
+    INITMAPLEHOOK(_CeTracer__Run, _CeTracer__Run_t, CeTracer__Run_Hook, CE_TRACER_RUN);
+#endif
+
+#if defined(REGION_GMS)
+    // SendHSLog
+    HOOKTYPEDEF_C(SendHSLog);
+    INITMAPLEHOOK(_SendHSLog, _SendHSLog_t, SendHSLog_Hook, SEND_HS_LOG);
+#endif
     return 0;
 }
 

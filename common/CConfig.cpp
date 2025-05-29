@@ -8,7 +8,7 @@ CConfig::CConfig() {
 
 CConfig *CConfig::GetInstance() {
     Log("CConfig::GetInstance");
-    return reinterpret_cast<CConfig *>(*reinterpret_cast<void **>(C_CONFIG_GET_INSTANCE));
+    return reinterpret_cast<CConfig *>(*reinterpret_cast<void **>(C_CONFIG_INSTANCE_ADDR));
 }
 
 INT CConfig::GetPartnerCode() {
@@ -16,9 +16,9 @@ INT CConfig::GetPartnerCode() {
     return reinterpret_cast<INT(__fastcall *)(CConfig *, void *)>(C_CONFIG_GET_PARTNER_CODE)(this, nullptr);
 }
 
-void CConfig::ApplySysOpt(int *pSysOpt, int bApplyVideo) {
+void CConfig::ApplySysOpt(CONFIG_SYSOPT *pSysOpt, int bApplyVideo) {
     Log("CConfig::ApplySysOpt");
-    reinterpret_cast<void (__fastcall *)(CConfig *, void *, int *, int)>(
+    reinterpret_cast<void (__fastcall *)(CConfig *, void *, CONFIG_SYSOPT *, int)>(
             C_CONFIG_APPLY_SYS_OPT)(this, nullptr, pSysOpt, bApplyVideo);
 }
 

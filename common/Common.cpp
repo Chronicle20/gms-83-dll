@@ -29,8 +29,11 @@ Common::Common(BOOL bHookWinLibs, std::function<void()> pPostMutexFunc)
 
 	// required for proper injection
 	INITWINHOOK("KERNEL32", "CreateMutexA", CreateMutexA_Original, CreateMutexA_t, WinHooks::CreateMutexA_Hook);
+//    INITWINHOOK("USER32", "CreateWindowExA", CreateWindowExA_Original, CreateWindowExA_t, WinHooks::CreateWindowExA_Hook);
+    INITWINHOOK("KERNEL32", "GetStartupInfoA", GetStartupInfoA_Original, GetStartupInfoA_t, WinHooks::GetStartupInfoA_Hook);
+    INITWINHOOK("KERNEL32", "GetModuleHandleA", GetModuleHandleA_Original, GetModuleHandleA_t, WinHooks::GetModuleHandleA_Hook);
 
-	if (Common::GetConfig()->LocaleSpoofValue)
+    if (Common::GetConfig()->LocaleSpoofValue)
 	{
 		INITWINHOOK("KERNEL32", "GetACP", GetACP_Original, GetACP_t, WinHooks::GetACP_Hook);
 	}
