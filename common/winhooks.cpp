@@ -134,6 +134,7 @@ namespace WinHooks {
 
     VOID WINAPI GetStartupInfoA_Hook(LPSTARTUPINFOA lpStartupInfo) {
         if (lpStartupInfo && IsCallerEXE(_ReturnAddress())) {
+            Log("[GetStartupInfoA_Hook].");
             Common::GetInstance()->OnThemidaUnpack();
         }
         GetStartupInfoA_Original(lpStartupInfo);
