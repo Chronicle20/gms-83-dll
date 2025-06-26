@@ -13,6 +13,12 @@ A collection of MS Client Edits which can be loaded through the provided ijl15 p
 4. Create an "edits" folder in the root MapleStory directory to house your client edits.
 5. Place (any) DLLs and corresponding INI configurations within the "edits" folder which you would like to apply to the client.
 
+### Compatability
+
+#### Windows 10
+
+Using the artifacts of this project may require the installation of [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) on Windows 10, due to it not coming prepackaged with the operating system. This may present as a Themida error "Cannot find 'ijl15.dll', Please, re-install this application"
+
 ## Edits
 ### bypass
 Exactly what you think it is.
@@ -40,6 +46,41 @@ Redirect IP the game uses for socket connections. Provided configuration produce
 ### Build Environment
 
 - I use CLion with a VisualStudio(2022 x86) Toolchain. Other IDEs are possible.
+
+#### Recommended Minimum Viable Build Environment Setup (IDE)
+1. Download and Install [Git](https://git-scm.com/) to clone the and manage the repository.
+2. Download and Install [CLion](https://www.jetbrains.com/clion/) IDE
+3. Download and Install [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/). Ensure the following components are selected via Individual components
+   - C++ Modules for v143 build tools (x86 & x64)
+   - C++ ATL for latest v143 build tools (x86 & x64)
+   - C++ MFC for latest v143 build tools (x86 & x64)
+   - MSVC v143 - VS 2022 C++ x64/x86 build tools
+   - C++ CMake tools for Windows
+   - Windows 10 SDK
+4. Open CLion and add project to CLion. 
+5. Project Wizard will start, ensure the Toolchains->CMake include an entry for Visual Studio. It should prepopulate with the Visual Studio Build Tools which you previously installed. The following changes should be made.
+   - Architecture - amd64_x86
+5. Debug Profile Wizard will start, ensure the Visual Studio Toolchain is selected. The following CMake options are necessary to debug build the parameterized build.
+   - BUILD_REGION = (GMS, JMS, etc)
+   - BUILD_MAJOR_VERSION = (83, 87, 95, etc)
+   - BUILD_MINOR_VERSION = (0, 1, etc)
+
+#### Minimum Viable Build Environment Setup (CLI)
+1. Download and Install [Git](https://git-scm.com/) to clone the and manage the repository.
+2. Download and Install [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/). Ensure the following components are selected via Individual components
+    - C++ Modules for v143 build tools (x86 & x64)
+    - C++ ATL for latest v143 build tools (x86 & x64)
+    - C++ MFC for latest v143 build tools (x86 & x64)
+    - MSVC v143 - VS 2022 C++ x64/x86 build tools
+    - C++ CMake tools for Windows
+    - Windows 10 SDK
+3. Download and Install [CMake](https://cmake.org/download/). Ensure this is available in your PATH.
+4. Download and Install [Ninja](https://github.com/ninja-build/ninja/releases) Ensure this is available in your PATH.
+5. Open Developer PowerShell for VS 2022 - This may not be necessary, but will ensure VS build tools are available in PATH.
+6. Use the following command to establish cmake build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM="ninja.exe" -DBUILD_REGION=[REGION] -DBUILD_MAJOR_VERSION=[MAJOR_VERSION] -DBUILD_MINOR_VERSION=[MINOR_VERSION] -G Ninja -S [PATH TO SOURCE] -B [PATH TO CMAKE BUILD FOLDER]
+7. Use the following command to build
+    - cmake --build [PATH TO CMAKE BUILD FOLDER]
 
 ### Adding a new version
 
