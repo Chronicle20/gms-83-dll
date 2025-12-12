@@ -61,7 +61,7 @@ jobs:
       - name: Package Artifacts
         run: cmake --build build --config ${{ env.BUILD_TYPE }} --target package_dlls
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
           path: build/artifacts/
@@ -80,7 +80,7 @@ jobs:
     name: Upload ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
           path: release_build
