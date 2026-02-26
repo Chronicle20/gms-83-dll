@@ -40,7 +40,7 @@ jobs:
       - name: Artifact Build
         run: cmake --build build --config ${{env.BUILD_TYPE}} --target package_dlls
       - name: Upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: build/artifacts/
           name: snapshot-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
