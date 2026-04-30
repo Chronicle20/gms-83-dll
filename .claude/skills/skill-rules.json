@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "description": "Skill activation triggers for Claude Code. Controls when skills automatically suggest or block actions. Add C++/CMake/MapleStory-DLL skills here as they are authored.",
+  "skills": {},
+  "notes": {
+    "enforcement_types": {
+      "suggest": "Skill suggestion appears but doesn't block execution",
+      "block": "Requires skill to be used before proceeding (guardrail)",
+      "warn": "Shows warning but allows proceeding"
+    },
+    "priority_levels": {
+      "critical": "Highest - Always trigger when matched",
+      "high": "Important - Trigger for most matches",
+      "medium": "Moderate - Trigger for clear matches",
+      "low": "Optional - Trigger only for explicit matches"
+    },
+    "customization": {
+      "pathPatterns": "Adjust to match project structure (bypass/, redirect/, common/, include/, etc.)",
+      "keywords": "Add domain-specific terms (DLL, hook, IAT, MapleStory, ijl15, memory map, etc.)",
+      "intentPatterns": "Use regex for flexible user intent matching"
+    }
+  }
+}
