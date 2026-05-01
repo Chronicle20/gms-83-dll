@@ -57,6 +57,8 @@ else()
     message(FATAL_ERROR "Unsupported region: ${BUILD_REGION}")
 endif()
 
+include(CommonLib)
+
 # Add subdirectories for each project
 add_subdirectory(bypass)
 add_subdirectory(enable-minimize)
