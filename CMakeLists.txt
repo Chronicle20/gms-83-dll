@@ -71,21 +71,39 @@ add_subdirectory(redirect)
 add_subdirectory(skip-logo)
 add_subdirectory(window-mode)
 
-# Custom target to package DLLs into a tar archive
+# Custom target to package DLLs into the artifacts/ layout
+set(EDIT_DLL_TARGETS
+    bypass
+    enable-minimize
+    no-patcher
+    no-beginner-party-block
+    no-enter-mts-map-restriction
+    no-ad-balloon
+    redirect
+    skip-logo
+    window-mode
+)
+
+set(PACKAGE_COMMANDS
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/artifacts"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/artifacts/edits"
+)
+foreach(t ${EDIT_DLL_TARGETS})
+    list(APPEND PACKAGE_COMMANDS
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "$<TARGET_FILE:${t}>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
+    )
+endforeach()
+list(APPEND PACKAGE_COMMANDS
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "$<TARGET_FILE:proxy>" "${CMAKE_BINARY_DIR}/artifacts/"
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_BINARY_DIR}/redirect/redirect.ini"
+        "${CMAKE_BINARY_DIR}/artifacts/edits/"
+)
+
 add_custom_target(package_dlls
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/artifacts"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/artifacts/edits"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:bypass>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:enable-minimize>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-patcher>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-beginner-party-block>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-enter-mts-map-restriction>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:no-ad-balloon>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:proxy>" "${CMAKE_BINARY_DIR}/artifacts/"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:redirect>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:skip-logo>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:window-mode>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/redirect/redirect.ini" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-        COMMENT "Creating tar archive of DLL artifacts"
+    ${PACKAGE_COMMANDS}
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    COMMENT "Packaging DLL artifacts"
 )
