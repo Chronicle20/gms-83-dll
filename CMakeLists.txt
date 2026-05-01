@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.26)
 project(gms_83_dll)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Required build flags
 set(BUILD_REGION "" CACHE STRING "Game region (e.g., GMS, JMS)")
