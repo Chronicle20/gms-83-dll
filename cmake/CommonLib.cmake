@@ -13,6 +13,15 @@
 # propagated from here.
 file(GLOB COMMON_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/common/*.cpp")
 
+# pch.cpp and ZAllocEx.cpp are leftovers from the original Visual Studio
+# project's PCH setup — neither was ever compiled by the pre-refactor CMake
+# build, and neither is self-contained without /FI pch.h. ZAllocEx.cpp's
+# global operator new/delete overrides are unreferenced by any edit DLL.
+list(REMOVE_ITEM COMMON_SOURCES
+    "${CMAKE_SOURCE_DIR}/common/pch.cpp"
+    "${CMAKE_SOURCE_DIR}/common/ZAllocEx.cpp"
+)
+
 add_library(common_lib OBJECT ${COMMON_SOURCES})
 
 target_include_directories(common_lib PUBLIC "${CMAKE_SOURCE_DIR}/common")
