@@ -1,0 +1,39 @@
+name: clang-format
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  format:
+    name: clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install clang-format-18
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y clang-format-18 clang-tools-18
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-18 100
+          sudo update-alternatives --install /usr/bin/clang-format-diff clang-format-diff /usr/bin/clang-format-diff-18 100
+          clang-format --version
+          clang-format-diff -h >/dev/null 2>&1 || true
+        shell: bash
+
+      - name: Diff check
+        run: |
+          set -euo pipefail
+          git fetch origin "$GITHUB_BASE_REF"
+          DIFF=$(git diff -U0 "origin/$GITHUB_BASE_REF"...HEAD -- '*.cpp' '*.h' '*.hpp' \
+                 | clang-format-diff -p1 -style=file || true)
+          if [ -n "$DIFF" ]; then
+            echo "::error::clang-format suggests the following changes on PR-introduced lines:"
+            printf '%s\n' "$DIFF"
+            exit 1
+          fi
+          echo "No clang-format issues on PR-introduced C++ lines."
+        shell: bash
