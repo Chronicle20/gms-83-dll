@@ -42,7 +42,7 @@ jobs:
         shell: bash
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ github.event.inputs.tag }}
           name: Release v${{ github.event.inputs.tag }}
