@@ -51,10 +51,6 @@ jobs:
       - name: Set up MSVC
         uses: microsoft/setup-msbuild@v2.0.0
 
-      - name: Verify CMake version (TEMPORARY - remove in Task 4)
-        run: cmake --version
-        shell: pwsh
-
       - name: Configure CMake
         run: >
           cmake -B build
