@@ -2,36 +2,25 @@ name: Pull Request
 
 on:
   pull_request:
-    branches: [ "main" ]
-env:
-  BUILD_TYPE: Debug
+    branches: [ main ]
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        config:
-          - { region: GMS, major: 83, minor: 1 }
-          - { region: GMS, major: 87, minor: 1 }
-          - { region: GMS, major: 95, minor: 1 }
-          - { region: GMS, major: 111, minor: 1 }
-          - { region: JMS, major: 185, minor: 1 }
-    name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up MSVC
-        uses: microsoft/setup-msbuild@v3
-      - name: Set up CMake
-        run: |
-          choco install cmake
-        shell: pwsh
-      - name: Configure CMake
-        run: cmake -B build `
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} `
-          -G "Visual Studio 17" -A Win32 `
-          -DBUILD_REGION=${{ matrix.config.region }} `
-          -DBUILD_MAJOR_VERSION=${{ matrix.config.major }} `
-          -DBUILD_MINOR_VERSION=${{ matrix.config.minor }}
-        shell: pwsh
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+  build-debug:
+    name: Build (Debug)
+    uses: ./.github/workflows/_build.yml
+    with:
+      build_type: Debug
+      upload: false
+      artifact_prefix: pr-debug
+
+  build-release:
+    name: Build (Release)
+    uses: ./.github/workflows/_build.yml
+    with:
+      build_type: Release
+      upload: false
+      artifact_prefix: pr-release

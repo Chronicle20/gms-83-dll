@@ -2,45 +2,17 @@ name: Build Snapshot
 
 on:
   push:
-    branches:
-      - main
-env:
-  BUILD_TYPE: Release
+    branches: [ main ]
+
+concurrency:
+  group: snapshot-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        config:
-          - { region: GMS, major: 83, minor: 1 }
-          - { region: GMS, major: 87, minor: 1 }
-          - { region: GMS, major: 95, minor: 1 }
-          - { region: GMS, major: 111, minor: 1 }
-          - { region: JMS, major: 185, minor: 1 }
-    name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v6
-      - name: Set up MSVC
-        uses: microsoft/setup-msbuild@v3
-      - name: Set up CMake
-        run: |
-          choco install cmake
-        shell: pwsh
-      - name: Configure CMake
-        run: cmake -B build `
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} `
-          -G "Visual Studio 17" -A Win32 `
-          -DBUILD_REGION=${{ matrix.config.region }} `
-          -DBUILD_MAJOR_VERSION=${{ matrix.config.major }} `
-          -DBUILD_MINOR_VERSION=${{ matrix.config.minor }}
-        shell: pwsh
-      - name: Build
-        run: cmake --build build --config ${{env.BUILD_TYPE}}
-      - name: Artifact Build
-        run: cmake --build build --config ${{env.BUILD_TYPE}} --target package_dlls
-      - name: Upload
-        uses: actions/upload-artifact@v7
-        with:
-          path: build/artifacts/
-          name: snapshot-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
+    name: Snapshot
+    uses: ./.github/workflows/_build.yml
+    with:
+      build_type: Release
+      upload: true
+      artifact_prefix: snapshot

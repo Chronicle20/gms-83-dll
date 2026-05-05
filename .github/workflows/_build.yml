@@ -1,0 +1,76 @@
+# Reusable build workflow. Single source of truth for the build matrix.
+#
+# Inputs:
+#   build_type      (string, required) - "Debug" or "Release". Used as
+#                                        -DCMAKE_BUILD_TYPE and --config.
+#   upload          (boolean, default false) - When true, runs the
+#                                              package_dlls target and
+#                                              uploads build/artifacts/.
+#   artifact_prefix (string, default "artifacts") - Prefix component of
+#                                                   the uploaded artifact
+#                                                   name. Disambiguates
+#                                                   multiple invocations
+#                                                   in one workflow run.
+#
+# Callers: pull-request.yml, build-snapshot.yml, release.yml.
+name: Build (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      build_type:
+        description: 'CMake build type (Debug or Release).'
+        required: true
+        type: string
+      upload:
+        description: 'If true, run package_dlls and upload build/artifacts/.'
+        required: false
+        type: boolean
+        default: false
+      artifact_prefix:
+        description: 'Prefix for the uploaded artifact name. Disambiguates multiple invocations in one workflow run.'
+        required: false
+        type: string
+        default: artifacts
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        config:
+          - { region: GMS, major: 83,  minor: 1 }
+          - { region: GMS, major: 87,  minor: 1 }
+          - { region: GMS, major: 95,  minor: 1 }
+          - { region: GMS, major: 111, minor: 1 }
+          - { region: JMS, major: 185, minor: 1 }
+    name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }} (${{ inputs.build_type }})
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up MSVC
+        uses: microsoft/setup-msbuild@v3
+
+      - name: Configure CMake
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }}
+          -G "Visual Studio 17" -A Win32
+          -DBUILD_REGION=${{ matrix.config.region }}
+          -DBUILD_MAJOR_VERSION=${{ matrix.config.major }}
+          -DBUILD_MINOR_VERSION=${{ matrix.config.minor }}
+        shell: pwsh
+
+      - name: Build
+        run: cmake --build build --config ${{ inputs.build_type }}
+
+      - name: Package artifacts
+        if: inputs.upload
+        run: cmake --build build --config ${{ inputs.build_type }} --target package_dlls
+
+      - name: Upload artifact
+        if: inputs.upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.artifact_prefix }}-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}-${{ inputs.build_type }}
+          path: build/artifacts/

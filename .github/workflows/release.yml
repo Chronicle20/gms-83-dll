@@ -1,4 +1,4 @@
-name: Release Workflow
+name: Release
 
 on:
   workflow_dispatch:
@@ -6,92 +6,48 @@ on:
       tag:
         description: 'Tag for the release (e.g. 1.2.3)'
         required: true
-env:
-  BUILD_TYPE: Release
+
 jobs:
-  # 🏷️ Create the GitHub Release (run once)
-  create_release:
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create.outputs.upload_url }}
-    steps:
-      - name: Create GitHub Release
-        id: create
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          tag_name: v${{ github.event.inputs.tag }}
-          release_name: Release v${{ github.event.inputs.tag }}
-          draft: false
-          prerelease: false
-          body: |
-            Multi-region release for version v${{ github.event.inputs.tag }}
-  # ⚙️ Matrix Build + Artifact Packaging
   build:
-    needs: create_release
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        config:
-          - { region: GMS, major: 83, minor: 1 }
-          - { region: GMS, major: 87, minor: 1 }
-          - { region: GMS, major: 95, minor: 1 }
-          - { region: GMS, major: 111, minor: 1 }
-          - { region: JMS, major: 185, minor: 1 }
-    name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Set up MSVC
-        uses: microsoft/setup-msbuild@v3
-      - name: Set up CMake
-        run: choco install cmake
-        shell: pwsh
-      - name: Configure CMake
-        run: cmake -B build `
-          -G "Visual Studio 17" -A Win32 `
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
-          -DBUILD_REGION=${{ matrix.config.region }} `
-          -DBUILD_MAJOR_VERSION=${{ matrix.config.major }} `
-          -DBUILD_MINOR_VERSION=${{ matrix.config.minor }}
-        shell: pwsh
-      - name: Build
-        run: cmake --build build --config ${{ env.BUILD_TYPE }}
-      - name: Package Artifacts
-        run: cmake --build build --config ${{ env.BUILD_TYPE }} --target package_dlls
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
-          path: build/artifacts/
-  # 📦 Upload artifacts to the release
-  upload:
-    needs: [create_release, build]
+    name: Build
+    uses: ./.github/workflows/_build.yml
+    with:
+      build_type: Release
+      upload: true
+      artifact_prefix: release
+
+  release:
+    name: Publish GitHub Release
+    needs: build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        config:
-          - { region: GMS, major: 83, minor: 1 }
-          - { region: GMS, major: 87, minor: 1 }
-          - { region: GMS, major: 95, minor: 1 }
-          - { region: GMS, major: 111, minor: 1 }
-          - { region: JMS, major: 185, minor: 1 }
-    name: Upload ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }}
+    permissions:
+      contents: write
     steps:
-      - name: Download artifact
+      - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
-          name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}
-          path: release_build
-      - name: Zip artifact
-        run: zip -r artifact.zip ./release_build
-      - name: Upload to GitHub Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          pattern: release-*
+          path: artifacts/
+
+      - name: Zip per-matrix-entry directories
+        run: |
+          set -euo pipefail
+          cd artifacts
+          for d in release-*/; do
+            d="${d%/}"
+            base="${d%-Release}"
+            (cd "$d" && zip -r "../${base}.zip" .)
+          done
+          ls -la
+        shell: bash
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: ./artifact.zip
-          asset_name: artifacts-${{ matrix.config.region }}-${{ matrix.config.major }}.${{ matrix.config.minor }}.zip
-          asset_content_type: application/zip
+          tag_name: v${{ github.event.inputs.tag }}
+          name: Release v${{ github.event.inputs.tag }}
+          body: |
+            Multi-region release for version v${{ github.event.inputs.tag }}
+          files: artifacts/release-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
