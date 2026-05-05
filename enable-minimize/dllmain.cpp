@@ -35,8 +35,6 @@ typedef HWND(WINAPI* CreateWindowExA_t)(
 );
 extern CreateWindowExA_t CreateWindowExA_Original;
 
-CreateWindowExA_t CreateWindowExA_Original;
-
 /// <summary>
 /// Blocks the startup patcher "Play!" window and forces the login screen to be minimized
 /// </summary>
