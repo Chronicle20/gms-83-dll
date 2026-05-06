@@ -178,3 +178,5 @@
 
 #define CE_TRACER_RUN @CE_TRACER_RUN@
 #define SEND_HS_LOG @SEND_HS_LOG@
+
+#define C_MOB_C_MOB @C_MOB_C_MOB@

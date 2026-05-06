@@ -61,6 +61,7 @@ include(CommonLib)
 
 # Add subdirectories for each project
 add_subdirectory(bypass)
+add_subdirectory(doom-fix)
 add_subdirectory(enable-minimize)
 add_subdirectory(no-patcher)
 add_subdirectory(no-beginner-party-block)
@@ -74,6 +75,7 @@ add_subdirectory(window-mode)
 # Custom target to package DLLs into the artifacts/ layout
 set(EDIT_DLL_TARGETS
     bypass
+    doom-fix
     enable-minimize
     no-patcher
     no-beginner-party-block

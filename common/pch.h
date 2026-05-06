@@ -40,7 +40,15 @@
 #include "ZMap.h"
 #include "ZList.h"
 
+#include "TSecType.h"
+#include "Secret.h"
+
+#include "CAttrShoe.h"
+#include "CRTTI.h"
+#include "Range.h"
+
 #include "IGObj.h"
+#include "IVecCtrlOwner.h"
 #include "IUIMsgHandler.h"
 
 #include "CInPacket.h"
@@ -98,8 +106,6 @@
 #include "CWvsPhysicalSpace2D.h"
 #include "CMapLoadable.h"
 
-#include "TSecType.h"
-
 #include "ExtendSP.h"
 #include "GW_CharacterStat.h"
 #include "AvatarLook.h"
@@ -144,5 +150,17 @@
 #include "CUIBattleRecord.h"
 #include "CWvsContext.h"
 
+#include "BulletContainer.h"
+#include "CBullet.h"
+#include "CFadeoutBullet.h"
+#include "CChatBalloon.h"
+#include "MobAttackInfo.h"
+#include "MobSkillInfo.h"
+#include "MobSpeakInformation.h"
+#include "MobSpeakCondition.h"
+#include "MobStat.h"
+#include "CMobTemplate.h"
+#include "CLife.h"
+#include "CMob.h"
 
 #include "TSingleton.h"
