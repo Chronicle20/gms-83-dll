@@ -130,6 +130,8 @@ public:
     int rTimeBomb_;
     int tTimeBomb_;
     unsigned int wTimeBomb_;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int nMagicCrash_;
     int rMagicCrash_;
     int tMagicCrash_;
@@ -143,7 +145,7 @@ public:
     long double nFs;
     int bInvincible;
     int bDisable;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int bCannotEvade;
 #endif
     ZList<BURNED_INFO> lBurnedInfo;

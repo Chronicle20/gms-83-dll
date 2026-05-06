@@ -97,6 +97,7 @@ public:
 
 
     int m_nMobChargeCount;
+#if (defined(REGION_GMS))
     int m_bAttackReady;
     int m_nAngerGaugeCount;
     int m_nUpdateTime;
@@ -104,11 +105,12 @@ public:
     int m_bFullChargeEffectTime;
     int m_bFullChargeEffectStartTime;
     ATTACKEFFECT m_effectAttack;
+#endif
     ZList<AFFECTEDSKILLENTRY> m_lAffectedSkillEntry;
     ZList<ATTACKENTRY> m_lAttackEntry;
     ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > > m_lpLayerASAni;
     ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > > m_lpLayerASIcon;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION < 95) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION < 95)
     ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > > unknown1;
 #endif
     __POSITION *m_posAffectedGuidedBullet;
@@ -142,7 +144,7 @@ public:
     MobStat m_stat;
     RANGE m_rgHorz;
     int m_nTeamForMCarnival;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int m_nPhase;
 #endif
     int _ZtlSecureTear_m_nMoveAction[2];
@@ -156,25 +158,29 @@ public:
     __POSITION *m_posFrame;
     int _ZtlSecureTear_m_tCurFrameRemain[2];
     unsigned int _ZtlSecureTear_m_tCurFrameRemain_CS;
+#if defined(REGION_GMS)
     int _ZtlSecureTear_m_tNextFramesRemain[2];
     unsigned int _ZtlSecureTear_m_tNextFramesRemain_CS;
     int _ZtlSecureTear_m_tActionDelay[2];
     unsigned int _ZtlSecureTear_m_tActionDelay_CS;
+#endif
     tagRECT m_rcBody;
     tagRECT m_rcBodyFlip;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     ZArray<tagRECT> m_arcMultiBody;
     ZArray<tagRECT> m_arcMultiBodyFlip;
 #endif
     ZArray<tagRECT> m_arcAttackBody;
     ZArray<tagRECT> m_arcAttackBodyFlip;
     ZArray<ZList<ZRef<CActionMan::MOBACTIONFRAMEENTRY> > > m_aAction;
+#if defined(REGION_GMS)
     int _ZtlSecureTear_m_tInitDelay[2];
     unsigned int _ZtlSecureTear_m_tInitDelay_CS;
     int _ZtlSecureTear_m_nDeadType[2];
     unsigned int _ZtlSecureTear_m_nDeadType_CS;
     int _ZtlSecureTear_m_nSuspended[2];
     unsigned int _ZtlSecureTear_m_nSuspended_CS;
+#endif
     int m_tLastPoisonDamage;
     int m_tLastVenomDamage;
     int m_tLastAmbushDamage;
@@ -183,8 +189,14 @@ public:
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     int m_tLastHitDazzledMob;
 #endif
+#if defined(REGION_JMS)
+    int dummy3;
+#endif
     ZList<unsigned long> m_ldwRevive;
     ZList<DAMAGEINFO> m_lDamageInfo;
+#if defined(REGION_JMS)
+    int dummy4;
+#endif
     ZList<HITEFFECT> m_lHitEffect;
     ZList<DROPPICKUP> m_lDropPickUpLog;
     _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerAction;
@@ -197,11 +209,15 @@ public:
     int m_tLastHitted;
     _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown> > m_pCanvasHPIndicator;
     ZMap<long, long, long> m_mDelayedHPIndicator;
+#if defined(REGION_GMS)
     ZArray<long> m_pCanvasAngerIndicatorArrayCount;
+#endif
     ZArray<ZArray<_com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown> > > > m_pCanvasAngerIndicatorArray;
     int m_nGaugeCount;
+#if defined(REGION_GMS)
     ZRef<CAttrShoe> m_pAttrShoe;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     SECPOINT m_ptPos;
     SECPOINT m_ptPosPrev;
 #else
@@ -212,16 +228,20 @@ public:
 #endif
     int m_nHPpercentage;
     int m_bWaitingToBeSetTossed;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     ZArray<tagPOINT> m_aMultiTargetForBall;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     ZArray<long> m_aRandTimeforAreaAttack;
     DelaySkill m_delaySkill;
 #endif
     int m_bDoomReserved;
     unsigned __int8 m_bDoomReservedSN;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     ZList<ZRef<ReservedPacket> > m_lpStatChangeReserved;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     TSecType<int> m_bChasing;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     int m_tTimeBomb;
     unsigned int m_dwSwallowCharacterID;
     unsigned int m_dwTargetMobID;
