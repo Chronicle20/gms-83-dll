@@ -16,6 +16,6 @@ public:
     VOID EncodeStr(ZXString<char> s);
     VOID EncodeBuffer(const void *p, unsigned int uSize);
 
-    VOID MakeBufferList(ZList<ZRef<ZSocketBuffer>>* l, unsigned short uSeqBase,
-                        unsigned int* puSeqKey, int bEnc, unsigned int dwKey) const;
+    VOID MakeBufferList(ZList<ZRef<ZSocketBuffer>>* l, unsigned short uSeqBase, unsigned int* puSeqKey, int bEnc,
+                        unsigned int dwKey) const;
 };

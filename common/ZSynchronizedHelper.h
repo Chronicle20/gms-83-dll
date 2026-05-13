@@ -4,9 +4,8 @@
 // spin-acquires the lock; the dtor releases it. The class is layout-compatible
 // with the game's struct (single m_pLock pointer). Specializations delegate to
 // the game's compiled ctor/dtor at their version-specific addresses.
-template <typename L>
-class ZSynchronizedHelper {
-public:
+template <typename L> class ZSynchronizedHelper {
+  public:
     L* m_pLock;
 
     explicit ZSynchronizedHelper(L* lock);
@@ -16,8 +15,6 @@ public:
     ZSynchronizedHelper& operator=(const ZSynchronizedHelper&) = delete;
 };
 
-template <>
-ZSynchronizedHelper<ZFatalSection>::ZSynchronizedHelper(ZFatalSection* lock);
+template <> ZSynchronizedHelper<ZFatalSection>::ZSynchronizedHelper(ZFatalSection* lock);
 
-template <>
-ZSynchronizedHelper<ZFatalSection>::~ZSynchronizedHelper();
+template <> ZSynchronizedHelper<ZFatalSection>::~ZSynchronizedHelper();
