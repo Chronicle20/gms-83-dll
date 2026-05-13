@@ -273,28 +273,14 @@ typedef VOID(__thiscall *_CClientSocket__SendPacket_t)(CClientSocket *pThis, COu
 VOID __fastcall CClientSocket__SendPacket_Hook(CClientSocket *pThis, PVOID edx, COutPacket *oPacket) {
     Log("CClientSocket::SendPacket (rewritten)");
 
-    void *sync[1];
-    reinterpret_cast<void (__fastcall *)(void *, void *, ZFatalSection *)>(
-            Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR)(sync, nullptr, &pThis->m_lockSend);
+    ZSynchronizedHelper<ZFatalSection> sync(&pThis->m_lockSend);
 
     unsigned int hSocket = pThis->m_sock._m_hSocket;
     if (hSocket && hSocket != INVALID_SOCKET && !pThis->m_ctxConnect.lAddr.GetCount()) {
-        reinterpret_cast<void (__fastcall *)(COutPacket *, void *, ZList<ZRef<ZSocketBuffer>> *,
-                                             unsigned short, unsigned int *, int, unsigned int)>(
-                C_OUT_PACKET_MAKE_BUFFER_LIST)(
-                oPacket, nullptr, &pThis->m_lpSendBuff, 0x5F,
-                &pThis->m_uSeqSnd, 1, pThis->m_uSeqSnd);
-
-        pThis->m_uSeqSnd = reinterpret_cast<unsigned int (__cdecl *)(unsigned char *, int, unsigned int *)>(
-                C_IG_CIPHER_INNO_HASH)(
-                reinterpret_cast<unsigned char *>(&pThis->m_uSeqSnd), 4, nullptr);
-
-        reinterpret_cast<void (__fastcall *)(CClientSocket *, void *)>(
-                C_CLIENT_SOCKET_FLUSH)(pThis, nullptr);
+        oPacket->MakeBufferList(&pThis->m_lpSendBuff, 0x5F, &pThis->m_uSeqSnd, 1, pThis->m_uSeqSnd);
+        pThis->m_uSeqSnd = CIGCipher::innoHash(reinterpret_cast<unsigned char *>(&pThis->m_uSeqSnd), 4, nullptr);
+        pThis->Flush();
     }
-
-    reinterpret_cast<void (__fastcall *)(void *, void *)>(
-            Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR)(sync, nullptr);
 }
 #endif
 

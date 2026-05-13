@@ -18,6 +18,11 @@ void CClientSocket::SendPacket(COutPacket *oPacket) {
             C_CLIENT_SOCKET_SEND_PACKET)(this, nullptr, oPacket);
 }
 
+void CClientSocket::Flush() {
+    reinterpret_cast<void (__fastcall *)(CClientSocket *, void *)>(
+            C_CLIENT_SOCKET_FLUSH)(this, nullptr);
+}
+
 void CClientSocket::ManipulatePacket() {
     Log("CClientSocket::ManipulatePacket");
     reinterpret_cast<void (__fastcall *)(CClientSocket *, void *)>(
