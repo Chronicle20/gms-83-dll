@@ -260,6 +260,30 @@ VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx,
     Log("CClientSocket::Connect CTX Happy Path");
 }
 
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+// void __thiscall CClientSocket::SendPacket(CClientSocket *this, const COutPacket& oPacket)
+//
+// v95 added a return-address validation inside the original SendPacket: after every
+// internal call it re-reads [ebp+4] and traps to `call 0` if the caller is outside
+// .text. Calling from this DLL therefore crashes. We replace SendPacket entirely
+// with the same body, minus the trap. m_lockSend is still acquired so other
+// game-internal callers continue to serialize correctly.
+typedef VOID(__thiscall* _CClientSocket__SendPacket_t)(CClientSocket* pThis, COutPacket* oPacket);
+
+VOID __fastcall CClientSocket__SendPacket_Hook(CClientSocket* pThis, PVOID edx, COutPacket* oPacket) {
+    Log("CClientSocket::SendPacket (rewritten)");
+
+    ZSynchronizedHelper<ZFatalSection> sync(&pThis->m_lockSend);
+
+    unsigned int hSocket = pThis->m_sock._m_hSocket;
+    if (hSocket && hSocket != INVALID_SOCKET && !pThis->m_ctxConnect.lAddr.GetCount()) {
+        oPacket->MakeBufferList(&pThis->m_lpSendBuff, 0x5F, &pThis->m_uSeqSnd, 1, pThis->m_uSeqSnd);
+        pThis->m_uSeqSnd = CIGCipher::innoHash(reinterpret_cast<unsigned char*>(&pThis->m_uSeqSnd), 4, nullptr);
+        pThis->Flush();
+    }
+}
+#endif
+
 // int __thiscall CLogin::SendCheckPasswordPacket(CLogin *this, char *sID, char *sPasswd)
 typedef INT(__thiscall *_CLogin__SendCheckPasswordPacket_t)(CLogin *pThis, char *sID, char *sPasswd);
 
@@ -836,6 +860,13 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     HOOKTYPEDEF_C(CClientSocket__OnConnect);
     INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
                   C_CLIENT_SOCKET_ON_CONNECT);
+
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    // CClientSocket::SendPacket — bypass v95+ return-address anti-tamper
+    HOOKTYPEDEF_C(CClientSocket__SendPacket);
+    INITMAPLEHOOK(_CClientSocket__SendPacket, _CClientSocket__SendPacket_t, CClientSocket__SendPacket_Hook,
+                  C_CLIENT_SOCKET_SEND_PACKET);
+#endif
 
     // CFuncKeyMappedMan::CFuncKeyMappedMan
     HOOKTYPEDEF_C(CFuncKeyMappedMan__CFuncKeyMappedMan);

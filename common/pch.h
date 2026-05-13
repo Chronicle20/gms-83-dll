@@ -29,6 +29,9 @@
 #include "ZAllocAnonSelector.h"
 #include "ZAllocStrSelector.h"
 #include "ZFatalSection.h"
+
+#include "ZSynchronizedHelper.h"
+
 #include "ZAllocEx.h"
 #include "ZArray.h"
 #include "ZRefCounted.h"
@@ -77,6 +80,9 @@
 #include "ZSocketBuffer.h"
 #include "ZSocketBase.h"
 #include "CIOBufferManipulator.h"
+
+#include "CIGCipher.h"
+
 #include "COutPacket.h"
 #include "CClientSocket.h"
 

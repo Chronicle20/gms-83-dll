@@ -40,6 +40,8 @@ public:
 
     void SendPacket(COutPacket *oPacket);
 
+    void Flush();
+
     void ManipulatePacket();
 
     void Close();
