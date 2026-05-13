@@ -30,11 +30,11 @@ void COutPacket::EncodeBuffer(const void *p, unsigned int uSize) {
             C_OUT_PACKET_ENCODE_BUFFER)(this, nullptr, p, uSize);
 }
 
-void COutPacket::MakeBufferList(ZList<ZRef<ZSocketBuffer>> *l, unsigned short uSeqBase,
-                                unsigned int *puSeqKey, int bEnc, unsigned int dwKey) const {
-    reinterpret_cast<void (__fastcall *)(const COutPacket *, void *,
-                                         ZList<ZRef<ZSocketBuffer>> *,
-                                         unsigned short, unsigned int *, int, unsigned int)>(
+void COutPacket::MakeBufferList(ZList<ZRef<ZSocketBuffer>>* l, unsigned short uSeqBase,
+                                unsigned int* puSeqKey, int bEnc, unsigned int dwKey) const {
+    reinterpret_cast<void(__fastcall*)(const COutPacket*, void*,
+                                       ZList<ZRef<ZSocketBuffer>>*,
+                                       unsigned short, unsigned int*, int, unsigned int)>(
             C_OUT_PACKET_MAKE_BUFFER_LIST)(this, nullptr, l, uSeqBase, puSeqKey, bEnc, dwKey);
 }
 

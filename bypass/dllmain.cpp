@@ -268,9 +268,9 @@ VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket *pThis, PVOID edx,
 // .text. Calling from this DLL therefore crashes. We replace SendPacket entirely
 // with the same body, minus the trap. m_lockSend is still acquired so other
 // game-internal callers continue to serialize correctly.
-typedef VOID(__thiscall *_CClientSocket__SendPacket_t)(CClientSocket *pThis, COutPacket *oPacket);
+typedef VOID(__thiscall* _CClientSocket__SendPacket_t)(CClientSocket* pThis, COutPacket* oPacket);
 
-VOID __fastcall CClientSocket__SendPacket_Hook(CClientSocket *pThis, PVOID edx, COutPacket *oPacket) {
+VOID __fastcall CClientSocket__SendPacket_Hook(CClientSocket* pThis, PVOID edx, COutPacket* oPacket) {
     Log("CClientSocket::SendPacket (rewritten)");
 
     ZSynchronizedHelper<ZFatalSection> sync(&pThis->m_lockSend);
@@ -278,7 +278,7 @@ VOID __fastcall CClientSocket__SendPacket_Hook(CClientSocket *pThis, PVOID edx, 
     unsigned int hSocket = pThis->m_sock._m_hSocket;
     if (hSocket && hSocket != INVALID_SOCKET && !pThis->m_ctxConnect.lAddr.GetCount()) {
         oPacket->MakeBufferList(&pThis->m_lpSendBuff, 0x5F, &pThis->m_uSeqSnd, 1, pThis->m_uSeqSnd);
-        pThis->m_uSeqSnd = CIGCipher::innoHash(reinterpret_cast<unsigned char *>(&pThis->m_uSeqSnd), 4, nullptr);
+        pThis->m_uSeqSnd = CIGCipher::innoHash(reinterpret_cast<unsigned char*>(&pThis->m_uSeqSnd), 4, nullptr);
         pThis->Flush();
     }
 }

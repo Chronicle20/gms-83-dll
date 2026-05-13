@@ -19,7 +19,7 @@ void CClientSocket::SendPacket(COutPacket *oPacket) {
 }
 
 void CClientSocket::Flush() {
-    reinterpret_cast<void (__fastcall *)(CClientSocket *, void *)>(
+    reinterpret_cast<void(__fastcall*)(CClientSocket*, void*)>(
             C_CLIENT_SOCKET_FLUSH)(this, nullptr);
 }
 

@@ -7,17 +7,17 @@
 template <typename L>
 class ZSynchronizedHelper {
 public:
-    L *m_pLock;
+    L* m_pLock;
 
-    explicit ZSynchronizedHelper(L *lock);
+    explicit ZSynchronizedHelper(L* lock);
     ~ZSynchronizedHelper();
 
-    ZSynchronizedHelper(const ZSynchronizedHelper &) = delete;
-    ZSynchronizedHelper &operator=(const ZSynchronizedHelper &) = delete;
+    ZSynchronizedHelper(const ZSynchronizedHelper&) = delete;
+    ZSynchronizedHelper& operator=(const ZSynchronizedHelper&) = delete;
 };
 
 template <>
-ZSynchronizedHelper<ZFatalSection>::ZSynchronizedHelper(ZFatalSection *lock);
+ZSynchronizedHelper<ZFatalSection>::ZSynchronizedHelper(ZFatalSection* lock);
 
 template <>
 ZSynchronizedHelper<ZFatalSection>::~ZSynchronizedHelper();
