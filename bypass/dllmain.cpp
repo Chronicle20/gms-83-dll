@@ -815,6 +815,10 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     INITMAPLEHOOK_OR_RETURN(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
 
 #if defined(REGION_JMS)
+    // TODO: lift this and the OnPacket+0x19 NOP below into a proper
+    // INITMAPLEHOOK_OR_RETURN-installed CSecurityClient::OnPacket hook
+    // (typedef _CSecurityClient__OnPacket_t already exists). The raw byte
+    // writes work but bypass nothing else in this MainProc.
     if (C_SECURITY_CLIENT_ON_PACKET_RET_STUB != 0) {
         constexpr BYTE retStub[] = {0xC3};
         MemEdit::WriteBytes(C_SECURITY_CLIENT_ON_PACKET_RET_STUB, retStub);
