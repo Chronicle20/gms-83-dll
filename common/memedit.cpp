@@ -79,7 +79,7 @@ BOOL MemEdit::PatchNop(DWORD dwAddress, UINT nCount)
     for (UINT i = 0; i < nCount; ++i)
         bArr[i] = x86NOP;
 
-	// https://stackoverflow.com/a/13026295/14784253
+    // https://stackoverflow.com/a/13026295/14784253
 	DWORD dwOldValue, dwTemp;
 
 	VirtualProtect((LPVOID)dwAddress, nCount, PAGE_EXECUTE_READWRITE, &dwOldValue);
