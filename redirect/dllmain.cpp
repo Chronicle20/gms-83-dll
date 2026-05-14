@@ -115,7 +115,7 @@ bool Config::Load(const std::string& path) {
     if (!ParseINI(path, ini))
         return false;
 
-    auto take_last = [&](const char* key) -> std::optional<std::string> {
+    auto TakeLast = [&](const char* key) -> std::optional<std::string> {
         auto it = ini.entries.find(std::string("Main.") + key);
         if (it == ini.entries.end() || it->second.empty())
             return std::nullopt;
@@ -125,7 +125,7 @@ bool Config::Load(const std::string& path) {
         return it->second.back();
     };
 
-    auto rip = take_last("RedirectIP");
+    auto rip = TakeLast("RedirectIP");
     if (!rip) {
         Log("INI: missing required key Main.RedirectIP");
         return false;
@@ -136,7 +136,7 @@ bool Config::Load(const std::string& path) {
     }
     redirectIp = *rip;
 
-    auto rport = take_last("RedirectPort");
+    auto rport = TakeLast("RedirectPort");
     if (!rport) {
         Log("INI: missing required key Main.RedirectPort");
         return false;
