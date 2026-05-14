@@ -16,18 +16,69 @@
 
 #pragma region Macros
 
-/// Sets hook and outputs result to debug window (pass/fail)
-#define INITWINHOOK(sModName, sFuncName, pOrigFunc, Func_t, pNewFunc)		\
-pOrigFunc = (Func_t)GetFuncAddress(sModName, sFuncName);					\
-if (SetHook(TRUE, reinterpret_cast<void**>(&pOrigFunc), pNewFunc))			\
-{ Log("Hooked %s", sFuncName); }											\
-else																		\
-{ Log("Failed to hook %s", sFuncName); } // end macro
+/// Best-effort maple hook: logs success/fail. Skips with INFO when dwAddress == 0
+/// (legitimate "not present on this build" state in the memory map).
+#define INITMAPLEHOOK(pOrigFunc, Func_t, pNewFunc, dwAddress)                                                          \
+    do {                                                                                                               \
+        if ((dwAddress) == 0) {                                                                                        \
+            Log("Skipping hook (unsupported on this build): %s", #pOrigFunc);                                          \
+            break;                                                                                                     \
+        }                                                                                                              \
+        pOrigFunc = reinterpret_cast<Func_t>(dwAddress);                                                               \
+        if (!SetHook(TRUE, reinterpret_cast<void**>(&pOrigFunc), pNewFunc)) {                                          \
+            Log("Failed to hook %s at 0x%08X", #pOrigFunc, (DWORD)(dwAddress));                                        \
+        } else {                                                                                                       \
+            Log("Hooked %s at 0x%08X", #pOrigFunc, (DWORD)(dwAddress));                                                \
+        }                                                                                                              \
+    } while (0)
 
-#define INITMAPLEHOOK(pOrigFunc, Func_t, pNewFunc, dwAddress)				\
-pOrigFunc = reinterpret_cast<Func_t>(dwAddress);							\
-if (!SetHook(TRUE, reinterpret_cast<void**>(&pOrigFunc), pNewFunc))			\
-{ Log("Failed to hook maple func at address %d", dwAddress); } // end macro
+/// Fail-fast maple hook: like INITMAPLEHOOK, but returns -1 from the enclosing
+/// function (intended for use in MainProc) when Detours rejects the hook.
+/// A dwAddress of 0 is still a soft skip, not a failure.
+#define INITMAPLEHOOK_OR_RETURN(pOrigFunc, Func_t, pNewFunc, dwAddress)                                                \
+    do {                                                                                                               \
+        if ((dwAddress) == 0) {                                                                                        \
+            Log("Skipping hook (unsupported on this build): %s", #pOrigFunc);                                          \
+            break;                                                                                                     \
+        }                                                                                                              \
+        pOrigFunc = reinterpret_cast<Func_t>(dwAddress);                                                               \
+        if (!SetHook(TRUE, reinterpret_cast<void**>(&pOrigFunc), pNewFunc)) {                                          \
+            Log("Failed to hook %s at 0x%08X -- aborting MainProc", #pOrigFunc, (DWORD)(dwAddress));                   \
+            return -1;                                                                                                 \
+        }                                                                                                              \
+        Log("Hooked %s at 0x%08X", #pOrigFunc, (DWORD)(dwAddress));                                                    \
+    } while (0)
+
+/// Best-effort Win32 hook: logs success/fail, never returns.
+#define INITWINHOOK(sModName, sFuncName, pOrigFunc, Func_t, pNewFunc)                                                  \
+    do {                                                                                                               \
+        pOrigFunc = (Func_t)GetFuncAddress(sModName, sFuncName);                                                       \
+        if (!pOrigFunc) {                                                                                              \
+            Log("GetFuncAddress failed for %s!%s", sModName, sFuncName);                                               \
+            break;                                                                                                     \
+        }                                                                                                              \
+        if (SetHook(TRUE, reinterpret_cast<void**>(&pOrigFunc), pNewFunc)) {                                           \
+            Log("Hooked %s!%s", sModName, sFuncName);                                                                  \
+        } else {                                                                                                       \
+            Log("Failed to hook %s!%s", sModName, sFuncName);                                                          \
+        }                                                                                                              \
+    } while (0)
+
+/// Fail-fast Win32 hook: returns -1 from the enclosing function on resolution or
+/// install failure.
+#define INITWINHOOK_OR_RETURN(sModName, sFuncName, pOrigFunc, Func_t, pNewFunc)                                        \
+    do {                                                                                                               \
+        pOrigFunc = (Func_t)GetFuncAddress(sModName, sFuncName);                                                       \
+        if (!pOrigFunc) {                                                                                              \
+            Log("GetFuncAddress failed for %s!%s -- aborting MainProc", sModName, sFuncName);                          \
+            return -1;                                                                                                 \
+        }                                                                                                              \
+        if (!SetHook(TRUE, reinterpret_cast<void**>(&pOrigFunc), pNewFunc)) {                                          \
+            Log("Failed to hook %s!%s -- aborting MainProc", sModName, sFuncName);                                     \
+            return -1;                                                                                                 \
+        }                                                                                                              \
+        Log("Hooked %s!%s", sModName, sFuncName);                                                                      \
+    } while (0)
 
 #define HOOKTYPEDEF_FUNCTYPE(functionName) _##functionName##_t
 
