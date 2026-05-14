@@ -1,18 +1,20 @@
 /*
  This file is part of GMS-83-DLL.
 
- GMS-83-DLL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ GMS-83-DLL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
- GMS-83-DLL is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ GMS-83-DLL is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
+ You should have received a copy of the GNU General Public License along with Foobar. If not, see
+ <https://www.gnu.org/licenses/>.
  */
 
 #include "memedit.h"
 #include <vector>
 
-BOOL MemEdit::PatchRetZero(DWORD dwAddress)
-{
+BOOL MemEdit::PatchRetZero(DWORD dwAddress) {
     BYTE bArr[3];
     bArr[0] = x86XOR;
     bArr[1] = x86EAXEAX;
@@ -27,13 +29,8 @@ BOOL MemEdit::PatchRetZero(DWORD dwAddress)
     return bSuccess;
 }
 
-BOOL MemEdit::PatchJmp(DWORD dwAddress, PVOID pDestination)
-{
-    patch_far_jmp pWrite =
-    {
-        x86JMP,
-        (DWORD)pDestination - (dwAddress + sizeof(DWORD) + sizeof(BYTE))
-    };
+BOOL MemEdit::PatchJmp(DWORD dwAddress, PVOID pDestination) {
+    patch_far_jmp pWrite = {x86JMP, (DWORD)pDestination - (dwAddress + sizeof(DWORD) + sizeof(BYTE))};
 
     // https://stackoverflow.com/a/13026295/14784253
     DWORD dwOldValue, dwTemp;
@@ -44,13 +41,8 @@ BOOL MemEdit::PatchJmp(DWORD dwAddress, PVOID pDestination)
     return bSuccess;
 }
 
-BOOL MemEdit::PatchCall(DWORD dwAddress, PVOID pDestination)
-{
-    patch_call pWrite =
-    {
-        x86CALL,
-        (DWORD)pDestination - (dwAddress + sizeof(DWORD) + sizeof(BYTE))
-    };
+BOOL MemEdit::PatchCall(DWORD dwAddress, PVOID pDestination) {
+    patch_call pWrite = {x86CALL, (DWORD)pDestination - (dwAddress + sizeof(DWORD) + sizeof(BYTE))};
 
     // https://stackoverflow.com/a/13026295/14784253
     DWORD dwOldValue, dwTemp;
@@ -61,8 +53,7 @@ BOOL MemEdit::PatchCall(DWORD dwAddress, PVOID pDestination)
     return bSuccess;
 }
 
-BOOL MemEdit::PatchNop(DWORD dwAddress, UINT nCount)
-{
+BOOL MemEdit::PatchNop(DWORD dwAddress, UINT nCount) {
     constexpr UINT kStackThreshold = 64;
     BYTE stackBuf[kStackThreshold];
     std::vector<BYTE> heapBuf;
@@ -102,17 +93,17 @@ void MemEdit::WriteInt(const DWORD dwOriginAddress, const unsigned int dwValue) 
 
 void MemEdit::CodeCave(void* ptrCodeCave, const DWORD dwOriginAddress, const int nNOPCount) {
     __try {
-        if (nNOPCount) PatchNop(dwOriginAddress, nNOPCount);
+        if (nNOPCount)
+            PatchNop(dwOriginAddress, nNOPCount);
         BYTE jmp = x86JMP;
         WriteValue<BYTE>(dwOriginAddress, &jmp);
         INT ret = (int)(((int)ptrCodeCave - (int)dwOriginAddress) - 5);
         WriteValue<INT>(dwOriginAddress + 1, &ret);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
     }
-    __except (EXCEPTION_EXECUTE_HANDLER) {}
 }
 
-BOOL MemEdit::WriteBytes(DWORD dwAddress, LPCVOID pData, UINT nCount)
-{
+BOOL MemEdit::WriteBytes(DWORD dwAddress, LPCVOID pData, UINT nCount) {
     // https://stackoverflow.com/a/13026295/14784253
     DWORD dwOldValue, dwTemp;
 

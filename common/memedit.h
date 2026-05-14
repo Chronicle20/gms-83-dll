@@ -1,11 +1,14 @@
 /*
  This file is part of GMS-83-DLL.
 
- GMS-83-DLL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ GMS-83-DLL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
- GMS-83-DLL is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ GMS-83-DLL is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
+ You should have received a copy of the GNU General Public License along with Foobar. If not, see
+ <https://www.gnu.org/licenses/>.
  */
 
 #pragma once
@@ -25,21 +28,18 @@
 #define x86CALL 0xE8
 #define x86NOP 0x90
 
-
 class MemEdit {
-private:
-
+  private:
     // need to pack this so it doesnt auto-align to 8 bytes
 #pragma pack(1)
-    typedef struct patch_call
-    {
+    typedef struct patch_call {
         BYTE nPatchType;
         DWORD dwAddress;
     } patch_far_jmp;
 #pragma pack()
     assert_size(sizeof(patch_call), 0x5);
 
-public:
+  public:
     static BOOL PatchRetZero(DWORD dwAddress);
     static BOOL PatchJmp(DWORD dwAddress, PVOID pDestination);
     static BOOL PatchCall(DWORD dwAddress, PVOID pDestination);
@@ -66,9 +66,7 @@ public:
     /// <param name="dwAddress">Address to write to</param>
     /// <param name="pValue">Pointer to the value to be written</param>
     /// <returns>True if write operation was successful, otherwise false.</returns>
-    template <typename TType>
-    static BOOL WriteValue(DWORD dwAddress, TType* pValue)
-    {
+    template <typename TType> static BOOL WriteValue(DWORD dwAddress, TType* pValue) {
         // https://stackoverflow.com/a/13026295/14784253
         DWORD dwOldValue, dwTemp;
 
@@ -84,9 +82,7 @@ public:
     /// <typeparam name="TType">Type that will be read</typeparam>
     /// <param name="dwAddr"></param>
     /// <returns>Pointer to the value at the given location</returns>
-    template <typename TType>
-    static TType* ReadValue(DWORD dwAddr)
-    {
+    template <typename TType> static TType* ReadValue(DWORD dwAddr) {
         return reinterpret_cast<TType*>(dwAddr);
     }
 };
