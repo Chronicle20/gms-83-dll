@@ -68,6 +68,7 @@ BOOL MemEdit::PatchNop(DWORD dwAddress, UINT nCount)
 	std::vector<BYTE> heapBuf;
 	BYTE* bArr;
 
+	// SBO: every current caller is <= 7 bytes; vector fallback exists for correctness if a future caller exceeds 64.
 	if (nCount <= kStackThreshold) {
 		bArr = stackBuf;
 	} else {
