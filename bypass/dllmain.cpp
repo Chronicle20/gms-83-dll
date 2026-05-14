@@ -151,7 +151,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     if (majorVersion != BUILD_MAJOR_VERSION) {
         throw CTerminateException(570425351);
     }
-    if (version > MINOR_VERSION) {
+    if (version > BUILD_MINOR_VERSION) {
         throw CPatchException();
     }
     if (!version) {
@@ -193,7 +193,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
 #endif
         cOutPacket.Encode1(0);
         // TODO not sure if this exists in less than GMS 87 but greater than 83.
-#if (defined(REGION_GMS) && MAJOR_VERSION > 83) || (defined(REGION_JMS))
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION > 83) || (defined(REGION_JMS))
         cOutPacket.EncodeBuffer(CWvsContext::GetInstance()->m_aClientKey, 8);
 #endif
 
@@ -580,7 +580,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     CQuickslotKeyMappedMan::CreateInstance();
     CMacroSysMan::CreateInstance();
 
-#if (defined(REGION_GMS) && MAJOR_VERSION >= 95)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     CBattleRecordMan::CreateInstance();
 #endif
     
@@ -588,7 +588,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     pThis->InitializeGr2D();
     pThis->InitializeInput();
 
-#if (defined(REGION_GMS) && MAJOR_VERSION >= 95) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     ShowWindow(pThis->m_hWnd, 5);
     UpdateWindow(pThis->m_hWnd);
     SetForegroundWindow(pThis->m_hWnd);
@@ -765,7 +765,7 @@ VOID __fastcall CFuncKeyMappedMan__CFuncKeyMappedMan_Hook(CFuncKeyMappedMan *pTh
 
     pThis->m_nPetConsumeItemID = 0;
     pThis->m_nPetConsumeMPItemID = 0;
-#if defined(REGION_GMS) && MAJOR_VERSION >= 111 || defined(REGION_JMS)
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111 || defined(REGION_JMS)
     pThis->dummy1 = 0;
 #endif
 #if defined(REGION_JMS)
@@ -815,7 +815,7 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
         MemEdit::WriteBytes(C_SECURITY_CLIENT_ON_PACKET_RET_STUB, retStub);
     }
 #endif
-#if (defined(REGION_GMS) && MAJOR_VERSION >= 87) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     HOOKTYPEDEF_C(DR__check);
     INITMAPLEHOOK_OR_RETURN(_DR__check, _DR__check_t, DR__check_Hook, DR_CHECK);
 #endif
@@ -874,7 +874,7 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     INITMAPLEHOOK_OR_RETURN(_CFuncKeyMappedMan__CFuncKeyMappedMan, _CFuncKeyMappedMan__CFuncKeyMappedMan_t,
                             CFuncKeyMappedMan__CFuncKeyMappedMan_Hook, C_FUNC_KEY_MAPPED_MAN);
 
-#if (defined(REGION_GMS) && MAJOR_VERSION >= 95)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     // CeTracer::Run
     HOOKTYPEDEF_C(CeTracer__Run);
     INITMAPLEHOOK_OR_RETURN(_CeTracer__Run, _CeTracer__Run_t, CeTracer__Run_Hook, CE_TRACER_RUN);

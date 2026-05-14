@@ -15,13 +15,13 @@ public:
     int m_aQuickslotKeyMapped_Old[8];
     int m_nPetConsumeItemID;
     int m_nPetConsumeMPItemID;
-#if defined(REGION_GMS) && MAJOR_VERSION >= 111 || defined(REGION_JMS)
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111 || defined(REGION_JMS)
     int dummy1;
 #endif
 #if defined(REGION_JMS)
     int dummy2;
 #endif
-#if defined(REGION_GMS) && MAJOR_VERSION >= 95
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95
     int m_nNormalAttackCode;
 #endif
 
