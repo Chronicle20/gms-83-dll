@@ -57,12 +57,18 @@ DWORD GetFuncAddress(const char* lpModule, const char* lpFunc)
     return (DWORD)GetProcAddress(hMod, lpFunc);
 }
 
+// Not called from DllMain: FreeLibrary inside DllMain is documented as deadlock-prone
+// (loader lock recursion). Provided for an explicit shutdown path; process exit reclaims
+// otherwise.
 void FreeLoadedModules() {
-    std::lock_guard<std::mutex> lk(g_loadedMutex);
-    for (HMODULE hMod : g_loadedByUs) {
+    std::unordered_set<HMODULE> toFree;
+    {
+        std::lock_guard<std::mutex> lk(g_loadedMutex);
+        toFree.swap(g_loadedByUs);
+    }
+    for (HMODULE hMod : toFree) {
         FreeLibrary(hMod);
     }
-    g_loadedByUs.clear();
 }
 
 // Credits: https://guidedhacking.com/threads/hook-vtable.13096/post-76763
