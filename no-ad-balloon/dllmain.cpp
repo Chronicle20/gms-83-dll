@@ -15,7 +15,8 @@
 // main thread
 DWORD WINAPI MainProc(LPVOID lpParam) {
     // Noop Ad Balloon
-    MemEdit::WriteBytes(WIN_MAIN + WIN_MAIN_AD_BALLOON_CONDITIONAL, new BYTE[1]{0xEB}, 1);
+    constexpr BYTE jmpShort[] = {0xEB};
+    MemEdit::WriteBytes(WIN_MAIN + WIN_MAIN_AD_BALLOON_CONDITIONAL, jmpShort);
     return 0;
 }
 
