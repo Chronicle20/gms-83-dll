@@ -18,7 +18,12 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
         auto *instance = reinterpret_cast<unsigned int *>(C_CONFIG_SYS_OPT_WINDOWED_MODE);
         *instance = 0;
     } else if (strcmp(BUILD_REGION, "JMS") == 0) {
-        MemEdit::WriteBytes(0x00ADA8D7+0x94, new BYTE[7]{0xC7, 0x45, 0xDC, 0x00, 0x00, 0x00, 0x00}, 7);
+        if (C_WVS_APP_INITIALIZE_GR2D != 0 && C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET != 0) {
+            constexpr BYTE windowedPatch[] = {0xC7, 0x45, 0xDC, 0x00, 0x00, 0x00, 0x00};
+            MemEdit::WriteBytes(
+                C_WVS_APP_INITIALIZE_GR2D + C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET,
+                windowedPatch);
+        }
     }
     return 0;
 }

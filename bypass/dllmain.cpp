@@ -814,9 +814,10 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
 
 #if defined(REGION_JMS)
-    // TODO define these functions.
-    MemEdit::WriteBytes(0x00B3B96B, new BYTE[1]{0xC3}, 1);
-
+    if (C_SECURITY_CLIENT_ON_PACKET_RET_STUB != 0) {
+        constexpr BYTE retStub[] = {0xC3};
+        MemEdit::WriteBytes(C_SECURITY_CLIENT_ON_PACKET_RET_STUB, retStub);
+    }
 #endif
 #if (defined(REGION_GMS) && MAJOR_VERSION >= 87) || defined(REGION_JMS)
     HOOKTYPEDEF_C(DR__check);
@@ -824,7 +825,12 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
 #endif
 
 #if defined(REGION_JMS)
-    MemEdit::WriteBytes(0x00B3B5F7 + 0x19, new BYTE[2]{0x90, 0x90}, 2);
+    if (C_SECURITY_CLIENT_ON_PACKET_CHECK != 0) {
+        constexpr BYTE nopPair[] = {0x90, 0x90};
+        MemEdit::WriteBytes(
+            C_SECURITY_CLIENT_ON_PACKET_CHECK + C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET,
+            nopPair);
+    }
 #endif
 
     // CWvsApp::CallUpdate
