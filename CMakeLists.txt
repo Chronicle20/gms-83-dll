@@ -27,11 +27,9 @@ else()
     message(FATAL_ERROR "Memory map not found at: ${MEMORY_MAP_FILE}")
 endif()
 
-# Generate memory_map.h
-configure_file(
-        ${CMAKE_SOURCE_DIR}/include/memory_map.h.in
-        ${CMAKE_BINARY_DIR}/generated/memory_map.h
-)
+# Generate memory_map.h (with validation that every @KEY@ has a defined
+# non-empty CMake var; see cmake/GenerateMemoryMap.cmake).
+include(GenerateMemoryMap)
 
 # Define shared INTERFACE config for all subprojects
 add_library(build_config INTERFACE)
