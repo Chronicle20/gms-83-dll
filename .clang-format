@@ -10,5 +10,7 @@ AllowShortFunctionsOnASingleLine: Empty
 BreakBeforeBraces: Attach
 StatementMacros:
   - INITMAPLEHOOK
+  - INITMAPLEHOOK_OR_RETURN
   - INITWINHOOK
+  - INITWINHOOK_OR_RETURN
   - HOOKTYPEDEF_C
