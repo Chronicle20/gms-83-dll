@@ -4,6 +4,7 @@
 
 #include "hooker.h"
 #include "logger.h"
+#include "parse_ini.h"
 #include "winhook_types.h"
 #include "winhooks.h"
 #include <WS2tcpip.h>
@@ -22,68 +23,12 @@ SOCKET m_GameSock = INVALID_SOCKET;
 WSPPROC_TABLE m_ProcTable = {nullptr};
 
 namespace {
-std::string TrimLeft(std::string s) {
-    auto it = std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isspace(c); });
-    s.erase(s.begin(), it);
-    return s;
-}
-
-std::string TrimRight(std::string s) {
-    auto it = std::find_if(s.rbegin(), s.rend(), [](unsigned char c) { return !std::isspace(c); });
-    s.erase(it.base(), s.end());
-    return s;
-}
-
 std::string Trim(std::string s) {
-    return TrimRight(TrimLeft(std::move(s)));
-}
-
-// Strip everything from the first ; or # to end of line. [Section] is not a comment.
-std::string StripComment(const std::string& line) {
-    auto pos = line.find_first_of(";#");
-    return (pos == std::string::npos) ? line : line.substr(0, pos);
-}
-
-struct ParsedINI {
-    // "section.key" -> ordered values (last-wins is the consumer's choice).
-    std::map<std::string, std::vector<std::string>> entries;
-};
-
-bool ParseINI(const std::string& path, ParsedINI& out) {
-    std::ifstream inputFile(path);
-    if (!inputFile.is_open()) {
-        Log("Failed to open INI file: %s", path.c_str());
-        return false;
-    }
-
-    std::string line;
-    std::string currentSection;
-    int lineNo = 0;
-    while (std::getline(inputFile, line)) {
-        ++lineNo;
-        std::string trimmed = Trim(StripComment(line));
-        if (trimmed.empty())
-            continue;
-
-        if (trimmed.front() == '[' && trimmed.back() == ']') {
-            currentSection = trimmed.substr(1, trimmed.size() - 2);
-            continue;
-        }
-
-        auto pos = trimmed.find('=');
-        if (pos == std::string::npos) {
-            Log("INI: malformed line %d (no '='): %s", lineNo, trimmed.c_str());
-            continue;
-        }
-        std::string key = Trim(trimmed.substr(0, pos));
-        std::string value = Trim(trimmed.substr(pos + 1));
-        if (key.empty()) {
-            Log("INI: malformed line %d (empty key): %s", lineNo, trimmed.c_str());
-            continue;
-        }
-        out.entries[currentSection + "." + key].push_back(std::move(value));
-    }
-    return true;
+    auto left = std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isspace(c); });
+    s.erase(s.begin(), left);
+    auto right = std::find_if(s.rbegin(), s.rend(), [](unsigned char c) { return !std::isspace(c); });
+    s.erase(right.base(), s.end());
+    return s;
 }
 } // namespace
 
@@ -101,8 +46,8 @@ static Config& GetConfig() {
 }
 
 bool Config::Load(const std::string& path) {
-    ParsedINI ini;
-    if (!ParseINI(path, ini))
+    ms::ini::Parsed ini;
+    if (!ms::ini::Parse(path, ini, [](const char* msg) { Log("%s", msg); }))
         return false;
 
     auto TakeLast = [&](const char* key) -> std::optional<std::string> {
