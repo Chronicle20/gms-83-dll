@@ -9,11 +9,12 @@
  */
 #include "pch.h"
 
+#include "CTerminateException.h"
+#include "hooker.h"
+#include "logger.h"
+#include <WS2tcpip.h>
 #include <memedit.h>
 #include <timeapi.h>
-#include <WS2tcpip.h>
-#include "logger.h"
-#include "hooker.h"
 
 // void __thiscall CSecurityClient::OnPacket(CSecurityClient *this, CInPacket *iPacket)
 typedef VOID(__thiscall *_CSecurityClient__OnPacket_t)(CSecurityClient *pThis, CInPacket *iPacket);
@@ -151,19 +152,19 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
         }
     }
     if (nVersionHeader != VERSION_HEADER) {
-        throw std::invalid_argument("570425351");
+        throw CTerminateException(570425351);
     }
     if (majorVersion > BUILD_MAJOR_VERSION) {
-        throw std::invalid_argument("CPatchException");
+        throw CPatchException();
     }
     if (majorVersion != BUILD_MAJOR_VERSION) {
-        throw std::invalid_argument("570425351");
+        throw CTerminateException(570425351);
     }
     if (version > MINOR_VERSION) {
-        throw std::invalid_argument("CPatchException");
+        throw CPatchException();
     }
     if (!version) {
-        throw std::invalid_argument("570425351");
+        throw CTerminateException(570425351);
     }
     pThis->ClearSendReceiveCtx();
     pThis->m_ctxConnect.lAddr.RemoveAll();
@@ -172,7 +173,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr *>(&pThis->m_addr), &peerAddrLen) ==
         -1) {
         int lastError = WSAGetLastError();
-        throw std::invalid_argument("570425351");
+        throw CTerminateException(570425351);
     }
 
     if (pThis->m_ctxConnect.bLogin) {
@@ -798,91 +799,100 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
 
     // CWvsApp::CWvsApp
     HOOKTYPEDEF_C(CWvsApp__CWvsApp);
-    INITMAPLEHOOK(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, C_WVS_APP);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, C_WVS_APP);
 
     // CWvsApp::SetUp
     HOOKTYPEDEF_C(CWvsApp__SetUp);
-    INITMAPLEHOOK(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, C_WVS_APP_SET_UP);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, C_WVS_APP_SET_UP);
 
     // CWvsApp::InitializeInput
     HOOKTYPEDEF_C(CWvsApp__InitializeInput);
-    INITMAPLEHOOK(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook,
-                  C_WVS_APP_INITIALIZE_INPUT);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook,
+                            C_WVS_APP_INITIALIZE_INPUT);
 
     // CWvsApp::Run
     HOOKTYPEDEF_C(CWvsApp__Run);
-    INITMAPLEHOOK(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
 
 #if defined(REGION_JMS)
-    // TODO define these functions.
-    MemEdit::WriteBytes(0x00B3B96B, new BYTE[1]{0xC3}, 1);
-
+    // TODO: lift this and the OnPacket+0x19 NOP below into a proper
+    // INITMAPLEHOOK_OR_RETURN-installed CSecurityClient::OnPacket hook
+    // (typedef _CSecurityClient__OnPacket_t already exists). The raw byte
+    // writes work but bypass nothing else in this MainProc.
+    if (C_SECURITY_CLIENT_ON_PACKET_RET_STUB != 0) {
+        constexpr BYTE retStub[] = {0xC3};
+        MemEdit::WriteBytes(C_SECURITY_CLIENT_ON_PACKET_RET_STUB, retStub);
+    }
 #endif
 #if (defined(REGION_GMS) && MAJOR_VERSION >= 87) || defined(REGION_JMS)
     HOOKTYPEDEF_C(DR__check);
-    INITMAPLEHOOK(_DR__check, _DR__check_t, DR__check_Hook, DR_CHECK);
+    INITMAPLEHOOK_OR_RETURN(_DR__check, _DR__check_t, DR__check_Hook, DR_CHECK);
 #endif
 
 #if defined(REGION_JMS)
-    MemEdit::WriteBytes(0x00B3B5F7 + 0x19, new BYTE[2]{0x90, 0x90}, 2);
+    if (C_SECURITY_CLIENT_ON_PACKET_CHECK != 0) {
+        constexpr BYTE nopPair[] = {0x90, 0x90};
+        MemEdit::WriteBytes(C_SECURITY_CLIENT_ON_PACKET_CHECK + C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET, nopPair);
+    }
 #endif
 
     // CWvsApp::CallUpdate
     HOOKTYPEDEF_C(CWvsApp__CallUpdate);
-    INITMAPLEHOOK(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook, C_WVS_APP_CALL_UPDATE);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook,
+                            C_WVS_APP_CALL_UPDATE);
 
     // CWvsApp::ConnectLogin
     HOOKTYPEDEF_C(CWvsApp__ConnectLogin);
-    INITMAPLEHOOK(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t, CWvsApp__ConnectLogin_Hook,
-                  C_WVS_APP_CONNECT_LOGIN);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t, CWvsApp__ConnectLogin_Hook,
+                            C_WVS_APP_CONNECT_LOGIN);
 
     // CLogin::SendCheckPasswordPacket
     HOOKTYPEDEF_C(CLogin__SendCheckPasswordPacket);
-    INITMAPLEHOOK(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
-                  CLogin__SendCheckPasswordPacket_Hook, C_LOGIN_SEND_CHECK_PASSWORD_PACKET);
+    INITMAPLEHOOK_OR_RETURN(_CLogin__SendCheckPasswordPacket, _CLogin__SendCheckPasswordPacket_t,
+                            CLogin__SendCheckPasswordPacket_Hook, C_LOGIN_SEND_CHECK_PASSWORD_PACKET);
 
     // CSecurityClient::OnPacket
     HOOKTYPEDEF_C(CSecurityClient__OnPacket);
-    INITMAPLEHOOK(_CSecurityClient__OnPacket, _CSecurityClient__OnPacket_t, CSecurityClient__OnPacket_Hook,
-                  C_SECURITY_CLIENT_ON_PACKET);
+    INITMAPLEHOOK_OR_RETURN(_CSecurityClient__OnPacket, _CSecurityClient__OnPacket_t, CSecurityClient__OnPacket_Hook,
+                            C_SECURITY_CLIENT_ON_PACKET);
 
     // CClientSocket::Connect
     HOOKTYPEDEF_C(CClientSocket__Connect_ctx);
-    INITMAPLEHOOK(_CClientSocket__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook,
-                  C_CLIENT_SOCKET_CONNECT_CTX);
+    INITMAPLEHOOK_OR_RETURN(_CClientSocket__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook,
+                            C_CLIENT_SOCKET_CONNECT_CTX);
 
     // CClientSocket::Connect
     HOOKTYPEDEF_C(CClientSocket__Connect_addr);
-    INITMAPLEHOOK(_CClientSocket__Connect_addr, _CClientSocket__Connect_addr_t, CClientSocket__Connect_Addr_Hook,
-                  C_CLIENT_SOCKET_CONNECT_ADR);
+    INITMAPLEHOOK_OR_RETURN(_CClientSocket__Connect_addr, _CClientSocket__Connect_addr_t,
+                            CClientSocket__Connect_Addr_Hook, C_CLIENT_SOCKET_CONNECT_ADR);
 
     // CClientSocket::OnConnect
     HOOKTYPEDEF_C(CClientSocket__OnConnect);
-    INITMAPLEHOOK(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
-                  C_CLIENT_SOCKET_ON_CONNECT);
+    INITMAPLEHOOK_OR_RETURN(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
+                            C_CLIENT_SOCKET_ON_CONNECT);
 
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     // CClientSocket::SendPacket — bypass v95+ return-address anti-tamper
     HOOKTYPEDEF_C(CClientSocket__SendPacket);
-    INITMAPLEHOOK(_CClientSocket__SendPacket, _CClientSocket__SendPacket_t, CClientSocket__SendPacket_Hook,
-                  C_CLIENT_SOCKET_SEND_PACKET);
+    INITMAPLEHOOK_OR_RETURN(_CClientSocket__SendPacket, _CClientSocket__SendPacket_t, CClientSocket__SendPacket_Hook,
+                            C_CLIENT_SOCKET_SEND_PACKET);
 #endif
 
     // CFuncKeyMappedMan::CFuncKeyMappedMan
     HOOKTYPEDEF_C(CFuncKeyMappedMan__CFuncKeyMappedMan);
-    INITMAPLEHOOK(_CFuncKeyMappedMan__CFuncKeyMappedMan, _CFuncKeyMappedMan__CFuncKeyMappedMan_t,
-                  CFuncKeyMappedMan__CFuncKeyMappedMan_Hook, C_FUNC_KEY_MAPPED_MAN);
+    INITMAPLEHOOK_OR_RETURN(_CFuncKeyMappedMan__CFuncKeyMappedMan, _CFuncKeyMappedMan__CFuncKeyMappedMan_t,
+                            CFuncKeyMappedMan__CFuncKeyMappedMan_Hook, C_FUNC_KEY_MAPPED_MAN);
 
 #if (defined(REGION_GMS) && MAJOR_VERSION >= 95)
     // CeTracer::Run
     HOOKTYPEDEF_C(CeTracer__Run);
-    INITMAPLEHOOK(_CeTracer__Run, _CeTracer__Run_t, CeTracer__Run_Hook, CE_TRACER_RUN);
+    INITMAPLEHOOK_OR_RETURN(_CeTracer__Run, _CeTracer__Run_t, CeTracer__Run_Hook, CE_TRACER_RUN);
 #endif
 
 #if defined(REGION_GMS)
     // SendHSLog
     HOOKTYPEDEF_C(SendHSLog);
-    INITMAPLEHOOK(_SendHSLog, _SendHSLog_t, SendHSLog_Hook, SEND_HS_LOG);
+    INITMAPLEHOOK_OR_RETURN(_SendHSLog, _SendHSLog_t, SendHSLog_Hook, SEND_HS_LOG);
 #endif
     return 0;
 }

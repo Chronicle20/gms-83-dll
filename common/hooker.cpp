@@ -9,6 +9,13 @@
  */
 
 #include "hooker.h"
+#include <mutex>
+#include <unordered_set>
+
+namespace {
+std::mutex g_loadedMutex;
+std::unordered_set<HMODULE> g_loadedByUs;
+} // namespace
 
 BOOL SetHook(bool bInstall, void** ppvTarget, void* pvDetour)
 {
@@ -38,9 +45,30 @@ BOOL SetHook(bool bInstall, void** ppvTarget, void* pvDetour)
 
 DWORD GetFuncAddress(const char* lpModule, const char* lpFunc)
 {
-	HMODULE hMod = LoadLibraryA(lpModule);
+    HMODULE hMod = GetModuleHandleA(lpModule);
+    if (!hMod) {
+        hMod = LoadLibraryA(lpModule);
+        if (!hMod)
+            return 0;
 
-	return !hMod ? 0 : (DWORD)GetProcAddress(hMod, lpFunc);
+        std::lock_guard<std::mutex> lk(g_loadedMutex);
+        g_loadedByUs.insert(hMod);
+    }
+    return (DWORD)GetProcAddress(hMod, lpFunc);
+}
+
+// Not called from DllMain: FreeLibrary inside DllMain is documented as deadlock-prone
+// (loader lock recursion). Provided for an explicit shutdown path; process exit reclaims
+// otherwise.
+void FreeLoadedModules() {
+    std::unordered_set<HMODULE> toFree;
+    {
+        std::lock_guard<std::mutex> lk(g_loadedMutex);
+        toFree.swap(g_loadedByUs);
+    }
+    for (HMODULE hMod : toFree) {
+        FreeLibrary(hMod);
+    }
 }
 
 // Credits: https://guidedhacking.com/threads/hook-vtable.13096/post-76763

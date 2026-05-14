@@ -13,13 +13,15 @@
 #include "memory_map.h"
 
 // main thread
-const DWORD dwLauncher = 0x007F3CE0;
 DWORD WINAPI MainProc(LPVOID lpParam) {
     // Noop Patcher
     if (strcmp(BUILD_REGION, "GMS") == 0) {
         MemEdit::PatchNop(WIN_MAIN + WIN_MAIN_PATCHER_OFFSET, 5);
     } else if (strcmp(BUILD_REGION, "JMS") == 0) {
-        MemEdit::WriteBytes(dwLauncher, new BYTE[6]{0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3}, 6);
+        if (WIN_MAIN_LAUNCHER_STUB != 0) {
+            constexpr BYTE retOne[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3};
+            MemEdit::WriteBytes(WIN_MAIN_LAUNCHER_STUB, retOne);
+        }
     }
     return 0;
 }
