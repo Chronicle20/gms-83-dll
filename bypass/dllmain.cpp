@@ -14,6 +14,7 @@
 #include <WS2tcpip.h>
 #include "logger.h"
 #include "hooker.h"
+#include "CTerminateException.h"
 
 // void __thiscall CSecurityClient::OnPacket(CSecurityClient *this, CInPacket *iPacket)
 typedef VOID(__thiscall *_CSecurityClient__OnPacket_t)(CSecurityClient *pThis, CInPacket *iPacket);
@@ -151,19 +152,19 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
         }
     }
     if (nVersionHeader != VERSION_HEADER) {
-        throw std::invalid_argument("570425351");
+        throw CTerminateException(570425351);
     }
     if (majorVersion > BUILD_MAJOR_VERSION) {
-        throw std::invalid_argument("CPatchException");
+        throw CPatchException();
     }
     if (majorVersion != BUILD_MAJOR_VERSION) {
-        throw std::invalid_argument("570425351");
+        throw CTerminateException(570425351);
     }
     if (version > MINOR_VERSION) {
-        throw std::invalid_argument("CPatchException");
+        throw CPatchException();
     }
     if (!version) {
-        throw std::invalid_argument("570425351");
+        throw CTerminateException(570425351);
     }
     pThis->ClearSendReceiveCtx();
     pThis->m_ctxConnect.lAddr.RemoveAll();
@@ -172,7 +173,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
     if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr *>(&pThis->m_addr), &peerAddrLen) ==
         -1) {
         int lastError = WSAGetLastError();
-        throw std::invalid_argument("570425351");
+        throw CTerminateException(570425351);
     }
 
     if (pThis->m_ctxConnect.bLogin) {
