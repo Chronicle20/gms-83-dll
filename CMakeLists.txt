@@ -112,3 +112,9 @@ add_custom_target(package_dlls
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     COMMENT "Packaging DLL artifacts"
 )
+
+option(BUILD_TESTS "Build host-side unit tests" OFF)
+if (BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
