@@ -9,6 +9,7 @@
  */
 
 #include "memedit.h"
+#include <vector>
 
 BOOL MemEdit::PatchRetZero(DWORD dwAddress)
 {
@@ -62,9 +63,19 @@ BOOL MemEdit::PatchCall(DWORD dwAddress, PVOID pDestination)
 
 BOOL MemEdit::PatchNop(DWORD dwAddress, UINT nCount)
 {
-	BYTE* bArr = new BYTE[nCount];
+	constexpr UINT kStackThreshold = 64;
+	BYTE stackBuf[kStackThreshold];
+	std::vector<BYTE> heapBuf;
+	BYTE* bArr;
 
-	for (UINT i = 0; i < nCount; i++)
+	if (nCount <= kStackThreshold) {
+		bArr = stackBuf;
+	} else {
+		heapBuf.assign(nCount, 0);
+		bArr = heapBuf.data();
+	}
+
+	for (UINT i = 0; i < nCount; ++i)
 		bArr[i] = x86NOP;
 
 	// https://stackoverflow.com/a/13026295/14784253

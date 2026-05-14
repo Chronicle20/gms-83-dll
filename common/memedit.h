@@ -10,6 +10,7 @@
 
 #pragma once
 #include <Windows.h>
+#include <cstddef>
 #include <cstdlib>
 
 #include "asserts.h"
@@ -44,6 +45,16 @@ public:
 	static BOOL PatchCall(DWORD dwAddress, PVOID pDestination);
 	static BOOL PatchNop(DWORD dwAddress, UINT nCount);
 	static BOOL WriteBytes(DWORD dwAddress, LPCVOID pData, UINT nCount);
+
+	/// <summary>
+	/// Writes a stack-allocated byte array to the specified address.
+	/// Size is deduced; no heap allocation required at the callsite.
+	/// </summary>
+	template <std::size_t N>
+	static BOOL WriteBytes(DWORD dwAddress, const BYTE (&data)[N])
+	{
+		return WriteBytes(dwAddress, static_cast<LPCVOID>(data), static_cast<UINT>(N));
+	}
 
 	static void FillBytes(DWORD dwOriginAddress, unsigned char ucValue, int nCount);
 	static void WriteByte(DWORD dwOriginAddress, unsigned char ucValue);
