@@ -198,7 +198,6 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket *pThis, PVOID edx, in
 #endif
 
         CClientSocket::GetInstance()->SendPacket(&cOutPacket);
-        cOutPacket.m_aSendBuff.RemoveAll();
     }
 
     //_ZRef_ZSocketBuffer__Destructor(&pBuff, edx, 0);
@@ -318,7 +317,6 @@ INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin *pThis, PVOID edx, ch
         cuiTitle->ClearToolTip();
     }
 
-    cOutPacket.m_aSendBuff.RemoveAll();
     return 1;
 }
 
