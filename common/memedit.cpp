@@ -1,6 +1,8 @@
 #include "memedit.h"
 #include <vector>
 
+#include "byte_ops.h"
+
 BOOL MemEdit::PatchRetZero(DWORD dwAddress) {
     BYTE bArr[3];
     bArr[0] = x86XOR;
@@ -54,8 +56,7 @@ BOOL MemEdit::PatchNop(DWORD dwAddress, UINT nCount) {
         bArr = heapBuf.data();
     }
 
-    for (UINT i = 0; i < nCount; ++i)
-        bArr[i] = x86NOP;
+    ms::byte_ops::fill_nop(reinterpret_cast<unsigned char*>(bArr), nCount);
 
     // https://stackoverflow.com/a/13026295/14784253
     DWORD dwOldValue, dwTemp;
