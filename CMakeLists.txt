@@ -48,6 +48,13 @@ target_compile_definitions(build_config INTERFACE
         BUILD_MINOR_VERSION=${BUILD_MINOR_VERSION}
 )
 
+# Compile-time log threshold. Debug build: everything (Trace=0).
+# Anything else (Release/RelWithDebInfo/MinSizeRel): Warn=3 and above only.
+target_compile_definitions(build_config INTERFACE
+    $<$<CONFIG:Debug>:LOG_MIN_LEVEL=0>
+    $<$<NOT:$<CONFIG:Debug>>:LOG_MIN_LEVEL=3>
+)
+
 # Region macro for conditional compilation
 if (BUILD_REGION STREQUAL "GMS")
     target_compile_definitions(build_config INTERFACE REGION_GMS)
