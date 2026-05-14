@@ -46,19 +46,17 @@ public:
 	static BOOL PatchNop(DWORD dwAddress, UINT nCount);
 	static BOOL WriteBytes(DWORD dwAddress, LPCVOID pData, UINT nCount);
 
-	/// <summary>
-	/// Writes a stack-allocated byte array to the specified address.
-	/// Size is deduced; no heap allocation required at the callsite.
-	/// </summary>
-	template <std::size_t N>
-	static BOOL WriteBytes(DWORD dwAddress, const BYTE (&data)[N])
-	{
-		return WriteBytes(dwAddress, static_cast<LPCVOID>(data), static_cast<UINT>(N));
-	}
+    /// <summary>
+    /// Writes a stack-allocated byte array to the specified address.
+    /// Size is deduced; no heap allocation required at the callsite.
+    /// </summary>
+    template <std::size_t N> static BOOL WriteBytes(DWORD dwAddress, const BYTE (&data)[N]) {
+        return WriteBytes(dwAddress, static_cast<LPCVOID>(data), static_cast<UINT>(N));
+    }
 
-	static void FillBytes(DWORD dwOriginAddress, unsigned char ucValue, int nCount);
-	static void WriteByte(DWORD dwOriginAddress, unsigned char ucValue);
-	static void WriteInt(DWORD dwOriginAddress, unsigned int dwValue);
+    static void FillBytes(DWORD dwOriginAddress, unsigned char ucValue, int nCount);
+    static void WriteByte(DWORD dwOriginAddress, unsigned char ucValue);
+    static void WriteInt(DWORD dwOriginAddress, unsigned int dwValue);
 	static void CodeCave(void* ptrCodeCave, DWORD dwOriginAddress, int nNOPCount);
 
 	/// <summary>

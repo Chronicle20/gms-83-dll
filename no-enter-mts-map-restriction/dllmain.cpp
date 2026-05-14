@@ -15,7 +15,8 @@
 // main thread
 DWORD WINAPI MainProc(LPVOID lpParam) {
     constexpr BYTE jmpShort[] = {0xEB};
-    MemEdit::WriteBytes(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST + C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET, jmpShort);
+    MemEdit::WriteBytes(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST + C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET,
+                        jmpShort);
     return 0;
 }
 

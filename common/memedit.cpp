@@ -63,21 +63,21 @@ BOOL MemEdit::PatchCall(DWORD dwAddress, PVOID pDestination)
 
 BOOL MemEdit::PatchNop(DWORD dwAddress, UINT nCount)
 {
-	constexpr UINT kStackThreshold = 64;
-	BYTE stackBuf[kStackThreshold];
-	std::vector<BYTE> heapBuf;
-	BYTE* bArr;
+    constexpr UINT kStackThreshold = 64;
+    BYTE stackBuf[kStackThreshold];
+    std::vector<BYTE> heapBuf;
+    BYTE* bArr;
 
-	// SBO: every current caller is <= 7 bytes; vector fallback exists for correctness if a future caller exceeds 64.
-	if (nCount <= kStackThreshold) {
-		bArr = stackBuf;
-	} else {
-		heapBuf.assign(nCount, 0);
-		bArr = heapBuf.data();
-	}
+    // SBO: every current caller is <= 7 bytes; vector fallback exists for correctness if a future caller exceeds 64.
+    if (nCount <= kStackThreshold) {
+        bArr = stackBuf;
+    } else {
+        heapBuf.assign(nCount, 0);
+        bArr = heapBuf.data();
+    }
 
-	for (UINT i = 0; i < nCount; ++i)
-		bArr[i] = x86NOP;
+    for (UINT i = 0; i < nCount; ++i)
+        bArr[i] = x86NOP;
 
 	// https://stackoverflow.com/a/13026295/14784253
 	DWORD dwOldValue, dwTemp;

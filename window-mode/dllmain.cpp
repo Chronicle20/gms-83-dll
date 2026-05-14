@@ -20,9 +20,7 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     } else if (strcmp(BUILD_REGION, "JMS") == 0) {
         if (C_WVS_APP_INITIALIZE_GR2D != 0 && C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET != 0) {
             constexpr BYTE windowedPatch[] = {0xC7, 0x45, 0xDC, 0x00, 0x00, 0x00, 0x00};
-            MemEdit::WriteBytes(
-                C_WVS_APP_INITIALIZE_GR2D + C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET,
-                windowedPatch);
+            MemEdit::WriteBytes(C_WVS_APP_INITIALIZE_GR2D + C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET, windowedPatch);
         }
     }
     return 0;
