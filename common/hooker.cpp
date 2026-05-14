@@ -9,6 +9,13 @@
  */
 
 #include "hooker.h"
+#include <mutex>
+#include <unordered_set>
+
+namespace {
+std::mutex g_loadedMutex;
+std::unordered_set<HMODULE> g_loadedByUs;
+} // namespace
 
 BOOL SetHook(bool bInstall, void** ppvTarget, void* pvDetour)
 {
@@ -38,9 +45,24 @@ BOOL SetHook(bool bInstall, void** ppvTarget, void* pvDetour)
 
 DWORD GetFuncAddress(const char* lpModule, const char* lpFunc)
 {
-	HMODULE hMod = LoadLibraryA(lpModule);
+    HMODULE hMod = GetModuleHandleA(lpModule);
+    if (!hMod) {
+        hMod = LoadLibraryA(lpModule);
+        if (!hMod)
+            return 0;
 
-	return !hMod ? 0 : (DWORD)GetProcAddress(hMod, lpFunc);
+        std::lock_guard<std::mutex> lk(g_loadedMutex);
+        g_loadedByUs.insert(hMod);
+    }
+    return (DWORD)GetProcAddress(hMod, lpFunc);
+}
+
+void FreeLoadedModules() {
+    std::lock_guard<std::mutex> lk(g_loadedMutex);
+    for (HMODULE hMod : g_loadedByUs) {
+        FreeLibrary(hMod);
+    }
+    g_loadedByUs.clear();
 }
 
 // Credits: https://guidedhacking.com/threads/hook-vtable.13096/post-76763

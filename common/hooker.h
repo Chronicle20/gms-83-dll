@@ -45,3 +45,4 @@ extern HOOKTYPEDEF_FUNCTYPE(functionName) _##functionName
 extern BOOL SetHook(bool bInstall, void** ppvTarget, void* pvDetour);
 extern DWORD GetFuncAddress(const char* lpModule, const char* lpFunc);
 extern PVOID HookVTableFunction(void* pVTable, void* fnHookFunc, int nOffset);
+extern void FreeLoadedModules();
