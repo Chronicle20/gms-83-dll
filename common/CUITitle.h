@@ -1,3 +1,4 @@
+#pragma once
 
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
 class CUITitle : public CFadeWnd {

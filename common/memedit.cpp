@@ -1,18 +1,7 @@
-/*
- This file is part of GMS-83-DLL.
-
- GMS-83-DLL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
- GMS-83-DLL is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License along with Foobar. If not, see
- <https://www.gnu.org/licenses/>.
- */
-
 #include "memedit.h"
 #include <vector>
+
+#include "byte_ops.h"
 
 BOOL MemEdit::PatchRetZero(DWORD dwAddress) {
     BYTE bArr[3];
@@ -67,8 +56,7 @@ BOOL MemEdit::PatchNop(DWORD dwAddress, UINT nCount) {
         bArr = heapBuf.data();
     }
 
-    for (UINT i = 0; i < nCount; ++i)
-        bArr[i] = x86NOP;
+    ms::byte_ops::fill_nop(reinterpret_cast<unsigned char*>(bArr), nCount);
 
     // https://stackoverflow.com/a/13026295/14784253
     DWORD dwOldValue, dwTemp;

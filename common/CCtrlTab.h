@@ -1,3 +1,4 @@
+#pragma once
 struct CCtrlTab : CCtrlWnd {
     struct TABINFO {
         int bCanvas;

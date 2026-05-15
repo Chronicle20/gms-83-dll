@@ -1,3 +1,4 @@
+#pragma once
 #include "CCtrlWnd.h"
 #include "ZXString.h"
 

@@ -1,3 +1,4 @@
+#pragma once
 interface IWzRawCanvasAllocator;
 
 #undef  INTERFACE

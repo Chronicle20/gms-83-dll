@@ -1,3 +1,4 @@
+#pragma once
 struct PARTYSERACH_SETTING {
     int bCleared;
     int nMin_Level;

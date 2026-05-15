@@ -1,3 +1,4 @@
+#pragma once
 #include "ZArray.h"
 
 class GW_CoupleRecord {

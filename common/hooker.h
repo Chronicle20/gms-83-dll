@@ -1,13 +1,3 @@
-/*
- This file is part of GMS-83-DLL.
-
- GMS-83-DLL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
- GMS-83-DLL is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
- */
-
 #pragma once
 #include <Windows.h>
 #include "detours.h"
@@ -32,8 +22,10 @@
         }                                                                                                              \
     } while (0)
 
-/// Fail-fast maple hook: like INITMAPLEHOOK, but returns -1 from the enclosing
-/// function (intended for use in MainProc) when Detours rejects the hook.
+/// Fail-fast maple hook: like INITMAPLEHOOK, but returns FALSE from the
+/// enclosing function when Detours rejects the hook. Intended for use inside
+/// the per-category `BOOL Install<Category>Hooks()` installers; bypass_main's
+/// MainProc checks each and short-circuits the chain on the first failure.
 /// A dwAddress of 0 is still a soft skip, not a failure.
 #define INITMAPLEHOOK_OR_RETURN(pOrigFunc, Func_t, pNewFunc, dwAddress)                                                \
     do {                                                                                                               \
@@ -43,8 +35,8 @@
         }                                                                                                              \
         pOrigFunc = reinterpret_cast<Func_t>(dwAddress);                                                               \
         if (!SetHook(TRUE, reinterpret_cast<void**>(&pOrigFunc), pNewFunc)) {                                          \
-            Log("Failed to hook %s at 0x%08X -- aborting MainProc", #pOrigFunc, (DWORD)(dwAddress));                   \
-            return -1;                                                                                                 \
+            Log("Failed to hook %s at 0x%08X -- aborting installer", #pOrigFunc, (DWORD)(dwAddress));                  \
+            return FALSE;                                                                                              \
         }                                                                                                              \
         Log("Hooked %s at 0x%08X", #pOrigFunc, (DWORD)(dwAddress));                                                    \
     } while (0)

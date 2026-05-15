@@ -1,3 +1,4 @@
+#pragma once
 class CONFIG_SYSOPT
 {
     int nSysOpt_Video;

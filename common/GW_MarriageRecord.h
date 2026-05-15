@@ -1,3 +1,4 @@
+#pragma once
 struct GW_MarriageRecord {
     unsigned int dwMarriageNo;
     unsigned int dwGroomID;

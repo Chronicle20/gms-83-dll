@@ -1,3 +1,4 @@
+#pragma once
 class CIOBufferManipulator {
 public:
     static unsigned int Decode2(unsigned short *n, const char *pSrc, unsigned int uRemain);

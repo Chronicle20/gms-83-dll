@@ -1,3 +1,4 @@
+#pragma once
 enum FONT_TYPE : __int32
 {
     FONT_BASIC_WHITE = 0x0,

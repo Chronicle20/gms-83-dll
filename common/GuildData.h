@@ -1,3 +1,4 @@
+#pragma once
 #include "ZXString.h"
 #include "ZArray.h"
 #include "ZMap.h"

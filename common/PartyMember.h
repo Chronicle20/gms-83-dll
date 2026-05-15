@@ -1,3 +1,4 @@
+#pragma once
 struct PARTYMEMBER {
     unsigned int adwCharacterID[6];
     char asCharacterName[6][13];

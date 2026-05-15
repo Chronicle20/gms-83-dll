@@ -1,3 +1,4 @@
+#pragma once
 class CONFIG_GAMEOPT
 {
     int bGameOpt_Whisper;

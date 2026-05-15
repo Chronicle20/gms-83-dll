@@ -1,3 +1,4 @@
+#pragma once
 interface IWzCanvas;
 
 #undef  INTERFACE

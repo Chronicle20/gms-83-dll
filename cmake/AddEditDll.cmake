@@ -44,4 +44,9 @@ function(add_edit_dll name)
         target_link_libraries(${name} PRIVATE ${EDIT_EXTRA_LIBS})
     endif()
     set_target_properties(${name} PROPERTIES OUTPUT_NAME "${EDIT_OUTPUT_NAME}")
+    # Reuse the PCH compiled by common_lib. This force-includes pch.h for
+    # every TU in this edit DLL — accepted as the design tradeoff (the
+    # symbol cost is dropped at link time via /OPT:REF, and the shared PCH
+    # artifact is the whole point).
+    target_precompile_headers(${name} REUSE_FROM common_lib)
 endfunction()

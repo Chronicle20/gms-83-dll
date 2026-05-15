@@ -1,3 +1,4 @@
+#pragma once
 struct DIDEVICEINSTANCEA
 {
     unsigned int dwSize;

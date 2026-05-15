@@ -18,7 +18,7 @@ public:
         int nSkill;
     };
 
-#if defined(REGION_GMS) && MAJOR_VERSION >= 95
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95
     int m_bFirstUserLoad;
 #endif
     int m_bAvatarMegaphone;
@@ -28,7 +28,7 @@ public:
     int m_nTargetPosition_Y;
     int m_bChaseEnable;
 #endif
-#if defined(REGION_GMS) && MAJOR_VERSION >= 87
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87
     int m_bPetHelpPopUpShown;
 #endif
     WEBCOOKIE m_Cookie;
@@ -70,10 +70,10 @@ public:
     int m_bTesterAccount;
     int unk3;
 #endif
-#if (defined(REGION_GMS) && MAJOR_VERSION > 83) || (defined(REGION_JMS))
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION > 83) || (defined(REGION_JMS))
     unsigned __int8 m_aClientKey[8];
 #endif
-#if defined(REGION_GMS) && MAJOR_VERSION >= 87
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87
     int m_bTesterAccount;
 #endif
     unsigned int m_dwCharacterId;

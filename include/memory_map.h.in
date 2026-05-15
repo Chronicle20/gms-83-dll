@@ -1,8 +1,6 @@
 #pragma once
 
 #define REGION "@BUILD_REGION@"
-#define MAJOR_VERSION @BUILD_MAJOR_VERSION@
-#define MINOR_VERSION @BUILD_MINOR_VERSION@
 #define VERSION_HEADER @VERSION_HEADER@
 
 // Client Send Packet Opcodes

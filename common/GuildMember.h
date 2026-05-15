@@ -1,3 +1,4 @@
+#pragma once
 struct GUILDMEMBER {
     char sCharacterName[13];
     int nJob;
