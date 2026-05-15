@@ -8,6 +8,7 @@
 #include "logger.h"
 
 #include <WS2tcpip.h>
+#include <timeapi.h>
 
 // ---- forward declarations (same-TU) ------------------------------------
 VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket* pThis, PVOID edx, const sockaddr_in* pAddr);
