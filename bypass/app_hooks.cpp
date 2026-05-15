@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "app_hooks.h"
-#include "socket_hooks_internal.h"  // CClientSocket__OnConnect_Hook fwd-decl
+#include "socket_hooks_internal.h" // CClientSocket__OnConnect_Hook fwd-decl
 
 #include "hooker.h"
 #include "logger.h"
@@ -31,7 +31,7 @@ static IWzGr2D* get_gr() {
 }
 
 static void GetSEPrivilege() {
-    ((VOID** (_fastcall*)())GET_SE_PRIVILEGE)();
+    ((VOID * *(_fastcall*)()) GET_SE_PRIVILEGE)();
 }
 
 static DWORD ResetLSP() {
@@ -40,7 +40,7 @@ static DWORD ResetLSP() {
 
 // ---- hook bodies --------------------------------------------------------
 
-VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime) {
+VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime) {
     if (pThis->m_bFirstUpdate) {
         pThis->m_tUpdateTime = tCurTime;
 #if defined(REGION_GMS)
@@ -53,7 +53,7 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
     }
 
     while (tCurTime - pThis->m_tUpdateTime > 0) {
-        CStage *stage = get_stage();
+        CStage* stage = get_stage();
         if (stage) {
             stage->Update();
         }
@@ -78,9 +78,9 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp *pThis, PVOID edx, int tCurTime
     CActionMan::GetInstance()->SweepCache();
 }
 
-VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
+VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp* pThis, PVOID edx) {
     Log("CWvsApp::ConnectLogin");
-    CClientSocket *pSock = CClientSocket::GetInstance();
+    CClientSocket* pSock = CClientSocket::GetInstance();
     pSock->Close();
     Log("CWvsApp::ConnectLogin Call CClientSocket::ConnectLogin");
     pSock->ConnectLogin();
@@ -116,14 +116,14 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
                 TranslateMessage(&msg);
                 DispatchMessageA(&msg);
 
-                if ((LONG) (timeGetTime() - pSock->m_tTimeout) > 0) {
+                if ((LONG)(timeGetTime() - pSock->m_tTimeout) > 0) {
                     Log("CWvsApp::ConnectLogin Call CClientSocket::OnConnect 4. timeGetTime [%d], timeOut [%d].",
                         timeGetTime(), pSock->m_tTimeout);
                     CClientSocket__OnConnect_Hook(pSock, edx, 0);
                 }
             }
         } else {
-            if ((LONG) (timeGetTime() - pSock->m_tTimeout) > 0) {
+            if ((LONG)(timeGetTime() - pSock->m_tTimeout) > 0) {
                 Log("CWvsApp::ConnectLogin Call CClientSocket::OnConnect 5");
                 CClientSocket__OnConnect_Hook(pSock, edx, 0);
             }
@@ -137,19 +137,19 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp *pThis, PVOID edx) {
     auto handle = pSock->m_sock._m_hSocket;
     if (handle == 0 || handle == -1) {
         Log("CWvsApp::ConnectLogin Should issue exception here.");
-//        CTerminateException ex(570425345);
-//        int* exceptionObject = reinterpret_cast<int*>(&ex); // if needed
-//        _CxxThrowException(exceptionObject, &_TI3_AVCTerminateException__);
+        //        CTerminateException ex(570425345);
+        //        int* exceptionObject = reinterpret_cast<int*>(&ex); // if needed
+        //        _CxxThrowException(exceptionObject, &_TI3_AVCTerminateException__);
     }
 }
 
-VOID __fastcall CWvsApp__InitializeInput_Hook(CWvsApp *pThis, PVOID edx) {
+VOID __fastcall CWvsApp__InitializeInput_Hook(CWvsApp* pThis, PVOID edx) {
     Log("CWvsApp::InitializeInput");
     CInputSystem::CreateInstance();
     CInputSystem::GetInstance()->Init(pThis->m_hWnd, pThis->m_ahInput);
 }
 
-VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
+VOID __fastcall CWvsApp__Run_Hook(CWvsApp* pThis, PVOID edx, int* pbTerminate) {
     Log("CWvsApp::Run");
     tagMSG msg{};
     ISMSG isMsg{};
@@ -223,7 +223,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp *pThis, PVOID edx, int *pbTerminate) {
     }
 }
 
-VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
+VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
     Log("CWvsApp::SetUp");
 #if defined(REGION_GMS)
     pThis->InitializeAuth();
@@ -239,9 +239,9 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     CSecurityClient::CreateInstance();
 
     PVOID cfgAlloc = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(sizeof(CConfig));
-    CConfig *cConfig;
+    CConfig* cConfig;
     if (cfgAlloc) {
-        cConfig = new(cfgAlloc) CConfig();
+        cConfig = new (cfgAlloc) CConfig();
     }
 
     pThis->InitializePCOM();
@@ -323,22 +323,22 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp *pThis, PVOID edx) {
     CConfig::GetInstance()->CheckExecPathReg(tempString);
 
     PVOID ret = ZAllocEx<ZAllocAnonSelector>::GetInstance()->Alloc(sizeof(CLogo));
-    CStage *cLogo;
+    CStage* cLogo;
     if (ret) {
-        cLogo = new(ret) CLogo();
+        cLogo = new (ret) CLogo();
     } else {
         cLogo = nullptr;
     }
     _set_stage(cLogo, nullptr);
 }
 
-VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, PVOID edx, const char *sCmdLine) {
+VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp* pThis, PVOID edx, const char* sCmdLine) {
     Log("CWvsApp::CWvsApp");
-    void **instance = reinterpret_cast<void **>(C_WVS_APP_INSTANCE_ADDR);
+    void** instance = reinterpret_cast<void**>(C_WVS_APP_INSTANCE_ADDR);
     *instance = pThis;
 
-//    void* globalThis = *(void**)0x01002884;
-//    Log("global singleton = %p, hook pThis = %p", globalThis, pThis);
+    //    void* globalThis = *(void**)0x01002884;
+    //    Log("global singleton = %p, hook pThis = %p", globalThis, pThis);
 
     pThis->m_hWnd = nullptr;
     pThis->m_bPCOMInitialized = 0;
@@ -390,15 +390,14 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, PVOID edx, const char *sCm
     }
 
 #if defined(REGION_GMS)
-    int *g_dwTargetOS = reinterpret_cast<int *>(G_DW_TARGET_OS);
+    int* g_dwTargetOS = reinterpret_cast<int*>(G_DW_TARGET_OS);
 
     if (ovi.dwMajorVersion < 5) {
         *g_dwTargetOS = 1996;
     }
 
     BOOL bIsWow64 = FALSE;
-    auto fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
-            GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+    auto fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
     if (fnIsWow64Process) {
         fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
     }
@@ -416,28 +415,25 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp *pThis, PVOID edx, const char *sCm
 // ---- installer ----------------------------------------------------------
 BOOL InstallAppHooks() {
     HOOKTYPEDEF_C(CWvsApp__CWvsApp);
-    INITMAPLEHOOK_OR_RETURN(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t,
-                            CWvsApp__CWvsApp_Hook, C_WVS_APP);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__CWvsApp, _CWvsApp__CWvsApp_t, CWvsApp__CWvsApp_Hook, C_WVS_APP);
 
     HOOKTYPEDEF_C(CWvsApp__SetUp);
-    INITMAPLEHOOK_OR_RETURN(_CWvsApp__SetUp, _CWvsApp__SetUp_t,
-                            CWvsApp__SetUp_Hook, C_WVS_APP_SET_UP);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__SetUp, _CWvsApp__SetUp_t, CWvsApp__SetUp_Hook, C_WVS_APP_SET_UP);
 
     HOOKTYPEDEF_C(CWvsApp__InitializeInput);
-    INITMAPLEHOOK_OR_RETURN(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t,
-                            CWvsApp__InitializeInput_Hook, C_WVS_APP_INITIALIZE_INPUT);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__InitializeInput, _CWvsApp__InitializeInput_t, CWvsApp__InitializeInput_Hook,
+                            C_WVS_APP_INITIALIZE_INPUT);
 
     HOOKTYPEDEF_C(CWvsApp__Run);
-    INITMAPLEHOOK_OR_RETURN(_CWvsApp__Run, _CWvsApp__Run_t,
-                            CWvsApp__Run_Hook, C_WVS_APP_RUN);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__Run, _CWvsApp__Run_t, CWvsApp__Run_Hook, C_WVS_APP_RUN);
 
     HOOKTYPEDEF_C(CWvsApp__CallUpdate);
-    INITMAPLEHOOK_OR_RETURN(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t,
-                            CWvsApp__CallUpdate_Hook, C_WVS_APP_CALL_UPDATE);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__CallUpdate, _CWvsApp__CallUpdate_t, CWvsApp__CallUpdate_Hook,
+                            C_WVS_APP_CALL_UPDATE);
 
     HOOKTYPEDEF_C(CWvsApp__ConnectLogin);
-    INITMAPLEHOOK_OR_RETURN(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t,
-                            CWvsApp__ConnectLogin_Hook, C_WVS_APP_CONNECT_LOGIN);
+    INITMAPLEHOOK_OR_RETURN(_CWvsApp__ConnectLogin, _CWvsApp__ConnectLogin_t, CWvsApp__ConnectLogin_Hook,
+                            C_WVS_APP_CONNECT_LOGIN);
 
     return TRUE;
 }

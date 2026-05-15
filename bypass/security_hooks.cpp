@@ -19,11 +19,9 @@ INT __cdecl DR__check_Hook() {
     return 0;
 }
 
-VOID __fastcall CeTracer__Run_Hook(int* pThis, PVOID edx) {
-}
+VOID __fastcall CeTracer__Run_Hook(int* pThis, PVOID edx) {}
 
-VOID __fastcall SendHSLog_Hook(void* ecx, void* edx, char a1) {
-}
+VOID __fastcall SendHSLog_Hook(void* ecx, void* edx, char a1) {}
 
 BOOL InstallSecurityHooks() {
     // The pre-refactor MainProc interleaved CSecurityClient byte patches
@@ -49,14 +47,13 @@ BOOL InstallSecurityHooks() {
 #if defined(REGION_JMS)
     if (C_SECURITY_CLIENT_ON_PACKET_CHECK != 0) {
         constexpr BYTE nopPair[] = {0x90, 0x90};
-        MemEdit::WriteBytes(C_SECURITY_CLIENT_ON_PACKET_CHECK + C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET,
-                            nopPair);
+        MemEdit::WriteBytes(C_SECURITY_CLIENT_ON_PACKET_CHECK + C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET, nopPair);
     }
 #endif
 
     HOOKTYPEDEF_C(CSecurityClient__OnPacket);
-    INITMAPLEHOOK_OR_RETURN(_CSecurityClient__OnPacket, _CSecurityClient__OnPacket_t,
-                            CSecurityClient__OnPacket_Hook, C_SECURITY_CLIENT_ON_PACKET);
+    INITMAPLEHOOK_OR_RETURN(_CSecurityClient__OnPacket, _CSecurityClient__OnPacket_t, CSecurityClient__OnPacket_Hook,
+                            C_SECURITY_CLIENT_ON_PACKET);
 
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     HOOKTYPEDEF_C(CeTracer__Run);

@@ -7,10 +7,8 @@
 
 typedef INT(__thiscall* _CLogin__SendCheckPasswordPacket_t)(CLogin* pThis, char* sID, char* sPasswd);
 
-INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin* pThis, PVOID edx,
-                                                    char* sID, char* sPasswd) {
-    Log("CLogin::SendCheckPasswordPacket. ID [%s]. bRequestSent [%d].",
-        sID, pThis->m_bRequestSent);
+INT __fastcall CLogin__SendCheckPasswordPacket_Hook(CLogin* pThis, PVOID edx, char* sID, char* sPasswd) {
+    Log("CLogin::SendCheckPasswordPacket. ID [%s]. bRequestSent [%d].", sID, pThis->m_bRequestSent);
     if (pThis->m_bRequestSent) {
         return 0;
     }

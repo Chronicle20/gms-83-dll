@@ -33,7 +33,8 @@ std::string StripComment(const std::string& line) {
 }
 
 void Tell(const LogSink& sink, const char* fmt, ...) {
-    if (!sink) return;
+    if (!sink)
+        return;
     char buf[256];
     va_list args;
     va_start(args, fmt);
@@ -57,7 +58,8 @@ bool Parse(const std::string& path, Parsed& out, const LogSink& sink) {
     while (std::getline(inputFile, line)) {
         ++lineNo;
         std::string trimmed = Trim(StripComment(line));
-        if (trimmed.empty()) continue;
+        if (trimmed.empty())
+            continue;
 
         if (trimmed.front() == '[' && trimmed.back() == ']') {
             currentSection = trimmed.substr(1, trimmed.size() - 2);

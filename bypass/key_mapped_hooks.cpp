@@ -14,11 +14,11 @@ VOID __fastcall CFuncKeyMappedMan__CFuncKeyMappedMan_Hook(CFuncKeyMappedMan* pTh
     *instance = pThis;
 
     *(void**)pThis = (void*)C_FUNC_KEY_MAPPED_MAN_VFTABLE;
-    memcpy(pThis->m_aFuncKeyMapped,        reinterpret_cast<void*>(DEFAULT_FKM_INSTANCE_ADDR),
+    memcpy(pThis->m_aFuncKeyMapped, reinterpret_cast<void*>(DEFAULT_FKM_INSTANCE_ADDR),
            sizeof(pThis->m_aFuncKeyMapped));
-    memcpy(pThis->m_aFuncKeyMapped_Old,    reinterpret_cast<void*>(DEFAULT_FKM_INSTANCE_ADDR),
+    memcpy(pThis->m_aFuncKeyMapped_Old, reinterpret_cast<void*>(DEFAULT_FKM_INSTANCE_ADDR),
            sizeof(pThis->m_aFuncKeyMapped_Old));
-    memcpy(pThis->m_aQuickslotKeyMapped,   reinterpret_cast<void*>(DEFAULT_QKM_INSTANCE_ADDR),
+    memcpy(pThis->m_aQuickslotKeyMapped, reinterpret_cast<void*>(DEFAULT_QKM_INSTANCE_ADDR),
            sizeof(pThis->m_aQuickslotKeyMapped));
     memcpy(pThis->m_aQuickslotKeyMapped_Old, reinterpret_cast<void*>(DEFAULT_QKM_INSTANCE_ADDR),
            sizeof(pThis->m_aQuickslotKeyMapped_Old));
@@ -35,9 +35,7 @@ VOID __fastcall CFuncKeyMappedMan__CFuncKeyMappedMan_Hook(CFuncKeyMappedMan* pTh
 
 BOOL InstallKeyMappedHooks() {
     HOOKTYPEDEF_C(CFuncKeyMappedMan__CFuncKeyMappedMan);
-    INITMAPLEHOOK_OR_RETURN(_CFuncKeyMappedMan__CFuncKeyMappedMan,
-                            _CFuncKeyMappedMan__CFuncKeyMappedMan_t,
-                            CFuncKeyMappedMan__CFuncKeyMappedMan_Hook,
-                            C_FUNC_KEY_MAPPED_MAN);
+    INITMAPLEHOOK_OR_RETURN(_CFuncKeyMappedMan__CFuncKeyMappedMan, _CFuncKeyMappedMan__CFuncKeyMappedMan_t,
+                            CFuncKeyMappedMan__CFuncKeyMappedMan_Hook, C_FUNC_KEY_MAPPED_MAN);
     return TRUE;
 }

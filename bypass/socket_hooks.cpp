@@ -10,14 +10,11 @@
 #include <WS2tcpip.h>
 
 // ---- forward declarations (same-TU) ------------------------------------
-VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket* pThis, PVOID edx,
-                                                 const sockaddr_in* pAddr);
+VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket* pThis, PVOID edx, const sockaddr_in* pAddr);
 
 // ---- typedefs -----------------------------------------------------------
-typedef VOID(__thiscall* _CClientSocket__Connect_addr_t)(CClientSocket* pThis,
-                                                          const sockaddr_in* pAddr);
-typedef VOID(__thiscall* _CClientSocket__Connect_ctx_t)(CClientSocket* pThis,
-                                                         CClientSocket::CONNECTCONTEXT* ctx);
+typedef VOID(__thiscall* _CClientSocket__Connect_addr_t)(CClientSocket* pThis, const sockaddr_in* pAddr);
+typedef VOID(__thiscall* _CClientSocket__Connect_ctx_t)(CClientSocket* pThis, CClientSocket::CONNECTCONTEXT* ctx);
 typedef INT(__thiscall* _CClientSocket__OnConnect_t)(CClientSocket* pThis, INT bSuccess);
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
 typedef VOID(__thiscall* _CClientSocket__SendPacket_t)(CClientSocket* pThis, COutPacket* oPacket);
@@ -68,12 +65,8 @@ int read_packet_body(CClientSocket* pSock, char* out, int expectedLen, int& retr
     return total;
 }
 
-bool decode_handshake(const char* buf, int len,
-                      unsigned short& outMajorVersion,
-                      int& outMinorVersion,
-                      unsigned int& outSeqSnd,
-                      unsigned int& outSeqRcv,
-                      unsigned char& outVersionHeader) {
+bool decode_handshake(const char* buf, int len, unsigned short& outMajorVersion, int& outMinorVersion,
+                      unsigned int& outSeqSnd, unsigned int& outSeqRcv, unsigned char& outVersionHeader) {
     const char* end = buf + len;
     const char* result = buf;
 
@@ -99,10 +92,10 @@ bool decode_handshake(const char* buf, int len,
         return false;
     }
 
-    outMajorVersion  = majorVersion;
-    outMinorVersion  = minor;
-    outSeqSnd        = seqSnd;
-    outSeqRcv        = seqRcv;
+    outMajorVersion = majorVersion;
+    outMinorVersion = minor;
+    outSeqSnd = seqSnd;
+    outSeqRcv = seqRcv;
     outVersionHeader = versionHeader;
     return true;
 }
@@ -137,9 +130,9 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
     if (pBuff.p && pBuff.p->m_nRef) {
         InterlockedIncrement(&pBuff.p->m_nRef);
     }
-    char* buffer         = pBuff.p->buf;
+    char* buffer = pBuff.p->buf;
     char* accumulatedBuf = buffer;
-    int   retries        = 40;
+    int retries = 40;
 
     int hdrBytes = read_packet_header(pThis, buffer, retries);
     if (hdrBytes == 0) {
@@ -164,13 +157,12 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
     Log("CClientSocket::OnConnect Recv Decoding");
 
     unsigned short majorVersion;
-    int            minorVersionValue;
-    unsigned int   uSeqSnd;
-    unsigned int   uSeqRcv;
-    unsigned char  nVersionHeader;
-    if (!decode_handshake(buffer, accumulatedBuf - buffer,
-                          majorVersion, minorVersionValue,
-                          uSeqSnd, uSeqRcv, nVersionHeader)) {
+    int minorVersionValue;
+    unsigned int uSeqSnd;
+    unsigned int uSeqRcv;
+    unsigned char nVersionHeader;
+    if (!decode_handshake(buffer, accumulatedBuf - buffer, majorVersion, minorVersionValue, uSeqSnd, uSeqRcv,
+                          nVersionHeader)) {
         // buffer underrun mid-decode — original code returned 0 here
         return 0;
     }
@@ -209,9 +201,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
     pThis->m_ctxConnect.lAddr.RemoveAll();
     pThis->m_ctxConnect.posList = nullptr;
     socklen_t peerAddrLen = sizeof(pThis->m_addr);
-    if (getpeername(pThis->m_sock._m_hSocket,
-                    reinterpret_cast<struct sockaddr*>(&pThis->m_addr),
-                    &peerAddrLen) == -1) {
+    if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr*>(&pThis->m_addr), &peerAddrLen) == -1) {
         int lastError = WSAGetLastError();
         throw CTerminateException(570425351);
     }
@@ -250,8 +240,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
     return 1;
 }
 
-VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket* pThis, PVOID edx,
-                                                 const sockaddr_in* pAddr) {
+VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket* pThis, PVOID edx, const sockaddr_in* pAddr) {
     Log("CClientSocket::Connect(CClientSocket *this, const sockaddr_in *pAddr)");
     pThis->ClearSendReceiveCtx();
     pThis->m_sock.CloseSocket();
@@ -269,12 +258,12 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket* pThis, PVOID edx
     const UINT WM_SOCKET = WM_USER + 1;
     const long eventMask = FD_READ | FD_WRITE | FD_CONNECT | FD_CLOSE;
 
-    int asyncResult   = WSAAsyncSelect(socketHandle, hwnd, WM_SOCKET, eventMask);
+    int asyncResult = WSAAsyncSelect(socketHandle, hwnd, WM_SOCKET, eventMask);
     int connectResult = connect(socketHandle, reinterpret_cast<const sockaddr*>(pAddr), sizeof(sockaddr_in));
-    int lastError     = WSAGetLastError();
+    int lastError = WSAGetLastError();
 
-    Log("CClientSocket::Connect ADR asyncResult [%d], connectResult [%d], lastError [%d].",
-        asyncResult, connectResult, lastError);
+    Log("CClientSocket::Connect ADR asyncResult [%d], connectResult [%d], lastError [%d].", asyncResult, connectResult,
+        lastError);
 
     if (asyncResult == SOCKET_ERROR || connectResult != SOCKET_ERROR || lastError != WSAEWOULDBLOCK) {
         Log("CClientSocket::Connect ADR Try CClientSocket::OnConnect");
@@ -283,15 +272,14 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket* pThis, PVOID edx
     Log("CClientSocket::Connect ADR Happy Path");
 }
 
-VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket* pThis, PVOID edx,
-                                                CClientSocket::CONNECTCONTEXT* ctx) {
+VOID __fastcall CClientSocket__Connect_Ctx_Hook(CClientSocket* pThis, PVOID edx, CClientSocket::CONNECTCONTEXT* ctx) {
     Log("CClientSocket::Connect(CClientSocket *this, const CClientSocket::CONNECTCONTEXT *ctx)");
     pThis->m_ctxConnect.lAddr.RemoveAll();
     pThis->m_ctxConnect.lAddr.AddTail(&ctx->lAddr);
     pThis->m_ctxConnect.posList = ctx->posList;
-    pThis->m_ctxConnect.bLogin  = ctx->bLogin;
+    pThis->m_ctxConnect.bLogin = ctx->bLogin;
     pThis->m_ctxConnect.posList = reinterpret_cast<__POSITION*>(pThis->m_ctxConnect.lAddr.GetHeadPosition());
-    pThis->m_addr               = *pThis->m_ctxConnect.lAddr.GetHeadPosition();
+    pThis->m_addr = *pThis->m_ctxConnect.lAddr.GetHeadPosition();
     CClientSocket__Connect_Addr_Hook(pThis, edx, &pThis->m_addr);
     Log("CClientSocket::Connect CTX Happy Path");
 }
@@ -314,21 +302,21 @@ VOID __fastcall CClientSocket__SendPacket_Hook(CClientSocket* pThis, PVOID edx, 
 // ---- installer ----------------------------------------------------------
 BOOL InstallSocketHooks() {
     HOOKTYPEDEF_C(CClientSocket__Connect_ctx);
-    INITMAPLEHOOK_OR_RETURN(_CClientSocket__Connect_ctx, _CClientSocket__Connect_ctx_t,
-                            CClientSocket__Connect_Ctx_Hook, C_CLIENT_SOCKET_CONNECT_CTX);
+    INITMAPLEHOOK_OR_RETURN(_CClientSocket__Connect_ctx, _CClientSocket__Connect_ctx_t, CClientSocket__Connect_Ctx_Hook,
+                            C_CLIENT_SOCKET_CONNECT_CTX);
 
     HOOKTYPEDEF_C(CClientSocket__Connect_addr);
     INITMAPLEHOOK_OR_RETURN(_CClientSocket__Connect_addr, _CClientSocket__Connect_addr_t,
                             CClientSocket__Connect_Addr_Hook, C_CLIENT_SOCKET_CONNECT_ADR);
 
     HOOKTYPEDEF_C(CClientSocket__OnConnect);
-    INITMAPLEHOOK_OR_RETURN(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t,
-                            CClientSocket__OnConnect_Hook, C_CLIENT_SOCKET_ON_CONNECT);
+    INITMAPLEHOOK_OR_RETURN(_CClientSocket__OnConnect, _CClientSocket__OnConnect_t, CClientSocket__OnConnect_Hook,
+                            C_CLIENT_SOCKET_ON_CONNECT);
 
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     HOOKTYPEDEF_C(CClientSocket__SendPacket);
-    INITMAPLEHOOK_OR_RETURN(_CClientSocket__SendPacket, _CClientSocket__SendPacket_t,
-                            CClientSocket__SendPacket_Hook, C_CLIENT_SOCKET_SEND_PACKET);
+    INITMAPLEHOOK_OR_RETURN(_CClientSocket__SendPacket, _CClientSocket__SendPacket_t, CClientSocket__SendPacket_Hook,
+                            C_CLIENT_SOCKET_SEND_PACKET);
 #endif
 
     return TRUE;
