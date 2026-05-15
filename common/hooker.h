@@ -22,8 +22,10 @@
         }                                                                                                              \
     } while (0)
 
-/// Fail-fast maple hook: like INITMAPLEHOOK, but returns -1 from the enclosing
-/// function (intended for use in MainProc) when Detours rejects the hook.
+/// Fail-fast maple hook: like INITMAPLEHOOK, but returns FALSE from the
+/// enclosing function when Detours rejects the hook. Intended for use inside
+/// the per-category `BOOL Install<Category>Hooks()` installers; bypass_main's
+/// MainProc checks each and short-circuits the chain on the first failure.
 /// A dwAddress of 0 is still a soft skip, not a failure.
 #define INITMAPLEHOOK_OR_RETURN(pOrigFunc, Func_t, pNewFunc, dwAddress)                                                \
     do {                                                                                                               \
@@ -33,8 +35,8 @@
         }                                                                                                              \
         pOrigFunc = reinterpret_cast<Func_t>(dwAddress);                                                               \
         if (!SetHook(TRUE, reinterpret_cast<void**>(&pOrigFunc), pNewFunc)) {                                          \
-            Log("Failed to hook %s at 0x%08X -- aborting MainProc", #pOrigFunc, (DWORD)(dwAddress));                   \
-            return -1;                                                                                                 \
+            Log("Failed to hook %s at 0x%08X -- aborting installer", #pOrigFunc, (DWORD)(dwAddress));                  \
+            return FALSE;                                                                                              \
         }                                                                                                              \
         Log("Hooked %s at 0x%08X", #pOrigFunc, (DWORD)(dwAddress));                                                    \
     } while (0)
