@@ -19,9 +19,10 @@ enum class LogLevel : int {
 
 extern void LogImpl(LogLevel level, const char* fmt, ...);
 
-// Legacy free-function entry point. Forwards directly to LogImpl(Info, ...)
-// — bypasses LOG_MIN_LEVEL so existing callsites continue to fire in every
-// build. New code must use the LOG_* macros below.
+// Legacy free-function entry point. Writes the formatted message unprefixed
+// to OutputDebugStringA — bypasses both the level tag and LOG_MIN_LEVEL so
+// existing callsites continue to fire in every build. New code must use the
+// LOG_* macros below.
 extern void Log(const char* format, ...);
 
 #define LOG_GMS_DLL_IMPL_(lvl, ...) ::LogImpl((lvl), __VA_ARGS__)
