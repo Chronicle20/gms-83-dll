@@ -1,3 +1,4 @@
+#pragma once
 enum GR2D_ANITYPE : __int32
 {
     GA_STOP = 0x0,

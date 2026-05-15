@@ -1,3 +1,4 @@
+#pragma once
 struct GW_Friend {
     unsigned int dwFriendID;
     char sFriendName[13];

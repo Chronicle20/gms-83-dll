@@ -1,3 +1,4 @@
+#pragma once
 struct Additional {
     struct SKILL {
         int nSkillID;

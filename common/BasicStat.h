@@ -1,3 +1,4 @@
+#pragma once
 struct BasicStat {
     int _ZtlSecureTear_nGender[2];
     unsigned int _ZtlSecureTear_nGender_CS;

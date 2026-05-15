@@ -1,3 +1,4 @@
+#pragma once
 enum CANVAS_PIXFORMAT : __int32
 {
     CP_UNKNOWN = 0x0,

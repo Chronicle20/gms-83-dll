@@ -1,3 +1,4 @@
+#pragma once
 struct ForcedStat {
     int _ZtlSecureTear_nSTR[2];
     unsigned int _ZtlSecureTear_nSTR_CS;

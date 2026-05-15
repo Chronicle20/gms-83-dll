@@ -1,3 +1,4 @@
+#pragma once
 #include "CRand32.h"
 
 struct CalcDamage {

@@ -1,3 +1,4 @@
+#pragma once
 enum CANVAS_LEVELMAP : __int32
 {
     CL_ALL16 = 0x1,

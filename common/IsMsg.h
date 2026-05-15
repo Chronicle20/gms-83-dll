@@ -1,3 +1,4 @@
+#pragma once
 struct ISMSG
 {
     unsigned int message;

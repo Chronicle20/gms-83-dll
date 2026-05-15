@@ -1,3 +1,4 @@
+#pragma once
 struct CUIWnd : CWnd {
     ZRef<CCtrlButton> m_pBtClose;
     CUIToolTip m_uiToolTip;

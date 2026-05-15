@@ -1,3 +1,4 @@
+#pragma once
 enum CANVAS_DITHERTYPE : __int32
 {
     CD_NONE = 0x0,

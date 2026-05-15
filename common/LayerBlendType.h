@@ -1,3 +1,4 @@
+#pragma once
 enum LAYER_BLENDTYPE : __int32
 {
     LB_NORMAL = 0x0,

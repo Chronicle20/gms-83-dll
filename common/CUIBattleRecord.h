@@ -1,3 +1,4 @@
+#pragma once
 #include "CUIWnd.h"
 #include "CCtrlTab.h"
 #include "CCtrlCheckBox.h"
