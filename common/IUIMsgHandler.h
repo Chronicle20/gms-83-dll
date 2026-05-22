@@ -1,7 +1,5 @@
 #pragma once
 
-#include "CRTTI.h"
-
 class IUIMsgHandler {
 public:
     virtual void OnKey(unsigned int, unsigned int) = 0;
