@@ -1,5 +1,19 @@
 #pragma once
 
+// Forward declarations for types referenced only via ZRef<T> / ZArray<T> / ZList<T>
+// (pointer-only storage — no full type required for CWvsContext layout).
+// TODO: replace with proper #includes when these classes are ported.
+class CUIFadeYesNo;
+class CNoticeQuestProgress;
+class CUIQuestTimer;
+class CClock;
+class CUIAccountMoreInfo;
+class CUIFindFriend;
+struct GW_Memo;
+struct CS_COMMODITY;
+struct CS_LIMITGOODS;
+struct PrivilegeItem;
+
 class CWvsContext {
 public:
     virtual ~CWvsContext() = default;
@@ -80,7 +94,6 @@ public:
     int m_bExclRequestSent;
     int m_tExclRequestSent;
     int m_tExclRequestSentQ[2];
-    // TODO this is as far as has been verified.
     ZRef<CharacterData> m_pCharacterData;
     BasicStat m_basicStat;
     SecondaryStat m_secondaryStat;
@@ -121,25 +134,37 @@ public:
     int m_bPersonalShopOpen;
     int m_bADBoard;
     ZXString<char> m_sADBoard;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     ZRef<GW_ItemSlotBase> m_aRealEquip[60];
     ZRef<GW_ItemSlotBase> m_aRealEquip2[60];
     ZRef<GW_ItemSlotBase> m_aRealDragonEquip[4];
     ZRef<GW_ItemSlotBase> m_aRealMechanicEquip[5];
+#else
+    // v83: equip arrays carry 52 slots (vs v95's 60). Dragon equip absent.
+    // Mechanic equip is 4 slots in v83 (vs v95's 5).
+    ZRef<GW_ItemSlotBase> m_aRealEquip[52];
+    ZRef<GW_ItemSlotBase> m_aRealEquip2[52];
+    ZRef<GW_ItemSlotBase> m_aRealMechanicEquip[4];
+#endif
     CalcDamage m_CalcDamage;
     TSecType<long> m_tRestForHPDuration;
     TSecType<long> m_tRestForMPDuration;
     TSecType<long> m_tRestForMPDurationOnPortableChair;
     TSecType<long> m_tRestForHPDurationOnPortableChair;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     TSecType<long> m_tRestForHPDurationItemOption;
     TSecType<long> m_tRestForMPDurationItemOption;
+#endif
     int m_tReviveDialog;
     int m_tLastGivePopularity;
     int m_tLastEmotionChange;
     int m_tLastEffectItemChange;
     int m_tLastStatResetRequest;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int m_tLastFollowCharacterRequest;
     unsigned int m_dwOldDriverID;
     unsigned int m_dwFollowRequesterID;
+#endif
     CRand32 m_RndActionMan;
     ZXString<char> m_sWeekEventMessage;
     int m_bWeekEventMessagePrinted;
@@ -155,8 +180,10 @@ public:
     int *m_pAffectedAreaPool; // ZRef<CAffectedAreaPool>
     int *m_pTownPortalPool; // ZRef<CTownPortalPool>
     int *m_pOpenGatePool; // ZRef<COpenGatePool>
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int *m_pReactorPool; // ZRef<CReactorPool>
     int *m_pPortalList; // ZRef<CPortalList>
+#endif
     int *m_pUIItem; // ZRef<CUIItem>
     int *m_pUIEquip; // ZRef<CUIEquip>
     int *m_pUIStat; // ZRef<CUIStat>
@@ -167,7 +194,9 @@ public:
     int *m_pUIQuestInfo; // ZRef<CUIQuestInfo>
     int *m_pUIMedalQuestInfo; // ZRef<CUIMedalQuestInfo>
     int *m_pUIUserInfo; // ZRef<CUIUserInfo>
-    int *m_pUIQuestAlarm; // ZRef<CUIQuestAlarm>
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    int *m_pUIQuestAlarm; // ZRef<CUIQuestAlarm> -- in v83 this is a global TSingleton (dword_BF0FF4), not a member field
+#endif
     int *m_pUIGuildBBS; // ZRef<CUIGuildBBS>
     int *m_pAvatarMegaphone; // ZRef<CAvatarMegaphone>
     int *m_pUIMonsterCarnival; // ZRef<CUIMonsterCarnival>
@@ -181,28 +210,36 @@ public:
     int *m_pUIFamilyChart; // ZRef<CUIFamilyChart>
     int *m_pUIOperatorBoard; // ZRef<CUIOperatorBoard>
     int *m_pUIOperatorBoardState; // ZRef<CUIOpBoardState>
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int *m_pUIDragonBox; // ZRef<CUIDragonBox>
+#endif
     bool m_bIsOperatorBoardState;
     int m_nWebOpBoardIndex;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     ZRef<CUIBattleRecord> m_pUIBattleRecord;
+#endif
     ZXString<char> m_sWebOpBoardURL;
-//    ZRef<CUIAccountMoreInfo> m_pUIAccountMoreInfo;
-//    ZRef<CUIFindFriend> m_pUIFindFriend;
-//    ZArray<ZRef<CUIFadeYesNo>> m_apFadeWnd;
-//    ZRef<CNoticeQuestProgress> m_pNoticeQuestProgress;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    ZRef<CUIAccountMoreInfo> m_pUIAccountMoreInfo;
+    ZRef<CUIFindFriend> m_pUIFindFriend;
+#endif
+    ZArray<ZRef<CUIFadeYesNo>> m_apFadeWnd;
+    ZRef<CNoticeQuestProgress> m_pNoticeQuestProgress;
     int m_bShowUI;
-//    ZList<GW_Memo> m_lReceivedMemo;
+    ZList<GW_Memo> m_lReceivedMemo;
     int m_bOnReadingMemo;
     int m_bIsExistMemo_NotLoaded;
-//    ZList<ZRef<CUIQuestTimer>> m_lpUIQuestTimer;
-//    CTips m_tips;
-//    ZRef<CClock> m_pClock;
+    ZList<ZRef<CUIQuestTimer>> m_lpUIQuestTimer;
+    CTips m_tips;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    ZRef<CClock> m_pClock;
+#endif
     int m_nLastMobBonusEventPercentage;
     ZArray<ZXString<char>> m_aChannelName;
     ZArray<int> m_aAdultChannel;
-//    ZArray<ZRef<CS_COMMODITY>> m_aOriginalCommodity;
-//    ZArray<ZRef<CS_COMMODITY>> m_aCommodity;
-//    ZArray<CS_LIMITGOODS> m_aLimitGoods;
+    ZArray<ZRef<CS_COMMODITY>> m_aOriginalCommodity;
+    ZArray<ZRef<CS_COMMODITY>> m_aCommodity;
+    ZArray<CS_LIMITGOODS> m_aLimitGoods;
     int m_bMigrateFromWishItem;
     int m_nCommSN;
     ZXString<char> m_sGiveTo;
@@ -251,9 +288,9 @@ public:
     int m_bMiniMapOnOff;
     int m_nCashShopInitialItem;
     int m_nEnergy;
-    //ZArray<ZRef<PrivilegeItem>> m_apPrivilege;
-    //Privilege m_privilege;
-    //FamilyInfo m_FamilyInfo;
+    ZArray<ZRef<PrivilegeItem>> m_apPrivilege;
+    Privilege m_privilege;
+    FamilyInfo m_FamilyInfo;
     ZXString<char> m_sUnregisterCharacterName;
     ZMap<unsigned long, ZRef<ZList<_FILETIME> >, unsigned long>
             m_mExpireProtectingCheckedItem;
@@ -264,7 +301,7 @@ public:
     int m_tLastUpdateFileTime;
     _FILETIME m_ftLastUpdate;
     CWvsContext::Massacre m_Massacre;
-    //PartyRaidTeam m_nTeamForPartyRaid;
+    PartyRaidTeam m_nTeamForPartyRaid;
     int m_nPartyRaidStageMine;
     int m_nPartyRaidStageOther;
     int m_nPartyRaidPoint;
@@ -281,12 +318,14 @@ public:
     bool m_bIsLargeScreen;
     unsigned __int8 m_nDoubleJumpChatCtrl;
     int m_aPasssiveSkillBuffing[22];
-    //ZList<CWvsContext::ITEMMSG> m_lItemMsg;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    ZList<CWvsContext::ITEMMSG> m_lItemMsg;
     int m_tNextCheckItemMsg;
     unsigned __int16 m_usWorldMapQuestID;
     ZList<unsigned long> m_lWorldMapQuestMobList;
     //ZArray<WORLDMAPQUESTDEMANDITEM> m_aWorldMapQuestDemandItem;
     int m_bShowOnlyWorthyQuests;
+#endif
 
     //TODO
     static CWvsContext *GetInstance();

@@ -24,7 +24,9 @@ struct GUILDDATA {
     ZXString<char> sNotice;
     int nPoint;
     int nAllianceID;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int nLevel;
     ZMap<long, GUILDDATA::SKILLENTRY, long> mSkillRecord;
     ZArray<long> aSkillRecordOnlyID;
+#endif
 };

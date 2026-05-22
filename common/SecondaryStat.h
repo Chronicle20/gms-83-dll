@@ -390,12 +390,14 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tBarrier__CS;
     int _ZtlSecureTear_rBarrier_[2];
     unsigned int _ZtlSecureTear_rBarrier__CS;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int _ZtlSecureTear_nDojangShield_[2];
     unsigned int _ZtlSecureTear_nDojangShield__CS;
     int _ZtlSecureTear_tDojangShield_[2];
     unsigned int _ZtlSecureTear_tDojangShield__CS;
     int _ZtlSecureTear_rDojangShield_[2];
     unsigned int _ZtlSecureTear_rDojangShield__CS;
+#endif
     int _ZtlSecureTear_nReverseInput_[2];
     unsigned int _ZtlSecureTear_nReverseInput__CS;
     int _ZtlSecureTear_rReverseInput_[2];
@@ -540,6 +542,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rBodyPressure__CS;
     int _ZtlSecureTear_tBodyPressure_[2];
     unsigned int _ZtlSecureTear_tBodyPressure__CS;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int _ZtlSecureTear_nSmartKnockback_[2];
     unsigned int _ZtlSecureTear_nSmartKnockback__CS;
     int _ZtlSecureTear_rSmartKnockback_[2];
@@ -831,5 +834,6 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tSummonBomb__CS;
     int _ZtlSecureTear_lSummonBomb_[2];
     unsigned int _ZtlSecureTear_lSummonBomb__CS;
+#endif
     ZRef<TemporaryStatBase<long>> aTemporaryStat[7];
 };

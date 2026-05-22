@@ -146,6 +146,10 @@
 #include "AllianceData.h"
 #include "CalcDamage.h"
 #include "CUIBattleRecord.h"
+#include "Tips.h"
+#include "Privilege.h"
+#include "FamilyInfo.h"
+#include "PartyRaidTeam.h"
 #include "CWvsContext.h"
 
 
