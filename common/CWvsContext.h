@@ -148,6 +148,10 @@ class CWvsContext {
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     ZRef<GW_ItemSlotBase> m_aRealEquip[60];
     ZRef<GW_ItemSlotBase> m_aRealEquip2[60];
+#elif defined(REGION_JMS)
+    // v185 JMS: equip arrays carry 37 slots (vs v83=52, v87/v95=60).
+    ZRef<GW_ItemSlotBase> m_aRealEquip[37];
+    ZRef<GW_ItemSlotBase> m_aRealEquip2[37];
 #else
     // v83: equip arrays carry 52 slots (v87+ has 60).
     ZRef<GW_ItemSlotBase> m_aRealEquip[52];
@@ -194,7 +198,7 @@ class CWvsContext {
     int* m_pAffectedAreaPool; // ZRef<CAffectedAreaPool>
     int* m_pTownPortalPool;   // ZRef<CTownPortalPool>
     int* m_pOpenGatePool;     // ZRef<COpenGatePool>
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     int* m_pReactorPool; // ZRef<CReactorPool>
     int* m_pPortalList;  // ZRef<CPortalList>
 #endif
@@ -208,8 +212,8 @@ class CWvsContext {
     int* m_pUIQuestInfo;      // ZRef<CUIQuestInfo>
     int* m_pUIMedalQuestInfo; // ZRef<CUIMedalQuestInfo>
     int* m_pUIUserInfo;       // ZRef<CUIUserInfo>
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
-    // v83 stores this as global TSingleton dword_BF0FF4, not a member field.
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+    // v83/v87 store this as global TSingleton, not a member field.
     int* m_pUIQuestAlarm; // ZRef<CUIQuestAlarm>
 #endif
     int* m_pUIGuildBBS;           // ZRef<CUIGuildBBS>
