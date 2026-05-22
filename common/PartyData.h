@@ -1,10 +1,9 @@
 #pragma once
-#include "ZXString.h"
 #include "PartyMember.h"
+#include "ZXString.h"
 
 struct PARTYDATA {
-    struct TOWNPORTAL
-    {
+    struct TOWNPORTAL {
         unsigned int m_dwTownID;
         unsigned int m_dwFieldID;
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)

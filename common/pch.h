@@ -146,10 +146,20 @@
 #include "AllianceData.h"
 #include "CalcDamage.h"
 #include "CUIBattleRecord.h"
-#include "Tips.h"
-#include "Privilege.h"
+// clang-format off
+// Order-sensitive: CWvsContext.h depends on each of the headers below.
+#include "CNoticeQuestProgress.h"
+#include "CS_COMMODITY.h"
+#include "CS_LIMITGOODS.h"
+#include "CUIFadeYesNo.h"
+#include "CUIQuestTimer.h"
 #include "FamilyInfo.h"
+#include "GW_Memo.h"
 #include "PartyRaidTeam.h"
+#include "Privilege.h"
+#include "PrivilegeItem.h"
+#include "Tips.h"
+// clang-format on
 #include "CWvsContext.h"
 
 

@@ -1,8 +1,8 @@
 #pragma once
-#include "ZXString.h"
+#include "GuildMember.h"
 #include "ZArray.h"
 #include "ZMap.h"
-#include "GuildMember.h"
+#include "ZXString.h"
 
 struct GUILDDATA {
     struct SKILLENTRY {

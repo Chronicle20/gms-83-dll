@@ -1,7 +1,7 @@
 #pragma once
 
 class CTips {
-public:
+  public:
     struct TIPS_INFO {
         int nLevelMin;
         int nLevelMax;
