@@ -171,17 +171,22 @@
 // clang-format on
 #include "CWvsContext.h"
 
+// clang-format off
+// Order matters: CMob/CMobTemplate/CLife have no #includes of their own and
+// rely on the PCH to provide MobAttackInfo, MobSkillInfo, MobSpeak*, and
+// MobStat first.
 #include "BulletContainer.h"
 #include "CBullet.h"
-#include "CChatBalloon.h"
 #include "CFadeoutBullet.h"
-#include "CLife.h"
-#include "CMob.h"
-#include "CMobTemplate.h"
+#include "CChatBalloon.h"
 #include "MobAttackInfo.h"
 #include "MobSkillInfo.h"
-#include "MobSpeakCondition.h"
 #include "MobSpeakInformation.h"
+#include "MobSpeakCondition.h"
 #include "MobStat.h"
+#include "CMobTemplate.h"
+#include "CLife.h"
+#include "CMob.h"
+// clang-format on
 
 #include "TSingleton.h"
