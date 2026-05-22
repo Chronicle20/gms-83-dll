@@ -132,6 +132,10 @@ set(C_UI_WND_VFTABLE 0x00B3CE10)           # primary vftable (IGObj subobject at
 set(C_UI_WND_VTABLE_SLOT_COUNT 14)         # walked 0x00B3CE10..+0x37 forward; slot 14 = 0xFDE04000 (outside .text), prior 14 entries all in .text
 set(SIZEOF_C_UI_WND_V83_1 1456)            # 0x5B0; IDA struct ordinal 226 size; matches dtor's last touched member at offset 0x5AC + 4 == 0x5B0
 
+set(C_CTRL_BUTTON_CTOR 0x004258E4)         # CCtrlButton::CCtrlButton(void) -- nullary ctor (??0CCtrlButton@@QAE@XZ ends in XZ = no params); plan's (x,y,w,h,name,CREATEPARAM*) is wrong, setup happens via virtual CreateCtrl at 0x004BFFFB (signature: CWnd*, UINT, LONG, LONG, LONG, void*)
+set(C_CTRL_BUTTON_VFTABLE 0x00AF0C10)      # primary CCtrlButton vftable (IGObj subobject at offset 0, 10 slots = 0x28 bytes per CCtrlButton_vtbl struct); secondary inherited CWnd::IUIMsgHandler vftable at 0x00AF0BC4 (offset +4), CWnd::ZRefCounted vftable at 0x00AF0BC0 (offset +8) -- multiple inheritance via CCtrlWnd base
+set(SIZEOF_C_CTRL_BUTTON_V83_1 1444)       # 0x5A4; IDA struct ordinal 301 size; last member m_bSelfDisable at offset 0x5A0 + 4 == 0x5A4
+
 set(G_DW_TARGET_OS 0x00BE2EBC)
 
 set(C_WVS_APP 0x009F4FDA)
