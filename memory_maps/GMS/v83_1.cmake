@@ -136,6 +136,10 @@ set(C_CTRL_BUTTON_CTOR 0x004258E4)         # CCtrlButton::CCtrlButton(void) -- n
 set(C_CTRL_BUTTON_VFTABLE 0x00AF0C10)      # primary CCtrlButton vftable (IGObj subobject at offset 0, 10 slots = 0x28 bytes per CCtrlButton_vtbl struct); secondary inherited CWnd::IUIMsgHandler vftable at 0x00AF0BC4 (offset +4), CWnd::ZRefCounted vftable at 0x00AF0BC0 (offset +8) -- multiple inheritance via CCtrlWnd base
 set(SIZEOF_C_CTRL_BUTTON_V83_1 1444)       # 0x5A4; IDA struct ordinal 301 size; last member m_bSelfDisable at offset 0x5A0 + 4 == 0x5A4
 
+set(C_CTRL_EDIT_CTOR 0x004C9C72)           # CCtrlEdit::CCtrlEdit(void) -- nullary ctor (??0CCtrlEdit@@QAE@XZ ends in XZ = no params); same pattern as CCtrlButton (Task 1.5) and CUIWnd (Task 1.4); calls CCtrlWnd::CCtrlWnd then zeros members and writes 3 vptrs; setup happens via virtual CreateCtrl, callers pass CREATEPARAM* (e.g. CCSWnd_Char::OnCreate at 0x004AB7BE constructs CREATEPARAM via 0x004C8D5F)
+set(C_CTRL_EDIT_VFTABLE 0x00AF2BA8)        # primary CCtrlEdit vftable (IGObj subobject at offset 0); secondary inherited CWnd::IUIMsgHandler vftable at 0x00AF2B5C (offset +4), CWnd::ZRefCounted vftable at 0x00AF2B58 (offset +8) -- multiple inheritance via CCtrlWnd base, same triple-vptr layout as CCtrlButton
+set(SIZEOF_C_CTRL_EDIT_V83_1 184)          # 0xB8; from CCSWnd_Char::OnCreate at 0x004AB7AC: ZAllocEx::Alloc(0xB8u) immediately preceding CCtrlEdit::CCtrlEdit call at 0x004AB7BE; consistent with ctor's last write at offset 0xB4 + 4 == 0xB8
+
 set(G_DW_TARGET_OS 0x00BE2EBC)
 
 set(C_WVS_APP 0x009F4FDA)
