@@ -1,8 +1,7 @@
 #pragma once
 
-
 class CMob : CLife {
-public:
+  public:
     struct ATTACKEFFECT {
         int tStart;
         int bLeft;
@@ -12,10 +11,10 @@ public:
     struct AFFECTEDSKILLENTRY {
         int nSkillID;
         int tStart;
-        __POSITION *posList;
+        __POSITION* posList;
         int bIcon;
         int bFlip;
-        _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > pLayer;
+        _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> pLayer;
     };
 
     struct ATTACKENTRY {
@@ -85,16 +84,14 @@ public:
     };
 
     struct MobBullet : CFadeoutBullet {
-    public:
-        struct Container : BulletContainer<MobBullet> {
-        };
+      public:
+        struct Container : BulletContainer<MobBullet> {};
 
         int m_nZ;
         int m_bLeft;
         _bstr_t m_sBallUOL;
         int m_nAttackIdx;
     };
-
 
     int m_nMobChargeCount;
 #if (defined(REGION_GMS))
@@ -108,15 +105,15 @@ public:
 #endif
     ZList<AFFECTEDSKILLENTRY> m_lAffectedSkillEntry;
     ZList<ATTACKENTRY> m_lAttackEntry;
-    ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > > m_lpLayerASAni;
-    ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > > m_lpLayerASIcon;
+    ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerASAni;
+    ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerASIcon;
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION < 95)
-    ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > > unknown1;
+    ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> unknown1;
 #endif
-    __POSITION *m_posAffectedGuidedBullet;
-    _com_ptr_t<_com_IIID<IWzVector2D, &IID_IUnknown> > m_pvc;
-    _com_ptr_t<_com_IIID<IWzVector2D, &IID_IUnknown> > m_pvcActive;
-    _com_ptr_t<_com_IIID<IWzVector2D, &IID_IUnknown> > m_pvcHead;
+    __POSITION* m_posAffectedGuidedBullet;
+    _com_ptr_t<_com_IIID<IWzVector2D, &IID_IUnknown>> m_pvc;
+    _com_ptr_t<_com_IIID<IWzVector2D, &IID_IUnknown>> m_pvcActive;
+    _com_ptr_t<_com_IIID<IWzVector2D, &IID_IUnknown>> m_pvcHead;
     int _ZtlSecureTear_m_bInViewSplit[2];
     unsigned int _ZtlSecureTear_m_bInViewSplit_CS;
     int _ZtlSecureTear_m_nMobCtrlState[2];
@@ -137,8 +134,8 @@ public:
     unsigned int m_uLayerStateCounter;
     unsigned int _ZtlSecureTear_m_dwMobID[2];
     unsigned int _ZtlSecureTear_m_dwMobID_CS;
-    CMobTemplate *m_pTemplate;
-    CMobTemplate *m_pTemplateByDoom;
+    CMobTemplate* m_pTemplate;
+    CMobTemplate* m_pTemplateByDoom;
     int _ZtlSecureTear_m_nMP[2];
     unsigned int _ZtlSecureTear_m_nMP_CS;
     MobStat m_stat;
@@ -155,7 +152,7 @@ public:
     unsigned int _ZtlSecureTear_m_tHitExpire_CS;
     int _ZtlSecureTear_m_tLastHitExpire[2];
     unsigned int _ZtlSecureTear_m_tLastHitExpire_CS;
-    __POSITION *m_posFrame;
+    __POSITION* m_posFrame;
     int _ZtlSecureTear_m_tCurFrameRemain[2];
     unsigned int _ZtlSecureTear_m_tCurFrameRemain_CS;
 #if defined(REGION_GMS)
@@ -172,7 +169,7 @@ public:
 #endif
     ZArray<tagRECT> m_arcAttackBody;
     ZArray<tagRECT> m_arcAttackBodyFlip;
-    ZArray<ZList<ZRef<CActionMan::MOBACTIONFRAMEENTRY> > > m_aAction;
+    ZArray<ZList<ZRef<CActionMan::MOBACTIONFRAMEENTRY>>> m_aAction;
 #if defined(REGION_GMS)
     int _ZtlSecureTear_m_tInitDelay[2];
     unsigned int _ZtlSecureTear_m_tInitDelay_CS;
@@ -199,20 +196,20 @@ public:
 #endif
     ZList<HITEFFECT> m_lHitEffect;
     ZList<DROPPICKUP> m_lDropPickUpLog;
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerAction;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerAction;
     int m_nCalcDamageStatIndex;
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerHPTag;
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pEffectLayer;
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerAngerTag;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerHPTag;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pEffectLayer;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerAngerTag;
     int m_bNeedToUpdateCrc;
     unsigned int m_dwMobCrc;
     int m_tLastHitted;
-    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown> > m_pCanvasHPIndicator;
+    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasHPIndicator;
     ZMap<long, long, long> m_mDelayedHPIndicator;
 #if defined(REGION_GMS)
     ZArray<long> m_pCanvasAngerIndicatorArrayCount;
 #endif
-    ZArray<ZArray<_com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown> > > > m_pCanvasAngerIndicatorArray;
+    ZArray<ZArray<_com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>>>> m_pCanvasAngerIndicatorArray;
     int m_nGaugeCount;
 #if defined(REGION_GMS)
     ZRef<CAttrShoe> m_pAttrShoe;
@@ -237,7 +234,7 @@ public:
 #endif
     int m_bDoomReserved;
     unsigned __int8 m_bDoomReservedSN;
-    ZList<ZRef<ReservedPacket> > m_lpStatChangeReserved;
+    ZList<ZRef<ReservedPacket>> m_lpStatChangeReserved;
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     TSecType<int> m_bChasing;
 #endif

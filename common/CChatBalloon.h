@@ -1,16 +1,16 @@
 #pragma once
 
 class CChatBalloon {
-public:
+  public:
     virtual ~CChatBalloon() = default;
 
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerChat;
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerAD;
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerGameState;
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerShop;
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerBack;
-    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown> > m_pLayerEffect;
-    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown> > m_pButton[4];
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerChat;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerAD;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerGameState;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerShop;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerBack;
+    _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerEffect;
+    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pButton[4];
     int m_nADPosX;
     int m_nADPosY;
     int m_nADButtonPosX;

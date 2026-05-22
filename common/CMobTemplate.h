@@ -96,8 +96,8 @@ class CMobTemplate : ZRefCounted {
     int nEscortType;
     ZRef<MobAttackInfo> m_apAttackInfo[9];
     ZArray<MobSkillInfo> m_aSkillInfo;
-    ZArray<ZRef<MobSpeakInformation> > apSpeakInformation;
-    ZArray<ZRef<MobSpeakCondition> > apSpeakCondition;
+    ZArray<ZRef<MobSpeakInformation>> apSpeakInformation;
+    ZArray<ZRef<MobSpeakCondition>> apSpeakCondition;
     int nChatBalloon;
     int nWidth;
     int _ZtlSecureTear_bOnlyNormalAttack[2];

@@ -1,7 +1,6 @@
 #pragma once
 
-struct SECRECT
-{
+struct SECRECT {
     int _ZtlSecureTear_left[2];
     unsigned int _ZtlSecureTear_left_CS;
     int _ZtlSecureTear_top[2];

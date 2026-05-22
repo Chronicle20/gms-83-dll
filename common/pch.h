@@ -41,16 +41,16 @@
 #include "ZMap.h"
 #include "ZList.h"
 
-#include "TSecType.h"
 #include "Secret.h"
+#include "TSecType.h"
 
 #include "CAttrShoe.h"
 #include "CRTTI.h"
 #include "Range.h"
 
 #include "IGObj.h"
-#include "IVecCtrlOwner.h"
 #include "IUIMsgHandler.h"
+#include "IVecCtrlOwner.h"
 
 #include "CInPacket.h"
 #include "INetMsgHandler.h"
@@ -173,15 +173,15 @@
 
 #include "BulletContainer.h"
 #include "CBullet.h"
-#include "CFadeoutBullet.h"
 #include "CChatBalloon.h"
-#include "MobAttackInfo.h"
-#include "MobSkillInfo.h"
-#include "MobSpeakInformation.h"
-#include "MobSpeakCondition.h"
-#include "MobStat.h"
-#include "CMobTemplate.h"
+#include "CFadeoutBullet.h"
 #include "CLife.h"
 #include "CMob.h"
+#include "CMobTemplate.h"
+#include "MobAttackInfo.h"
+#include "MobSkillInfo.h"
+#include "MobSpeakCondition.h"
+#include "MobSpeakInformation.h"
+#include "MobStat.h"
 
 #include "TSingleton.h"

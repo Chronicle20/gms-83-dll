@@ -1,5 +1,5 @@
 #pragma once
 
-interface CFadeoutBullet : CBullet {
+interface CFadeoutBullet : CBullet{
 
-};
+                           };

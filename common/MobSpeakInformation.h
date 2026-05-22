@@ -6,5 +6,5 @@ class MobSpeakInformation : ZRefCounted {
     int nMP;
     int nProb;
     int nWidth;
-    ZArray<ZXString<char> > asSpeech;
+    ZArray<ZXString<char>> asSpeech;
 };

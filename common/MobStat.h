@@ -1,7 +1,7 @@
 #pragma once
 
 class MobStat {
-public:
+  public:
     struct BURNED_INFO {
         unsigned int dwCharacterID;
         int nSkillID;
