@@ -390,7 +390,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tBarrier__CS;
     int _ZtlSecureTear_rBarrier_[2];
     unsigned int _ZtlSecureTear_rBarrier__CS;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     int _ZtlSecureTear_nDojangShield_[2];
     unsigned int _ZtlSecureTear_nDojangShield__CS;
     int _ZtlSecureTear_tDojangShield_[2];
@@ -542,7 +542,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rBodyPressure__CS;
     int _ZtlSecureTear_tBodyPressure_[2];
     unsigned int _ZtlSecureTear_tBodyPressure__CS;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     int _ZtlSecureTear_nSmartKnockback_[2];
     unsigned int _ZtlSecureTear_nSmartKnockback__CS;
     int _ZtlSecureTear_rSmartKnockback_[2];
@@ -703,6 +703,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_nEMDD_CS;
     int _ZtlSecureTear_nEMDD_[2];
     unsigned int _ZtlSecureTear_nEMDD__CS;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    // v95-only tail: v185 JMS truncates SecondaryStat at nEMDD_ (above), then places
+    // aTemporaryStat[7] at v185 0x1054.
     int _ZtlSecureTear_rEMDD_[2];
     unsigned int _ZtlSecureTear_rEMDD__CS;
     int _ZtlSecureTear_tEMDD_[2];
