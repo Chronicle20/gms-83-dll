@@ -20,6 +20,29 @@ class CWvsContext {
         int nSkill;
     };
 
+    // v95-only: auto-quest item-message system (m_lItemMsg).
+    struct ITEMMSGINFO {
+        unsigned __int16 usQuestID;
+        // 2-byte pad (compiler-inserted)
+        int nQuestState;
+        ZArray<long> aFieldID;
+        ZXString<char> sStateKeyword;
+        int tInterval;
+        int tRand;
+        int bRepeat;
+        unsigned int dwDuration;
+        ZArray<ZXString<char>> aMsg;
+        int nEffect;
+        int nPriority;
+    };
+
+    struct ITEMMSG {
+        int nItemID;
+        int tNext;
+        int nCheckIdx;
+        ZList<ITEMMSGINFO> lItemMsgInfo;
+    };
+
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95
     int m_bFirstUserLoad;
 #endif
