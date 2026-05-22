@@ -390,7 +390,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tBarrier__CS;
     int _ZtlSecureTear_rBarrier_[2];
     unsigned int _ZtlSecureTear_rBarrier__CS;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     int _ZtlSecureTear_nDojangShield_[2];
     unsigned int _ZtlSecureTear_nDojangShield__CS;
     int _ZtlSecureTear_tDojangShield_[2];
@@ -542,7 +542,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rBodyPressure__CS;
     int _ZtlSecureTear_tBodyPressure_[2];
     unsigned int _ZtlSecureTear_tBodyPressure__CS;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     int _ZtlSecureTear_nSmartKnockback_[2];
     unsigned int _ZtlSecureTear_nSmartKnockback__CS;
     int _ZtlSecureTear_rSmartKnockback_[2];
@@ -569,6 +569,14 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tStopPortion__CS;
     int _ZtlSecureTear_nStopMotion_[2];
     unsigned int _ZtlSecureTear_nStopMotion__CS;
+#endif
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87 && BUILD_MAJOR_VERSION < 95
+    // v87 places a 16-byte non-SecureTear region at SS+0xD30..0xD3F (open question;
+    // DecodeForLocal accesses [esi+0xD3C] via a ZMap-like accessor). Placeholder ensures
+    // aTemporaryStat[7] lands at v87 SS+0xD40 per disassembly evidence.
+    unsigned char _v87_unknown_0xD30[16];
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     int _ZtlSecureTear_rStopMotion_[2];
     unsigned int _ZtlSecureTear_rStopMotion__CS;
     int _ZtlSecureTear_tStopMotion_[2];
