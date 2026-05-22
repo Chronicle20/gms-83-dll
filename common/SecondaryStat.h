@@ -398,16 +398,31 @@ struct SecondaryStat {
     int _ZtlSecureTear_rDojangShield_[2];
     unsigned int _ZtlSecureTear_rDojangShield__CS;
 #endif
+    // v87 (GMS) and v185 (JMS) both encode this as a SecureTear<byte> (8B slot
+    // = 2B payload + 2B pad + 4B CS), verified via disassembly. v95 GMS uses the
+    // standard SecureTear<long> 12B slot. v83 layout is structurally different
+    // in this region and unconfirmed in detail; falls into the 12B branch.
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 87) || defined(REGION_JMS)
+    char _ZtlSecureTear_nReverseInput_[2];
+    unsigned int _ZtlSecureTear_nReverseInput__CS;
+#else
     int _ZtlSecureTear_nReverseInput_[2];
     unsigned int _ZtlSecureTear_nReverseInput__CS;
+#endif
     int _ZtlSecureTear_rReverseInput_[2];
     unsigned int _ZtlSecureTear_rReverseInput__CS;
     int _ZtlSecureTear_tReverseInput_[2];
     unsigned int _ZtlSecureTear_tReverseInput__CS;
     int _ZtlSecureTear_nDojangBerserk_[2];
     unsigned int _ZtlSecureTear_nDojangBerserk__CS;
+    // Same byte-vs-long delta as nReverseInput_ above.
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 87) || defined(REGION_JMS)
+    char _ZtlSecureTear_rDojangBerserk_[2];
+    unsigned int _ZtlSecureTear_rDojangBerserk__CS;
+#else
     int _ZtlSecureTear_rDojangBerserk_[2];
     unsigned int _ZtlSecureTear_rDojangBerserk__CS;
+#endif
     int _ZtlSecureTear_tDojangBerserk_[2];
     unsigned int _ZtlSecureTear_tDojangBerserk__CS;
     int _ZtlSecureTear_nDojangInvincible_[2];
