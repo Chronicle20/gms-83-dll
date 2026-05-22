@@ -1,3 +1,4 @@
+#pragma once
 #include "TemporaryStatBase.h"
 
 struct SecondaryStat {
@@ -389,22 +390,39 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tBarrier__CS;
     int _ZtlSecureTear_rBarrier_[2];
     unsigned int _ZtlSecureTear_rBarrier__CS;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     int _ZtlSecureTear_nDojangShield_[2];
     unsigned int _ZtlSecureTear_nDojangShield__CS;
     int _ZtlSecureTear_tDojangShield_[2];
     unsigned int _ZtlSecureTear_tDojangShield__CS;
     int _ZtlSecureTear_rDojangShield_[2];
     unsigned int _ZtlSecureTear_rDojangShield__CS;
+#endif
+    // v87 (GMS) and v185 (JMS) both encode this as a SecureTear<byte> (8B slot
+    // = 2B payload + 2B pad + 4B CS), verified via disassembly. v95 GMS uses the
+    // standard SecureTear<long> 12B slot. v83 layout is structurally different
+    // in this region and unconfirmed in detail; falls into the 12B branch.
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 87) || defined(REGION_JMS)
+    char _ZtlSecureTear_nReverseInput_[2];
+    unsigned int _ZtlSecureTear_nReverseInput__CS;
+#else
     int _ZtlSecureTear_nReverseInput_[2];
     unsigned int _ZtlSecureTear_nReverseInput__CS;
+#endif
     int _ZtlSecureTear_rReverseInput_[2];
     unsigned int _ZtlSecureTear_rReverseInput__CS;
     int _ZtlSecureTear_tReverseInput_[2];
     unsigned int _ZtlSecureTear_tReverseInput__CS;
     int _ZtlSecureTear_nDojangBerserk_[2];
     unsigned int _ZtlSecureTear_nDojangBerserk__CS;
+    // Same byte-vs-long delta as nReverseInput_ above.
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 87) || defined(REGION_JMS)
+    char _ZtlSecureTear_rDojangBerserk_[2];
+    unsigned int _ZtlSecureTear_rDojangBerserk__CS;
+#else
     int _ZtlSecureTear_rDojangBerserk_[2];
     unsigned int _ZtlSecureTear_rDojangBerserk__CS;
+#endif
     int _ZtlSecureTear_tDojangBerserk_[2];
     unsigned int _ZtlSecureTear_tDojangBerserk__CS;
     int _ZtlSecureTear_nDojangInvincible_[2];
@@ -601,6 +619,9 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rSoulStone__CS;
     int _ZtlSecureTear_tSoulStone_[2];
     unsigned int _ZtlSecureTear_tSoulStone__CS;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    // Atlas bits 82-85 (Flying / Frozen / AssistCharge / MirrorImage [v95 PDB name: nEnrage_]).
+    // v87 confirmed via Reset stat-group mapping (docs/tasks/cwvscontext-port/v87_secondarystat_reset_mapping.md).
     int _ZtlSecureTear_nFlying_[2];
     unsigned int _ZtlSecureTear_nFlying__CS;
     int _ZtlSecureTear_rFlying_[2];
@@ -625,6 +646,9 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rEnrage__CS;
     int _ZtlSecureTear_tEnrage_[2];
     unsigned int _ZtlSecureTear_tEnrage__CS;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
+    // Atlas bits 86+ (SuddenDeath onwards) — v87 lacks these.
     int _ZtlSecureTear_nSuddenDeath_[2];
     unsigned int _ZtlSecureTear_nSuddenDeath__CS;
     int _ZtlSecureTear_rSuddenDeath_[2];
@@ -699,6 +723,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_nEMDD_CS;
     int _ZtlSecureTear_nEMDD_[2];
     unsigned int _ZtlSecureTear_nEMDD__CS;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+    // v95-only tail: v185 JMS truncates SecondaryStat at nEMDD_ (above), then places
+    // aTemporaryStat[7] at v185 0x1054.
     int _ZtlSecureTear_rEMDD_[2];
     unsigned int _ZtlSecureTear_rEMDD__CS;
     int _ZtlSecureTear_tEMDD_[2];
@@ -830,5 +858,6 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tSummonBomb__CS;
     int _ZtlSecureTear_lSummonBomb_[2];
     unsigned int _ZtlSecureTear_lSummonBomb__CS;
+#endif
     ZRef<TemporaryStatBase<long>> aTemporaryStat[7];
 };

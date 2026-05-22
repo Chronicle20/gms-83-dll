@@ -1,3 +1,4 @@
+#pragma once
 struct WEBCOOKIE
 {
     char szCookie[4096];

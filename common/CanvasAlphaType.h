@@ -1,3 +1,4 @@
+#pragma once
 enum CANVAS_ALPHATYPE : uint32_t
 {
     CA_OVERWRITE = 0xFFFFFFFF,

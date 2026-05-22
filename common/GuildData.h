@@ -1,7 +1,8 @@
-#include "ZXString.h"
+#pragma once
+#include "GuildMember.h"
 #include "ZArray.h"
 #include "ZMap.h"
-#include "GuildMember.h"
+#include "ZXString.h"
 
 struct GUILDDATA {
     struct SKILLENTRY {
@@ -23,7 +24,9 @@ struct GUILDDATA {
     ZXString<char> sNotice;
     int nPoint;
     int nAllianceID;
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int nLevel;
     ZMap<long, GUILDDATA::SKILLENTRY, long> mSkillRecord;
     ZArray<long> aSkillRecordOnlyID;
+#endif
 };

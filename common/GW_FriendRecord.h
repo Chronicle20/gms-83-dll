@@ -1,3 +1,4 @@
+#pragma once
 #include "ZArray.h"
 
 struct GW_FriendRecord {

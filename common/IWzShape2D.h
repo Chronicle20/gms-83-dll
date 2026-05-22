@@ -1,3 +1,4 @@
+#pragma once
 #undef  INTERFACE
 #define INTERFACE   IWzShape2D
 

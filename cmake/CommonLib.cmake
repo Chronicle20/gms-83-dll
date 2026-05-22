@@ -33,3 +33,8 @@ target_link_libraries(common_lib
     PUBLIC  winmm.lib
     PUBLIC  comsuppw.lib
 )
+
+# Precompile the shared header. Guarded on COMPILE_LANGUAGE:CXX so a future
+# .c TU (none today, defensive) doesn't try to consume the C++ PCH.
+target_precompile_headers(common_lib PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/common/pch.h>")

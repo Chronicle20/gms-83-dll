@@ -19,7 +19,7 @@ public:
     ZSocketBase m_sock;
     CClientSocket::CONNECTCONTEXT m_ctxConnect;
     ZInetAddr m_addr;
-#if (defined(REGION_GMS) && MAJOR_VERSION >= 111)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111)
     int dummy1;
 #endif
     int m_tTimeout;
@@ -39,6 +39,8 @@ public:
     static void CreateInstance();
 
     void SendPacket(COutPacket *oPacket);
+
+    void Flush();
 
     void ManipulatePacket();
 

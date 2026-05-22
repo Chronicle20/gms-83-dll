@@ -1,3 +1,4 @@
+#pragma once
 #include "ZFatalSection.h"
 
 struct CRand32 {

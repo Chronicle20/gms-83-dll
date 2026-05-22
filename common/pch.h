@@ -1,11 +1,9 @@
+#pragma once
 // pch.h: This is a precompiled header file.
 // Files listed below are compiled only once, improving build performance for future builds.
 // This also affects IntelliSense performance, including code completion and many code browsing features.
 // However, files listed here are ALL re-compiled if any one of them is updated between builds.
 // Do not add files here that you will be updating frequently as this negates the performance advantage.
-
-//#ifndef PCH_H
-//#define PCH_H
 
 #include "framework.h"
 
@@ -29,6 +27,9 @@
 #include "ZAllocAnonSelector.h"
 #include "ZAllocStrSelector.h"
 #include "ZFatalSection.h"
+
+#include "ZSynchronizedHelper.h"
+
 #include "ZAllocEx.h"
 #include "ZArray.h"
 #include "ZRefCounted.h"
@@ -85,6 +86,9 @@
 #include "ZSocketBuffer.h"
 #include "ZSocketBase.h"
 #include "CIOBufferManipulator.h"
+
+#include "CIGCipher.h"
+
 #include "COutPacket.h"
 #include "CClientSocket.h"
 
@@ -148,6 +152,23 @@
 #include "AllianceData.h"
 #include "CalcDamage.h"
 #include "CUIBattleRecord.h"
+// clang-format off
+// Order-sensitive: CWvsContext.h depends on each of the headers below.
+#include "CClock.h"
+#include "CNoticeQuestProgress.h"
+#include "CS_COMMODITY.h"
+#include "CS_LIMITGOODS.h"
+#include "CUIAccountMoreInfo.h"
+#include "CUIFadeYesNo.h"
+#include "CUIFindFriend.h"
+#include "CUIQuestTimer.h"
+#include "FamilyInfo.h"
+#include "GW_Memo.h"
+#include "PartyRaidTeam.h"
+#include "Privilege.h"
+#include "PrivilegeItem.h"
+#include "Tips.h"
+// clang-format on
 #include "CWvsContext.h"
 
 #include "BulletContainer.h"

@@ -1,3 +1,4 @@
+#pragma once
 
 struct CInPacket {
     int m_bLoopback;

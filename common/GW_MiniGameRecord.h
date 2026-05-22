@@ -1,3 +1,4 @@
+#pragma once
 struct GW_MiniGameRecord
 {
     int nGameID;

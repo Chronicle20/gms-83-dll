@@ -1,3 +1,4 @@
+#pragma once
 struct CCtrlComboBox : CCtrlWnd {
     struct ITEM_INFO {
         ZXString<char> sItemName;

@@ -27,11 +27,9 @@ else()
     message(FATAL_ERROR "Memory map not found at: ${MEMORY_MAP_FILE}")
 endif()
 
-# Generate memory_map.h
-configure_file(
-        ${CMAKE_SOURCE_DIR}/include/memory_map.h.in
-        ${CMAKE_BINARY_DIR}/generated/memory_map.h
-)
+# Generate memory_map.h (with validation that every @KEY@ has a defined
+# non-empty CMake var; see cmake/GenerateMemoryMap.cmake).
+include(GenerateMemoryMap)
 
 # Define shared INTERFACE config for all subprojects
 add_library(build_config INTERFACE)
@@ -46,6 +44,13 @@ target_compile_definitions(build_config INTERFACE
         BUILD_REGION="${BUILD_REGION}"
         BUILD_MAJOR_VERSION=${BUILD_MAJOR_VERSION}
         BUILD_MINOR_VERSION=${BUILD_MINOR_VERSION}
+)
+
+# Compile-time log threshold. Debug build: everything (Trace=0).
+# Anything else (Release/RelWithDebInfo/MinSizeRel): Warn=3 and above only.
+target_compile_definitions(build_config INTERFACE
+    $<$<CONFIG:Debug>:LOG_MIN_LEVEL=0>
+    $<$<NOT:$<CONFIG:Debug>>:LOG_MIN_LEVEL=3>
 )
 
 # Region macro for conditional compilation
@@ -109,3 +114,9 @@ add_custom_target(package_dlls
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     COMMENT "Packaging DLL artifacts"
 )
+
+option(BUILD_TESTS "Build host-side unit tests" OFF)
+if (BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

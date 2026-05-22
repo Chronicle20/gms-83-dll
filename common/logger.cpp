@@ -1,24 +1,75 @@
-/*
- This file is part of GMS-83-DLL.
-
- GMS-83-DLL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
- GMS-83-DLL is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
- */
-
 #include "logger.h"
 
-void Log(const char* format, ...)
-{
-	char buf[1024] = { 0 };
+#include <cstdarg>
+#include <cstdio>
 
-	va_list args;
-	va_start(args, format);
-	vsprintf_s(buf, format, args);
+namespace {
 
-	OutputDebugString(buf);
+const char* LevelTag(LogLevel level) {
+    switch (level) {
+    case LogLevel::Trace:
+        return "[TRACE]";
+    case LogLevel::Debug:
+        return "[DEBUG]";
+    case LogLevel::Info:
+        return "[INFO] ";
+    case LogLevel::Warn:
+        return "[WARN] ";
+    case LogLevel::Error:
+        return "[ERROR]";
+    }
+    return "[?????]";
+}
 
-	va_end(args);
+} // namespace
+
+void LogImpl(LogLevel level, const char* fmt, ...) {
+    constexpr size_t kBufSz = 1024;
+    static_assert(kBufSz >= 4, "buffer must hold the '...' truncation marker");
+
+    char buf[kBufSz];
+    const char* tag = LevelTag(level);
+    int prefix = std::snprintf(buf, kBufSz, "%s ", tag);
+    if (prefix < 0 || static_cast<size_t>(prefix) >= kBufSz) {
+        // Prefix alone overflowed — should be impossible at kBufSz = 1024.
+        return;
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    int written = std::vsnprintf(buf + prefix, kBufSz - prefix, fmt, args);
+    va_end(args);
+
+    if (written >= 0 && static_cast<size_t>(prefix + written) >= kBufSz) {
+        buf[kBufSz - 4] = '.';
+        buf[kBufSz - 3] = '.';
+        buf[kBufSz - 2] = '.';
+        buf[kBufSz - 1] = '\0';
+    }
+
+    OutputDebugStringA(buf);
+}
+
+void Log(const char* format, ...) {
+    constexpr size_t kBufSz = 1024;
+    char buf[kBufSz];
+
+    va_list args;
+    va_start(args, format);
+    int written = std::vsnprintf(buf, kBufSz, format, args);
+    va_end(args);
+
+    if (written >= 0 && static_cast<size_t>(written) >= kBufSz) {
+        buf[kBufSz - 4] = '.';
+        buf[kBufSz - 3] = '.';
+        buf[kBufSz - 2] = '.';
+        buf[kBufSz - 1] = '\0';
+    }
+
+    // Two-step prefix prepend would require a second buffer or shifting;
+    // simplest is to forward unformatted text to OutputDebugString.
+    // To preserve "Log() always fires" semantics regardless of LOG_MIN_LEVEL,
+    // call OutputDebugStringA directly here. The tagged variant is
+    // accessible via LOG_INFO when callers migrate.
+    OutputDebugStringA(buf);
 }
