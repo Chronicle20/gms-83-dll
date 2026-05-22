@@ -187,7 +187,7 @@ calling into `CUIWnd` / `CCtrlButton` / `CCtrlEdit`.
 
 ## 5. Hook / Patch Surface
 
-The host installs **three** detours via MinHook (the existing `hooker.h` pattern).
+The host installs **three** detours via Microsoft Detours (the existing `hooker.h` pattern around `SetHook` + `INITMAPLEHOOK_OR_RETURN`).
 
 | # | Hook target | v95 address | v83.1 address | Purpose |
 |---|---|---|---|---|
@@ -305,7 +305,7 @@ follow-on PRD.
 ### 8.1 Stability
 
 - Host hooks must be idempotent under any reasonable race (game thread vs. host
-  init thread). The mutex check in §4.1 + MinHook's own atomicity is the
+  init thread). The mutex check in §4.1 + Detours' own atomicity is the
   expectation; concurrent hook install from two host instances must be impossible.
 - Consumer DLL crashes (segfault in a callback) must not corrupt the host or the
   game. The framework wraps every callback dispatch in a structured exception
@@ -332,10 +332,10 @@ follow-on PRD.
 
 ### 8.4 AV / Themida compatibility
 
-- No new IAT patches; all hooks are MinHook detours, matching the existing
+- No new IAT patches; all hooks are Microsoft Detours trampolines, matching the existing
   `bypass/` and `enable-minimize/` patterns. Themida tolerance is therefore the
   same as the existing edits.
-- No code is written into the game's `.text` section beyond what MinHook itself
+- No code is written into the game's `.text` section beyond what Detours itself
   writes.
 
 ### 8.5 Testability

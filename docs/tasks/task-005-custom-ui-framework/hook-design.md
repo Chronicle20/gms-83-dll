@@ -13,9 +13,8 @@ resolved during the implementation port.
 | H2 | `CWndMan::ProcessKey` | `0x009b4590` | `?ProcessKey@CWndMan@@QAEJIIJ@Z` | Hotkey toggle dispatch |
 | H3 | Stage-end notification | TBD | TBD | Auto-hide / restore on stage transitions |
 
-All hooks are MinHook detours using the existing `INITWINHOOK`-style helper
-pattern from `common/hooker.h` (adapted for in-process function-address hooks
-rather than IAT entries — see `bypass/dllmain.cpp` for an example).
+All hooks are Microsoft Detours trampolines using the existing `INITMAPLEHOOK_OR_RETURN`
+helper from `common/hooker.h`. See `bypass/socket_hooks.cpp` for an example.
 
 ---
 
@@ -163,6 +162,7 @@ singleton mutex check, before any consumer-DLL readiness signal.
 
 The host DLL does not provide an uninstall path — once loaded, it stays
 loaded until process exit. This matches every other edit in the project.
-If a future use case demands hot-unload, MinHook supports `MH_DisableHook`
-and the cleanup ordering would be: unregister all consumer handlers,
-disable H1+H2+H3, then unload. Not in milestone scope.
+If a future use case demands hot-unload, Detours supports
+`DetourTransactionBegin` + `DetourDetach`, and the cleanup ordering would be:
+unregister all consumer handlers, detach H1+H2+H3 inside a single transaction,
+then unload. Not in milestone scope.
