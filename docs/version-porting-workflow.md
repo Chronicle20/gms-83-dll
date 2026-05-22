@@ -100,8 +100,46 @@ Total source impact: 10 files changed (4 new, 6 modified), 129 insertions / 18 d
 - **Don't trust `analyze_struct_detailed` on a partially-mapped target IDB.** The user often defines just a few struct members in the target IDB; the rest is implicit. Trust disassembly over the (incomplete) struct definition.
 - **Don't apply structures back to the IDB during verification.** Once you `declare_c_type` your inferred struct into the target IDB, Hex-Rays will show those names in subsequent decompiles, which loops back into your evidence. Keep the verification pass read-only.
 - **Don't fight the IDA conventions.** `int*` placeholders, flat-named SecureTear pairs, anonymous EBCO bases — these are intentional and consistent. Preserve them in source where the user has used them, even if the v95 PDB shows a richer name.
+- **Don't try to read runtime-initialized data with `read_memory_bytes`.** UINT128 mask constants, virtual table pointers, and anything in BSS/uninitialized data sections return all `0xFF` from the static image — the runtime fills them in via static initializers. When you need bit positions or values, derive them from disassembly access patterns (e.g., which `[esi+OFFSET]` writes follow each `push offset unk_X`), not from the data sections themselves.
+- **Don't rely on IDA-label conventions across IDBs.** A class's stat-ID globals might be named `CTS_<Stat>` in one IDB (e.g. v83 here has 82 named CTS_ globals from the user's prior RE work) and completely unlabeled in another (v87 has zero CTS_ globals — same binary class, different IDA labeling state). When a labeling probe returns nothing, fall back to structural probes (Reset disassembly, mask-comparison sequences).
+- **Don't infer the connected IDB from conversation.** A user message saying "v87 loaded" doesn't mean the swap happened — they might have meant to and forgotten. Call `get_metadata` before drawing any version-specific conclusions. See [[feedback-verify-ida-target]].
+
+## Cross-validating against atlas-ms
+
+The user maintains a sibling Go server codebase at `~/source/atlas-ms/atlas/` (`Chronicle20/atlas` on GitHub) with version-aware registries that are authoritative for the **set and order** of bitmask-indexed fields. Cross-referencing client RE against atlas-ms catches bugs in BOTH directions.
+
+The most useful registry: `libs/atlas-packet/model/character_temporary_stat.go` — the `buildCharacterTemporaryStatRegistry` function lists all 125 character TemporaryStat IDs in canonical declaration order, with `t.MajorVersion()` / `t.Region()` gates marking per-version availability. Each `newAndIncNonDiseased(...)` is one stat; the order is the UINT128 bit order.
+
+**How to use it:**
+
+1. After identifying client-side stat groups (e.g. by counting Reset's UINT128 mask comparisons), look up each one's name in atlas-ms's registry.
+2. Check whether atlas-ms's gates match what the client actually has. A gate like `MajorVersion() > 83` opens for v87, v95, etc. — but if the client at one of those versions doesn't have a particular stat, atlas-ms is over-permissive and the wire format will be misaligned for that tenant. (This is exactly the bug found in the 2026-05-22 session: atlas-ms's `> 83` gate over-included 24 stats for v87. Fixed in `Chronicle20/atlas#564`.)
+3. Disagreements between atlas-ms and client RE are real findings worth investigating — don't silently pick one as ground truth.
+
+**Limits:** atlas-ms encodes the user's evolving understanding, which can itself be wrong. Treat as one source of evidence, not the oracle. The pattern works best for *registries* (stat lists, packet opcodes) — less so for arbitrary struct layouts where the server doesn't care about field offsets.
+
+## Subagent cross-validation discipline
+
+Multiple subagents in the 2026-05-21/22 sessions returned reports with structural errors that only later, more careful passes caught:
+
+- The original v83 SecondaryStat verifier counted all 269 pairs as 12-byte. The later deep mapping found 2 of them were 8-byte `SecureTear<char>` slots.
+- The v87 SecondaryStat deep mapping mis-identified `rMirrorImage_` at v87 0xD24 as `nStopMotion_`, and inferred a 16-byte "mystery padding" that didn't exist.
+- Multiple verifiers initially treated "Atlas's `> 83` gate is right" as a load-bearing premise without checking.
+
+**Rule:** before treating a subagent's structural claim as authoritative, anchor it to at least one independent disassembly probe in the main session. The subagent's offset-by-offset table is usually right; the high-level summary numbers ("v87 has 84 pairs" / "v87 stops at nStopMotion") often hide errors. Spot-check the boundary cases.
 
 ## Future work
 
 - A dual-IDB MCP setup would eliminate the swap dance entirely. The IDA MCP plugin supports binding to a specific port; running two instances on different ports lets one Claude session query both. Not yet set up in this project.
 - Some embedded UDTs need their own porting passes (`SecondaryStat` internals beyond size; `PARTYMEMBER`'s 7th array field; `GUILDDATA`'s pre-v95 members). These are deferred from the CWvsContext port.
+
+## Appendix: mistakes from prior sessions (don't repeat)
+
+These are documented separately so they don't get repeated in future sessions. If you find yourself making any of these, stop and re-read this section.
+
+1. **Deferring known bugs with "out of scope" / "unlikely to matter" reasoning.** Caught the 2026-05-21 session deferring a SecureTear byte-vs-long fix for two fields because "they're dojang fields probably nobody uses." That's not a real reason — the work to fix was trivial. If a probe can settle a question, run the probe. (Memory: [[feedback-prefer-confirmation]].)
+2. **Probing the wrong IDB.** Ran `list_globals_filter` against v83 while the conversation context implied v87 was loaded. User had to point out the mistake before the probes were ever directed at v87. (Memory: [[feedback-verify-ida-target]].)
+3. **Trusting a subagent's structural summary without cross-checking.** v87 SecondaryStat verifier's "v87 stops at `nStopMotion_`" claim was wrong by 4 stat groups; corrected later. The detailed per-offset table was right; the summary number wasn't.
+4. **Building gates from one verifier without consulting the others.** First v83 SecondaryStat report said v83 lacks DojangShield (`nSmartKnockback_..nStopMotion_` "absent in v83"); deep mapping found v83 has all of those. Gates added based on the first report were wrong and had to be reversed.
+5. **Adding speculative source-layout placeholders.** The v87 16-byte `_v87_unknown_0xD30` padding I inserted based on the wrong subagent finding became dead code that had to be removed in a later commit. When unsure about a gap, document it in the verification report rather than encoding it in source.
+6. **Committing directly to `main`.** Done once on 2026-05-21; user corrected immediately. Always work on a feature branch. (Memory: [[feedback-no-main-commits]].)
