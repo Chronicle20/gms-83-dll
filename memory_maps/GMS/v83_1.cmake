@@ -126,6 +126,12 @@ set(C_SYSTEM_INFO_GET_MACHINE_ID 0x00A54EB0)
 
 set(C_UI_TITLE_INSTANCE_ADDR 0x00BEDA60)
 
+set(C_UI_WND_CTOR 0x0092C17F)              # CUIWnd::CUIWnd(int nUIType, int closeType, int closeX, int closeY, const wchar_t* sBackgrndUOL, int nBackgrndX, int nBackgrndY) -- not the (x,y,w,h,name) form the plan assumed; 4 ints + UOL string + 2 ints; __thiscall, retn 1Ch
+set(C_UI_WND_DTOR 0x0092C272)              # CUIWnd::~CUIWnd (bare virtual destructor, ??1CUIWnd@@UAE@XZ); scalar deleting dtor wrapper lives at 0x0092C15B
+set(C_UI_WND_VFTABLE 0x00B3CE10)           # primary vftable (IGObj subobject at offset 0); secondary CWnd::IUIMsgHandler vftable at 0x00B3CDC4, CWnd::ZRefCounted vftable at 0x00B3CDC0
+set(C_UI_WND_VTABLE_SLOT_COUNT 14)         # walked 0x00B3CE10..+0x37 forward; slot 14 = 0xFDE04000 (outside .text), prior 14 entries all in .text
+set(SIZEOF_C_UI_WND_V83_1 1456)            # 0x5B0; IDA struct ordinal 226 size; matches dtor's last touched member at offset 0x5AC + 4 == 0x5B0
+
 set(G_DW_TARGET_OS 0x00BE2EBC)
 
 set(C_WVS_APP 0x009F4FDA)
