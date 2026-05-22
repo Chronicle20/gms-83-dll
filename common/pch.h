@@ -148,10 +148,13 @@
 #include "CUIBattleRecord.h"
 // clang-format off
 // Order-sensitive: CWvsContext.h depends on each of the headers below.
+#include "CClock.h"
 #include "CNoticeQuestProgress.h"
 #include "CS_COMMODITY.h"
 #include "CS_LIMITGOODS.h"
+#include "CUIAccountMoreInfo.h"
 #include "CUIFadeYesNo.h"
+#include "CUIFindFriend.h"
 #include "CUIQuestTimer.h"
 #include "FamilyInfo.h"
 #include "GW_Memo.h"

@@ -1,12 +1,6 @@
 #pragma once
 
-// Forward declarations for types only used inside gated v95+/JMS-only fields.
-// Full definitions for types used in the always-compiled section are pulled in
-// via pch.h (GW_Memo, CUIFadeYesNo, CNoticeQuestProgress, CUIQuestTimer,
-// CS_COMMODITY, CS_LIMITGOODS, PrivilegeItem -- all currently opaque stubs).
-class CClock;
-class CUIAccountMoreInfo;
-class CUIFindFriend;
+// Stubs/forward-decls for all dependent types are pulled in via pch.h.
 
 class CWvsContext {
   public:
@@ -128,16 +122,19 @@ class CWvsContext {
     int m_bPersonalShopOpen;
     int m_bADBoard;
     ZXString<char> m_sADBoard;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     ZRef<GW_ItemSlotBase> m_aRealEquip[60];
     ZRef<GW_ItemSlotBase> m_aRealEquip2[60];
+#else
+    // v83: equip arrays carry 52 slots (v87+ has 60).
+    ZRef<GW_ItemSlotBase> m_aRealEquip[52];
+    ZRef<GW_ItemSlotBase> m_aRealEquip2[52];
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     ZRef<GW_ItemSlotBase> m_aRealDragonEquip[4];
     ZRef<GW_ItemSlotBase> m_aRealMechanicEquip[5];
 #else
-    // v83: equip arrays carry 52 slots (vs v95's 60). Dragon equip absent.
-    // Mechanic equip is 4 slots in v83 (vs v95's 5).
-    ZRef<GW_ItemSlotBase> m_aRealEquip[52];
-    ZRef<GW_ItemSlotBase> m_aRealEquip2[52];
+    // v83/v87: 4-slot mount-equip block (v95 grew this to 5 + added DragonEquip).
     ZRef<GW_ItemSlotBase> m_aRealMechanicEquip[4];
 #endif
     CalcDamage m_CalcDamage;
@@ -214,7 +211,7 @@ class CWvsContext {
     ZRef<CUIBattleRecord> m_pUIBattleRecord;
 #endif
     ZXString<char> m_sWebOpBoardURL;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     ZRef<CUIAccountMoreInfo> m_pUIAccountMoreInfo;
     ZRef<CUIFindFriend> m_pUIFindFriend;
 #endif
@@ -226,7 +223,7 @@ class CWvsContext {
     int m_bIsExistMemo_NotLoaded;
     ZList<ZRef<CUIQuestTimer>> m_lpUIQuestTimer;
     CTips m_tips;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
     ZRef<CClock> m_pClock;
 #endif
     int m_nLastMobBonusEventPercentage;
