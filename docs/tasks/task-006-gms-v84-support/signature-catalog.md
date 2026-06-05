@@ -200,6 +200,97 @@ not about a specific address.
 - Cross-version stability: offsets MUST be re-measured per version; v83 were 0x212 / 0xA3D, v84 are 0x241 / 0xA6E.
 - Notes: verified bytes — 0xA3A1E1 = E8 91 FC FF FF (call), 0xA3AA0E = 74 6F (jz short).
 
+### CClientSocket::SendPacket   (memory-map key: C_CLIENT_SOCKET_SEND_PACKET)
+- Primary anchor: IDB symbol (mangled name)
+- Detail: `?SendPacket@CClientSocket@@QAEXABVCOutPacket@@@Z` survives in the v84 IDB. Body grabs the per-socket ZFatalSection (ZSynchronizedHelper<ZFatalSection> ctor = sub_403166, same addr v83→v84), validates the socket fd ([this+8] != 0/-1) and the send-disabled flag ([this+14h]), then pushes the send-seq opcode and calls COutPacket::MakeBufferList -> CIGCipher::innoHash -> CClientSocket::Flush.
+- Fallback anchor: call-graph — the callee chain MakeBufferList + innoHash + Flush is a unique fingerprint; the last call in the body IS Flush. Also reachable from the free global `?SendPacket@@YAXABVCOutPacket@@@Z` which calls `CClientSocket::SendPacket(ms_pInstance, pkt)`.
+- Cross-version stability: mangled name present in v83 and v84; the ZSynchronizedHelper ctor address (0x403166) is identical across both. The push'd opcode is a per-version constant: 0x53 ('S') in v83, 0x54 ('T') in v84 — do NOT use it as a cross-version anchor.
+- Notes: v84 @ 0x0049B28C. HIGH-VALUE (needs-main-review). Two different kinds (symbol + call-graph). Spot-check: confirmed independently via the free `SendPacket` helper at 0x53B0E2 reading the socket singleton.
+
+### CClientSocket::Flush   (memory-map key: C_CLIENT_SOCKET_FLUSH)
+- Primary anchor: call-graph
+- Detail: The last call inside CClientSocket::SendPacket. Walks the send-buffer ZList (head at [this+5Ch], InterlockedIncrement on each ZRef<ZSocketBuffer>) and writes via the cloned WS2_32 `send` pointer (`call dword_C49D6C`), handling the -1 / WSAEWOULDBLOCK (0x2733 = 10035) result.
+- Fallback anchor: structure — the only socket-region function that walks [this+5Ch] ZList and calls the dedicated cloned-send slot dword_C49D6C; distinct from the cloned `connect` (dword_C49D4C) and cloned `recv` (dword_C49D74).
+- Cross-version stability: structurally identical v83→v84; v83 used an indirect cloned-send slot too (dword_BF066C). Locate via the SendPacket call-graph + the [this+5Ch] send-buffer walk, not the cloned-pointer address (which moves per build).
+- Notes: v84 @ 0x0049B314. HIGH-VALUE (needs-main-review). Two different kinds (call-graph + structure/constant). Spot-check: the WSAEWOULDBLOCK 0x2733 error-path + the dedicated cloned-send slot, independent of the SendPacket call edge.
+
+### CClientSocket::ProcessPacket   (memory-map key: C_CLIENT_SOCKET_PROCESS_PACKET)
+- Primary anchor: IDB symbol (mangled name)
+- Detail: `?ProcessPacket@CClientSocket@@IAEXAAVCInPacket@@@Z` survives in the v84 IDB. Reads the CStage singleton (STAGE_INSTANCE_ADDR), constructs a ZRef<CStage>, calls CInPacket::Decode2 to read the opcode word, then dispatches via a sub-0x10 jump table.
+- Fallback anchor: call-graph — sole callee is `?Decode2@CInPacket@@QAEGXZ`; sole caller is CClientSocket::ManipulatePacket.
+- Cross-version stability: mangled name + the Decode2-driven opcode switch stable v83→v84. The stage-singleton global address differs per version (v83 0xBEDED4, v84 0xC474EC).
+- Notes: v84 @ 0x0049B502. HIGH-VALUE (needs-main-review). Two different kinds (symbol + call-graph/structure). Spot-check: sole caller is ManipulatePacket (sub_49B42E), independent of the symbol.
+
+### CClientSocket::ManipulatePacket   (memory-map key: C_CLIENT_SOCKET_MANIPULATE_PACKET)
+- Primary anchor: call-graph
+- Detail: The sole caller of CClientSocket::ProcessPacket. Reassembles the receive stream: calls CInPacket::AppendBuffer ([this+64h]) and ZList<ZRef<ZSocketBuffer>>::RemoveAt ([this+3Ch]), runs the per-packet version check `((dword[this+88h] >> 16) ^ word[this+72h]) == <version-magic>` and the length guard (<= 0x10000), then dispatches each decoded packet through ProcessPacket.
+- Fallback anchor: constant — the version-magic compare `cmp ax, 0FFABh` at the [this+88h]>>16 ^ [this+72h] site is a near-unique immediate. v83 used 0xFFAC, v84 uses 0xFFAB (one LOWER). The magic changes per major version but the direction is not assumed from two data points — confirm the v84 value by reading the compare; do NOT byte-search the v83 constant.
+- Cross-version stability: the AppendBuffer + RemoveAt + version-XOR + ProcessPacket-dispatch structure is stable; the version-magic immediate (0xFFAC v83 / 0xFFAB v84) is per-version — confirm direction, don't byte-search the v83 value.
+- Notes: v84 @ 0x0049B42E (function size 0xD4, same as v83). HIGH-VALUE (needs-main-review). Two different kinds (call-graph + constant). Spot-check: the 0xFFAB version-magic compare, independent of the ProcessPacket call edge.
+
+### CClientSocket::Close   (memory-map key: C_CLIENT_SOCKET_CLOSE)
+- Primary anchor: call-graph + structure
+- Detail: Tiny 7-instruction function: `push esi; mov esi,ecx; call ClearSendReceiveCtx; lea ecx,[esi+8]; call ZSocketBase::CloseSocket; pop esi; retn`. The only function that calls both ClearSendReceiveCtx and CloseSocket on the embedded ZSocketBase at [this+8].
+- Fallback anchor: adjacency — sits immediately before CClientSocket::SendPacket in the image (v83 0x496369 before 0x49637B; v84 0x49B27A before 0x49B28C). Also called at the top of CWvsApp::ConnectLogin.
+- Cross-version stability: exact 7-instruction shape held v83→v84.
+- Notes: v84 @ 0x0049B27A.
+
+### CClientSocket::ClearSendReceiveCtx   (memory-map key: C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX)
+- Primary anchor: call-graph + structure
+- Detail: First call inside CClientSocket::Close (also called from the CClientSocket ctor and the connect path). Zeroes [this+68h] (dword), [this+70h] (word), [this+78h] (dword), then calls ZList<ZRef<ZSocketBuffer>>::RemoveAll twice — on the receive list [this+3Ch] and the send list [this+50h].
+- Fallback anchor: structure — the exact 68h/70h(word)/78h zero triple + two RemoveAll calls at +3Ch and +50h.
+- Cross-version stability: identical member offsets and call shape v83→v84.
+- Notes: v84 @ 0x0049B903.
+
+### CClientSocket::OnConnect   (memory-map key: C_CLIENT_SOCKET_ON_CONNECT)
+- Primary anchor: call-graph + structure
+- Detail: The WSAAsyncSelect FD_CONNECT/FD_READ event handler driven by the CWvsApp::ConnectLogin message-pump loop. Reads from the cloned WS2_32 `recv` slot (dword_C49D74), parses the host/port/version handshake, validates the protocol version against the literal 84, calls getpeername, and emits the handshake via CClientSocket::SendPacket; throws the CPatchException / CTerminateException / CDisconnectException trio. Recurses as the retry/teardown path `OnConnect(0)`; also tail-called by Connect(sockaddr_in) on error.
+- Fallback anchor: the exception-type trio + the version-equality check (==84) + getpeername; reads g_CWvsApp singleton (m_nGameStartMode).
+- Cross-version stability: handler role + exception trio stable; the protocol-version literal equals the client major version (84 here) and the cloned-recv slot address are per-version.
+- Notes: v84 @ 0x00499DCD (large, 0x612). Disambiguated from the three Connect* variants: it is the recv-side handler (cloned recv) and the SendPacket/getpeername driver, not a `socket`/`connect` caller.
+
+### CClientSocket::Connect(sockaddr_in)   (memory-map key: C_CLIENT_SOCKET_CONNECT_ADR)
+- Primary anchor: import call
+- Detail: `?Connect@CClientSocket@@IAEXPBUsockaddr_in@@@Z` — the only function calling WS2_32 `socket` (socket(2,1,0) = AF_INET/SOCK_STREAM). Closes any prior socket (ClearSendReceiveCtx + ZSocketBase::CloseSocket), creates the socket, throws ZException on failure, arms WSAAsyncSelect (cloned slot dword_C49D2C, msg 1025), then calls the cloned `connect` slot dword_C49D4C(s, addr, 16) and tolerates WSAEWOULDBLOCK (10035).
+- Fallback anchor: structure — socket(2,1,0) + connect(s,addr,16=sizeof sockaddr_in) + WSAEWOULDBLOCK; only caller of the `socket` import.
+- Cross-version stability: the `socket` import xref is the most stable anchor; v83/v84 both route connect/send/recv through cloned WS2_32 slots (anti-tamper), so connect itself is an indirect call — anchor on `socket`, not `connect`.
+- Notes: v84 @ 0x00499C2B. Disambiguated from the other Connect variants: it is the private sockaddr_in overload and the sole `socket` caller. Its two callers are Connect(CONNECTCONTEXT) and OnConnect.
+
+### CClientSocket::Connect(CONNECTCONTEXT)   (memory-map key: C_CLIENT_SOCKET_CONNECT_CTX)
+- Primary anchor: call-graph
+- Detail: `?Connect@CClientSocket@@QAEXABUCONNECTCONTEXT@1@@Z` — public overload. Consumes a CONNECTCONTEXT (sub_499C03), stores the resolved address into the socket object, and tail-calls the private Connect(sockaddr_in).
+- Fallback anchor: structure — small wrapper (size 0x64) whose only meaningful call is the sockaddr_in Connect; called by CClientSocket::ConnectLogin and by a CWvsContext-side caller.
+- Cross-version stability: wrapper-to-sockaddr_in-Connect relationship stable; v83 body is control-flow-virtualized, so anchor on the call-graph (it is one of the two callers of Connect(sockaddr_in)).
+- Notes: v84 @ 0x00499B9F. Disambiguated from CONNECT_ADR: this is the public CONNECTCONTEXT overload that *calls* CONNECT_ADR rather than calling `socket` directly.
+
+### CClientSocket::ConnectLogin   (memory-map key: C_CLIENT_SOCKET_CONNECT_LOGIN)
+- Primary anchor: call-graph
+- Detail: Called exactly once, from CWvsApp::ConnectLogin (0x00A3FFE8, labeled in Task 2). Reads the CWvsApp singleton's m_nGameStartMode (g_CWvsApp+36, ==1 / ==2 branches), pulls login host/port from the command line via CWvsApp::GetCmdLine, builds a CONNECTCONTEXT list (random server pick when no cmd-line host), and finally calls Connect(CONNECTCONTEXT).
+- Fallback anchor: structure — the GetCmdLine(arg 0/1/2/3) + m_nGameStartMode branch + final Connect(CONNECTCONTEXT) call.
+- Cross-version stability: the unique caller (CWvsApp::ConnectLogin) is a stable call-graph signature; v83 body is virtualized, so anchor on that single caller edge.
+- Notes: v84 @ 0x00499824. Distinct from CWvsApp::ConnectLogin (the message-pump driver at 0x00A3FFE8) — this is the CClientSocket method it invokes.
+
+### ZSocketBase::CloseSocket   (memory-map key: Z_SOCKET_BASE_CLOSE_SOCKET)
+- Primary anchor: import call
+- Detail: The only tiny function calling both WS2_32 `shutdown` and `closesocket`: `if (*this != -1) { shutdown(*this, 2); closesocket(*this); *this = -1; }`. Function size 0x20.
+- Fallback anchor: structure — the -1 socket sentinel store + the shutdown(s,2)/closesocket pair; called by CClientSocket::Close ([this+8]) and Connect(sockaddr_in).
+- Cross-version stability: shutdown+closesocket import pair is a very stable anchor; v83 0x494857 (size identical).
+- Notes: v84 @ 0x0049974A.
+
+### ZSocketBuffer::Alloc   (memory-map key: Z_SOCKET_BUFFER_ALLOC)
+- Primary anchor: structure (dual-alloc idiom — durable when symbols are absent)
+- Detail: static factory that does TWO ZAllocEx::Alloc calls (the payload of size `a1`, then the 0x1C/28-byte ZSocketBuffer header), then runs the placement ctor on the header and returns it. The mangled symbol `?Alloc@ZSocketBuffer@@SAPAV1@IABVZAllocHelper@@@Z` is present in this IDB and is the fastest anchor when available, but may not survive into a future stripped IDB — hence the structural idiom is the primary.
+- Fallback anchor: call-graph — called by OnConnect with the MSS literal 1460 to allocate the receive buffer; the dual ZAllocEx::Alloc with a fixed 28-byte second size is near-unique in the socket region.
+- Cross-version stability: the dual-alloc(size, 28) + placement-ctor idiom is stable; v83 0x495FD2 wrapped it in C++ EH, v84 collapsed the EH frame but kept the idiom.
+- Notes: v84 @ 0x0049AEE3 (ZAllocEx::Alloc = sub_403065, placement ctor = sub_49AF30).
+
+### globals: CClientSocket singleton / CreateInstance   (memory-map keys: C_CLIENT_SOCKET_INSTANCE_ADDR / C_CLIENT_SOCKET_CREATE_INSTANCE)
+- Primary anchor: writer function
+- Detail: The CClientSocket singleton is the `(this+1!=0)?this:0` SBB store at the top of the CClientSocket ctor (??0CClientSocket@@QAE@XZ); the ctor also installs the socket vtable, sets the fd member to -1, wires the ZList send/recv heads, and calls ClearSendReceiveCtx. CreateInstance is the TSingleton wrapper that reads the singleton, and on null does `push 94h` -> ZAllocEx::Alloc -> ctor (the 0x94 instance size matches v83).
+- Fallback anchor: the singleton is read as the socket `this` by the free `?SendPacket@@YAXABVCOutPacket@@@Z` helper and by CWvsApp::ConnectLogin; CreateInstance is the sole caller of the CClientSocket ctor.
+- Cross-version stability: both the SBB-singleton-store idiom and the CreateInstance(0x94-alloc + ctor) shape are stable; locate via the ctor/CreateInstance, not the raw global address.
+- Notes: v84 C_CLIENT_SOCKET_INSTANCE_ADDR @ 0x00C40C64; C_CLIENT_SOCKET_CREATE_INSTANCE @ 0x00A43D0B. CreateInstance moved out of the v83 0x9F9Exx singleton cluster into the 0xA43Dxx region — found by call-graph (sole ctor caller), NOT address arithmetic.
+
 <!--
 Add one section per resolved key. Group loosely by subsystem to mirror
 memory-map.md. Leave the two stubs above as worked examples of the schema.
