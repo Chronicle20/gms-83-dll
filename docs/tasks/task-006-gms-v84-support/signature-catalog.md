@@ -326,6 +326,98 @@ not about a specific address.
 - Cross-version stability: the 71 / 0x13 / ROL3 / ROL4 obfuscation constants and the 1460/0x5B4 chunking are structurally identical v83→v84; the function's only caller (SendPacket) is a stable call-graph anchor. The send-seq opcode pushed by SendPacket is per-version (0x53 'S' v83, 0x54 'T' v84) — do NOT use it as an anchor.
 - Notes: v84 @ 0x00703E53 (named in the IDB during this port; ZSocketBuffer::Alloc = 0x0049AEE3, CAES encrypt = sub_42E520). HIGH-VALUE (needs-main-review). Two different kinds (call-graph + constant/structure). Spot-check: the 71/0x13 obfuscation-constant shuffle loop, independent of the SendPacket call edge.
 
+### CLogin::SendCheckPasswordPacket   (memory-map key: C_LOGIN_SEND_CHECK_PASSWORD_PACKET)
+- Primary anchor: IDB symbol (mangled name)
+- Detail: `?SendCheckPasswordPacket@CLogin@@QAEHPBD0@Z` survives in the IDB. Body calls `CNMCOClientObject::LoginAuth(id, pw, 201, 0)`, runs the 20000-range NMLoginAuthReplyCode switch, then on success builds the login packet: `COutPacket(seq=1)` followed by EncodeStr(password), EncodeStr(passport), EncodeBuffer(MachineId, 16), Encode4(GameRoomClient), Encode1(m_nGameStartMode = [g_CWvsApp+36]), Encode1(0), Encode1(0), Encode4(PartnerCode), and finally CClientSocket::SendPacket. Every encoder matches the Task-4-resolved COutPacket cluster.
+- Fallback anchor: constant + call-graph — the opcode immediate is `1` passed to the COutPacket ctor (stable v83->v84), and the encoder chain ending in SendPacket is a unique fingerprint; sole non-trivial caller is CLogin::Update.
+- Cross-version stability: mangled name present in v83 and v84; the COutPacket(1) opcode + EncodeStr/EncodeStr/EncodeBuffer(16)/Encode4/Encode1x3/Encode4/SendPacket layout is structurally identical. The LoginAuth region magic 201 is stable.
+- Notes: v84 @ 0x0060B88B. HIGH-VALUE (needs-main-review). Two DIFFERENT kinds (symbol + opcode/encoder-chain). Spot-check: the CNMCOClientObject::LoginAuth(.,.,201,0) call + the 20000-range reply-code switch, independent of both the symbol and the encoder chain.
+
+### CLogin::Update   (memory-map keys: C_LOGIN_UPDATE / C_LOGO_UPDATE)
+- Primary anchor: call-graph
+- Detail: Sole non-trivial caller of CLogin::SendCheckPasswordPacket (with the cmd-line auto-connect guard `m_aCmd[0] && *m_aCmd[0] && [g_CWvsApp+40] (m_bAutoConnect)`). Body is the m_nLoginStep state machine: OnStepChanged on step-change timeout, EnableLoginStartCtrl(2/17/18/1/0) per step + game-start-mode, the 10000 ms VAC wait, the sub-step UI-alloc cascade (CUINewChar* via the ZAllocEx helper), GotoTitle, and the tail dispatch to SendCheckPasswordPacket / SendLoginPacket (this+544/548) / SendSelectCharPacket (this+552).
+- Fallback anchor: structure/constant — the EnableLoginStartCtrl(2/17/18/1/0) ladder + the 10000 ms VAC timeout + the m_nLoginStep (this+380) switch.
+- Cross-version stability: the state-machine shape + the SendCheckPasswordPacket caller edge are stable v83->v84.
+- Notes: v84 @ 0x00609A9F. **LOGO_UPDATE vs LOGIN_UPDATE determination:** in the repo's v83 mapping BOTH C_LOGIN_UPDATE and C_LOGO_UPDATE are set to 0x005F4C16 = CLogin::Update (they were never two distinct functions in the cmake — C_LOGO_UPDATE deliberately points at CLogin::Update, not at the CLogo vtable Update slot). This convention is carried to v84 unchanged: both keys map to the SAME v84 address 0x00609A9F. They have NOT diverged. For completeness, the *actual* CLogo IGObj-vtable Update method (the NX/WZ logo-timer animator with the 0x5DC/0x215E constants) is a genuinely separate function at v84 0x00644750 (v83 0x0062F2B6) — labeled CLogo__Update in the IDB but NOT used by the C_LOGO_UPDATE key.
+
+### CLogo::CLogo (ctor)   (memory-map key: C_LOGO)
+- Primary anchor: structure (member-zero + vtable install)
+- Detail: Calls the CStage base ctor, zeroes the seven CLogo members (m_pLayerMain, m_pLogoProp, m_dwTickInitial, m_dwClick, m_bLogoSoundPlayed, m_bWZInit, m_bNXFadeIn), then installs the four CLogo vtables (IGObj / IUIMsgHandler / INetMsgHandler / ZRefCounted). The installed IGObj vtable's slots are the confirmed CLogo methods.
+- Fallback anchor: vtable linkage — the vtable cluster it writes contains CLogo::GetRTTI/IsKindOf/Update/Init (IGObj) and CLogo::OnKey/OnSetFocus/OnMouseButton (IUIMsgHandler), with the inherited CStage::OnPacket and CStage::OnMouseEnter slots.
+- Cross-version stability: base-ctor + 7-member-zero + 4-vtable-install shape stable v83->v84.
+- Notes: v84 @ 0x0064417C (IGObj vtable @ 0x00B4939C; CLogo CRTTI object @ 0x00C470B8). The adjacent CLogo destructor is sub_64420B.
+
+### CLogo vtable methods: GetRTTI / IsKindOf / Update / Init / OnKey / OnSetFocus / OnMouseButton
+- (keys: C_LOGO_GET_RTTI / C_LOGO_IS_KIND_OF / C_LOGO_INIT / C_LOGO_ON_KEY / C_LOGO_ON_SET_FOCUS / C_LOGO_ON_MOUSE_BUTTON; slot 2 = the real CLogo::Update which has NO cmake key — see C_LOGO_UPDATE convention)
+- Primary anchor: vtable slot (anchor kind 5) confirmed by a SECOND anchor (method body content), matched by slot ORDER against v83's CLogo vtable (not v83 addresses).
+- Detail (IGObj vtable @ 0x00B4939C, slot order GetRTTI/IsKindOf/Update/Init):
+  - slot 0 GetRTTI = 0x006441C0 — returns &CLogo_CRTTI (0x00C470B8). 2nd anchor: single-instruction `lea/return &g_rtti`.
+  - slot 1 IsKindOf = 0x006441C6 — walks the CRTTI m_pPrev chain from the same g_rtti. 2nd anchor: the chain-walk loop.
+  - slot 2 Update = 0x00644750 — the logo-timer animator (0x5DC/0x215E timers, DrawNXLogo/DrawWZLogo/InitWZLogo/LogoEnd). NOTE: this is the real CLogo::Update but is NOT the C_LOGO_UPDATE key value (see CLogin::Update entry).
+  - slot 3 Init = 0x00644274 — see C_LOGO_INIT entry below.
+- Detail (IUIMsgHandler vtable, slot order OnKey/OnSetFocus/OnMouseButton then inherited OnMouseMove/OnMouseWheel/.../OnMouseEnter):
+  - slot 0 OnKey = 0x00644714 — `if (lParam>=0 && (wParam==13||27||32)) CLogo::ForcedEnd(this-4)`. 2nd anchor: the 13/27/32 key-code triple + ForcedEnd call.
+  - slot 1 OnSetFocus = 0x006441BA — `return 1`. 2nd anchor: trivial constant return (matches v83).
+  - slot 2 OnMouseButton = 0x0064473B — `if (msg==514) CLogo::ForcedEnd(this-4)`. 2nd anchor: the 514 (WM_RBUTTONUP) compare + ForcedEnd call.
+- Cross-version stability: vtable slot ORDER stable v83->v84; the body fingerprints (13/27/32, 514, return-1, CRTTI chain) are stable. The CRTTI global address is per-version (v83 0x00BEDAB0, v84 0x00C470B8).
+- Notes: v84 IGObj vtable @ 0x00B4939C; CLogo CRTTI @ 0x00C470B8. The shared CStage slots in the same vtable cluster are CStage::OnPacket (0x0079894B) and CStage::OnMouseEnter (0x0079892C).
+
+### CLogo::Init   (memory-map key: C_LOGO_INIT)
+- Primary anchor: call-graph
+- Detail: First call is CLogo::InitNXLogo; then CInputSystem::ShowCursor(0); then CWvsApp::GetCmdLine([g_CWvsApp], &buf, 5 or 3) gated on m_nGameStartMode==1; ends with `if (cmd && *cmd && [g_CWvsApp+40] (m_bAutoConnect)) CLogo::LogoEnd()`.
+- Fallback anchor: structure — the GetCmdLine(5/3) game-start-mode branch + the m_bAutoConnect-guarded LogoEnd tail; it is the IGObj-vtable Init slot (slot 3).
+- Cross-version stability: structurally identical v83->v84.
+- Notes: v84 @ 0x00644274 (InitNXLogo = 0x00644830, ShowCursor = sub_5AA58B, LogoEnd = 0x00644348).
+
+### CLogo::InitNXLogo   (memory-map key: C_LOGO_INIT_NX_LOGO)
+- Primary anchor: call-graph + constant
+- Detail: First call inside CLogo::Init. Loads the NX-logo image resource via StringPool ID + IWzResMan::GetObjectA into m_pLogoProp, reads the GR singleton (GR_INSTANCE_ADDR) to IWzGr2D::CreateLayer, fills an 800x600 canvas (vtable+140 with 0,0,800,600,-1), RelMoves the layer alpha to 255, then plays the NX-logo BGM via CSoundMan::PlayBGM (StringPool ID).
+- Fallback anchor: structure — the GetObjectA(LogoImg) -> CreateLayer(GR) -> 800x600 canvas -> PlayBGM(NxLogoMs) sequence; the GR-singleton read feeding CreateLayer is the same code site v83 uses.
+- Cross-version stability: the 800x600 canvas + CreateLayer + PlayBGM structure stable. The StringPool IDs are per-version (v83 LogoImg/Nexon=1384, NxLogoMs=1250; v84 =1386, =1252) — do NOT byte-search the v83 IDs; the table shifted between versions.
+- Notes: v84 @ 0x00644830. PlayBGM = sub_43F166.
+
+### CLogo::LogoEnd   (memory-map key: C_LOGO_LOGO_END)
+- Primary anchor: structure (alloc-size + callee triple)
+- Detail: `p = ZAllocEx::Alloc(0x28C); if (p) CLogin::CLogin(p); set_stage(stage, 0)`. The 0x28C (652-byte) allocation feeding the CLogin ctor, then set_stage, is a near-unique fingerprint.
+- Fallback anchor: call-graph — calls the CLogin ctor and set_stage; called by CLogo::Update and CLogo::Init.
+- Cross-version stability: the Alloc(0x28C) + CLogin-ctor + set_stage triple stable v83->v84. The CLogin instance size (0x28C) is stable.
+- Notes: v84 @ 0x00644348 (CLogin ctor = 0x00608B15, set_stage = 0x00799CF0).
+
+### CLogo::ForcedEnd   (memory-map key: C_LOGO_FORCED_END)
+- Primary anchor: call-graph + structure
+- Detail: Called by CLogo::OnKey and CLogo::OnMouseButton. Guarded by `if (m_dwClick==0)`; sets m_dwClick = timeGetTime; GetAlpha vtable+144 call (255,255); loads the WIZET logo resource via StringPool ID + GetObjectA; fills an 800x600 canvas; uses an `L"40"` bstr index; draws the final logo frame.
+- Fallback anchor: structure — the m_dwClick-zero guard + the WIZET-logo GetObjectA + 800x600 canvas; it is the ForcedEnd target of both OnKey and OnMouseButton.
+- Cross-version stability: the m_dwClick guard + WIZET-logo + 800x600 shape stable. The WIZET StringPool ID is per-version (v83 1383, v84 1385).
+- Notes: v84 @ 0x00644392.
+
+### set_stage   (memory-map keys: SET_STAGE / STAGE_INSTANCE_ADDR)
+- Primary anchor: writer function (global store) + structure
+- Detail: The free function that swaps the CStage singleton: zeroes `g_CStage_pInstance` (STAGE_INSTANCE_ADDR), releases the old stage via a ZRef teardown (the `v2+12 then -12` idiom), runs three IsKindOf (vtable+72) checks against the CStage-subclass CRTTI globals, branches on CWvsContext::GetCharacterData to call OnEnterGame / OnLeaveGame / OnGameStageChanged, then stores the new stage and invokes its vtable+4 init.
+- Fallback anchor: call-graph — the OnEnterGame/OnLeaveGame/OnGameStageChanged trio + GetCharacterData; the only function that zeroes-then-rewrites STAGE_INSTANCE_ADDR.
+- Cross-version stability: the singleton-swap + IsKindOf-trio + character-data branch structure stable v83->v84. STAGE_INSTANCE_ADDR address is per-version (v83 0x00BEDED4, v84 0x00C474EC).
+- Notes: v84 SET_STAGE @ 0x00799CF0; STAGE_INSTANCE_ADDR @ 0x00C474EC. STAGE_INSTANCE_ADDR independently corroborated as the global read by the already-labeled CClientSocket::ProcessPacket, CStage::OnSetField, CStage::OnSetCashShop, and CWvsApp::CallUpdate (the Task-4 cross-version hint 0xC474EC verified independently here).
+
+### CStage::OnPacket   (memory-map key: C_STAGE_ON_PACKET)
+- Primary anchor: IDB symbol (mangled name)
+- Detail: `?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z` survives in the IDB. A 3-case switch dispatching to CStage::OnSetField / CStage::OnSetITC / CStage::OnSetCashShop.
+- Fallback anchor: structure/call-graph — the small switch whose three targets are OnSetField/OnSetITC/OnSetCashShop (the first and third already labeled in the IDB).
+- Cross-version stability: mangled name + the OnSetField/OnSetITC/OnSetCashShop dispatch stable. The opcode case values are per-version (v83 125/126/127, v84 0x80/0x81/0x82).
+- Notes: v84 @ 0x0079894B. It is the INetMsgHandler-vtable slot 0 of every CStage subclass (CField, CLogin, CLogo, ...).
+
+### CStage::OnMouseEnter   (memory-map key: C_STAGE_ON_MOUSE_ENTER)
+- Primary anchor: structure
+- Detail: Tiny: `if (bEnter) { if (*(CInputSystem_singleton + 2484)) CInputSystem::SetCursorState(singleton, 0); }`. The CInputSystem-singleton member at byte offset 2484 (v83 thiscall member +621 * 4) feeding SetCursorState(0) is near-unique.
+- Fallback anchor: adjacency + call-graph — sits immediately before CStage::OnPacket in the image (v83 0x00775FC7 before 0x00775FE6; v84 0x0079892C before 0x0079894B); reads the CInputSystem singleton and calls SetCursorState.
+- Cross-version stability: the `if(enter) if([inputsys+cursorstate]) SetCursorState(0)` shape + the adjacency-to-OnPacket are stable. The CInputSystem singleton address is per-version.
+- Notes: v84 @ 0x0079892C (CInputSystem singleton = 0x00C456B4, SetCursorState = 0x005AA92C).
+
+### globals: GR_INSTANCE_ADDR / C_UI_TITLE_INSTANCE_ADDR   (memory-map keys: GR_INSTANCE_ADDR / C_UI_TITLE_INSTANCE_ADDR)
+- Primary anchor: reader code site
+- Detail: GR_INSTANCE_ADDR is the IWzGr2D singleton read by CLogo::InitNXLogo to call IWzGr2D::CreateLayer (the same code site v83 uses) and by the entire CWnd/canvas drawing layer; it is the single most-referenced Gr2D global. C_UI_TITLE_INSTANCE_ADDR is the CUITitle singleton read at the end of CLogin::SendCheckPasswordPacket (`if (g_CUITitle) (g_CUITitle->vftable[52])(...)`) and in CLogin::Update / CLogin::GotoTitle.
+- Fallback anchor: GR is written after the Gr2D CreateInstance in CWvsApp::InitializeGr2D (Task-2-labeled); CUITitle is read by the labeled SendCheckPasswordPacket.
+- Cross-version stability: the reader idioms are stable; locate via the InitNXLogo CreateLayer site (GR) and the SendCheckPasswordPacket CUITitle read (Title), not the raw addresses.
+- Notes: v84 GR_INSTANCE_ADDR @ 0x00C4AB6C; C_UI_TITLE_INSTANCE_ADDR @ 0x00C47064.
+
 <!--
 Add one section per resolved key. Group loosely by subsystem to mirror
 memory-map.md. Leave the two stubs above as worked examples of the schema.
