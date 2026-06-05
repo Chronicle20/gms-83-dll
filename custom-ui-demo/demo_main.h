@@ -1,6 +1,15 @@
 #pragma once
 #include "abi/custom_ui_abi.h"
 
+// <windows.h> (pulled in via the precompiled header) defines CreateWindow as
+// an object-like macro -> CreateWindowW/CreateWindowExA. That would mangle our
+// ResolvedAbi::CreateWindow member (and every g_abi.CreateWindow(...) call)
+// into CreateWindowExA. Drop the macro; we resolve the host export by its
+// literal name "CustomUI_CreateWindow" via GetProcAddress, never the Win32 API.
+#ifdef CreateWindow
+#undef CreateWindow
+#endif
+
 namespace custom_ui_demo {
 
 struct ResolvedAbi {
