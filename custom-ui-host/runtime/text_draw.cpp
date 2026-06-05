@@ -147,11 +147,20 @@ void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8) {
             return;
     }
 
+    // One-time step logging so a crash in the draw path is localized by the
+    // last line printed (the per-call calling conventions are unverified).
+    static bool s_dbg = true;
+    const bool dbg = s_dbg;
+    if (dbg)
+        Log("custom-ui-host: DrawLabel: begin x=%d y=%d", x, y);
+
     // 1. window-layer canvas (owned _com_ptr_t<IWzCanvas>). The storage's first
     //    pointer is the raw IWzCanvas*.
     void* canvas_storage = nullptr;
     reinterpret_cast<GetCanvasFn>(C_WND_GET_CANVAS)(cuiwnd_self, nullptr, &canvas_storage);
     void* raw_canvas = *reinterpret_cast<void**>(&canvas_storage);
+    if (dbg)
+        Log("custom-ui-host: DrawLabel: canvas=%p", raw_canvas);
     if (!raw_canvas)
         return;
 
@@ -169,12 +178,20 @@ void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8) {
     MakeVariantMissing(&vTab);
 
     // 4. draw.
+    if (dbg)
+        Log("custom-ui-host: DrawLabel: pre DrawTextA text=%p font=%p", text.m_Data, g_label_font);
     reinterpret_cast<DrawTextAFn>(C_DRAW_TEXT_A)(raw_canvas, nullptr, x, y, text.m_Data, g_label_font, &vAlpha, &vTab);
+    if (dbg)
+        Log("custom-ui-host: DrawLabel: post DrawTextA");
 
     // 5. release the canvas ref (COM Release == vtable slot +8).
     void** canvas_vtbl = *reinterpret_cast<void***>(raw_canvas);
     auto release = reinterpret_cast<unsigned long(__fastcall*)(void*, void*)>(canvas_vtbl[2]);
     release(raw_canvas, nullptr);
+    if (dbg) {
+        Log("custom-ui-host: DrawLabel: done (released canvas)");
+        s_dbg = false;
+    }
 }
 
 } // namespace custom_ui_host
