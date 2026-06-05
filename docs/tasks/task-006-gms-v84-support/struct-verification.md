@@ -427,6 +427,134 @@ m_aClientKey → m_bTesterAccount(`>=87`) → m_dwCharacterId → … → m_basi
   math is exact; the v87 gap is a separate concern worth a dedicated v87 pass, but does not
   affect any v84 verdict here.
 
+### VERDICTS — Task 15 read-only audit (Party/Guild/Config/misc — 6 headers)
+
+v84 IDB = `GMS_v84.1_U_DEVM.exe` (port 13341, confirmed active via `list_instances`
+before every probe). Cross-anchored vs v83 (port 13337) and v95 (port 13339, as the
+oracle where every `>=95` gate flips ON). Read-only: `disasm`/`decompile` +
+`find_bytes` (cross-version function locator) + v95 `type_inspect` (UDT oracle for
+GUILDDATA); **no `set_type`/`declare_type`/rename applied to any IDB**.
+
+**Headline:** ALL 6 headers are CORRECT for v84 — no rewrites required. Unlike the
+Mob/UI families (Tasks 13/14), NONE of these 6 headers has a `>=87` gate, so v84
+cannot be an "intermediate": every gate here is `<95`/`>=95`/`>=111`, which resolves
+identically for build 83 and build 84. Each gate was nonetheless verified against a
+concrete v84 disasm anchor (not assumed). The PartyMember `<95` block is **PRESENT**
+in v84 (confirmed via the v84↔v95 PARTYDATA size delta, not assumed).
+
+#### PartyMember.h — gate `<95` (adwFieldID[6]) — ✅ PRESENT in v84, gate correct
+- **`<95` `adwFieldID[6]` (24 B) — PRESENT in v84** (84 < 95 → true). PARTYMEMBER is
+  not flat-decoded standalone in OnPartyResult; it rides inside PARTYDATA's single
+  `DecodeBuffer(this, 0x12A)` blob. v84 PARTYDATA = 0x12A (298) = **PARTYMEMBER(202,
+  incl adwFieldID) + aTownPortal[6](6×16 = 96)**. The 202 figure REQUIRES adwFieldID
+  (core PARTYMEMBER without it = 178 = 0xB2; with it = 202).
+- **Decisive `<95` proof (v84↔v95 delta):** v95 PARTYDATA::Decode @ 0x4F2B00 =
+  `push 17Ah` = 0x17A (378), exactly v84's 0x12A + 0x50. The +0x50 = v95 moving
+  adwFieldID PARTYMEMBER→PARTYDATA (net 0, but reshuffled) + adding TOWNPORTAL.m_nSKillID
+  (6×4=24) + PQReward tail (adwFieldID[6]+aPQReward[6]+aPQRewardType[6]+dwPQRewardMobTemplateID
+  +bPQReward = 24+24+24+4+4 = 80). 24+80 − 24 (adwFieldID removed from member) = 80 = 0x50. ✅
+  This proves v84 keeps adwFieldID inside PARTYMEMBER (the `<95` side).
+- **VERDICT: gate correct.** (PARTYMEMBER size note for embedders: 202 B per member;
+  it appears once by value inside PARTYDATA.)
+
+#### PartyData.h — gates `>=95` (×3 regions) — ✅ all gates correct
+- **v84 size 0x12A (298).** Anchor: v84 PARTYDATA::Decode @ 0x4EB819
+  `push 12Ah; push ecx; mov ecx,[esp+8]; call DecodeBuffer (0x432EBE); retn 4` —
+  identical literal to v83 PARTYDATA::Decode (0x12A @ 0x4E43E8). Confirmed as PARTYDATA
+  by its caller: CWvsContext::OnPartyResult (sub_A89CF3, the big party packet handler).
+  The matching Encode stub @ 0x4EB807 also pushes 0x12A.
+- **`>=95` `TOWNPORTAL.m_nSKillID` — ABSENT** (TOWNPORTAL = 16 B in v84: 4+4+8, no skill).
+- **`>=95` `adwFieldID[6]` (in PARTYDATA) — ABSENT** (it's still in PARTYMEMBER for v84).
+- **`>=95` PQReward tail (aPQReward/aPQRewardType/dwPQRewardMobTemplateID/bPQReward) — ABSENT.**
+  All three blocks together account for the +0x50 jump to v95's 0x17A. ✅
+- **VERDICT: all gates correct** (v84 = v83 = 0x12A).
+
+#### GuildData.h — gates `>=95` (×3: nLevel, mSkillRecord ZMap, aSkillRecordOnlyID) — ✅ correct
+- **v84 size 0x2A (42).** GUILDDATA is field-by-field decoded (ZXString/ZArray members),
+  so size comes from the ctor/Clear extent, not a buffer literal. v84 GUILDDATA::Clear
+  @ 0xA4C703 (located by byte-identical prologue `53 56 8B F1 33 DB 8D 4E 04 89 1E 89
+  5E 22` to v83 Clear @ 0xA024DD) resets members up to **nAllianceID @ 0x26**
+  (`*(this+38)=0`); the highest member is nAllianceID ⇒ size 0x2A. It does NOT touch
+  nLevel(0x2A)/mSkillRecord/aSkillRecordOnlyID.
+- **`>=95` block — ABSENT in v84.** Cross-check: v95 GUILDDATA UDT (type_inspect) =
+  0x4A (74), with nLevel @ 0x2A, mSkillRecord ZMap @ 0x2E (24 B), aSkillRecordOnlyID @
+  0x46 (4 B) — exactly the trailing +0x20 the gate adds. v95 ctor @ 0x9E5750 explicitly
+  builds the ZMap (`_m_uTableSize=31`, `_CalcAutoGrow(…,0x64)`); v84 ctor/Clear has no
+  such ZMap init. Struct is byte-packed (mark fields at unaligned 0x18-0x1D). ✅
+- **VERDICT: gate correct** (v84 = v83 = 0x2A).
+
+#### ConfigSysOpt.h — gate `>=95` (×2: bSysOpt_LargeScreen, bSysOpt_WindowedMode) — ✅ correct
+- **v84 size 0x30 (48).** Anchor: CConfig::ApplySysOpt @ 0x4A3A9C does
+  `qmemcpy(this+25, a2, 0x30u)` — copies the entire CONFIG_SYSOPT (`a2`) = **12 ints
+  (0x30)** into the CConfig object at this[25..36]. The 12 fields used downstream map
+  1:1 to the header: this[25]=nSysOpt_Video … this[31]=nSysOpt_MouseSpeed (`g_CInputSystem
+  +2416 = this[31]`), this[34]=bSysOpt_Tremble, this[35]=nSysOpt_MobInfo (tested ==1/2/3
+  for HP/MP bars → CWvsContext+14376/14380), this[36]=bSysOpt_Minimap_Normal
+  (`sub_A2C4E1(this[36])`). Exactly 12 ints, no 13th/14th.
+- **`>=95` `bSysOpt_LargeScreen`/`bSysOpt_WindowedMode` — ABSENT** (would make 0x38).
+- **Windowed-mode cross-check (Task 7):** `C_CONFIG_SYS_OPT_WINDOWED_MODE` @ 0xC4B150 is a
+  STANDALONE global (`g_CConfig_SysOpt_WindowedMode`, set to 0x10 in CWvsApp::SetUp @
+  0xA3E1BB; xref'd only by SetUp/CreateMainWindow/InitializeGr2D), NOT a CONFIG_SYSOPT
+  member. This is exactly consistent with `bSysOpt_WindowedMode` being `>=95`-gated-out of
+  the struct for v84 — the windowed-mode setting lives outside the struct in this build. ✅
+- **VERDICT: gate correct** (v84 = v83 = 0x30).
+
+#### CFuncKeyMappedMan.h — gates `>=111`||JMS (dummy1), `>=95` (m_nNormalAttackCode) — ✅ correct
+- **v84 size 0x3C8 (968).** Anchor: CreateInstance @ 0xA43D50 → `sub_403065(968)` then
+  ctor @ 0x59DD00. Cross-check vs Task-6: ctor stores vftable @ 0xB46B08; the two
+  445-byte (0x1BD) memcpys from DEFAULT_FKM @ 0xC31C7C populate m_aFuncKeyMapped[89] and
+  m_aFuncKeyMapped_Old[89] (89×5 B = 445 ⇒ FUNCKEY_MAPPED = 5 B); the two 0x20 memcpys
+  from DEFAULT_QKM @ 0xC31E3C populate m_aQuickslotKeyMapped[8]/_Old[8].
+- **Field map:** +4 m_aFuncKeyMapped(445), +449 _Old(445), +896 m_aQuickslotKeyMapped(32),
+  +928 _Old(32), +960 m_nPetConsumeItemID, +964 m_nPetConsumeMPItemID. Ctor STOPS at
+  a1[241] (+964) ⇒ no further field. 964+4 = 968 = alloc size. ✅
+- **`>=111`||JMS `dummy1` — ABSENT; `>=95` `m_nNormalAttackCode` — ABSENT** (both would push
+  size past 968). GMS build 84 < 95 < 111, not JMS ⇒ both correctly excluded.
+- **VERDICT: all gates correct.**
+
+#### CLogo.h — gates `>=95` (×4), `>=95`||JMS (m_bNXFadeOut), `>=111` (dummy1) — ✅ all correct
+- **v84 size 0x38 (56).** Anchor: alloc `push 38h` @ 0xA3E6B8 in CWvsApp::SetUp,
+  immediately before `call CLogo::CLogo` @ 0x64417C (Task-5 ctor). Ctor zero-inits
+  this[6]=m_pLayerMain (com_ptr), this[7]=m_pLogoProp (com_ptr), then this[9..13] =
+  m_dwTickInitial/m_dwClick/m_bLogoSoundPlayed/m_bWZInit/m_bNXFadeIn (this[8]=m_nLogoCount
+  left uninit as a plain int). Last field this[13] @ 0x34 ⇒ 0x38. CStage base = 0x18
+  (this[0..5], vtables @ 0x0-0xC set in ctor).
+- **`>=95` `m_pLayerBackground` (leading com_ptr) — ABSENT** (first own field is m_pLayerMain
+  @ this[6]/0x18; a leading `m_pLayerBackground` would push everything +4 and the doc count
+  would not close at 0x38). **`>=95`||JMS `m_bNXFadeOut` — ABSENT** (build 84<95, not JMS;
+  would be this[14]/0x38). **`>=95` `m_bVideoMode`/`m_videoState` — ABSENT.** **`>=111`
+  `dummy1` — ABSENT.** All resolve to the v83 side. ✅
+- **VERDICT: all gates correct.**
+
+**Task-15 Task-16 cross-check flags:** NONE. All 6 headers' gates are correct for v84
+(no `>=87`-style intermediate traps exist in this family). No source changes for Task 16.
+
+### 22/22 COMPLETION — final audit roll-up (Tasks 11–15)
+
+**All 22 version-gated headers now carry a v84 size + per-gate verdict + disasm anchor
+(no ☐ rows remain).** Tally across the full audit:
+
+- **CORRECT (18 of 22 table rows):** CWvsApp, CWvsContext, CClientSocket, CLogin,
+  MobStat, CFadeWnd, CCtrlButton, CCtrlCheckBox, CUIWnd, CWnd, CUILoginStart, CUITitle,
+  PartyMember, PartyData, GuildData, ConfigSysOpt, CFuncKeyMappedMan, CLogo.
+  *(The 5 Task-11 boundary-gate SITES — doom-fix dllmain, CWvsContext key, socket_hooks,
+  CLogin ==83 member, CUIToolTip >=83 — were also all CORRECT; those sites are folded into
+  the CWvsContext/CLogin/CUIToolTip header rows.)*
+- **NEEDS CHANGE (4):** **CUIToolTip.h**, **CMob.h**, **SecondaryStat.h**,
+  **CMapLoadable.h** — all flagged for Task 16, all are `>=87` gates firing too late for
+  v84 (v84 is an intermediate carrying a SUBSET of the `>=87` fields):
+  - **CUIToolTip.h:** move `m_pFontGen_Unknown` + `m_pCanvasEquip_Durability[2][2]` to
+    `>=84`(||JMS for Gen_Unknown+Durability); keep `m_pFontH_White`/`m_pFontStan_Prp` at
+    `>=87`. Restores v84 to 0x52C (propagates to CUIWnd 0x5C8, CCtrlButton 0x5BC, CUITitle 0x604).
+  - **CMob.h:** move `m_aMultiTargetForBall` and `m_aRandTimeforAreaAttack`+`m_delaySkill`
+    from `>=87`(||JMS) to `>=84`(||JMS). Restores v84 CMob to 0x560.
+  - **SecondaryStat.h (size-critical):** SPLIT the `>=87`||JMS post-SoulStone block —
+    `nFlying_`+`nFrozen_` → `>=84`(||JMS); keep `nAssistCharge_`+`nEnrage_` at `>=87`||JMS.
+    Restores v84 to 0xD20. Re-verify downstream CWvsContext offsets after m_secondaryStat (+0x48).
+  - **CMapLoadable.h:** move `m_lVisibleByQuest` from `>=87`||JMS to `>=84`||JMS. Restores v84 to 0x128.
+  - Every rewrite must be re-validated against v83/v87/v95/v111/JMS185 (FR-13) so no other
+    version's compiled branch flips.
+
 ## The 22 version-gated headers
 
 For each, record: v84 size, which gated fields are present/absent in v84, the
@@ -439,11 +567,11 @@ disassembly anchor, and the verdict (gate correct / gate needs change).
 | common/CClientSocket.h | `>= 111` | 0x94 (148) | ✅ gate correct | CreateInstance @ 0xA43D0B `push 94h`; see Task-12 notes |
 | common/CLogin.h | `>= 95`, `== 83` | 0x28C (652) | ✅ all gates correct | alloc `push 28Ch` @ 0xA6FD1C; ctor @ 0x608B15; see Task-12 notes |
 | common/CMapLoadable.h | `>= 95` (×3), `>= 87`\|\|JMS (×1) | 0x128 (296) | ⚠️ **NEEDS CHANGE** (`m_lVisibleByQuest` mis-gated `>=87`) | v84 ctor sub_64EAB3: THREE ZLists @ 0x78/0x8C/**0xA0** (m_lVisibleByQuest present) before ZMaps @ 0xB4; v83 ctor 0x639401 has only TWO (ZMap @ 0xA0). `>=95` all absent. See Task-14 notes. |
-| common/CLogo.h | _audit_ | | ☐ | |
+| common/CLogo.h | `>= 95` (×4), `>= 95`\|\|JMS (×1), `>= 111` (×1) | 0x38 (56) | ✅ all gates correct | alloc `push 38h` @ 0xA3E6B8 (CWvsApp::SetUp, before CLogo::CLogo @ 0x64417C); ctor zero-inits this[6..7] (m_pLayerMain/m_pLogoProp com_ptrs) + this[9..13] (m_dwTickInitial…m_bNXFadeIn), last field @ 0x34 ⇒ 0x38. CStage base = 0x18. `m_pLayerBackground`/`m_bNXFadeOut`/`m_bVideoMode`/`m_videoState`/`dummy1` all ABSENT. See Task-15 notes. |
 | common/CMob.h | `<95`, `>=87` (×5), `>=95` (×3) | 0x560 (1376) | ⚠️ **NEEDS CHANGE** (3 fields mis-gated `>=87`) | CreateMob @ 0x678024 `push 560h`; v84 ctor @ 0x678060 has m_aMultiTargetForBall @ 0x528, m_aRandTimeforAreaAttack @ 0x52C, m_delaySkill @ 0x530-0x53C (absent in v83 ctor 0x6621d9); m_bDoomReserved @ 0x540. m_bChasing & SECPOINT m_ptPos & all `>=95` absent. See Task-14 notes. |
 | common/MobStat.h | `>=95`\|\|JMS, `>=95` (×2) | 0x208 (520) — v83-identical | ✅ all gates correct | embedded m_stat @ CMob+0x1A0 … 0x3A8 (m_nTeamForMCarnival @ 0x3B0); v83 UDT MobStat=520; no 83/84/87 gate. See Task-14 notes. |
-| common/ConfigSysOpt.h | _audit_ | | ☐ | |
-| common/CFuncKeyMappedMan.h | _audit_ | | ☐ | |
+| common/ConfigSysOpt.h | `>= 95` (×2) | 0x30 (48) | ✅ gate correct | CConfig::ApplySysOpt @ 0x4A3A9C: `qmemcpy(this+25, a2, 0x30u)` copies exactly **12 ints** (0x30) = fields nSysOpt_Video…bSysOpt_Minimap_Normal; `>=95` `bSysOpt_LargeScreen`/`bSysOpt_WindowedMode` ABSENT (would make 0x38). Windowed-mode is a SEPARATE global `g_CConfig_SysOpt_WindowedMode` @ 0xC4B150 (not a struct member in v84), consistent with the gate. See Task-15 notes. |
+| common/CFuncKeyMappedMan.h | `>= 111`\|\|JMS (×1), `>= 95` (×1) (+ JMS-only `dummy2`) | 0x3C8 (968) | ✅ all gates correct | CreateInstance @ 0xA43D50 `sub_403065(968)`; ctor @ 0x59DD00: vftable @ 0xB46B08, memcpy(+4,DEFAULT_FKM,0x1BD=445)=m_aFuncKeyMapped[89]×5B, memcpy(+449,…,445)=_Old, memcpy(+896,DEFAULT_QKM,0x20)=m_aQuickslotKeyMapped[8], memcpy(+928,…,0x20)=_Old, +960/+964=m_nPetConsumeItemID/MP. Ctor stops @ 964+4=968 ⇒ `dummy1`(`>=111`) & `m_nNormalAttackCode`(`>=95`) ABSENT. See Task-15 notes. |
 | common/CFadeWnd.h | `>= 87` (+ `REGION_GMS` `m_bUserAlarm`) | 0xD4 (212) | ✅ all gates correct | v84 ctor sub_52ACD8: `mov [esi+0C8h],eax` (m_sInviter) is highest field → m_dwSN @ 0xCC adjacent (no `>=87` 3-int block). See Task-13 notes. |
 | common/CCtrlButton.h | `>= 95` | 0x5BC (1468) — embeds v84 CUIToolTip (0x52C) | ✅ gate correct | v84 m_uiToolTip @ 0x8C (`lea ecx,[esi+8Ch]; call sub_91CA58` @ 0x4C5B0D / 0x8475F9); base CCtrlWnd 0x34; `>=95` `m_sToolTipFromData` absent. See Task-13 notes. |
 | common/CCtrlCheckBox.h | `>= 95` | 0x6C (108) — v83-identical | ✅ gate correct | v84 ctor sub_46C894: eh-vector `m_apCanvasCheckBox[4]` @ 0x5C ends 0x6C; nothing written past → `>=95` `m_nTextOffsetX/Y` absent. See Task-13 notes. |
@@ -452,9 +580,9 @@ disassembly anchor, and the verdict (gate correct / gate needs change).
 | common/CUIToolTip.h | `>= 83`, **`>= 87` (×4)**, `>= 95` (×6) | **0x52C (1324)** | ⚠️ **NEEDS CHANGE** (2 fields mis-gated `>=87`) | v84 ctor sub_91A417: CLineInfo=0x20 (eh-vec `push 20h`), no m_aOptionLineInfo, **21 fonts** (0x428–0x478) incl `m_pFontGen_Unknown`, **`m_pCanvasEquip_Durability[2][2]` PRESENT @ 0x518**. See Task-13 CUIToolTip note. |
 | common/CUILoginStart.h | `>= 95` / `REGION_JMS` | 0x100 (256) — v83-identical | ✅ all gates correct | v84 ctor sub_623270: m_pLogin @ 0x7C, m_aBtParam[5] eh-vec @ 0x80 (size 0x10) adjacent ⇒ `>=95`/JMS 2 com_ptrs absent. See Task-13 notes. |
 | common/CUITitle.h | `>= 95` (base CFadeWnd + `m_rcRMA`) | 0x604 (1540) — embeds v84 CUIToolTip (0x52C) | ✅ all gates correct | v84 ctor sub_635785: base is CDialog (sub_4F6020, not CFadeWnd); m_pCanvasRMA[2] @ 0x88 → buttons @ 0x90 adjacent (no `m_rcRMA`); m_uiToolTipTitle @ 0xD8. See Task-13 notes. |
-| common/GuildData.h | `>= 95` | | ☐ | |
-| common/PartyMember.h | `< 95` | | ☐ | |
-| common/PartyData.h | `>= 95` | | ☐ | |
+| common/GuildData.h | `>= 95` (×3: nLevel, mSkillRecord ZMap, aSkillRecordOnlyID) | 0x2A (42) | ✅ gate correct | v84 GUILDDATA::Clear @ 0xA4C703 (byte-identical to v83 Clear @ 0xA024DD) touches members up to nAllianceID @ 0x26 ⇒ size 0x2A; NO nLevel/mSkillRecord/aSkillRecordOnlyID. v95 GUILDDATA UDT = 0x4A (those 3 fields add +0x20 @ 0x2A onward). `>=95` block ABSENT in v84. See Task-15 notes. |
+| common/PartyMember.h | `< 95` (adwFieldID[6]) | 202 (0xCA) — embedded in PARTYDATA | ✅ gate correct (`<95` block PRESENT) | adwFieldID[6] is part of v84's flat PARTYDATA decode (0x12A): PARTYMEMBER(202, incl adwFieldID) + aTownPortal[6](96) = 298. Proven by v95 delta: v95 moves adwFieldID PARTYMEMBER→PARTYDATA & adds PQ block ⇒ v95 PARTYDATA = 0x17A (=0x12A+0x50). `<95` true for v84 ⇒ adwFieldID stays in PARTYMEMBER. See Task-15 notes. |
+| common/PartyData.h | `>= 95` (×3 blocks: TOWNPORTAL.m_nSKillID, adwFieldID[6], PQReward tail) | 0x12A (298) | ✅ all gates correct | PARTYDATA::Decode @ 0x4EB819 `push 12Ah; call DecodeBuffer` ⇒ 298 (called from CWvsContext::OnPartyResult sub_A89CF3); IDENTICAL to v83 (0x12A @ 0x4E43E8). 298 = PARTYMEMBER(202,with adwFieldID) + aTownPortal[6](6×16, no m_nSKillID). v95 = 0x17A (all `>=95` present). `>=95` blocks ABSENT in v84. See Task-15 notes. |
 | common/SecondaryStat.h | `>=87`/`==87`/`>=95` | **0xD20 (3360)** (v83=0xCD8, v87=0xD74) | ⚠️ **NEEDS CHANGE** — size-critical (intermediate; `>=87` block half-present) | ctor sub_79ED3E eh-vector `lea eax,[esi+0CE8h]` ⇒ aTemporaryStat[7] @ 0xCE8 ⇒ 0xD20. v84 carries nFlying_+nFrozen_ (6 tears @ 0xCA0-0xCE7) but NOT nAssistCharge_/nEnrage_; nDojangShield_ & `==87` byte-variants absent. See Task-14 SecondaryStat note. |
 
 (Threshold column is filled in during the audit by grepping each file; the four
