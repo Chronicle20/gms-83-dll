@@ -13,16 +13,16 @@ struct CustomUIWnd;
 using WindowHandle = std::uint32_t;
 
 class WindowRegistry {
-public:
-    WindowHandle Register(CustomUIWnd *w);
+  public:
+    WindowHandle Register(CustomUIWnd* w);
     bool Unregister(WindowHandle h);
-    CustomUIWnd *Lookup(WindowHandle h) const;
-    void ForEach(const std::function<void(CustomUIWnd *)> &fn) const;
+    CustomUIWnd* Lookup(WindowHandle h) const;
+    void ForEach(const std::function<void(CustomUIWnd*)>& fn) const;
     std::size_t Size() const;
 
-private:
+  private:
     mutable std::mutex mu_;
-    std::unordered_map<WindowHandle, CustomUIWnd *> by_handle_;
+    std::unordered_map<WindowHandle, CustomUIWnd*> by_handle_;
     WindowHandle next_handle_ = 1;
 };
 

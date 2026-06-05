@@ -27,7 +27,7 @@ public:
 
     CFuncKeyMappedMan();
 
-    static CFuncKeyMappedMan *GetInstance();
+    static CFuncKeyMappedMan* GetInstance();
     static void CreateInstance();
 
     FUNCKEY_MAPPED FuncKeyMapped(int vk);

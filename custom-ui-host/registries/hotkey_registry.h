@@ -11,21 +11,21 @@ using WindowHandle = std::uint32_t;
 struct HotkeyBinding {
     HotkeyId id;
     unsigned int vk;
-    unsigned int mods;       // CUSTOM_UI_MOD_* bitmask
+    unsigned int mods; // CUSTOM_UI_MOD_* bitmask
     WindowHandle target;
 };
 
 class HotkeyRegistry {
-public:
+  public:
     // Returns 0 on rejection (denylist hit, vk already mapped on game,
     // already-bound conflict). Returns non-zero opaque id on success.
     HotkeyId Bind(unsigned int vk, unsigned int mods, WindowHandle target);
     bool Unbind(HotkeyId id);
-    const HotkeyBinding *Lookup(unsigned int vk, unsigned int mods) const;
+    const HotkeyBinding* Lookup(unsigned int vk, unsigned int mods) const;
     void Clear();
     std::size_t Size() const;
 
-private:
+  private:
     static bool IsDenylisted(unsigned int vk);
 
     mutable std::mutex mu_;

@@ -10,9 +10,8 @@ void CFuncKeyMappedMan::CreateInstance() {
     reinterpret_cast<void (__cdecl *)()>(C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE)();
 }
 
-CFuncKeyMappedMan *CFuncKeyMappedMan::GetInstance() {
-    return *reinterpret_cast<CFuncKeyMappedMan **>(
-        C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR);
+CFuncKeyMappedMan* CFuncKeyMappedMan::GetInstance() {
+    return *reinterpret_cast<CFuncKeyMappedMan**>(C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR);
 }
 
 FUNCKEY_MAPPED CFuncKeyMappedMan::FuncKeyMapped(int vk) {

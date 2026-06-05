@@ -2,14 +2,14 @@
 
 class CCtrlButton : CCtrlWnd {
 public:
-    // No C++ constructor: custom-ui-host builds buttons via a raw thunk to
-    // the nullary game ctor (C_CTRL_BUTTON_CTOR) on a byte buffer.
+  // No C++ constructor: custom-ui-host builds buttons via a raw thunk to
+  // the nullary game ctor (C_CTRL_BUTTON_CTOR) on a byte buffer.
 
-    struct CREATEPARAM {
-        bool bAcceptFocus;
-        bool bDrawBack;
-        bool bAnimateOnce;
-        ZXString<unsigned short> sUOL;
+  struct CREATEPARAM {
+      bool bAcceptFocus;
+      bool bDrawBack;
+      bool bAnimateOnce;
+      ZXString<unsigned short> sUOL;
     };
 
     int m_nDisplayState;

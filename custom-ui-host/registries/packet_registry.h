@@ -14,31 +14,28 @@ namespace custom_ui_host {
 
 using HandlerId = std::uint32_t;
 
-using PacketHandlerFn = void(__cdecl *)(unsigned short opcode,
-                                        const unsigned char *payload,
-                                        unsigned int payloadLen,
-                                        void *user);
+using PacketHandlerFn = void(__cdecl*)(unsigned short opcode, const unsigned char* payload, unsigned int payloadLen,
+                                       void* user);
 
 class PacketRegistry {
-public:
+  public:
     PacketRegistry(unsigned short range_min, unsigned short range_max);
 
     // Returns 0 if opcode is out of range or already registered.
-    HandlerId Register(unsigned short opcode, PacketHandlerFn fn, void *user);
+    HandlerId Register(unsigned short opcode, PacketHandlerFn fn, void* user);
     bool Unregister(HandlerId id);
 
     // Out-of-range opcodes and absent handlers are silent no-ops.
-    void Dispatch(unsigned short opcode, const unsigned char *payload,
-                  unsigned int payloadLen);
+    void Dispatch(unsigned short opcode, const unsigned char* payload, unsigned int payloadLen);
 
     std::size_t Size() const;
 
-private:
+  private:
     struct Entry {
         HandlerId id;
         unsigned short opcode;
         PacketHandlerFn fn;
-        void *user;
+        void* user;
     };
 
     mutable std::mutex mu_;

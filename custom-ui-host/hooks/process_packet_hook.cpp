@@ -13,11 +13,10 @@ namespace custom_ui_host {
 
 namespace {
 
-typedef void(__thiscall *ProcessPacket_t)(CClientSocket *, CInPacket *);
+typedef void(__thiscall* ProcessPacket_t)(CClientSocket*, CInPacket*);
 ProcessPacket_t _ProcessPacket = nullptr;
 
-void __fastcall ProcessPacket_Hook(CClientSocket *self, void * /*edx*/,
-                                   CInPacket *iPacket) {
+void __fastcall ProcessPacket_Hook(CClientSocket* self, void* /*edx*/, CInPacket* iPacket) {
     if (!iPacket) {
         _ProcessPacket(self, iPacket);
         return;
@@ -28,15 +27,12 @@ void __fastcall ProcessPacket_Hook(CClientSocket *self, void * /*edx*/,
     if (opcode >= g_config.inbound_op_min && opcode <= g_config.inbound_op_max) {
         // Custom range: dispatch to registered handler with the payload
         // bytes that follow the opcode. Vanilla path NOT invoked.
-        const unsigned char *payload =
-            reinterpret_cast<const unsigned char *>(
-                iPacket->m_aRecvBuff.GetTailPosition()) +
-            iPacket->m_uOffset;
+        const unsigned char* payload =
+            reinterpret_cast<const unsigned char*>(iPacket->m_aRecvBuff.GetTailPosition()) + iPacket->m_uOffset;
         const unsigned int payloadLen =
-            iPacket->m_uDataLen > iPacket->m_uOffset
-                ? iPacket->m_uDataLen - iPacket->m_uOffset
-                : 0u;
-        if (g_packets) g_packets->Dispatch(opcode, payload, payloadLen);
+            iPacket->m_uDataLen > iPacket->m_uOffset ? iPacket->m_uDataLen - iPacket->m_uOffset : 0u;
+        if (g_packets)
+            g_packets->Dispatch(opcode, payload, payloadLen);
         return;
     }
 
@@ -48,9 +44,7 @@ void __fastcall ProcessPacket_Hook(CClientSocket *self, void * /*edx*/,
 } // namespace
 
 BOOL InstallProcessPacketHook() {
-    INITMAPLEHOOK_OR_RETURN(_ProcessPacket, ProcessPacket_t,
-                            &ProcessPacket_Hook,
-                            C_CLIENT_SOCKET_PROCESS_PACKET);
+    INITMAPLEHOOK_OR_RETURN(_ProcessPacket, ProcessPacket_t, &ProcessPacket_Hook, C_CLIENT_SOCKET_PROCESS_PACKET);
     return TRUE;
 }
 

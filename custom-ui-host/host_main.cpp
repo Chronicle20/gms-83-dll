@@ -1,11 +1,11 @@
 #include "pch.h"
 
 #include "abi/abi_globals.h"
-#include "host_globals.h"
 #include "hooks/process_key_hook.h"
 #include "hooks/process_packet_hook.h"
 #include "hooks/s_update_hook.h"
 #include "hooks/stage_dtor_hook.h"
+#include "host_globals.h"
 #include "logger.h"
 #include "runtime/host_config.h"
 #include "runtime/vtable_patch.h"
@@ -21,7 +21,7 @@ bool AcquireSingletonMutex() {
     HANDLE h = CreateMutexW(nullptr, FALSE, L"Local\\custom-ui-host-singleton");
     if (!h) {
         Log("custom-ui-host: CreateMutexW failed err=%lu", GetLastError());
-        return false;  // treat as double-load to be safe
+        return false; // treat as double-load to be safe
     }
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         Log("custom-ui-host: another host instance is already running -- "

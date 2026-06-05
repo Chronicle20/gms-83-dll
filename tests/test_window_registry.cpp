@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 namespace custom_ui_host {
-struct CustomUIWnd {  // test stub; the real one lands in Phase 5
+struct CustomUIWnd { // test stub; the real one lands in Phase 5
     int marker;
 };
 } // namespace custom_ui_host
@@ -33,7 +33,7 @@ TEST(WindowRegistry, UnregisterClearsLookup) {
     auto h = reg.Register(&w);
     EXPECT_TRUE(reg.Unregister(h));
     EXPECT_EQ(reg.Lookup(h), nullptr);
-    EXPECT_FALSE(reg.Unregister(h));  // double-unreg is idempotent failure
+    EXPECT_FALSE(reg.Unregister(h)); // double-unreg is idempotent failure
 }
 
 TEST(WindowRegistry, HandlesAreUnique) {
@@ -53,6 +53,6 @@ TEST(WindowRegistry, ForEachIteratesAll) {
     reg.Register(&a);
     reg.Register(&b);
     int sum = 0;
-    reg.ForEach([&](CustomUIWnd *w) { sum += w->marker; });
+    reg.ForEach([&](CustomUIWnd* w) { sum += w->marker; });
     EXPECT_EQ(sum, 3);
 }

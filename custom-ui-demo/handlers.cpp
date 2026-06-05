@@ -8,16 +8,15 @@
 
 namespace custom_ui_demo {
 
-void OnPing(CustomUI_WindowHandle, CustomUI_CtrlId, void *) {
+void OnPing(CustomUI_WindowHandle, CustomUI_CtrlId, void*) {
     Log("custom-ui-demo: OnPing -> SendPacket(0x0F00)");
     g_abi.SendPacket(0x0F00, nullptr, 0);
 }
 
-void OnPong(unsigned short opcode, const unsigned char *payload,
-            unsigned int len, void *) {
+void OnPong(unsigned short opcode, const unsigned char* payload, unsigned int len, void*) {
     int seq;
     if (len >= 4) {
-        seq = *reinterpret_cast<const int *>(payload);
+        seq = *reinterpret_cast<const int*>(payload);
     } else {
         seq = ++g_ping_count;
     }

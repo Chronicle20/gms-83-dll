@@ -15,10 +15,10 @@ std::atomic<bool> g_pending_restore{false};
 
 namespace {
 
-typedef void(__thiscall *StageDtor_t)(CStage *);
+typedef void(__thiscall* StageDtor_t)(CStage*);
 StageDtor_t _StageDtor = nullptr;
 
-void __fastcall StageDtor_Hook(CStage *self, void * /*edx*/) {
+void __fastcall StageDtor_Hook(CStage* self, void* /*edx*/) {
     SnapshotAndSuspendVisibleWindows();
     g_pending_restore.store(true);
     _StageDtor(self);
@@ -27,8 +27,7 @@ void __fastcall StageDtor_Hook(CStage *self, void * /*edx*/) {
 } // namespace
 
 BOOL InstallStageDtorHook() {
-    INITMAPLEHOOK_OR_RETURN(_StageDtor, StageDtor_t, &StageDtor_Hook,
-                            C_STAGE_DTOR);
+    INITMAPLEHOOK_OR_RETURN(_StageDtor, StageDtor_t, &StageDtor_Hook, C_STAGE_DTOR);
     return TRUE;
 }
 

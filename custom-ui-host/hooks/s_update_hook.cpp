@@ -13,11 +13,11 @@ namespace custom_ui_host {
 
 namespace {
 
-typedef CWnd **(__cdecl *SUpdate_t)();
+typedef CWnd**(__cdecl* SUpdate_t)();
 SUpdate_t _SUpdate = nullptr;
 
-CWnd **__cdecl SUpdate_Hook() {
-    CWnd **rv = _SUpdate();
+CWnd** __cdecl SUpdate_Hook() {
+    CWnd** rv = _SUpdate();
     if (g_pending_restore.exchange(false)) {
         RestoreSuspendedWindows();
     }
@@ -27,8 +27,7 @@ CWnd **__cdecl SUpdate_Hook() {
 } // namespace
 
 BOOL InstallSUpdateHook() {
-    INITMAPLEHOOK_OR_RETURN(_SUpdate, SUpdate_t, &SUpdate_Hook,
-                            C_WND_MAN_S_UPDATE);
+    INITMAPLEHOOK_OR_RETURN(_SUpdate, SUpdate_t, &SUpdate_Hook, C_WND_MAN_S_UPDATE);
     return TRUE;
 }
 

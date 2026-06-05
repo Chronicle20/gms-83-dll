@@ -14,13 +14,11 @@ namespace custom_ui_host {
 //   SafeDispatch("CustomUI button click", [&]() {
 //       consumer_fn(arg);
 //   });
-template <class F>
-inline void SafeDispatch(const char *siteName, F &&fn) noexcept {
+template <class F> inline void SafeDispatch(const char* siteName, F&& fn) noexcept {
     __try {
         fn();
-    } __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION
-                    ? EXCEPTION_EXECUTE_HANDLER
-                    : EXCEPTION_CONTINUE_SEARCH) {
+    } __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER
+                                                                 : EXCEPTION_CONTINUE_SEARCH) {
         Log("custom-ui-host: AV in consumer callback at site=[%s]", siteName);
     }
 }

@@ -13,6 +13,6 @@ bool InitLabelFont();
 // the label font failed to initialise. Acquires the window canvas (owned ref),
 // draws via IWzCanvas::DrawTextA, then releases the canvas. Must only be called
 // from within the slot-11 Draw override (the canvas is valid there).
-void DrawLabel(void *cuiwnd_self, int x, int y, const char *utf8);
+void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8);
 
-}  // namespace custom_ui_host
+} // namespace custom_ui_host

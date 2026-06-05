@@ -1,8 +1,8 @@
 #include "packet_registry.h"
 
 #include <cstring>
-#include <vector>
 #include <gtest/gtest.h>
+#include <vector>
 
 using custom_ui_host::PacketRegistry;
 
@@ -14,9 +14,8 @@ struct CallSpy {
     std::vector<unsigned char> last_payload;
 };
 
-void __cdecl Handler(unsigned short op, const unsigned char *p,
-                     unsigned int n, void *user) {
-    auto *s = static_cast<CallSpy *>(user);
+void __cdecl Handler(unsigned short op, const unsigned char* p, unsigned int n, void* user) {
+    auto* s = static_cast<CallSpy*>(user);
     s->count++;
     s->last_op = op;
     s->last_len = n;
@@ -57,8 +56,8 @@ TEST(PacketRegistry, DispatchOutsideRangeNoop) {
     PacketRegistry reg(0x2000, 0x20FF);
     CallSpy spy;
     reg.Register(0x2000, &Handler, &spy);
-    reg.Dispatch(0x1FFF, nullptr, 0);  // outside range
-    reg.Dispatch(0x2001, nullptr, 0);  // in range, no handler
+    reg.Dispatch(0x1FFF, nullptr, 0); // outside range
+    reg.Dispatch(0x2001, nullptr, 0); // in range, no handler
     EXPECT_EQ(spy.count, 0);
 }
 
@@ -69,5 +68,5 @@ TEST(PacketRegistry, UnregisterStopsDispatch) {
     EXPECT_TRUE(reg.Unregister(id));
     reg.Dispatch(0x2000, nullptr, 0);
     EXPECT_EQ(spy.count, 0);
-    EXPECT_FALSE(reg.Unregister(id));  // idempotent failure
+    EXPECT_FALSE(reg.Unregister(id)); // idempotent failure
 }
