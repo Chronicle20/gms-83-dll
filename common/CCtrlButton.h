@@ -2,6 +2,8 @@
 
 class CCtrlButton : CCtrlWnd {
 public:
+    CCtrlButton();
+
     struct CREATEPARAM {
         bool bAcceptFocus;
         bool bDrawBack;
