@@ -54,16 +54,17 @@ CustomUIWnd* CustomUIWnd::Create(int x, int y, int w, int h, const char* /*title
     std::memset(buf, 0, kBufSize);
 
     // Construct the game-side CUIWnd in place via the INT-ONLY ctor (the
-    // string ctor 0x0092C17F dereferences its UOL arg and would crash on
-    // null). We mirror CUIEquip's exact ctor args so the stock
-    // CUIWnd::OnCreate path (driven later from Show) loads a real, always-
-    // present WZ panel: nUIType=1 -> "Equip" (sub_92C61C), closeType=3 ->
-    // UI/Basic.img/BtClose close button, closeX/closeY = Equip's close-button
-    // offsets, nBackgrnd=1 -> OnCreate's background block is enabled
-    // (gated on [this+0x598] != 0). The ctor writes the game vftable at buf[0..3].
+    // string ctor 0x0092C17F dereferences its UOL arg and would crash on null).
+    // FREE-FORM dialog: nBackgrnd=0 so OnCreate's background block is skipped
+    // (no WZ panel) -- we paint our own frame in the Draw override. closeType=3
+    // still builds the stock UI/Basic.img/BtClose button; closeX/closeY place it
+    // at the dialog's top-right (inside our border). nUIType=0 is benign (with
+    // nBackgrnd=0 it drives no WZ lookup; geometry is set explicitly via
+    // CreateWnd). The ctor writes the game vftable at buf[0..3].
+    const int closeX = w > 22 ? w - 18 : 4;
     reinterpret_cast<void(__fastcall*)(void*, void*, int, int, int, int, int, int, int)>(C_UI_WND_CTOR_INT)(
-        buf, nullptr, /*nUIType*/ 1, /*closeType*/ 3, /*closeX*/ 155,
-        /*closeY*/ 6, /*nBackgrnd*/ 1, /*nBackgrndX*/ 0, /*nBackgrndY*/ 0);
+        buf, nullptr, /*nUIType*/ 0, /*closeType*/ 3, /*closeX*/ closeX,
+        /*closeY*/ 5, /*nBackgrnd*/ 0, /*nBackgrndX*/ 0, /*nBackgrndY*/ 0);
 
     // If the cloned CUIWnd vtable is available (Task 5.3), patch the vptr to
     // it. If not yet initialised, leave the stock game vftable in place —

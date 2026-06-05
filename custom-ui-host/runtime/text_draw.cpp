@@ -144,6 +144,35 @@ bool InitLabelFont() {
     return true;
 }
 
+void DrawFrame(void* cuiwnd_self, int w, int h) {
+    if (w <= 0 || h <= 0)
+        return;
+
+    void* canvas_storage = nullptr;
+    reinterpret_cast<GetCanvasFn>(C_WND_GET_CANVAS)(cuiwnd_self, nullptr, &canvas_storage);
+    void* canvas = *reinterpret_cast<void**>(&canvas_storage);
+    if (!canvas)
+        return;
+
+    // IWzCanvas::FillRect = raw COM vtable slot 35 (+0x8C), __stdcall(this, x, y,
+    // w, h, argb): confirmed in CUIToolTip::MakeLayer (`mov edx,[esi]; push args;
+    // push canvas; call [edx+8Ch]`). Colour is 24-bit RGB (high byte ignored);
+    // the same call draws tooltip boxes. Body fill then 1px border lines.
+    void** vtbl = *reinterpret_cast<void***>(canvas);
+    auto fill = reinterpret_cast<long(__stdcall*)(void*, int, int, int, int, unsigned int)>(vtbl[35]);
+    constexpr unsigned int kBodyColor = 0xE6E6E6;   // light grey panel
+    constexpr unsigned int kBorderColor = 0x2A2A2A; // dark border
+    fill(canvas, 0, 0, w, h, kBodyColor);
+    fill(canvas, 0, 0, w, 1, kBorderColor);     // top
+    fill(canvas, 0, h - 1, w, 1, kBorderColor); // bottom
+    fill(canvas, 0, 0, 1, h, kBorderColor);     // left
+    fill(canvas, w - 1, 0, 1, h, kBorderColor); // right
+
+    // release the canvas ref (raw IUnknown::Release, slot 2, __stdcall -- see
+    // DrawLabel step 5 for why the convention differs from the C++ wrappers).
+    reinterpret_cast<unsigned long(__stdcall*)(void*)>(vtbl[2])(canvas);
+}
+
 void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8) {
     if (!utf8)
         return;

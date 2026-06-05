@@ -2,11 +2,17 @@
 
 namespace custom_ui_host {
 
-// Creates the shared label font (Arial, size 12, ARGB 0xFFFFFFFF white) once
+// Creates the shared label font (Arial, size 12, ARGB 0xFF000000 black) once
 // via PcCreateObject::IWzFont + IWzFont::Create and caches the raw IWzFont* in
 // a file-scope global. Returns false on failure (e.g. font factory unavailable);
 // a false return leaves label rendering disabled but is non-fatal for the host.
 bool InitLabelFont();
+
+// Draws the free-form dialog frame (solid body + 1px border) sized to (w,h) onto
+// the window canvas via IWzCanvas::FillRect. `cuiwnd_self` is the raw game-side
+// CUIWnd `this`; must only be called from within the slot-11 Draw override (the
+// canvas is valid there). No-op for non-positive sizes.
+void DrawFrame(void* cuiwnd_self, int w, int h);
 
 // Draws a single UTF-8 label inside a CUIWnd Draw override. `cuiwnd_self` is the
 // raw game-side CUIWnd `this`. (x,y) are window-relative coordinates. No-op when

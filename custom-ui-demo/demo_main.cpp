@@ -92,14 +92,20 @@ void __cdecl BuildUI(void* /*user*/) {
     auto cfg = LoadConfig();
 
     Log("custom-ui-demo: CreateWindow...");
-    g_window = g_abi.CreateWindow("Demo", cfg.x, cfg.y, 240, 80, nullptr);
+    g_window = g_abi.CreateWindow("Demo", cfg.x, cfg.y, 200, 200, nullptr);
     if (!g_window) {
         Log("custom-ui-demo: CreateWindow failed");
         return;
     }
     Log("custom-ui-demo: CreateWindow -> handle=%d", (int)g_window);
     Log("custom-ui-demo: AddLabel...");
-    g_label = g_abi.AddLabel(g_window, 10, 10, "Server says: ?");
+    // Free-form dialog: a title line near the top, then content below. (Title
+    // and content are drawn with the label font -- MapleStory's own dialog
+    // titles are baked into background art, which a free-form dialog has no
+    // equivalent for, so we render the title as text.)
+    g_abi.AddLabel(g_window, 64, 12, "Demo Dialog");
+    g_label = g_abi.AddLabel(g_window, 16, 48, "Server says: ?");
+    g_abi.AddLabel(g_window, 16, 70, "F8 toggles this window.");
     Log("custom-ui-demo: AddLabel -> %d", (int)g_label);
     Log("custom-ui-demo: BindHotkey...");
     auto hk = g_abi.BindHotkey(cfg.vk, cfg.mods, g_window);
@@ -115,7 +121,7 @@ void __cdecl BuildUI(void* /*user*/) {
     // fault, and by this point the window/label/hotkey/packet handler are all
     // already set up, so F8/window/label/packets keep working even if it fails.
     Log("custom-ui-demo: AddButton...");
-    g_abi.AddButton(g_window, 10, 40, 60, 20, "Ping", &OnPing);
+    g_abi.AddButton(g_window, 70, 165, 60, 20, "Ping", &OnPing);
     Log("custom-ui-demo: AddButton done");
 }
 

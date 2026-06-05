@@ -59,9 +59,12 @@ void __fastcall Draw_Override(void* self, void* /*edx*/, const void* pClip) {
     FrameworkExtras* fe = CustomUIWnd::ExtrasOf(self);
     if (!fe)
         return;
-    // Text drawing creates a font + COM canvas and can throw (_com_error) or
-    // AV if a graphics resource is unavailable. This runs inside the game's
-    // render loop, so an unguarded fault would crash the client. Contain it.
+    // Frame + text drawing creates fonts + COM canvases and can throw
+    // (_com_error) or AV if a graphics resource is unavailable. This runs
+    // inside the game's render loop, so an unguarded fault would crash the
+    // client. Contain each in SEH. Draw the free-form dialog frame first
+    // (solid body + border), then the labels on top.
+    SafeDispatch("CustomUI draw frame", [self, fe] { DrawFrame(self, fe->w, fe->h); });
     SafeDispatch("CustomUI draw labels", [self, fe] {
         for (const ControlEntry& entry : fe->controls) {
             if (!entry.text.empty()) {
