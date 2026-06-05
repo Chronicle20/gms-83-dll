@@ -2,6 +2,7 @@
 class CCtrlComboBox{};
 
 struct CCtrlEdit : CCtrlWnd {
+    CCtrlEdit();
     struct CEditCaret {
         int m_l;
         int m_t;
