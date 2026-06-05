@@ -210,6 +210,16 @@ catalogued. Group order follows `include/memory_map.h.in`.
 | C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET | JMS sentinel | 0x00000000 | ✔ 0x00000000 (JMS only; positive JMS185 = 0x94) |
 | WIN_MAIN_LAUNCHER_STUB | JMS sentinel | 0x00000000 | ✔ 0x00000000 (JMS only; positive JMS185 @ 0x7F3CE0) |
 
+## Completion (Task 10 — completeness gate)
+
+- **145 / 145** tracking rows marked `✔` (written to `v84_1.cmake` + catalogued). Zero `☐`/`◐` remain.
+- `cmake/CheckMemoryMapKeys.cmake` (GMS 84.1) → `OK: all 145 keys defined and non-empty`.
+- `signature-catalog.md` carries a determination for every absolute key (offsets record host fn + target instruction + measured delta; sentinels record absent/present + the version the positive was confirmed in).
+- v84 IDB (`GMS_v84.1_U_DEVM.i64`, port 13341) labelled for all resolved functions/globals and `idb_save`'d.
+- Findings flagged for the user (latent v83-map issues surfaced during the port, not regressions introduced here):
+  - `C_RADIO_MANAGER_INSTANCE_ADDR` — v83 pointed at the shared `ZAllocEx` allocator selector, not the real instance; v84 resolves to the genuine instance (`0x00C45848`).
+  - `RESET_LSP` — v83 carried a stale `# does not exist` comment; the function is genuinely present (v84 `0x004505C5`), and the repo consumes the key via a pre-existing `*(void**)` deref-not-call quirk (`bypass/app_hooks.cpp`).
+
 ## Suggested resolution order
 
 Per README §"Adding a new version": start with **WinMain → CWvsApp** (they
