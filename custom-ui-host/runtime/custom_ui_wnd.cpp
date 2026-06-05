@@ -94,19 +94,34 @@ FrameworkExtras &CustomUIWnd::Extras() {
 
 void *CustomUIWnd::GameWnd() { return reinterpret_cast<unsigned char *>(this); }
 
-// Show/Hide are wired in Task 5.4 (CWnd::CreateWnd + CWndMan register/remove).
-// For now they only track the visibility flag so Destroy behaves; the ABI
-// shims (Phase 6) gate real visibility changes on g_ready anyway.
 void CustomUIWnd::Show() {
     auto &fe = Extras();
     if (fe.is_visible) return;
-    fe.is_visible = true;  // real CreateWnd/RegisterUIWindow lands in Task 5.4
+    void *buf = GameWnd();
+    if (!fe.layer_created) {
+        // First show: CreateWnd builds the sized layer at (x,y) of (w,h),
+        // stores geometry, and registers the window for display.
+        reinterpret_cast<void(__fastcall *)(void *, void *, int, int, int, int,
+                                            int, int, int, int)>(
+            C_WND_CREATE_WND)(buf, nullptr, fe.x, fe.y, fe.w, fe.h,
+                              /*z*/ 10, /*bScreenCoord*/ 1, /*pData*/ 0,
+                              /*bSetFocus*/ 1);
+        fe.layer_created = true;
+    } else {
+        // Re-show: layer already exists; re-add to the display z-list.
+        reinterpret_cast<void(__cdecl *)(void *)>(C_WND_MAN_REGISTER_UI_WINDOW)(
+            buf);
+    }
+    fe.is_visible = true;
 }
 
 void CustomUIWnd::Hide() {
     auto &fe = Extras();
     if (!fe.is_visible) return;
-    fe.is_visible = false;  // real RemoveWindow lands in Task 5.4
+    // Remove from the display z-list; the layer/object persists for re-show.
+    reinterpret_cast<void(__cdecl *)(void *)>(C_WND_MAN_UNREGISTER_UI_WINDOW)(
+        GameWnd());
+    fe.is_visible = false;
 }
 
 bool CustomUIWnd::IsVisible() const {

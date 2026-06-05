@@ -182,6 +182,8 @@ set(C_WND_MAN_REGISTER_UI_WINDOW 0x009E43FF)  # CWndMan::RegisterWindow(CWnd*), 
 set(C_WND_MAN_S_UPDATE 0x009E47C3)
 set(C_WND_MAN_UNREGISTER_UI_WINDOW 0x009E44BA)  # CWndMan::RemoveWindow(CWnd*), __cdecl static
 
+set(C_WND_CREATE_WND 0x009DE4D2)           # CWnd::CreateWnd(left,top,width,height,z,bScreenCoord,pData,bSetFocus) __thiscall; builds sized layer + registers window for display (sizes AND shows)
+
 set(Z_ARRAY_REMOVE_ALL 0x00428CF1)
 
 set(Z_X_STRING_GET_BUFFER 0x00414617)
