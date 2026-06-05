@@ -5,6 +5,7 @@
 #include "logger.h"
 #include "memory_map.h"
 
+#include <cstdio>
 #include <cstring>
 
 namespace custom_ui_host {
@@ -67,6 +68,94 @@ void MakeVariantMissing(Variant* out) {
     std::memset(out, 0, sizeof(*out));
     *reinterpret_cast<unsigned short*>(out->bytes) = 0x000A;         // vt = VT_ERROR
     *reinterpret_cast<unsigned long*>(out->bytes + 8) = 0x80020004u; // scode = DISP_E_PARAMNOTFOUND
+}
+
+// --- Stage B: WorldMap 9-slice border ---------------------------------------
+// Cached border-piece canvases (IWzCanvas*), one per WZ node. Index -> role:
+// 0=top-left 1=top 2=top-right 3=left 4=right 5=bottom-left 6=bottom 7=bottom-right.
+void* g_border[8] = {};
+bool g_border_attempted = false;
+int g_border_base = -1; // index into kBorderBases that resolved
+
+// UOL base-path candidates for the border pieces (the WZ tree nesting was
+// reported ambiguously). We try each on piece 0 and keep the one that loads.
+const char* const kBorderBases[] = {
+    "UI/UIWindow.img/WorldMap/Border",
+    "UI/Basic.img/WorldMap/Border",
+};
+
+// Load a WZ canvas by UOL path. resman GetObjectA(uol) -> variant -> GetUnknown
+// -> QI to IWzCanvas. Returns an AddRef'd IWzCanvas* (cached for the session) or
+// null. COM-throwing, so the whole thing is guarded.
+void* LoadUICanvas(const char* uolAnsi) {
+    void* resman = *reinterpret_cast<void**>(C_RESMAN_INSTANCE_PTR);
+    if (!resman)
+        return nullptr;
+    void* canvas = nullptr;
+    try {
+        BStr uol;
+        MakeBStr(&uol, uolAnsi); // GetObjectA consumes (releases) this bstr
+        Variant vParam;
+        MakeVariantMissing(&vParam);
+        Variant vAux;
+        MakeVariantMissing(&vAux);
+        Variant result;
+        std::memset(&result, 0, sizeof(result));
+        reinterpret_cast<void*(__fastcall*)(void*, void*, void*, void*, void*, void*)>(C_RESMAN_GET_OBJECT_A)(
+            resman, nullptr, &result, uol.m_Data, &vParam, &vAux);
+        void* unk =
+            reinterpret_cast<void*(__fastcall*)(void*, void*, int, int)>(C_VARIANT_GET_UNKNOWN)(&result, nullptr, 0, 0);
+        if (unk)
+            reinterpret_cast<int(__fastcall*)(void*, void*, void*)>(C_QI_CANVAS)(&canvas, nullptr, &unk);
+    } catch (...) {
+        return nullptr;
+    }
+    return canvas;
+}
+
+int CanvasWidth(void* c) {
+    return reinterpret_cast<int(__fastcall*)(void*, void*)>(C_CANVAS_GET_WIDTH)(c, nullptr);
+}
+int CanvasHeight(void* c) {
+    return reinterpret_cast<int(__fastcall*)(void*, void*)>(C_CANVAS_GET_HEIGHT)(c, nullptr);
+}
+
+// Loads the 8 border pieces once (caching them). Returns true if at least the
+// first piece resolved. Logs each piece's dimensions for validation.
+bool InitBorder() {
+    if (g_border_attempted)
+        return g_border[0] != nullptr;
+    g_border_attempted = true;
+
+    char uol[160];
+    for (int b = 0; b < 2 && g_border_base < 0; ++b) {
+        std::snprintf(uol, sizeof(uol), "%s/0", kBorderBases[b]);
+        void* c = LoadUICanvas(uol);
+        if (c) {
+            g_border[0] = c;
+            g_border_base = b;
+        }
+    }
+    if (g_border_base < 0) {
+        Log("custom-ui-host: border: no WorldMap/Border base path resolved -- frame stays plain");
+        return false;
+    }
+    for (int i = 1; i < 8; ++i) {
+        std::snprintf(uol, sizeof(uol), "%s/%d", kBorderBases[g_border_base], i);
+        g_border[i] = LoadUICanvas(uol);
+    }
+    for (int i = 0; i < 8; ++i) {
+        int w = -1, h = -1;
+        if (g_border[i]) {
+            try {
+                w = CanvasWidth(g_border[i]);
+                h = CanvasHeight(g_border[i]);
+            } catch (...) {
+            }
+        }
+        Log("custom-ui-host: border[%d] (%s/%d) canvas=%p %dx%d", i, kBorderBases[g_border_base], i, g_border[i], w, h);
+    }
+    return true;
 }
 
 } // namespace
@@ -168,6 +257,11 @@ bool InitLabelFont() {
 void DrawFrame(void* cuiwnd_self, int w, int h) {
     if (w <= 0 || h <= 0)
         return;
+
+    // Stage B (validation): load the WorldMap border pieces once and log their
+    // sizes. Blitting them is the next step; for now the FillRect frame below
+    // still draws so the dialog stays visible regardless.
+    InitBorder();
 
     void* canvas_storage = nullptr;
     reinterpret_cast<GetCanvasFn>(C_WND_GET_CANVAS)(cuiwnd_self, nullptr, &canvas_storage);
