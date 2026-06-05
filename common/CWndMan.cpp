@@ -9,13 +9,17 @@ void CWndMan::RedrawInvalidatedWindows() {
 }
 
 void CWndMan::RegisterUIWindow(CUIWnd *pWnd) {
-    reinterpret_cast<void(__fastcall *)(CWndMan *, void *, CUIWnd *)>(
-        C_WND_MAN_REGISTER_UI_WINDOW)(this, nullptr, pWnd);
+    // 0x009E43FF is a __cdecl FREE function taking only the window pointer
+    // (operates on a global CWndMan list; ignores `this`). v83.1-confirmed.
+    reinterpret_cast<void(__cdecl *)(CUIWnd *)>(C_WND_MAN_REGISTER_UI_WINDOW)(
+        pWnd);
 }
 
 void CWndMan::UnregisterUIWindow(CUIWnd *pWnd) {
-    reinterpret_cast<void(__fastcall *)(CWndMan *, void *, CUIWnd *)>(
-        C_WND_MAN_UNREGISTER_UI_WINDOW)(this, nullptr, pWnd);
+    // 0x009E44BA is a __cdecl (static) function taking only the window
+    // pointer; ignores `this`. v83.1-confirmed.
+    reinterpret_cast<void(__cdecl *)(CUIWnd *)>(C_WND_MAN_UNREGISTER_UI_WINDOW)(
+        pWnd);
 }
 
 long CWndMan::ProcessKey(unsigned int msg, unsigned int vk, long lParam) {
