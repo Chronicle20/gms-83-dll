@@ -141,6 +141,129 @@ their size comes from the ctor/dtor extent, not a `new` immediate.)
   v95+ present). (Task-11 modeling note stands: the v83-only member is a 20-byte
   ZList, not literally `int[5]`; same size, cosmetic only.)
 
+### VERDICTS — Task 13 read-only audit (UI/control family — 8 headers)
+
+v84 IDB = `GMS_v84.1_U_DEVM.exe` (port 13341, confirmed active via `list_instances`
+before every probe). Cross-anchored vs v83 (port 13337) and v87 (port 13338).
+Read-only: `disasm`/`decompile` + `type_inspect` on the v83/v87 IDBs as oracles;
+**no `set_type`/`declare_type`/rename applied to any IDB**. The v83 IDB carries
+prebuilt UDTs (`CWnd`, `CDialog`, `CCtrlWnd`, `CUIToolTip`, `CUIWnd`, `CCtrlButton`,
+`CCtrlCheckBox`, `CFadeWnd`, `CUITitle`) used purely as a layout oracle; the v87 IDB
+likewise carries `CUIToolTip`. Every v84 number below is anchored to a v84 disasm line.
+
+#### Base-class sizes (load-bearing — anchored carefully)
+
+| Base | v84 size | How anchored (v84) | Matches v83-side? |
+|---|---|---|---|
+| **CWnd** | **0x6C (108)** | ctor `sub_A26609`: vtables @ 0/4/8, 3 layer com_ptrs @ 0x18/0x1C/0x20, ZList `m_lpChildren` @ 0x50 (vtable `off_B92FE4`), `m_pBackgrnd` @ 0x68 = last (dtor unwind table). **CDialog ctor `sub_4F6020` writes its first own member @ 0x6C** ⇒ CWnd ends exactly @ 0x6C (no room for `>=95` `m_origin`). | ✅ v83 UDT = 108 |
+| **CCtrlWnd** | **0x34 (52)** | v83 oracle UDT (no boundary gate at 83/84; control base unchanged); v84 ctor `sub_4E6D14` invoked by every CCtrl ctor with derived members starting @ 0x34. | ✅ v83 UDT = 52 |
+| **CDialog** | **0x7C (124)** | = CWnd(0x6C) + m_nRet/m_bTerminate/m_pChildModal[2]. v84 chain `sub_4F63D7`→`sub_4F6020`→`sub_A26609` writes CDialog members @ 0x6C/0x70/0x74/0x78. | ✅ v83 UDT = 124 |
+| **CUIToolTip** | **0x52C (1324)** | embedded base for CUIWnd/CCtrlButton/CUITitle — see dedicated note below. | ⚠️ **v84-specific** (v83=0x514, v87=0x534) |
+
+CWnd's `>=87` gate is `SECPOINT m_ptCursorRel` vs two ints `m_ptCursorRel_x/_y` —
+**both forms are 8 bytes @ 0x48/0x4C, so the gate is layout-neutral**; v84 (build<87)
+compiles the two-int form, v87+ the SECPOINT. No size impact either way; gate correct.
+
+#### CUIToolTip.h — the size-critical embedded UDT (⚠️ NEEDS CHANGE)
+
+**v84 CUIToolTip = 0x52C (1324).** v83 = 0x514 (1300), v87 = 0x534 (1332).
+v84 is a genuine **intermediate** between v83 and v87 — it does NOT equal v87.
+Reconciliation: `v84 = v83(0x514) + m_pLayerAdditional(4) + m_pFontGen_Unknown(4)
++ m_pCanvasEquip_Durability[2][2](16) = 0x52C`. And `v87(0x534) = v84(0x52C)
++ m_pFontH_White(4) + m_pFontStan_Prp(4)`.
+
+Per-gate findings (v84 ctor `CUIToolTip::CUIToolTip` @ **0x91A417**; embed cross-check
+`0x7C + 0x52C = 0x5A8` = field after m_uiToolTip in dialog ctors sub_46A98C/sub_5AE105):
+
+- **`>=95` `m_bUseDotImage` in `CLineInfo` — ABSENT.** v84 eh-vector ctor `lea eax,[esi+24h];
+  push 20h; push 20h` (@ 0x91A445) ⇒ **CLineInfo stride = 0x20** (not 0x24); array @ 0x24
+  ends @ 0x424. ✅ gate correct.
+- **`>=83` `m_pLayerAdditional` — PRESENT @ 0x14** (Task 11): `mov [esi+10h],edi` (m_pLayer)
+  `mov [esi+14h],edi` (@ 0x91A42E/34). ✅ gate correct. *(Note: the v83_Me IDB UDT lacks
+  this field — that binary predates `>=83`; v84/v87 both have it, consistent with the gate.)*
+- **`>=95` `m_nOptionLineNo` + `m_aOptionLineInfo[32]` — ABSENT.** After `m_nLineSeparated`
+  @ 0x424 the font block begins immediately @ 0x428 (`mov [esi+428h],edi` @ 0x91A452);
+  no 0x488-byte option-array. ✅ gate correct.
+- **`>=87` `m_pFontGen_Unknown` — PRESENT in v84 @ 0x478. ⚠️ NEEDS CHANGE → `>=84`.**
+  v84 zero-inits **21** font com_ptrs (0x428…0x478 inclusive); v83 has 20 (last
+  `m_pFontGen_Blue`), v87 has 23. The single extra v84 font is `m_pFontGen_Unknown`.
+- **`>=87` `m_pFontH_White` — ABSENT in v84 (stays `>=87`).** Canvas eh-vector for
+  `m_pCanvasEquip_ReqItem[12]` is @ **0x47C** (`lea eax,[esi+47Ch]; push 0Ch; push 4`
+  @ 0x91A4DD) — i.e. the font block stops at 0x478; v87 has FontH_White @ 0x47C. ✅ correct.
+- **`>=87` `m_pFontStan_Prp` — ABSENT in v84 (stays `>=87`).** Same anchor (canvas @ 0x47C,
+  not 0x484 as in v87). ✅ correct.
+- **`>=87` `m_pCanvasEquip_Durability[2][2]` — PRESENT in v84 @ 0x518. ⚠️ NEEDS CHANGE → `>=84`.**
+  v84 ctor: eh-vector `lea eax,[esi+518h]; push 4; push 4` (@ 0x91A555, count 4 = [2][2]),
+  immediately followed by `m_bIngoreWeddingInfo` @ 0x528 ⇒ size 0x52C. v83 lacks it
+  (m_bIngoreWeddingInfo @ 0x510); v87 has it @ 0x520.
+- **`>=95` `m_pFontStan_Dsc/Num/Skill_Prp/Skill_Dsc` — ABSENT** (font block ends @ Gen_Unknown). ✅ correct.
+
+**VERDICT: NEEDS CHANGE.** Two `>=87` gates fire too late for v84:
+`m_pFontGen_Unknown` and `m_pCanvasEquip_Durability` must move to **`>=84`**, while
+`m_pFontH_White` and `m_pFontStan_Prp` must STAY `>=87`. This SPLITS the header's
+single `#if >=87 { m_pFontGen_Unknown; m_pFontH_White; }` block. As written, the
+header compiles CUIToolTip at **0x518 for v84 (20 B too small)** — it drops
+`m_pFontGen_Unknown` (-4) and `m_pCanvasEquip_Durability` (-16). **Task-16 must fix this**;
+the error propagates into every embedder (CUIWnd, CCtrlButton, CUITitle, and all
+CDialog/CWnd-derived UI windows embedding a CUIToolTip).
+
+#### CWnd.h — gates `>=87` (cursor), `>=95` (UIOrigin/m_origin)
+- v84 size **0x6C**. `>=87` cursor layout-neutral (8 B). `>=95` `m_origin` ABSENT
+  (CDialog first member @ 0x6C). **VERDICT: all gates correct.**
+
+#### CUIWnd.h — gate `>=95` (5 fields, mid-struct)
+- v84 size **0x5C8** (= v83 0x5B0 + CUIToolTip delta 0x18). base CWnd 0x6C; embeds one
+  CUIToolTip. The `>=95` block (`m_nSmallScreenX…m_bIsLargeMode`) sits between
+  `m_nBackgrndY` and `m_bPosSave`; build 84 < 95 ⇒ compiled out (no v87 trap — only gate
+  is `>=95`). **VERDICT: gate correct.** *(Size depends on the corrected CUIToolTip.)*
+
+#### CCtrlButton.h — gate `>=95` (`m_sToolTipFromData`)
+- v84 size **0x5BC** (= v83 0x5A4 + CUIToolTip delta 0x18). base CCtrlWnd 0x34;
+  m_uiToolTip @ 0x8C (v84 methods `lea ecx,[esi+8Ch]; call sub_91CA58` @ 0x4C5B0D,
+  0x8475F9). `m_sToolTipFromData` (`>=95`, between m_uiToolTip and m_bSelfDisable)
+  ABSENT for build 84 ⇒ m_bSelfDisable @ 0x5B8. **VERDICT: gate correct.**
+  *(Size depends on the corrected CUIToolTip.)*
+
+#### CCtrlCheckBox.h — gate `>=95` (`m_nTextOffsetX/Y`, trailing)
+- v84 size **0x6C**, v83-identical (no CUIToolTip embed). v84 ctor `sub_46C894`:
+  CCtrlWnd ctor + eh-vector `m_apCanvasCheckBox[4]` @ 0x5C ending @ 0x6C; nothing
+  written past ⇒ trailing `>=95` ints absent. **VERDICT: gate correct.**
+
+#### CFadeWnd.h — gates `>=87` (3 ints), `REGION_GMS` (`m_bUserAlarm`)
+- v84 size **0xD4**, v83-identical. v84 ctor `sub_52ACD8` (byte-isomorphic to v83
+  `??0CFadeWnd@@QAE@XZ` @ 0x51F887): highest member `mov [esi+0C8h],eax`
+  (`m_sInviter`), then `m_dwSN` @ 0xCC / `m_dwFriendID` @ 0xD0 — **no 3-int
+  `m_nLevel/m_nJobCode/m_nExpQuestID` block** between m_sInviter and m_dwSN (would push
+  m_dwSN to 0xD8). `m_bUserAlarm` present @ 0xBC (REGION_GMS, true). **VERDICT: all gates
+  correct.** *(This is a `>=87` trap that was checked, not assumed — v84 sits with v83.)*
+
+#### CUITitle.h — gate `>=95` (base CFadeWnd vs CDialog; `m_rcRMA`)
+- v84 size **0x604** (= v83 0x5EC + CUIToolTip delta 0x18). v84 ctor `sub_635785`
+  (singleton `g_CUITitle_pInstance`): **base is CDialog** (`sub_4F6020`, not CFadeWnd);
+  `m_pCanvasRMA[2]` @ 0x88 followed immediately by buttons @ 0x90 (no 16-byte `m_rcRMA`);
+  `m_uiToolTipTitle` @ 0xD8. Both `>=95` gates ABSENT. **VERDICT: all gates correct.**
+  *(Size depends on the corrected CUIToolTip.)*
+
+#### CUILoginStart.h — gate `>=95` / `REGION_JMS` (2 com_ptrs, mid-struct)
+- v84 size **0x100**, v83-identical (no CUIToolTip embed). v84 ctor `sub_623270`:
+  CDialog base; `m_pLogin` @ 0x7C; `m_aBtParam[5]` eh-vector @ 0x80 (stride 0x10) directly
+  after m_pLogin — no `>=95`/JMS `m_pFont` + `m_pCanvasChannelName` between. `m_apButton[5]`
+  @ 0xD0, `m_nViewWorldButtonType` @ 0xF8, `m_bRequestSent` @ 0xFC. **VERDICT: all gates correct.**
+
+**Task-13 Task-16 cross-check flags:**
+- **CUIToolTip.h (NEEDS CHANGE):** split the `>=87` font block — `m_pFontGen_Unknown` and
+  `m_pCanvasEquip_Durability[2][2]` must become **`>=84`** (present in v84); `m_pFontH_White`
+  and `m_pFontStan_Prp` stay `>=87`. Re-validate v83 (0x514, neither extra), v87/v95
+  (0x534+, all four) so no other version flips. The fix must restore v84 size to **0x52C**
+  and correspondingly all embedders (CUIWnd 0x5C8, CCtrlButton 0x5BC, CUITitle 0x604).
+  **JMS caveat (verified in spec review):** the current font-block gates carry a
+  `|| defined(REGION_JMS)` clause. JMS has a wholly different CUIToolTip layout
+  (option-line array present, canvas @ 0x884). When splitting, the new `>=84` gate
+  must RETAIN the JMS clause (`>=84 || defined(REGION_JMS)` for Gen_Unknown +
+  Durability), and `m_pFontH_White` keeps `>=87 || JMS`; do NOT silently drop JMS
+  coverage. (`m_pFontStan_Prp` stays `>=87` GMS-only, as today.)
+- All other 7 headers: gates correct, no change.
+
 ## The 22 version-gated headers
 
 For each, record: v84 size, which gated fields are present/absent in v84, the
@@ -158,14 +281,14 @@ disassembly anchor, and the verdict (gate correct / gate needs change).
 | common/MobStat.h | _audit_ | | ☐ | |
 | common/ConfigSysOpt.h | _audit_ | | ☐ | |
 | common/CFuncKeyMappedMan.h | _audit_ | | ☐ | |
-| common/CFadeWnd.h | _audit_ | | ☐ | |
-| common/CCtrlButton.h | _audit_ | | ☐ | |
-| common/CCtrlCheckBox.h | _audit_ | | ☐ | |
-| common/CUIWnd.h | _audit_ | | ☐ | |
-| common/CWnd.h | _audit_ | | ☐ | |
-| common/CUIToolTip.h | `>= 83` | | ☐ | boundary gate |
-| common/CUILoginStart.h | _audit_ | | ☐ | |
-| common/CUITitle.h | _audit_ | | ☐ | |
+| common/CFadeWnd.h | `>= 87` (+ `REGION_GMS` `m_bUserAlarm`) | 0xD4 (212) | ✅ all gates correct | v84 ctor sub_52ACD8: `mov [esi+0C8h],eax` (m_sInviter) is highest field → m_dwSN @ 0xCC adjacent (no `>=87` 3-int block). See Task-13 notes. |
+| common/CCtrlButton.h | `>= 95` | 0x5BC (1468) — embeds v84 CUIToolTip (0x52C) | ✅ gate correct | v84 m_uiToolTip @ 0x8C (`lea ecx,[esi+8Ch]; call sub_91CA58` @ 0x4C5B0D / 0x8475F9); base CCtrlWnd 0x34; `>=95` `m_sToolTipFromData` absent. See Task-13 notes. |
+| common/CCtrlCheckBox.h | `>= 95` | 0x6C (108) — v83-identical | ✅ gate correct | v84 ctor sub_46C894: eh-vector `m_apCanvasCheckBox[4]` @ 0x5C ends 0x6C; nothing written past → `>=95` `m_nTextOffsetX/Y` absent. See Task-13 notes. |
+| common/CUIWnd.h | `>= 95` | 0x5C8 (1480) — embeds v84 CUIToolTip (0x52C) | ✅ gate correct | base CWnd 0x6C; m_uiToolTip embed; v83-side trivially (84<95); `>=95` 5-field mid-block absent. See Task-13 notes. |
+| common/CWnd.h | `>= 87` (`SECPOINT m_ptCursorRel`), `>= 95` (`UIOrigin m_origin`) | 0x6C (108) | ✅ all gates correct | v84 CWnd ctor sub_A26609 (m_pBackgrnd @ 0x68 last); CDialog ctor sub_4F6020 writes its 1st own member @ 0x6C ⇒ CWnd ends @ 0x6C (no `>=95` m_origin). `>=87` cursor is 8 B either form (layout-neutral). See Task-13 notes. |
+| common/CUIToolTip.h | `>= 83`, **`>= 87` (×4)**, `>= 95` (×6) | **0x52C (1324)** | ⚠️ **NEEDS CHANGE** (2 fields mis-gated `>=87`) | v84 ctor sub_91A417: CLineInfo=0x20 (eh-vec `push 20h`), no m_aOptionLineInfo, **21 fonts** (0x428–0x478) incl `m_pFontGen_Unknown`, **`m_pCanvasEquip_Durability[2][2]` PRESENT @ 0x518**. See Task-13 CUIToolTip note. |
+| common/CUILoginStart.h | `>= 95` / `REGION_JMS` | 0x100 (256) — v83-identical | ✅ all gates correct | v84 ctor sub_623270: m_pLogin @ 0x7C, m_aBtParam[5] eh-vec @ 0x80 (size 0x10) adjacent ⇒ `>=95`/JMS 2 com_ptrs absent. See Task-13 notes. |
+| common/CUITitle.h | `>= 95` (base CFadeWnd + `m_rcRMA`) | 0x604 (1540) — embeds v84 CUIToolTip (0x52C) | ✅ all gates correct | v84 ctor sub_635785: base is CDialog (sub_4F6020, not CFadeWnd); m_pCanvasRMA[2] @ 0x88 → buttons @ 0x90 adjacent (no `m_rcRMA`); m_uiToolTipTitle @ 0xD8. See Task-13 notes. |
 | common/GuildData.h | `>= 95` | | ☐ | |
 | common/PartyMember.h | `< 95` | | ☐ | |
 | common/PartyData.h | `>= 95` | | ☐ | |
