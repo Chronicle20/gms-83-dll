@@ -34,44 +34,46 @@ long __fastcall ProcessKey_Hook(CWndMan* self, void* /*edx*/, unsigned int msg, 
         s_logged = true;
         Log("custom-ui-host: ProcessKey hook first fire");
     }
-    // Only rising-edge WM_KEYDOWN / WM_SYSKEYDOWN. lParam bit 30 == 1
-    // means the previous key state was down (auto-repeat).
-    if ((msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) && (lParam & (1L << 30)) == 0) {
-        if (g_hotkeys) {
-            unsigned int mods = SnapshotModifiers();
-            const auto* binding = g_hotkeys->Lookup(vk, mods);
-            if (binding && g_windows) {
-                auto* wnd = g_windows->Lookup(binding->target);
-                if (wnd) {
-                    // CWndMan::ProcessKey is invoked for the SAME WM_KEYDOWN
-                    // from two call sites (CWvsApp::ISMsgProc and
-                    // CWndMan::TranslateMessage), and ProcessKey never sees
-                    // key-up. Without deduping, one physical press toggles the
-                    // window twice (show then immediately hide). The duplicate
-                    // dispatch lands in the same pump turn (sub-millisecond
-                    // apart); debounce per-vk over a window far shorter than any
-                    // intentional re-press.
-                    static DWORD s_lastToggleTick[256] = {0};
-                    bool duplicate = false;
-                    if (vk < 256) {
-                        DWORD now = GetTickCount();
-                        if (now - s_lastToggleTick[vk] < 50)
-                            duplicate = true;
-                        else
-                            s_lastToggleTick[vk] = now;
-                    }
-                    if (!duplicate) {
-                        if (wnd->IsVisible())
-                            wnd->Hide();
-                        else
-                            wnd->Show();
-                    }
-                    return 1L; // consumed -- only when a target was acted on
+    // `msg` is NOT a usable down/up discriminator: CWndMan::TranslateMessage
+    // normalizes it to 256 (WM_KEYDOWN) for BOTH key-down and key-up before
+    // calling ProcessKey (and also masks lParam with 0x1FF0000, dropping the
+    // bit-30 repeat flag). The real edge is lParam bit 31 -- 0 = down, 1 = up
+    // -- which is exactly what ProcessKey itself tests via (a4 & 0x80000000).
+    const bool keyDown = (lParam & 0x80000000L) == 0;
+
+    // Per-vk rising-edge latch. ProcessKey is dispatched for the same event
+    // from two sites (CWvsApp::ISMsgProc + CWndMan::TranslateMessage) and
+    // repeats key-downs while held, so a raw keydown test would toggle several
+    // times per press. Toggle only on the first down; the matching up re-arms.
+    static bool s_held[256] = {false};
+
+    if (!keyDown) {
+        // Key-up: if we owned this press (latched on its down), clear the latch
+        // and consume the up too so the game doesn't see a half event.
+        if (vk < 256 && s_held[vk]) {
+            s_held[vk] = false;
+            return 1L;
+        }
+        return _ProcessKey(self, msg, vk, lParam);
+    }
+
+    if (g_hotkeys) {
+        unsigned int mods = SnapshotModifiers();
+        const auto* binding = g_hotkeys->Lookup(vk, mods);
+        if (binding && g_windows) {
+            auto* wnd = g_windows->Lookup(binding->target);
+            if (wnd) {
+                if (vk < 256 && !s_held[vk]) {
+                    s_held[vk] = true; // rising edge -- act once
+                    if (wnd->IsVisible())
+                        wnd->Hide();
+                    else
+                        wnd->Show();
                 }
-                // Binding matched but its target window is gone (stale
-                // handle): fall through to the game rather than silently
-                // swallowing the key.
+                return 1L; // consume the key-down (and repeats) for a bound key
             }
+            // Binding matched but its target window is gone (stale handle):
+            // fall through to the game rather than silently swallowing the key.
         }
     }
     return _ProcessKey(self, msg, vk, lParam);
