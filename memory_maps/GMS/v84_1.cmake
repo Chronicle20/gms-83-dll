@@ -3,10 +3,11 @@
 # A value still equal to v83 means UNVERIFIED unless its tracking-table row in
 # memory-map.md is marked ✔ with a signature-catalog entry.
 
-set(VERSION_HEADER 8)
-
-set(PLAYER_LOGGED_IN 0x14)
-set(CLIENT_START_ERROR 0x19)
+# Protocol constants read from the v84 CClientSocket::OnConnect send path (0x499DCD),
+# not copied from v83 — all three coincide with v83.
+set(VERSION_HEADER 8)        # cmp byte ptr [ebp+namelen+3], 8 @ 0x49A08A (version-header guard; else CTerminateException 0x22000007)
+set(PLAYER_LOGGED_IN 0x14)   # push 14h @ 0x49A2F9 -> COutPacket ctor in the logged-in (non-bLogin) send branch
+set(CLIENT_START_ERROR 0x19) # push 19h @ 0x49A2A0 -> COutPacket ctor in the bLogin send branch
 
 set(GET_SE_PRIVILEGE 0x0044FEF9)
 
@@ -75,6 +76,7 @@ set(C_LOGO_INIT_NX_LOGO 0x00644830)
 
 set(C_MACRO_SYS_MAN_CREATE_INSTANCE 0x00A43DA6)
 
+# confirmed absent in v84: no CBattleRecordMan class fn/string (positive class confirmed in v95 @ 0x4701A0+); GMS v95+ feature
 set(C_BATTLE_RECORD_MAN_CREATE_INSTANCE 0x00000000)
 
 set(C_MAPLE_TV_MAN_CREATE_INSTANCE 0x00A43E3F)
@@ -126,7 +128,11 @@ set(SET_STAGE 0x00799CF0)
 
 set(GR_INSTANCE_ADDR 0x00C4AB6C)
 
-set(RESET_LSP 0x0044ED47) # does not exist
+# WinSock LSP-reset (wpclsp.dll detect -> netsh winsock reset). v84 has it as a clean,
+# de-virtualized function (v83's 0x0044ED47 was an obfuscated stub + stale "does not exist"
+# comment). Called from CWvsApp::ctor in the (OS>=6 && !WOW64) branch (call @ 0xA3DD14).
+# IDB-labeled ResetLSP. Matches sibling GMS maps (v87 0x451212 / v95 0x45ECD0), entry convention.
+set(RESET_LSP 0x004505C5)
 
 set(C_STAGE_ON_MOUSE_ENTER 0x0079892C)
 set(C_STAGE_ON_PACKET 0x0079894B)
@@ -211,14 +217,23 @@ set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET 0xA4) # level-gate jnb @ host+0xA4 
 set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x00A5C95F)
 set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9) # ITC-gate jz @ host+0xE9 (0xA5CA48, bytes 74 26); edit patches 74->EB. Coincides w/ v83 (re-measured, not copied)
 
-set(DR_CHECK 0x00000000) # does not exist
-set(CE_TRACER_RUN 0x00000000) # does not exist
+# confirmed absent in v84: no DR_check fn / _DR_INFO type (positive ?DR_check@@YAHPAU_DR_INFO@@... confirmed in v87 @ 0x4A1AD3); GMS v87+ feature
+set(DR_CHECK 0x00000000)
+# confirmed absent in v84: no CeTracer/eTracer fn/string (positive ?Run@CeTracer@@QAEXXZ confirmed in v95 @ 0x9BF370); GMS v95+ feature
+set(CE_TRACER_RUN 0x00000000)
 set(SEND_HS_LOG 0x00A39EC9)
 
 set(C_MOB_C_MOB 0x00678060) # CMob::CMob ctor (doom-fix hook target, Task-11). m_pTemplate=this+0x188, m_pTemplateByDoom(this+0x18C)=0. needs-main-review
 
-set(C_SECURITY_CLIENT_ON_PACKET_RET_STUB 0x00000000) # JMS only
-set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only
-set(C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET 0x00000000) # JMS only
-set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x00000000) # JMS only
-set(WIN_MAIN_LAUNCHER_STUB 0x00000000) # JMS only
+# JMS only: in-place OnPacket ret-stub byte patch (positive JMS185 @ 0xB3B96B, push ebp prologue overwritten with C3).
+# GMS v84 bypasses CSecurityClient::OnPacket via the MapleHook on C_SECURITY_CLIENT_ON_PACKET (0xA97DF1) instead.
+set(C_SECURITY_CLIENT_ON_PACKET_RET_STUB 0x00000000)
+# JMS only: in-place OnPacket integrity-check NOP patch base (positive JMS185 @ 0xB3B5F7; CHECK+0x19 = 0xB3B610 bytes 74 04).
+set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000)
+set(C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET 0x00000000) # JMS only (positive JMS185 = 0x19); stays 0 for GMS
+# JMS only: InitializeGr2D windowed-mode in-place patch offset (positive JMS185 = 0x94).
+# GMS v84 forces windowed via C_CONFIG_SYS_OPT_WINDOWED_MODE (0xC4B150) instead; stays 0.
+set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x00000000)
+# JMS only: launcher/StartUpDlgClass stub forced to ret-1 (positive JMS185 @ 0x7F3CE0).
+# GMS v84 no-patcher NOPs WIN_MAIN+WIN_MAIN_PATCHER_OFFSET (0x241) instead; stays 0.
+set(WIN_MAIN_LAUNCHER_STUB 0x00000000)

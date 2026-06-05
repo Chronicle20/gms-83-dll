@@ -41,20 +41,21 @@ to the target instruction/branch — never copy the v83 offset.
 
 ## Sentinel handling
 
-These v83 keys are `0x00000000`. For each, confirm the v84 disposition before
-carrying the sentinel forward:
+These v83 keys are `0x00000000` (except `RESET_LSP`, which v83 carried as a
+non-zero but stale-"does not exist" address). For each, confirm the v84
+disposition before carrying the sentinel forward:
 
 | Key | v83 note | v84 action |
 |---|---|---|
-| `C_BATTLE_RECORD_MAN_CREATE_INSTANCE` | absent | Confirm absent; else locate |
-| `RESET_LSP` | "does not exist" | Confirm |
-| `DR_CHECK` | "does not exist" | Confirm |
-| `CE_TRACER_RUN` | "does not exist" | Confirm |
-| `C_SECURITY_CLIENT_ON_PACKET_RET_STUB` | JMS only | Carry `0x00000000` |
-| `C_SECURITY_CLIENT_ON_PACKET_CHECK` | JMS only | Carry `0x00000000` |
-| `C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET` | JMS only | Carry `0x00000000` |
-| `C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET` | JMS only | Carry `0x00000000` |
-| `WIN_MAIN_LAUNCHER_STUB` | JMS only | Carry `0x00000000` |
+| `C_BATTLE_RECORD_MAN_CREATE_INSTANCE` | absent | CONFIRMED absent (CBattleRecordMan positive in v95; v95+ feature) — carry `0x00000000` |
+| `RESET_LSP` | "does not exist" | **PRESENT in v84** — resolved to real fn `0x004505C5` (ResetLSP; stale v83 comment was wrong) |
+| `DR_CHECK` | "does not exist" | CONFIRMED absent (DR_check positive in v87; v87+ feature) — carry `0x00000000` |
+| `CE_TRACER_RUN` | "does not exist" | CONFIRMED absent (CeTracer::Run positive in v95; v95+ feature) — carry `0x00000000` |
+| `C_SECURITY_CLIENT_ON_PACKET_RET_STUB` | JMS only | CONFIRMED JMS-only (positive JMS185 0xB3B96B) — carry `0x00000000` |
+| `C_SECURITY_CLIENT_ON_PACKET_CHECK` | JMS only | CONFIRMED JMS-only (positive JMS185 0xB3B5F7) — carry `0x00000000` |
+| `C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET` | JMS only | CONFIRMED JMS-only (positive JMS185 0x19) — carry `0x00000000` |
+| `C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET` | JMS only | CONFIRMED JMS-only (positive JMS185 0x94) — carry `0x00000000` |
+| `WIN_MAIN_LAUNCHER_STUB` | JMS only | CONFIRMED JMS-only (positive JMS185 0x7F3CE0) — carry `0x00000000` |
 
 ## Key tracking (all 145)
 
@@ -63,9 +64,9 @@ catalogued. Group order follows `include/memory_map.h.in`.
 
 | Key | Class | v83 value | Status |
 |---|---|---|---|
-| VERSION_HEADER | constant | 8 | ☐ |
-| PLAYER_LOGGED_IN | opcode | 0x14 | ☐ |
-| CLIENT_START_ERROR | opcode | 0x19 | ☐ |
+| VERSION_HEADER | constant | 8 | ✔ 8 (read @ OnConnect 0x49A08A) |
+| PLAYER_LOGGED_IN | opcode | 0x14 | ✔ 0x14 (push 14h @ OnConnect 0x49A2F9) |
+| CLIENT_START_ERROR | opcode | 0x19 | ✔ 0x19 (push 19h @ OnConnect 0x49A2A0) |
 | GET_SE_PRIVILEGE | addr | 0x0044E824 | ✔ 0x0044FEF9 |
 | C_ACTION_MAN_CREATE_INSTANCE_ADDR | addr | 0x009F9DA6 | ✔ 0x00A43C5E |
 | C_ACTION_MAN_INSTANCE_ADDR | addr | 0x00BE78D4 | ✔ 0x00C40C24 |
@@ -120,7 +121,7 @@ catalogued. Group order follows `include/memory_map.h.in`.
 | C_LOGO_INIT | addr | 0x0062EDDA | ✔ 0x00644274 |
 | C_LOGO_INIT_NX_LOGO | addr | 0x0062F396 | ✔ 0x00644830 |
 | C_MACRO_SYS_MAN_CREATE_INSTANCE | addr | 0x009F9EEE | ✔ 0x00A43DA6 |
-| C_BATTLE_RECORD_MAN_CREATE_INSTANCE | sentinel | 0x00000000 | ☐ |
+| C_BATTLE_RECORD_MAN_CREATE_INSTANCE | sentinel | 0x00000000 | ✔ 0x00000000 (absent; CBattleRecordMan positive in v95) |
 | C_MAPLE_TV_MAN_CREATE_INSTANCE | addr | 0x009F9F87 | ✔ 0x00A43E3F |
 | C_MAPLE_TV_MAN_INSTANCE_ADDR | addr | 0x00BED76C | ✔ 0x00C46D64 |
 | C_MAPLE_TV_MAN_INIT | addr | 0x00636F4E | ✔ 0x0064C578 |
@@ -151,7 +152,7 @@ catalogued. Group order follows `include/memory_map.h.in`.
 | STAGE_INSTANCE_ADDR | addr | 0x00BEDED4 | ✔ 0x00C474EC |
 | SET_STAGE | addr | 0x00777347 | ✔ 0x00799CF0 |
 | GR_INSTANCE_ADDR | addr | 0x00BF14EC | ✔ 0x00C4AB6C |
-| RESET_LSP | sentinel | 0x0044ED47 | ☐ |
+| RESET_LSP | addr | 0x0044ED47 | ✔ 0x004505C5 (PRESENT — surprise; ResetLSP, called from CWvsApp ctor OS>=6&&!WOW64 @ 0xA3DD14; reclassified sentinel→addr) |
 | C_STAGE_ON_MOUSE_ENTER | addr | 0x00775FC7 | ✔ 0x0079892C |
 | C_STAGE_ON_PACKET | addr | 0x00775FE6 | ✔ 0x0079894B |
 | C_SYSTEM_INFO | addr | 0x00A54B90 | ✔ 0x00AA0D10 |
@@ -199,15 +200,15 @@ catalogued. Group order follows `include/memory_map.h.in`.
 | C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET | offset | 0xA4 | ✔ 0xA4 (re-measured; jnb @ 0x53BEDB level-check; coincides with v83) |
 | C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST | addr | 0x00A12522 | ✔ 0x00A5C95F (needs-main-review; opcode 0xA0; string-xref; spot-checked) |
 | C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET | offset | 0xE9 | ✔ 0xE9 (re-measured; jz @ 0xA5CA48 ITC-check; coincides with v83) |
-| DR_CHECK | sentinel | 0x00000000 | ☐ |
-| CE_TRACER_RUN | sentinel | 0x00000000 | ☐ |
+| DR_CHECK | sentinel | 0x00000000 | ✔ 0x00000000 (absent; DR_check positive in v87 @ 0x4A1AD3) |
+| CE_TRACER_RUN | sentinel | 0x00000000 | ✔ 0x00000000 (absent; CeTracer::Run positive in v95 @ 0x9BF370) |
 | SEND_HS_LOG | addr | 0x009F191B | ✔ 0x00A39EC9 |
 | C_MOB_C_MOB | addr | 0x006621D9 | ✔ 0x00678060 (needs-main-review; spot-checked) |
-| C_SECURITY_CLIENT_ON_PACKET_RET_STUB | JMS sentinel | 0x00000000 | ☐ |
-| C_SECURITY_CLIENT_ON_PACKET_CHECK | JMS sentinel | 0x00000000 | ☐ |
-| C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET | JMS sentinel | 0x00000000 | ☐ |
-| C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET | JMS sentinel | 0x00000000 | ☐ |
-| WIN_MAIN_LAUNCHER_STUB | JMS sentinel | 0x00000000 | ☐ |
+| C_SECURITY_CLIENT_ON_PACKET_RET_STUB | JMS sentinel | 0x00000000 | ✔ 0x00000000 (JMS only; positive JMS185 @ 0xB3B96B) |
+| C_SECURITY_CLIENT_ON_PACKET_CHECK | JMS sentinel | 0x00000000 | ✔ 0x00000000 (JMS only; positive JMS185 @ 0xB3B5F7) |
+| C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET | JMS sentinel | 0x00000000 | ✔ 0x00000000 (JMS only; positive JMS185 = 0x19) |
+| C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET | JMS sentinel | 0x00000000 | ✔ 0x00000000 (JMS only; positive JMS185 = 0x94) |
+| WIN_MAIN_LAUNCHER_STUB | JMS sentinel | 0x00000000 | ✔ 0x00000000 (JMS only; positive JMS185 @ 0x7F3CE0) |
 
 ## Suggested resolution order
 
