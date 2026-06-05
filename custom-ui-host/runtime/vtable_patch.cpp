@@ -7,6 +7,7 @@
 #include "runtime/custom_ui_wnd.h"
 #include "runtime/seh_dispatch.h"
 #include "runtime/text_draw.h"
+#include "runtime/ui_dispatch.h"
 
 #include <cstring>
 #include <new>
@@ -39,10 +40,16 @@ void __fastcall OnButtonClicked_Override(void* self, void* /*edx*/, unsigned int
     // Unknown id: this is the stock close button (id 1000) built by
     // CUIWnd::OnCreate. We must NOT forward to stock CUIWnd::OnButtonClicked --
     // it closes by type id (CWvsContext::UI_Close(m_nUIType)), which targets
-    // the real Equip window registered under nUIType=1, not our `this`. Hide
-    // our own window instead.
+    // the real Equip window registered under nUIType=1, not our `this`.
+    //
+    // Hide our own window, but DEFER it to the next UI tick: we're re-entrant
+    // inside the game's button-click dispatch, which is iterating the CWndMan
+    // window list, so calling RemoveWindow synchronously here doesn't take
+    // (the window keeps drawing). s_Update drains this queue outside that
+    // iteration. (F8 works synchronously because it runs from ProcessKey, not
+    // mid window-list iteration.)
     if (nControlId == 1000) {
-        SafeDispatch("CustomUI close button", [self] { reinterpret_cast<CustomUIWnd*>(self)->Hide(); });
+        EnqueueUIThreadTask([](void* w) { reinterpret_cast<CustomUIWnd*>(w)->Hide(); }, self);
     }
 }
 
