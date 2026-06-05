@@ -43,10 +43,29 @@ long __fastcall ProcessKey_Hook(CWndMan* self, void* /*edx*/, unsigned int msg, 
             if (binding && g_windows) {
                 auto* wnd = g_windows->Lookup(binding->target);
                 if (wnd) {
-                    if (wnd->IsVisible())
-                        wnd->Hide();
-                    else
-                        wnd->Show();
+                    // CWndMan::ProcessKey is invoked for the SAME WM_KEYDOWN
+                    // from two call sites (CWvsApp::ISMsgProc and
+                    // CWndMan::TranslateMessage), and ProcessKey never sees
+                    // key-up. Without deduping, one physical press toggles the
+                    // window twice (show then immediately hide). The duplicate
+                    // dispatch lands in the same pump turn (sub-millisecond
+                    // apart); debounce per-vk over a window far shorter than any
+                    // intentional re-press.
+                    static DWORD s_lastToggleTick[256] = {0};
+                    bool duplicate = false;
+                    if (vk < 256) {
+                        DWORD now = GetTickCount();
+                        if (now - s_lastToggleTick[vk] < 50)
+                            duplicate = true;
+                        else
+                            s_lastToggleTick[vk] = now;
+                    }
+                    if (!duplicate) {
+                        if (wnd->IsVisible())
+                            wnd->Hide();
+                        else
+                            wnd->Show();
+                    }
                     return 1L; // consumed -- only when a target was acted on
                 }
                 // Binding matched but its target window is gone (stale
