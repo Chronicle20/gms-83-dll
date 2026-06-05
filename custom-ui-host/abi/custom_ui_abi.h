@@ -29,6 +29,13 @@ typedef void(__cdecl* CustomUI_PacketHandlerFn)(unsigned short opcode, const uns
 __declspec(dllexport) unsigned int __cdecl CustomUI_GetAbiVersion(void);
 __declspec(dllexport) int __cdecl CustomUI_IsReady(void);
 
+/* Run a callback once on the game UI thread (next frame). REQUIRED wrapper
+   for any CustomUI_CreateWindow / AddLabel / AddButton / AddEdit / BindHotkey
+   call: window/control construction touches game graphics objects that are
+   only safe to create on the UI thread. Returns 0 if not ready or fn is null. */
+__declspec(dllexport) int __cdecl
+    CustomUI_RunOnUIThread(void(__cdecl *fn)(void *user), void *user);
+
 /* Windows */
 __declspec(dllexport) CustomUI_WindowHandle __cdecl CustomUI_CreateWindow(const char* title, int x, int y, int w, int h,
                                                                           void* user);

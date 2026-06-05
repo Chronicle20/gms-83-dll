@@ -4,6 +4,7 @@
 #include "hooks/stage_restore.h"
 
 #include "runtime/custom_ui_wnd.h"
+#include "runtime/ui_dispatch.h"
 
 #include "hooker.h"
 #include "logger.h"
@@ -23,6 +24,7 @@ CWnd** __cdecl SUpdate_Hook() {
     if (g_pending_restore.exchange(false)) {
         RestoreSuspendedWindows();
     }
+    DrainUIThreadTasks();  // run consumer UI-thread tasks (window/control build)
     return rv;
 }
 

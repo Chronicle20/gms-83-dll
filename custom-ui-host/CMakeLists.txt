@@ -29,6 +29,7 @@ add_edit_dll(custom-ui-host OUTPUT_NAME custom-ui-host SOURCES
     runtime/vtable_patch.cpp
     runtime/text_draw.cpp
     runtime/ini_config.cpp
+    runtime/ui_dispatch.cpp
 )
 
 # The public ABI header is part of the source tree; downstream edits

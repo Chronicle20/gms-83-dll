@@ -6,6 +6,7 @@
 #include "host_globals.h"
 #include "runtime/custom_ui_wnd.h"
 #include "runtime/host_config.h"
+#include "runtime/ui_dispatch.h"
 
 #include "logger.h"
 #include "memory_map.h"
@@ -51,6 +52,15 @@ __declspec(dllexport) unsigned int __cdecl CustomUI_GetAbiVersion(void) {
 
 __declspec(dllexport) int __cdecl CustomUI_IsReady(void) {
     return custom_ui_host::g_ready.load() ? 1 : 0;
+}
+
+__declspec(dllexport) int __cdecl
+CustomUI_RunOnUIThread(void(__cdecl *fn)(void *user), void *user) {
+    if (!custom_ui_host::ReadyOrLog("RunOnUIThread")) return 0;
+    if (!fn) return 0;
+    custom_ui_host::EnqueueUIThreadTask(
+        reinterpret_cast<custom_ui_host::UIThreadFn>(fn), user);
+    return 1;
 }
 
 __declspec(dllexport) CustomUI_WindowHandle __cdecl CustomUI_CreateWindow(const char* title, int x, int y, int w, int h,

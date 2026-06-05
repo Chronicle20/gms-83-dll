@@ -15,6 +15,7 @@ namespace custom_ui_demo {
 struct ResolvedAbi {
     unsigned int(__cdecl* GetAbiVersion)();
     int(__cdecl* IsReady)();
+    int(__cdecl* RunOnUIThread)(void(__cdecl*)(void*), void*);
     CustomUI_WindowHandle(__cdecl* CreateWindow)(const char*, int, int, int, int, void*);
     int(__cdecl* ShowWindow)(CustomUI_WindowHandle);
     int(__cdecl* HideWindow)(CustomUI_WindowHandle);
@@ -34,5 +35,6 @@ extern int g_ping_count;
 
 void OnPing(CustomUI_WindowHandle, CustomUI_CtrlId, void*);
 void OnPong(unsigned short, const unsigned char*, unsigned int, void*);
+void __cdecl BuildUI(void* user);
 
 } // namespace custom_ui_demo

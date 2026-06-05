@@ -72,6 +72,7 @@ template <class Fn> bool Resolve(HMODULE host, const char* name, Fn& out) {
 bool ResolveAbi(HMODULE host) {
     return Resolve(host, "CustomUI_GetAbiVersion", g_abi.GetAbiVersion) &&
            Resolve(host, "CustomUI_IsReady", g_abi.IsReady) &&
+           Resolve(host, "CustomUI_RunOnUIThread", g_abi.RunOnUIThread) &&
            Resolve(host, "CustomUI_CreateWindow", g_abi.CreateWindow) &&
            Resolve(host, "CustomUI_ShowWindow", g_abi.ShowWindow) &&
            Resolve(host, "CustomUI_HideWindow", g_abi.HideWindow) &&
@@ -84,6 +85,36 @@ bool ResolveAbi(HMODULE host) {
 }
 
 } // namespace
+
+void __cdecl BuildUI(void* /*user*/) {
+    Log("custom-ui-demo: BuildUI on UI thread");
+
+    auto cfg = LoadConfig();
+
+    Log("custom-ui-demo: CreateWindow...");
+    g_window = g_abi.CreateWindow("Demo", cfg.x, cfg.y, 240, 80, nullptr);
+    if (!g_window) {
+        Log("custom-ui-demo: CreateWindow failed");
+        return;
+    }
+    Log("custom-ui-demo: CreateWindow -> handle=%d", (int)g_window);
+    Log("custom-ui-demo: AddLabel...");
+    g_label = g_abi.AddLabel(g_window, 10, 10, "Server says: ?");
+    Log("custom-ui-demo: AddLabel -> %d", (int)g_label);
+    Log("custom-ui-demo: AddButton...");
+    g_abi.AddButton(g_window, 10, 40, 60, 20, "Ping", &OnPing);
+    Log("custom-ui-demo: AddButton done");
+    Log("custom-ui-demo: BindHotkey...");
+    auto hk = g_abi.BindHotkey(cfg.vk, cfg.mods, g_window);
+    Log("custom-ui-demo: BindHotkey -> %d", (int)hk);
+    if (!hk)
+        Log("custom-ui-demo: BindHotkey rejected (vk=0x%02X)", cfg.vk);
+    Log("custom-ui-demo: RegisterPacketHandler...");
+    g_abi.RegisterPacketHandler(0x2000, &OnPong, nullptr);
+    Log("custom-ui-demo: RegisterPacketHandler done");
+    Log("custom-ui-demo: window built, ready");
+}
+
 } // namespace custom_ui_demo
 
 DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
@@ -106,29 +137,8 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
     while (!custom_ui_demo::g_abi.IsReady())
         Sleep(50);
 
-    auto cfg = custom_ui_demo::LoadConfig();
-
-    Log("custom-ui-demo: CreateWindow...");
-    custom_ui_demo::g_window = custom_ui_demo::g_abi.CreateWindow("Demo", cfg.x, cfg.y, 240, 80, nullptr);
-    if (!custom_ui_demo::g_window) {
-        Log("custom-ui-demo: CreateWindow failed");
-        return 0;
-    }
-    Log("custom-ui-demo: CreateWindow -> handle=%d", (int)custom_ui_demo::g_window);
-    Log("custom-ui-demo: AddLabel...");
-    custom_ui_demo::g_label = custom_ui_demo::g_abi.AddLabel(custom_ui_demo::g_window, 10, 10, "Server says: ?");
-    Log("custom-ui-demo: AddLabel -> %d", (int)custom_ui_demo::g_label);
-    Log("custom-ui-demo: AddButton...");
-    custom_ui_demo::g_abi.AddButton(custom_ui_demo::g_window, 10, 40, 60, 20, "Ping", &custom_ui_demo::OnPing);
-    Log("custom-ui-demo: AddButton done");
-    Log("custom-ui-demo: BindHotkey...");
-    auto hk = custom_ui_demo::g_abi.BindHotkey(cfg.vk, cfg.mods, custom_ui_demo::g_window);
-    Log("custom-ui-demo: BindHotkey -> %d", (int)hk);
-    if (!hk)
-        Log("custom-ui-demo: BindHotkey rejected (vk=0x%02X)", cfg.vk);
-    Log("custom-ui-demo: RegisterPacketHandler...");
-    custom_ui_demo::g_abi.RegisterPacketHandler(0x2000, &custom_ui_demo::OnPong, nullptr);
-    Log("custom-ui-demo: RegisterPacketHandler done");
-    Log("custom-ui-demo: window built, ready");
+    Log("custom-ui-demo: deferring UI build to game UI thread");
+    custom_ui_demo::g_abi.RunOnUIThread(&custom_ui_demo::BuildUI, nullptr);
+    Log("custom-ui-demo: MainProc done (UI build queued)");
     return 0;
 }
