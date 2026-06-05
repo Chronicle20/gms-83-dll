@@ -8,4 +8,6 @@ struct CInPacket {
     unsigned __int16 m_uRawSeq;
     unsigned __int16 m_uDataLen;
     unsigned int m_uOffset;
+
+    unsigned short Decode2();
 };
