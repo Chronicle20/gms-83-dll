@@ -423,6 +423,72 @@ Add one section per resolved key. Group loosely by subsystem to mirror
 memory-map.md. Leave the two stubs above as worked examples of the schema.
 -->
 
+### Manager singletons: TSingleton<T>::CreateInstance + ms_pInstance pairs
+- (keys: C_ACTION_MAN_CREATE_INSTANCE_ADDR / C_ACTION_MAN_INSTANCE_ADDR, C_ANIMATION_DISPLAYER_CREATE_INSTANCE, C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE / C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR, C_MACRO_SYS_MAN_CREATE_INSTANCE, C_MAPLE_TV_MAN_CREATE_INSTANCE / C_MAPLE_TV_MAN_INSTANCE_ADDR, C_MONSTER_BOOK_MAN_CREATE_INSTANCE / C_MONSTER_BOOK_MAN_INSTANCE_ADDR, C_QUEST_MAN_CREATE_INSTANCE / C_QUEST_MAN_INSTANCE_ADDR, C_RADIO_MANAGER_CREATE_INSTANCE / C_RADIO_MANAGER_INSTANCE_ADDR, C_SECURITY_CLIENT_CREATE_INSTANCE / C_SECURITY_CLIENT_INSTANCE_ADDR, C_QUICKSLOT_KEY_MAPPED_MAN, C_INPUT_SYSTEM_CREATE_INSTANCE / C_INPUT_SYSTEM_INSTANCE_ADDR)
+- Primary anchor: constant (allocation size) + call-graph (the placement ctor callee)
+- Detail: Every manager CreateInstance is a tiny (~0x45 byte) `TSingleton<T>::CreateInstance` of the shape `if (!ms_pInstance) { v = ZAllocEx::Alloc(<SIZE>); if (v) Ctor(v); }`. They cluster together (v84 0x00A439xx–0x00A43Fxx, the same static-init region that also holds CClientSocket::CreateInstance @ 0x00A43D0B). **Match each manager to v84 by its per-class allocation SIZE** (the `push <imm>` to the allocator) — these are near-unique per-version fingerprints (RE-OBSERVE the size for each new version — they are class-layout-derived and can shift if a struct is refactored; they happened to match verbatim v83→v84): ActionMan 0x2B8(696), AnimationDisplayer 0x1A8(424), FuncKeyMappedMan 0x3C8(968), MacroSysMan 0x30(48), MapleTVMan 0x3E0(992), MonsterBookMan 0xA4(164), QuestMan 0x2A0(672), RadioManager 0x2C(44), SecurityClient 0x13C(316), QuickslotKeyMappedMan 0x44(68), InputSystem 0x9D0(2512). The `*_INSTANCE_ADDR` global is the `mov [g_xxx], <this>` store at the TOP of the matching placement ctor (the `(this+1!=0)?this:0` SBB idiom) — resolve the pair TOGETHER: CreateInstance names the ctor, the ctor names the instance global.
+- Fallback anchor: the ctor's distinctive body confirms the class (vtable installed, member-init shape, the StringPool IDs / ZList layout it builds) — a second independent anchor beyond the alloc size.
+- Cross-version stability: the alloc-size fingerprint + SBB-singleton-store idiom are stable; v83 used a two-arg `ZAllocEx::Alloc(heapsel, size)` while v84 collapsed to a one-arg `Alloc(size)` — read the size as the sole/last push. The mangled `TSingleton<T>::CreateInstance` names do NOT survive into v84 (only CClientSocket's does), so anchor on size + ctor, NOT on the symbol.
+- Notes: v84 addresses — ActionMan CreateInstance 0x00A43C5E / instance 0x00C40C24 / ctor 0x004067EF; AnimationDisplayer CreateInstance 0x00A43CB4 / ctor 0x004360B8 (StringPool IDs 972–980); FuncKeyMappedMan CreateInstance 0x00A43D50 / instance 0x00C46B70 / ctor 0x0059DD00; MacroSysMan CreateInstance 0x00A43DA6 / ctor 0x00646CFC; MapleTVMan CreateInstance 0x00A43E3F / instance 0x00C46D64 / ctor 0x0064C362; MonsterBookMan CreateInstance 0x00A43A2B / instance 0x00C46BE0 / ctor 0x00A43A70; QuestMan CreateInstance 0x00A4397A / instance 0x00C46BE4 / ctor 0x0073A7EB; RadioManager CreateInstance 0x00A43F30 / ctor 0x0074D115; SecurityClient CreateInstance 0x00A43DFA / instance 0x00C4583C / ctor 0x00A9790F; QuickslotKeyMappedMan CreateInstance 0x00A43F83 / ctor 0x00748B91; InputSystem CreateInstance 0x00A43922 / instance 0x00C456B4 / ctor 0x00A41A7B (the CInputSystem singleton cross-confirmed by Task-5's CStage::OnMouseEnter read of [0x00C456B4]).
+
+### CFuncKeyMappedMan ctor / vftable / default-key globals   (keys: C_FUNC_KEY_MAPPED_MAN / C_FUNC_KEY_MAPPED_MAN_VFTABLE / DEFAULT_FKM_INSTANCE_ADDR / DEFAULT_QKM_INSTANCE_ADDR)
+- Primary anchor: structure (the ctor's fixed memcpy shape) + vtable install
+- Detail: The CFuncKeyMappedMan ctor installs its vftable at `*this`, then runs FOUR memcpys: two of size 445 (0x1BD) from the DEFAULT_FKM key table, and two of size 32 (0x20) from the DEFAULT_QKM key table, into per-slot offsets near the object base (offsets as reported by the decompiler; re-confirm the unit/layout before using for struct work), then zeroes two trailing dword members. The 445/32 memcpy quad is a near-unique fingerprint. The vftable is `*this`; DEFAULT_FKM is the source of the 445-byte copies; DEFAULT_QKM is the source of the 32-byte copies.
+- Fallback anchor: call-graph — the ctor is the sole callee of CFuncKeyMappedMan::CreateInstance (alloc size 968).
+- Cross-version stability: the 445/32 quad + vtable-at-`*this` shape held v83→v84 byte-for-byte structurally.
+- Notes: v84 ctor 0x0059DD00; vftable 0x00B46B08; DEFAULT_FKM 0x00C31C7C; DEFAULT_QKM 0x00C31E3C.
+
+### CInputSystem methods: Init / UpdateDevice / GetIsMessage / GenerateAutoKeyDown / ShowCursor
+- (keys: C_INPUT_SYSTEM_INIT / C_INPUT_SYSTEM_UPDATE_DEVICE / C_INPUT_SYSTEM_GET_IS_MESSAGE / C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN / C_INPUT_SYSTEM_SHOW_CURSOR)
+- Primary anchor: import / constant / member-offset (per method) + adjacency to the labeled CInputSystem cluster (0x005AAxxx)
+- Detail: Init is the sole caller of the `DirectInput8Create` import (also builds the keyboard key-map table and centers the cursor at 400/300). UpdateDevice is the tiny `if(!a1) UpdateKeyboard(1); if(a1==1) UpdateMouse()` switch. GetIsMessage is `if(!this[625]) return 0; copy 3 dwords from this[626]; return 1` (member offsets 625/626 = v83 0x9C4/0x9C8 /4). GenerateAutoKeyDown checks this[2]/[8]/[586], calls timeGetTime, writes `*a2 = 256` (0x100 = WM_KEYDOWN) with the [588]/[589] repeat-rate. ShowCursor is `if(this[606]) (devvtable+224)(dev, bShow?-1:0xFFFFFF)`.
+- Fallback anchor: ShowCursor was already cross-referenced by Task-5 (CLogo::Init calls it); the five methods sit adjacent in the image (ShowCursor 0x005AA58B, UpdateDevice/GetIsMessage just before it; GenerateAutoKeyDown in the 0x005ABxxx tail).
+- Cross-version stability: DirectInput8Create import, the 0x100 WM_KEYDOWN write, the -1/0xFFFFFF cursor-show constants, and the member offsets are all stable; mangled CInputSystem method names do NOT survive into v84.
+- Notes: v84 Init 0x005AA112; UpdateDevice 0x005AA53C; GetIsMessage 0x005AA559; ShowCursor 0x005AA58B; GenerateAutoKeyDown 0x005AB525.
+
+### CActionMan::Init / SweepCache   (keys: C_ACTION_MAN_INIT / C_ACTION_MAN_SWEEP_CACHE)
+- Primary anchor: call-graph (Init) / constant (SweepCache)
+- Detail: Init calls the `get_action_name_from_code` helper (v84 sub_4AE25C) inside a per-action StringPool table-build loop (skips index 40, iterates to 173 in v84 / 162 in v83, 24-byte stride, dword_C45AF0/AEC/AFC action globals). SweepCache opens with `t = timeGetTime(); if (t - this[173] >= 0xEA60 (60000)) {...}` then a state-machine `switch` over the per-resource cache lists with 300000-ms eviction timeouts (member +0x2B4 = this[173]).
+- Fallback anchor: Init is the large StringPool-driven function adjacent to the ActionMan ctor (sub_4067EF); SweepCache is the only 60000+300000 timer state machine reading member +0x2B4.
+- Cross-version stability: the get_action_name_from_code call, the 60000/300000 timer constants, and member +0x2B4 are stable; the action-count loop bound shifted (162→173) so do not anchor on it.
+- Notes: v84 Init 0x00406B93; SweepCache 0x00411CA9.
+
+### CMapleTVMan::Init   (memory-map key: C_MAPLE_TV_MAN_INIT)
+- Primary anchor: call-graph + constant
+- Detail: Reads the Gr2D singleton, allocates 56 bytes for the TV object, spawns the MapleTV worker thread (ZThread::BeginThread / v84 sub_42D01F), loads the TV media WZ via StringPool (UI/MapleTVImg/TVMedia) + IWzResMan::GetObjectA, sets this[240]=child count and this[241]=windowed flag; opens with five ZXString buffer ops on this+233..237.
+- Fallback anchor: structure — the GR-singleton read + alloc(56) + BeginThread + GetObjectA(TVMedia) sequence; sole non-trivial method adjacent to the MapleTVMan ctor (sub_64C362).
+- Cross-version stability: the alloc-56 + BeginThread + GR-singleton + TVMedia-img shape is stable; the StringPool ID shifted (v83 3940 → v84 3943) so do not byte-search the ID.
+- Notes: v84 0x0064C578.
+
+### CMonsterBookMan::LoadBook   (memory-map key: C_MONSTER_BOOK_MAN_LOAD_BOOK)
+- Primary anchor: structure (3-stage short-circuit wrapper) + string xref (via stage 2)
+- Detail: LoadBook is a tiny wrapper `return f1() && f2(this) && f3(this)` (v84 sub_69B498). Stage 1 (sub_69B4C2) parses the item-consume monster-book WZ and computes the monster-id arithmetic `(mobId - 2380000)/1000` and `(mobId - 20704)` — a near-unique pair of immediates. Stage 2 (sub_69BB3F) reads the "String/MonsterBook.img" data and references the wide string "defaultHP" (and "defaultMP").
+- Fallback anchor: the "defaultHP"/"defaultMP" wide strings (v84 @ 0x00B49C2C) are referenced only by the LoadBook stage-2 reader; the (x-2380000)/1000 + (x-20704) arithmetic identifies stage 1.
+- Cross-version stability: the 3-call wrapper shape, the 2380000/1000 + 20704 monster-id math, and the "defaultHP/defaultMP" strings are stable v83→v84; the StringPool img IDs shift per version (do not byte-search them).
+- Notes: v84 wrapper 0x0069B498 (stages 0x0069B4C2 / 0x0069BB3F / 0x0069C473). Equivalent v83 wrapper was 0x0068487C.
+
+### CQuestMan::LoadDemand / LoadPartyQuestInfo / LoadExclusive
+- (keys: C_QUEST_MAN_LOAD_DEMAND / C_QUEST_MAN_LOAD_PARTY_QUEST_INFO / C_QUEST_MAN_LOAD_EXCLUSIVE)
+- Primary anchor: string xref (the WZ data-path literal each loads)
+- Detail: Each method is the sole referencer of its WZ path literal: LoadDemand → "Etc/QuestCategory.img" (wide, v84 @ 0x00B4F054); LoadPartyQuestInfo → "Quest/PQuest.img" (wide, v84 @ 0x00B4F228); LoadExclusive → "Quest/Exclusive.img" (wide, v84 @ 0x00B4F2B4). Each then iterates the property tree via IWzResMan::GetObjectA + GetItem.
+- Fallback anchor: LoadPartyQuestInfo additionally calls CQuestMan::LoadPartyQuestRank and references the "mark" key; all three are adjacent in the CQuestMan method region (0x0073xxxx–0x00742xxx).
+- Cross-version stability: the WZ data-path literals are extremely stable across versions and are the canonical anchor; mangled CQuestMan method names do NOT survive into v84.
+- Notes: v84 LoadDemand 0x0073AE25; LoadPartyQuestInfo 0x007408E6; LoadExclusive 0x00741D46.
+
+### CRadioManager singleton global   (memory-map key: C_RADIO_MANAGER_INSTANCE_ADDR)
+- Primary anchor: writer function (the ctor's singleton store)
+- Detail: **The v83 mapping for this key (0x00BF0B00) points at the SHARED HEAP-SELECTOR global `dword_BF0B00` — the allocator arg used by EVERY manager CreateInstance — NOT at the real CRadioManager instance.** The genuine instance global is the `mov [g], <this>` store at the top of the CRadioManager ctor (v84 sub_74D115 → 0x00C45848), and it is what the radio-manager methods (v84 0x0074Dxxx) read back. This entry resolves the key to the REAL instance global, anchored to disassembly evidence (ctor store + method reads), and flags the v83 value as a pre-existing quirk.
+- Fallback anchor: g_CRadioManager_pInstance (0x00C45848) is read across the radio-manager method cluster (sub_74D1A5, sub_74DE61, …) and written only by the ctor — distinct from the heap selector.
+- Cross-version stability: the ctor-store-then-method-read idiom is stable; locate via the ctor, not the v83 raw address. **needs-main-review** — confirm whether the repo's CRadioManager wrapper expects the real instance (this resolution) or must reproduce the v83 heap-selector quirk.
+- Notes: v84 real instance 0x00C45848; v84 heap selector (the v83-key referent) is the allocator-arg global, separate.
+
+### CSecurityClient::OnPacket   (memory-map key: C_SECURITY_CLIENT_ON_PACKET)
+- Primary anchor: constant + import (CInPacket::Decode1 opcode gate) — HIGH-VALUE, needs-main-review
+- Detail: `if (CInPacket::Decode1(pkt) == 4) CSecurityClient::OnCheckClientIntegrityRequest(pkt)` (v84 sub_A97DF1). Decode1 retains its mangled name in v84 (?Decode1@CInPacket@@QAEEXZ @ 0x004066C9); the opcode constant is 4.
+- Fallback anchor: call-graph — it is the sole caller of OnCheckClientIntegrityRequest (v84 sub_A97E10), which is uniquely identified by its Decode2/DecodeBuffer + integrity-scan + COutPacket(26)/Encode1(4)/SendPacket reply + CSecurityThreatDetected throw.
+- Cross-version stability: the Decode1==4 gate + the OnCheckClientIntegrityRequest dispatch are stable v83→v84; the Security method region relocated (v83 0x00A4Bxxx → v84 0x00A97xxx, the same region as the CSecurityClient ctor 0x00A9790F).
+- Notes: v84 0x00A97DF1. **HIGH-VALUE (needs-main-review).** Two DIFFERENT kinds (constant/import gate + call-graph). Spot-check (independent kind): the callee OnCheckClientIntegrityRequest builds the integrity reply with `COutPacket(26); Encode1(4); … SendPacket` — the Encode1(**4**) reply opcode matches the Decode1==4 request gate, and the throw of CSecurityThreatDetected on a bad scan is the security-specific behavior, confirming the function identity independently of the call edge.
+
 ## v84 IDB baseline
 
 Recorded 2026-06-05 via `mcp__ida-pro__survey_binary` with instance routed to port 13341.
@@ -445,12 +511,27 @@ to get the RVA used in `WIN_MAIN` and sibling keys.
 
 - **String xrefs are king.** Format strings, file paths ("Data\\…"), registry
   keys, and error literals survive across versions far better than code bytes.
-- **Manager singletons** (`*::CreateInstance` / `*_INSTANCE_ADDR`) cluster
-  together in the static-init region and are typically called in a fixed order
-  from one initializer — find one, the neighbors are adjacent calls.
-- **`*_INSTANCE_ADDR` globals** are the `mov [g_xxx], eax` store right after the
-  matching `CreateInstance` call returns. Resolve the function, read its
-  caller's store target.
+- **Manager singletons** (`*::CreateInstance` / `*_INSTANCE_ADDR`): each
+  `*::CreateInstance` is its OWN tiny (~0x45 byte) `TSingleton<T>::CreateInstance`
+  function — `if (!ms_pInstance) { v = ZAllocEx::Alloc(<SIZE>); if (v) Ctor(v); }`.
+  They cluster contiguously in one region of the image (in v84 GMS the cluster is
+  ~0x00A439xx–0x00A43Fxx, sharing it with CClientSocket::CreateInstance). **Match a
+  manager to its v84 CreateInstance by the per-class allocation SIZE** (the unique
+  `push <imm>` to the allocator) — that immediate is carried verbatim across
+  versions far more reliably than the address. NOTE: the allocator arity can change
+  (v83 `Alloc(heapsel, size)` two-arg → v84 `Alloc(size)` one-arg); read the size
+  as the sole/last push.
+- **`*_INSTANCE_ADDR` globals** are the `mov [g_xxx], <this>` store at the TOP of
+  the class's placement ctor (the `(this+1!=0)?this:0` SBB idiom), NOT a store in
+  the CreateInstance caller. Resolve the pair together: CreateInstance names the
+  ctor (its single callee), and the ctor names the instance global (its first store).
+- **`DEFAULT_*` key-table globals** (e.g. DEFAULT_FKM/DEFAULT_QKM) are the memcpy
+  SOURCE operands inside the owning manager's ctor; the copy size disambiguates
+  which default table (e.g. 445-byte FKM vs 32-byte QKM copies).
+- **Watch for v83-key referent quirks**: a v83 `*_INSTANCE_ADDR` value may point at
+  the wrong global (e.g. the shared heap-selector instead of the real instance —
+  seen on C_RADIO_MANAGER_INSTANCE_ADDR). Anchor to the ctor's actual store and
+  flag the discrepancy rather than carrying the wrong referent forward.
 - **Packet senders** reference their opcode as a `push <imm>` / `mov` immediate
   into a COutPacket; the opcode constant disambiguates among similar senders.
 - **`*_OFFSET` keys** are call-site or branch offsets *within* a host function;
