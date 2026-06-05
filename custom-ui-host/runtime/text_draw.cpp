@@ -184,10 +184,16 @@ void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8) {
     if (dbg)
         Log("custom-ui-host: DrawLabel: post DrawTextA");
 
-    // 5. release the canvas ref (COM Release == vtable slot +8).
+    // 5. release the canvas ref. GetCanvas returned an AddRef'd _com_ptr_t, so
+    //    we owe one Release. This is a DIRECT call to the raw COM vtable slot 2
+    //    (IUnknown::Release), which is __stdcall -- `this` is pushed on the
+    //    stack and the callee cleans it (retn 4). Confirmed in CWnd::Draw:
+    //    `mov ecx,[eax]; push eax; call [ecx+8]`. (GetCanvas/DrawTextA are
+    //    __thiscall C++ *wrappers*, hence the convention difference.) Calling
+    //    Release as __fastcall (this in ecx, 0 stack) left ESP off by 4 -> the
+    //    /RTC1 "value of esp was not properly saved" crash.
     void** canvas_vtbl = *reinterpret_cast<void***>(raw_canvas);
-    auto release = reinterpret_cast<unsigned long(__fastcall*)(void*, void*)>(canvas_vtbl[2]);
-    release(raw_canvas, nullptr);
+    reinterpret_cast<unsigned long(__stdcall*)(void*)>(canvas_vtbl[2])(raw_canvas);
     if (dbg) {
         Log("custom-ui-host: DrawLabel: done (released canvas)");
         s_dbg = false;
