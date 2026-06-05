@@ -295,11 +295,44 @@ CustomUI_GetEditText(CustomUI_WindowHandle h, CustomUI_CtrlId c, char *buf,
     return copied;
 }
 __declspec(dllexport) CustomUI_HotkeyId __cdecl
-CustomUI_BindHotkey(unsigned int, unsigned int, CustomUI_WindowHandle) {
-    return 0;
+CustomUI_BindHotkey(unsigned int vk, unsigned int modifiers,
+                    CustomUI_WindowHandle target) {
+    if (!custom_ui_host::ReadyOrLog("BindHotkey")) return 0;
+
+    // Reject if the vanilla func-key map already binds this slot. v83.1
+    // inlines FuncKeyMapped as a direct read of m_aFuncKeyMapped[vk]
+    // (returned by value); byte 0 of the packed FUNCKEY_MAPPED is nType.
+    auto *mgr = CFuncKeyMappedMan::GetInstance();
+    if (mgr) {
+        constexpr int kMax = 89;  // m_aFuncKeyMapped[89] on GMS
+        if (vk < static_cast<unsigned int>(kMax)) {
+            FUNCKEY_MAPPED fkm = mgr->FuncKeyMapped(static_cast<int>(vk));
+            unsigned char nType = *reinterpret_cast<unsigned char *>(&fkm);
+            if (nType != 0) {
+                Log("custom-ui-host: BindHotkey rejected -- vk=0x%02X already mapped (nType=%u)",
+                    vk, nType);
+                return 0;
+            }
+        }
+    }
+
+    auto *target_wnd = custom_ui_host::g_windows->Lookup(
+        static_cast<unsigned int>(target));
+    if (!target_wnd) {
+        Log("custom-ui-host: BindHotkey rejected -- unknown target window %d", target);
+        return 0;
+    }
+
+    auto id = custom_ui_host::g_hotkeys->Bind(vk, modifiers,
+                                              static_cast<unsigned int>(target));
+    return static_cast<CustomUI_HotkeyId>(id);
 }
-__declspec(dllexport) int __cdecl CustomUI_UnbindHotkey(CustomUI_HotkeyId) {
-    return 0;
+
+__declspec(dllexport) int __cdecl CustomUI_UnbindHotkey(CustomUI_HotkeyId id) {
+    if (!custom_ui_host::ReadyOrLog("UnbindHotkey")) return 0;
+    return custom_ui_host::g_hotkeys->Unbind(static_cast<unsigned int>(id))
+               ? 1
+               : 0;
 }
 __declspec(dllexport) int __cdecl
 CustomUI_SendPacket(unsigned short opcode, const void *payload,
