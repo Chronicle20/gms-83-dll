@@ -89,10 +89,12 @@ bool InitLabelFont() {
     // cf. sub_461CA8). GetStringW struct-returns a ZXString<ushort> (single
     // m_pStr) into our 4-byte slot; the pool string is persistent so we don't
     // release the ref.
-    constexpr unsigned int kStringPoolCanvasFont = 0x582;
+    constexpr unsigned int kStringPoolCanvasFont = 0x582; // SP_1410_CANVASFONT (COM class-hint)
+    constexpr unsigned int kStringPoolFontFace = 0x1597;  // SP_5527 (the game's UI font face)
+    void* pool = nullptr;
     const wchar_t* fontHint = nullptr;
     try {
-        void* pool = reinterpret_cast<void*(__cdecl*)()>(C_STRING_POOL_GET_INSTANCE)();
+        pool = reinterpret_cast<void*(__cdecl*)()>(C_STRING_POOL_GET_INSTANCE)();
         reinterpret_cast<void*(__fastcall*)(void*, void*, void*, unsigned int)>(C_STRING_POOL_GET_STRING_W)(
             pool, nullptr, &fontHint, kStringPoolCanvasFont);
     } catch (...) {
@@ -117,12 +119,31 @@ bool InitLabelFont() {
         return false;
     }
 
-    // Step C: configure face/size/color. "Arial" is the FACE (== StringPool
-    // [SP_5527_ARIAL]); opaque black is the game's default label colour. The
-    // style/alpha/tab variants must be the COM "omitted optional" variant
+    // Step C: configure face/size/color. The FACE must be the game's own UI
+    // font, resolved from StringPool[SP_5527] (idx 0x1597) -- the same string
+    // get_basic_font / sub_461CA8 use. A literal "Arial" renders as the
+    // NPC/chat face instead of the crisp UI face. GetBSTR struct-returns a
+    // Ztl_bstr_t (single m_Data) which IWzFont::Create consumes (releases), so
+    // we don't release it. We also resolve it as a wide string purely to log
+    // the actual font name. Opaque black is the colour; the style/alpha/tab
+    // variants must be the COM "omitted optional" variant
     // (VT_ERROR/DISP_E_PARAMNOTFOUND) -- a real VT_I4 makes Create throw.
+    const wchar_t* faceName = nullptr;
+    try {
+        reinterpret_cast<void*(__fastcall*)(void*, void*, void*, unsigned int)>(C_STRING_POOL_GET_STRING_W)(
+            pool, nullptr, &faceName, kStringPoolFontFace);
+    } catch (...) {
+    }
+    Log("custom-ui-host: label font face=[%ls]", faceName ? faceName : L"(null)");
     BStr face;
-    MakeBStr(&face, "Arial");
+    face.m_Data = nullptr;
+    try {
+        reinterpret_cast<void*(__fastcall*)(void*, void*, void*, unsigned int)>(C_STRING_POOL_GET_BSTR)(
+            pool, nullptr, &face, kStringPoolFontFace);
+    } catch (...) {
+        Log("custom-ui-host: InitLabelFont: GetBSTR(face) threw -- labels disabled");
+        return false;
+    }
     Variant style;
     MakeVariantMissing(&style);
     long hr = 0;

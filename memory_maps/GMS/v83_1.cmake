@@ -200,6 +200,7 @@ set(C_BSTR_FROM_CSTR 0x00425ADD)          # _bstr_t::_bstr_t(const char*) ??0_bs
 set(C_VARIANT_CTOR_I4 0x00402FAB)         # Ztl_variant_t::ctor_i4(int value, short vt=3) __thiscall; VT_I4 variant builder, used for DrawTextA opacity (alpha 0-255) + empty tab-origin
 set(C_STRING_POOL_GET_INSTANCE 0x0079E805) # StringPool::GetInstance (?GetInstance@StringPool@@SAAAV1@XZ) __cdecl static -> StringPool*; the process-wide string pool singleton
 set(C_STRING_POOL_GET_STRING_W 0x00406276) # StringPool::GetStringW (?GetStringW@StringPool@@QAE?AV?$ZXString@G@@I@Z) __thiscall; struct-returns ZXString<ushort> by value (hidden result ptr is first stack arg, then uint index). Used to resolve SP_1410_CANVASFONT (idx 0x582) -- the COM class-hint PcCreateObject::IWzFont needs as its first arg (NOT the face name)
+set(C_STRING_POOL_GET_BSTR 0x00406292)     # StringPool::GetBSTR (?GetBSTR@StringPool@@QAE?AVZtl_bstr_t@@I@Z) __thiscall; struct-returns Ztl_bstr_t by value (hidden result ptr first stack arg, then uint index). The game's UI fonts (get_basic_font @0x98A707, sub_461CA8) build their face from SP_5527 (idx 0x1597) via this -- NOT a literal "Arial"; IWzFont::Create consumes (releases) the returned bstr ref
 
 set(Z_ARRAY_REMOVE_ALL 0x00428CF1)
 
