@@ -2,6 +2,7 @@
 
 #include "host_globals.h"
 #include "logger.h"
+#include "runtime/host_config.h"
 
 namespace custom_ui_host {
 std::atomic<bool> g_ready{false};
@@ -34,9 +35,9 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
         return 0;
     }
 
-    // Hook installation lands in Phase 7. INI parsing lands in Task 3.3.
-    // Vtable cloning lands in Phase 5. For now, just signal ready so the
-    // demo's IsReady-poll smoke test passes once Phase 3 lands.
+    custom_ui_host::LoadHostConfig();
+
+    // Hook installation lands in Phase 7. Vtable cloning lands in Phase 5.
     custom_ui_host::g_ready.store(true);
     Log("custom-ui-host: ready");
     return 0;
