@@ -130,6 +130,7 @@ set(C_SYSTEM_INFO_GET_MACHINE_ID 0x00A54EB0)
 set(C_UI_TITLE_INSTANCE_ADDR 0x00BEDA60)
 
 set(C_UI_WND_CTOR 0x0092C17F)              # CUIWnd::CUIWnd(int nUIType, int closeType, int closeX, int closeY, const wchar_t* sBackgrndUOL, int nBackgrndX, int nBackgrndY) -- not the (x,y,w,h,name) form the plan assumed; 4 ints + UOL string + 2 ints; __thiscall, retn 1Ch
+set(C_UI_WND_CTOR_INT 0x0092C0BF)          # CUIWnd int-only ctor ??0CUIWnd@@QAE@HHHHHHH@Z (nUIType,closeType,closeX,closeY,nBackgrnd,nBackgrndX,nBackgrndY); no WZ-background load, safe for custom windows (the string ctor 0x0092C17F derefs the UOL and crashes on null)
 set(C_UI_WND_DTOR 0x0092C272)              # CUIWnd::~CUIWnd (bare virtual destructor, ??1CUIWnd@@UAE@XZ); scalar deleting dtor wrapper lives at 0x0092C15B
 set(C_UI_WND_VFTABLE 0x00B3CE10)           # primary vftable (IGObj subobject at offset 0); secondary CWnd::IUIMsgHandler vftable at 0x00B3CDC4, CWnd::ZRefCounted vftable at 0x00B3CDC0
 set(C_UI_WND_VTABLE_SLOT_COUNT 14)         # walked 0x00B3CE10..+0x37 forward; slot 14 = 0xFDE04000 (outside .text), prior 14 entries all in .text
