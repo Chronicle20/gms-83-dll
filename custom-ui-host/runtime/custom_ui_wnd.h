@@ -39,6 +39,10 @@ struct FrameworkExtras {
     WindowHandle handle = 0;
     void *user = nullptr;
     std::vector<ControlEntry> controls;
+    // Per-window monotonic control-id allocator. ids are echoed back to the
+    // window's slot-8 OnButtonClicked override for dispatch; start at 1 so 0
+    // remains the "invalid id" sentinel returned on failure.
+    CtrlId next_ctrl_id = 1;
     // Desired screen rectangle, applied by CWnd::CreateWnd on first Show
     // (Task 5.4). Stored here at Create time.
     int x = 0, y = 0, w = 0, h = 0;

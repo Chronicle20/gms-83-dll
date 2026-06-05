@@ -143,6 +143,13 @@ set(C_CTRL_EDIT_CTOR 0x004C9C72)           # CCtrlEdit::CCtrlEdit(void) -- nulla
 set(C_CTRL_EDIT_VFTABLE 0x00AF2BA8)        # primary CCtrlEdit vftable (IGObj subobject at offset 0); secondary inherited CWnd::IUIMsgHandler vftable at 0x00AF2B5C (offset +4), CWnd::ZRefCounted vftable at 0x00AF2B58 (offset +8) -- multiple inheritance via CCtrlWnd base, same triple-vptr layout as CCtrlButton
 set(SIZEOF_C_CTRL_EDIT_V83_1 184)          # 0xB8; from CCSWnd_Char::OnCreate at 0x004AB7AC: ZAllocEx::Alloc(0xB8u) immediately preceding CCtrlEdit::CCtrlEdit call at 0x004AB7BE; consistent with ctor's last write at offset 0xB4 + 4 == 0xB8
 
+set(C_CTRL_BUTTON_CREATE_CTRL 0x004BFFFB)  # CCtrlButton::CreateCtrl (?CreateCtrl@CCtrlButton@@UAEXPAVCWnd@@IJJJPAX@Z); __thiscall virtual, slot 8 of button vtable; (CWnd* parent, UINT id, LONG x, LONG y, LONG nDecClickArea, void* CREATEPARAM*) -- width/height derive from the loaded button image, not args
+set(C_CTRL_WND_CREATE_CTRL 0x004DFBFE)     # CCtrlWnd::CreateCtrl (?CreateCtrl@CCtrlWnd@@UAEXPAVCWnd@@IJJJJPAX@Z); base CreateCtrl, also CCtrlEdit's CreateCtrl (vtable slot 2); 7 args (CWnd* parent, UINT id, LONG x, LONG y, LONG w, LONG h, void* CREATEPARAM*)
+set(C_CTRL_EDIT_CREATEPARAM_CTOR 0x004C8D5F) # CCtrlEdit::CREATEPARAM::CREATEPARAM; default-inits edit param (Arial 12, ARGB 0xFF000000 black, empty text)
+set(C_CTRL_EDIT_CREATEPARAM_DTOR 0x00471B56) # CCtrlEdit::CREATEPARAM::~CREATEPARAM; param dtor (releases the embedded ZXString members)
+set(C_CTRL_EDIT_SET_TEXT 0x004CC512)       # CCtrlEdit::SetText (?SetText@CCtrlEdit@@QAEXPBD@Z); __thiscall (void* edit, const char* ansi); text stored at edit dword[13]
+set(C_CTRL_EDIT_GET_TEXT 0x00471353)       # CCtrlEdit::GetText (?GetText@CCtrlEdit@@QAE?AV?$ZXString@D@@XZ); __thiscall struct-return ZXString<char> by value (hidden return-slot ptr is first stack arg, per MSVC); reads edit dword[13]
+
 set(G_DW_TARGET_OS 0x00BE2EBC)
 
 set(C_WVS_APP 0x009F4FDA)
