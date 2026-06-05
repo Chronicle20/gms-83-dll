@@ -382,6 +382,19 @@ CustomUI_UnregisterPacketHandler(CustomUI_HandlerId id) {
                ? 1
                : 0;
 }
-__declspec(dllexport) void __cdecl CustomUI_DumpRegistries(void) {}
+__declspec(dllexport) void __cdecl CustomUI_DumpRegistries(void) {
+    if (custom_ui_host::g_windows) {
+        Log("custom-ui-host: window registry size=%zu",
+            custom_ui_host::g_windows->Size());
+    }
+    if (custom_ui_host::g_hotkeys) {
+        Log("custom-ui-host: hotkey registry size=%zu",
+            custom_ui_host::g_hotkeys->Size());
+    }
+    if (custom_ui_host::g_packets) {
+        Log("custom-ui-host: packet registry size=%zu",
+            custom_ui_host::g_packets->Size());
+    }
+}
 
 } // extern "C"
