@@ -16,12 +16,9 @@ CFuncKeyMappedMan *CFuncKeyMappedMan::GetInstance() {
 }
 
 FUNCKEY_MAPPED CFuncKeyMappedMan::FuncKeyMapped(int vk) {
-    // Returned struct is 5 bytes (packed); follow MSVC __thiscall calling
-    // convention: caller-allocated return-slot pointer passed as hidden
-    // first arg in ECX is NOT what the game uses here — small POD returns
-    // are returned in EDX:EAX on x86. Confirm via decompile if the
-    // generated thunk crashes; fall back to pass-by-reference if needed.
-    return reinterpret_cast<FUNCKEY_MAPPED(__fastcall *)(
-        CFuncKeyMappedMan *, void *, int)>(
-        C_FUNC_KEY_MAPPED_MAN_FUNC_KEY_MAPPED)(this, nullptr, vk);
+    // v83.1 has NO discrete CFuncKeyMappedMan::FuncKeyMapped function -- the
+    // compiler inlined every call site as `*(instance + 4 + 5*vk)`. We mirror
+    // that by indexing the member array directly. `vk` here is a func-key
+    // slot index (0..88 GMS / 0..93 JMS); callers must pass a valid index.
+    return m_aFuncKeyMapped[vk];
 }
