@@ -101,9 +101,6 @@ void __cdecl BuildUI(void* /*user*/) {
     Log("custom-ui-demo: AddLabel...");
     g_label = g_abi.AddLabel(g_window, 10, 10, "Server says: ?");
     Log("custom-ui-demo: AddLabel -> %d", (int)g_label);
-    Log("custom-ui-demo: AddButton...");
-    g_abi.AddButton(g_window, 10, 40, 60, 20, "Ping", &OnPing);
-    Log("custom-ui-demo: AddButton done");
     Log("custom-ui-demo: BindHotkey...");
     auto hk = g_abi.BindHotkey(cfg.vk, cfg.mods, g_window);
     Log("custom-ui-demo: BindHotkey -> %d", (int)hk);
@@ -113,6 +110,13 @@ void __cdecl BuildUI(void* /*user*/) {
     g_abi.RegisterPacketHandler(0x2000, &OnPong, nullptr);
     Log("custom-ui-demo: RegisterPacketHandler done");
     Log("custom-ui-demo: window built, ready");
+    // AddButton LAST: it loads a fragile WZ image and may AV inside the game's
+    // CCtrlButton::CreateCtrl. The outer UI-thread SafeDispatch contains the
+    // fault, and by this point the window/label/hotkey/packet handler are all
+    // already set up, so F8/window/label/packets keep working even if it fails.
+    Log("custom-ui-demo: AddButton...");
+    g_abi.AddButton(g_window, 10, 40, 60, 20, "Ping", &OnPing);
+    Log("custom-ui-demo: AddButton done");
 }
 
 } // namespace custom_ui_demo

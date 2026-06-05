@@ -11,6 +11,7 @@
 #include "logger.h"
 #include "memory_map.h"
 
+#include <cstddef>
 #include <cstring>
 #include <new>
 #include <string>
@@ -112,24 +113,23 @@ __declspec(dllexport) int __cdecl CustomUI_DestroyWindow(CustomUI_WindowHandle h
 
 namespace {
 
-// CCtrlButton::CREATEPARAM, minimal 16-byte layout per v83_controls.md Q1
-// "CREATEPARAM layout": three bools at +0/+1/+2 (m_bAcceptFocus, m_bDrawBack,
-// m_bAnimateOnce), then the button-image UOL at +12. CreateCtrl reads param+3
-// (byte 12) as a ZXString<unsigned short>; since ZXString<T> is a single
-// pointer (m_pStr), a raw const unsigned short* placed there is an equivalent
-// by-value ZXString whose backing buffer is our string literal. This matches
-// the doc's own recipe (lines 90, 343-344) which uses a raw const wchar_t* at
-// offset 12.
-struct CtrlButtonCreateParam {
-    unsigned char acceptFocus;
-    unsigned char drawBack;
-    unsigned char animateOnce;
-    unsigned char pad;
-    unsigned int r0;
-    unsigned int r1;
-    const unsigned short* uol; // ZXString<unsigned short>::m_pStr (button-image UOL)
+// CCtrlButton::CREATEPARAM, packed layout per the IDA-confirmed
+// CCtrlButton::CreateCtrl (0x004BFFFB). The game reads the param struct
+// UNALIGNED: byte0=bAcceptFocus, byte1=bDrawBack, byte2=bAnimateOnce, then a
+// ZXString<unsigned short> sUOL at packed byte offset 3 (NOT 4, NOT 12).
+// CreateCtrl does ZXString<unsigned short>::operator= on sUOL, which reads the
+// refcount header 12 bytes before m_pStr and AddRefs -- so sUOL MUST be a
+// properly-constructed ZXString (with an allocated header), not a raw pointer.
+#pragma pack(push, 1)
+struct PackedButtonParam {
+    unsigned char bAcceptFocus;
+    unsigned char bDrawBack;
+    unsigned char bAnimateOnce;
+    ZXString<unsigned short> sUOL; // packed -> offset 3, matching CCtrlButton::CreateCtrl
 };
-static_assert(sizeof(CtrlButtonCreateParam) == 16, "CCtrlButton::CREATEPARAM must be 16 bytes (UOL at offset 12)");
+#pragma pack(pop)
+static_assert(offsetof(PackedButtonParam, sUOL) == 3,
+              "CCtrlButton::CREATEPARAM sUOL must be at packed offset 3");
 
 // Default button image: a universally-present GMS node with
 // normal/mouseOver/pressed/disabled frames.
@@ -176,10 +176,15 @@ __declspec(dllexport) CustomUI_CtrlId __cdecl CustomUI_AddButton(CustomUI_Window
     std::memset(buf, 0, SIZEOF_C_CTRL_BUTTON_V83_1);
     reinterpret_cast<void(__fastcall*)(void*, void*)>(C_CTRL_BUTTON_CTOR)(buf, nullptr);
 
-    // 2. Build the CREATEPARAM (accept focus, default button image).
-    CtrlButtonCreateParam param{};
-    param.acceptFocus = 1;
-    param.uol = kDefaultButtonUOL;
+    // 2. Build the packed CREATEPARAM (accept focus, default button image).
+    //    sUOL default-ctor leaves m_pStr = nullptr. The game's CreateCtrl does
+    //    ZXString::operator= (AddRef on the refcount header), so sUOL must be a
+    //    real, allocated ZXString -- assign a wide literal via ZXString's
+    //    operator=(const unsigned short*), which allocates a buffer (with the
+    //    refcount header) and copies. Do NOT poke m_pStr directly.
+    PackedButtonParam param{};
+    param.bAcceptFocus = 1;
+    param.sUOL = kDefaultButtonUOL; // ZXString<unsigned short>::operator=(const unsigned short*)
 
     // 3. CCtrlButton::CreateCtrl(this, parent, id, x, y, decClickArea=0, &param).
     custom_ui_host::CtrlId id = fe.next_ctrl_id++;
