@@ -23,6 +23,7 @@ add_edit_dll(custom-ui-host SOURCES
     registries/packet_registry.cpp
     runtime/custom_ui_wnd.cpp
     runtime/vtable_patch.cpp
+    runtime/text_draw.cpp
     runtime/ini_config.cpp
 )
 

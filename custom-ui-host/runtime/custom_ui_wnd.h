@@ -3,6 +3,7 @@
 #include "registries/window_registry.h"
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace custom_ui_host {
@@ -20,11 +21,18 @@ struct ControlEntry {
     CtrlId id;
     ControlKind kind;
     void *raw;  // pointer into the per-control byte buffer (CCtrlButton*, etc.)
-    // Per-button vtable clone slot (per-instance approach). Unused for
-    // Label/Edit.
+    // Per-button vtable clone slot (per-instance approach). Unused now that
+    // click dispatch is id-based via the window's cloned slot-8 override; left
+    // in place so existing Destroy() teardown stays valid.
     void *btn_vtable_clone = nullptr;
     void(__cdecl *on_click)(WindowHandle, CtrlId, void *) = nullptr;
     void *user = nullptr;
+    // Drawn text. For a Label this is the label caption; for a Button it is an
+    // optional caption painted on top of the (image-only) button. Empty means
+    // nothing is drawn. Coordinates are window-relative (window origin = 0,0).
+    std::string text;  // UTF-8
+    int draw_x = 0;
+    int draw_y = 0;
 };
 
 struct FrameworkExtras {

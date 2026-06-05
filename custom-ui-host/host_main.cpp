@@ -8,6 +8,7 @@
 #include "hooks/stage_dtor_hook.h"
 #include "logger.h"
 #include "runtime/host_config.h"
+#include "runtime/vtable_patch.h"
 
 namespace custom_ui_host {
 std::atomic<bool> g_ready{false};
@@ -41,6 +42,13 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
     }
 
     custom_ui_host::LoadHostConfig();
+
+    // The cloned CUIWnd vtable must exist before any custom window is created
+    // (CustomUIWnd::Create patches the vptr from g_cloned_cuiwnd_vtable).
+    if (!custom_ui_host::InitCustomUIWndVtable()) {
+        Log("custom-ui-host: vtable init failed -- staying inert");
+        return 0;
+    }
 
     // Registries must exist before the host signals ready; InitAbiGlobals
     // reads g_config (packet range) so it must run after LoadHostConfig.

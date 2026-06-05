@@ -182,6 +182,13 @@ set(C_WND_MAN_S_UPDATE 0x009E47C3)
 set(C_WND_MAN_UNREGISTER_UI_WINDOW 0x009E44BA)  # CWndMan::RemoveWindow(CWnd*), __cdecl static
 
 set(C_WND_CREATE_WND 0x009DE4D2)           # CWnd::CreateWnd(left,top,width,height,z,bScreenCoord,pData,bSetFocus) __thiscall; builds sized layer + registers window for display (sizes AND shows)
+set(C_WND_DRAW 0x009E0502)                 # CWnd::Draw(const tagRECT* pClip) __thiscall (CUIWnd vtable slot 11); paints window background, no-op if none; original called first by cloned Draw override
+set(C_DRAW_TEXT_A 0x004277AD)              # IWzCanvas::DrawTextA(LONG x, LONG y, Ztl_bstr_t text, IWzFont*, const Ztl_variant_t& vAlpha, const Ztl_variant_t& vTabOrg) __thiscall; consumes one ref of the text bstr
+set(C_WND_GET_CANVAS 0x00425C4C)          # CWnd::GetCanvas(_com_ptr_t<IWzCanvas>* pOut) __thiscall; returns owned (AddRef'd) canvas ref -- caller MUST Release (COM vtable slot +8)
+set(C_IWZFONT_CREATE 0x0046341A)          # IWzFont::Create(Ztl_bstr_t face, ulong height, ulong argbColor, const Ztl_variant_t& style) __thiscall -> HRESULT; real font factory configure step
+set(C_PC_CREATE_IWZFONT 0x00463670)       # PcCreateObject::IWzFont(LPCWSTR hint, IWzFont** ppOut, int aggregate) __cdecl; allocates a blank IWzFont COM object
+set(C_BSTR_FROM_CSTR 0x00425ADD)          # _bstr_t::_bstr_t(const char*) ??0_bstr_t@@QAE@PBD@Z __thiscall; builds the Ztl_bstr_t text arg from ANSI (converts to wide)
+set(C_VARIANT_CTOR_I4 0x00402FAB)         # Ztl_variant_t::ctor_i4(int value, short vt=3) __thiscall; VT_I4 variant builder, used for DrawTextA opacity (alpha 0-255) + empty tab-origin
 
 set(Z_ARRAY_REMOVE_ALL 0x00428CF1)
 
