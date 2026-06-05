@@ -30,6 +30,34 @@ and v87, introduce explicit `== 84` / `>= 84` boundaries. **Every rewrite must b
 re-validated against v83/v87/v95/v111/JMS185** so no other version's compiled
 branch flips incorrectly (FR-13).
 
+### VERDICTS — Task 11 read-only audit (v84 IDB = `GMS_v84.1_U_DEVM.exe`, port 13341)
+
+All five gates audited against v84 disassembly, cross-anchored vs v83 (port 13337)
+and v87 (port 13338). **All five gates are CORRECT for v84 — no rewrites required.**
+v84 sides with v87 on gates 2/3/4/5 and with v87 (the fixed side) on gate 1.
+
+| # | Site | v84 finding | Deciding v84 disasm line | Verdict |
+|---|---|---|---|---|
+| 1 | `doom-fix/dllmain.cpp:25` (`< 84`) | v84 `CMob::CMob` **zero-inits `m_bDoomReserved`** (int @ this+0x540), like v87. The v83 ctor SKIPS it (the bug). The manual `m_bDoomReserved=0` fixup is NOT needed in v84. | `0x6782ad  mov [esi+540h], ebx` (ebx=0 → m_bDoomReserved=0), immediately followed by `0x6782b3  mov [esi+544h], bl` (m_bDoomReservedSN=0). CMob::CMob @ 0x00678060. | **CORRECT** — v84 on the fixed (`>=84`/no-fix) side. Header comment "fixed in v84" is accurate. |
+| 2 | `common/CWvsContext.h:98` (`> 83`) | v84 CWvsContext **carries `m_aClientKey[8]`** at the singleton + 0x20A0 (8352). `m_dwCharacterId` follows at +0x20A8 (8360), confirming the 8-byte key precedes it (matches header order). | (shared with #3) v84 OnConnect @ 0x00499DCD: `EncodeBuffer((void *)(dword_C40C68 + 8352), 8u)`; `dword_C40C68` = `CWvsContext::ms_pInstance`. | **CORRECT** — `>83` is true for v84 → key present. |
+| 3 | `bypass/socket_hooks.cpp:233` (`> 83`) | **SAME FACT as #2.** v84's connect-hello (PLAYER_LOGGED_IN, opcode 20) encodes the 8-byte client key after Encode4(characterId)+Encode1(subgrade)+Encode1(0), exactly the `>83` form. | `CClientSocket::OnConnect` @ 0x00499DCD, else-branch: `COutPacket(...,20)` → `Encode4(+8360)` → `Encode1` → `Encode1(0)` → `EncodeBuffer((dword_C40C68 + 8352), 8u)` → `SendPacket`. | **CORRECT** — `>83` true → encodes key. Reconciled with #2 (one layout fact). |
+| 4 | `common/CLogin.h:235` (`== 83`) | The v83-only 20-byte member between `m_abOnFamily` and `m_lNewEquip` is **ABSENT in v84**. v84: `m_abOnFamily` @ this+0x1B0, `m_lNewEquip` ZList @ this+0x1B4 (4-byte gap = adjacent). v83 has an extra 20-byte member (a ZList, IDA-named `unk`, not literally `int[5]`) between them; v87 does not. v84 matches v87. | v84 `CLogin::CLogin` @ 0x00608B15: m_abOnFamily store + ZList init `0x608bf7 mov dword ptr [eax], offset off_B4811C` at this+0x1B4 (eax=this+0x1B4); unwind entries loc_AE5DBD(+0x1B0)/loc_AE5DCB(+0x1B4 → ZList dtor). Contrast v83 ctor @ 0x5F3C59 which inits `unk[0..4]` between m_abOnFamily and m_lNewEquip. | **CORRECT** — `==83` false for v84 → member excluded. (Modeling note for Task 16: the v83-only member is a 20-byte ZList, not `int unk3[5]`; same size, so no offset error — but rename for accuracy if touched.) |
+| 5 | `common/CUIToolTip.h:92` (`>= 83`) | v84 CUIToolTip **has `m_pLayerAdditional`** at this+0x14 (com_ptr immediately after `m_pLayer` @ this+0x10). Ctor prologue is byte-identical to v87. | v84 `CUIToolTip::CUIToolTip` @ 0x0091A417: `0x91a42e mov [esi+10h], edi` (m_pLayer=0), `0x91a434 mov [esi+14h], edi` (m_pLayerAdditional=0), then eh-vector ctor for `m_aLineInfo[32]` at this+0x24 (`0x91a445 lea eax,[esi+24h]`, count 0x20). | **CORRECT** — `>=83` true for v84 → field present. |
+
+**Doom-field identity (settled):** Task 7's `this+0x18C` (this+99) is `m_pTemplateByDoom`
+(the pointer adjacent to `m_pTemplate` @ this+0x188) — NOT the doom-fix target.
+The doom-fix's `m_bDoomReserved` is a distinct, much-later int field @ this+0x540,
+sitting between `m_bWaitingToBeSetTossed` and `m_bDoomReservedSN`. Confirmed by the
+v83 ctor (@ 0x5F3C59) jumping `m_bWaitingToBeSetTossed=0` → `m_bDoomReservedSN=0`,
+skipping `m_bDoomReserved` (the v83 bug), and the v87 ctor (@ 0x69C5F6) explicitly
+`this->m_bDoomReserved = 0;` right after `m_delaySkill[3]=0` (the fix). v84 reproduces
+the v87 fix at offset 0x540.
+
+**Task-16 cross-check flags:** None of the 5 gates need a boundary change.
+The only follow-up is cosmetic: Gate 4's v83-only member should be remodeled in the
+header as a 20-byte ZList rather than `int unk3[5]` (size is correct either way; not
+a gate-correctness issue).
+
 ## The 22 version-gated headers
 
 For each, record: v84 size, which gated fields are present/absent in v84, the
