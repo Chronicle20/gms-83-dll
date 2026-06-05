@@ -77,12 +77,12 @@ bool InitLabelFont() {
     if (g_font_init_attempted) // already tried and failed -- don't spam / re-throw every frame
         return false;
     g_font_init_attempted = true;
-    Log("custom-ui-host: InitLabelFont begin");
 
     // The game's COM helpers (PcCreateObject::IWzFont, IWzFont::Create) THROW a
     // _com_error on failure rather than returning a code, so each step is
-    // wrapped to pinpoint which one fails and to keep the throw out of the
-    // game's render loop. This runs once (guarded above).
+    // wrapped both to keep the throw out of the game's render loop and to log
+    // which step failed. This runs once (guarded above), so on failure it logs
+    // exactly one line rather than spamming every frame.
 
     // Step A: resolve the COM class-hint. The factory's FIRST arg is NOT a face
     // name; the client pulls it from StringPool[SP_1410_CANVASFONT] (idx 0x582,
@@ -96,46 +96,51 @@ bool InitLabelFont() {
         reinterpret_cast<void*(__fastcall*)(void*, void*, void*, unsigned int)>(C_STRING_POOL_GET_STRING_W)(
             pool, nullptr, &fontHint, kStringPoolCanvasFont);
     } catch (...) {
-        Log("custom-ui-host: InitLabelFont: StringPool resolve THREW");
+        Log("custom-ui-host: InitLabelFont: StringPool resolve threw -- labels disabled");
         return false;
     }
-    Log("custom-ui-host: InitLabelFont: SP_1410 hint=[%ls] ptr=%p", fontHint ? fontHint : L"(null)",
-        reinterpret_cast<const void*>(fontHint));
-    if (!fontHint)
+    if (!fontHint) {
+        Log("custom-ui-host: InitLabelFont: SP_1410 hint empty -- labels disabled");
         return false;
+    }
 
     // Step B: allocate the IWzFont COM object from the hint.
     void* font = nullptr;
     try {
         reinterpret_cast<PcCreateIWzFontFn>(C_PC_CREATE_IWZFONT)(fontHint, &font, 0);
     } catch (...) {
-        Log("custom-ui-host: InitLabelFont: PcCreateObject::IWzFont THREW (hint rejected)");
+        Log("custom-ui-host: InitLabelFont: PcCreateObject::IWzFont threw -- labels disabled");
         return false;
     }
-    Log("custom-ui-host: InitLabelFont: IWzFont created=%p", font);
-    if (!font)
+    if (!font) {
+        Log("custom-ui-host: InitLabelFont: IWzFont null -- labels disabled");
         return false;
+    }
 
     // Step C: configure face/size/color. "Arial" is the FACE (== StringPool
-    // [SP_5527_ARIAL]); opaque black is the game's default label colour.
+    // [SP_5527_ARIAL]); opaque black is the game's default label colour. The
+    // style/alpha/tab variants must be the COM "omitted optional" variant
+    // (VT_ERROR/DISP_E_PARAMNOTFOUND) -- a real VT_I4 makes Create throw.
     BStr face;
     MakeBStr(&face, "Arial");
     Variant style;
-    MakeVariantMissing(&style); // optional style omitted -> regular weight
+    MakeVariantMissing(&style);
     long hr = 0;
     try {
         hr = reinterpret_cast<IWzFontCreateFn>(C_IWZFONT_CREATE)(font, nullptr, face.m_Data, /*height*/ 12,
                                                                  /*argbColor*/ 0xFF000000u, &style);
     } catch (...) {
-        Log("custom-ui-host: InitLabelFont: IWzFont::Create THREW");
+        Log("custom-ui-host: InitLabelFont: IWzFont::Create threw -- labels disabled");
         return false;
     }
-    Log("custom-ui-host: InitLabelFont: Create hr=0x%08lX", static_cast<unsigned long>(hr));
-    if (hr < 0)
+    if (hr < 0) {
+        Log("custom-ui-host: InitLabelFont: IWzFont::Create hr=0x%08lX -- labels disabled",
+            static_cast<unsigned long>(hr));
         return false;
+    }
 
     g_label_font = font;
-    Log("custom-ui-host: InitLabelFont ok");
+    Log("custom-ui-host: label font ready");
     return true;
 }
 
@@ -147,20 +152,11 @@ void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8) {
             return;
     }
 
-    // One-time step logging so a crash in the draw path is localized by the
-    // last line printed (the per-call calling conventions are unverified).
-    static bool s_dbg = true;
-    const bool dbg = s_dbg;
-    if (dbg)
-        Log("custom-ui-host: DrawLabel: begin x=%d y=%d", x, y);
-
     // 1. window-layer canvas (owned _com_ptr_t<IWzCanvas>). The storage's first
     //    pointer is the raw IWzCanvas*.
     void* canvas_storage = nullptr;
     reinterpret_cast<GetCanvasFn>(C_WND_GET_CANVAS)(cuiwnd_self, nullptr, &canvas_storage);
     void* raw_canvas = *reinterpret_cast<void**>(&canvas_storage);
-    if (dbg)
-        Log("custom-ui-host: DrawLabel: canvas=%p", raw_canvas);
     if (!raw_canvas)
         return;
 
@@ -178,11 +174,7 @@ void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8) {
     MakeVariantMissing(&vTab);
 
     // 4. draw.
-    if (dbg)
-        Log("custom-ui-host: DrawLabel: pre DrawTextA text=%p font=%p", text.m_Data, g_label_font);
     reinterpret_cast<DrawTextAFn>(C_DRAW_TEXT_A)(raw_canvas, nullptr, x, y, text.m_Data, g_label_font, &vAlpha, &vTab);
-    if (dbg)
-        Log("custom-ui-host: DrawLabel: post DrawTextA");
 
     // 5. release the canvas ref. GetCanvas returned an AddRef'd _com_ptr_t, so
     //    we owe one Release. This is a DIRECT call to the raw COM vtable slot 2
@@ -194,10 +186,6 @@ void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8) {
     //    /RTC1 "value of esp was not properly saved" crash.
     void** canvas_vtbl = *reinterpret_cast<void***>(raw_canvas);
     reinterpret_cast<unsigned long(__stdcall*)(void*)>(canvas_vtbl[2])(raw_canvas);
-    if (dbg) {
-        Log("custom-ui-host: DrawLabel: done (released canvas)");
-        s_dbg = false;
-    }
 }
 
 } // namespace custom_ui_host

@@ -23,9 +23,6 @@ namespace {
 // The argument is the control id we assigned in CreateCtrl, not the control
 // pointer. Dispatch by id to the owning ControlEntry's callback under SEH.
 void __fastcall OnButtonClicked_Override(void* self, void* /*edx*/, unsigned int nControlId) {
-    // Diagnostic: confirms a button click actually routes through our cloned
-    // slot-8 override (vs. some other dispatch path). id 1000 = stock close.
-    Log("custom-ui-host: OnButtonClicked id=%u", nControlId);
     FrameworkExtras* fe = CustomUIWnd::ExtrasOf(self);
     if (!fe)
         return;
