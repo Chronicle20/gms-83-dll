@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "abi/abi_globals.h"
 #include "host_globals.h"
 #include "logger.h"
 #include "runtime/host_config.h"
@@ -36,6 +37,10 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
     }
 
     custom_ui_host::LoadHostConfig();
+
+    // Registries must exist before the host signals ready; InitAbiGlobals
+    // reads g_config (packet range) so it must run after LoadHostConfig.
+    custom_ui_host::InitAbiGlobals();
 
     // Hook installation lands in Phase 7. Vtable cloning lands in Phase 5.
     custom_ui_host::g_ready.store(true);
