@@ -133,6 +133,8 @@ set(C_UI_WND_CTOR_INT 0x0092C0BF)          # CUIWnd int-only ctor ??0CUIWnd@@QAE
 set(C_UI_WND_DTOR 0x0092C272)              # CUIWnd::~CUIWnd (bare virtual destructor, ??1CUIWnd@@UAE@XZ); scalar deleting dtor wrapper lives at 0x0092C15B
 set(C_UI_WND_VFTABLE 0x00B3CE10)           # primary vftable (IGObj subobject at offset 0); secondary CWnd::IUIMsgHandler vftable at 0x00B3CDC4, CWnd::ZRefCounted vftable at 0x00B3CDC0
 set(C_UI_WND_VTABLE_SLOT_COUNT 14)         # walked 0x00B3CE10..+0x37 forward; slot 14 = 0xFDE04000 (outside .text), prior 14 entries all in .text
+set(C_UI_WND_ON_CREATE 0x0092C2E8)         # CUIWnd::OnCreate (?OnCreate@CUIWnd@@UAEXPAXV?$ZXString@G@@H@Z), vftable slot 13; __thiscall(void* pData, ZXString<ushort> sBackgrndUOL byval). Called manually after CreateWnd to load the WZ background (UI/UIWindow.img/<name>/backgrnd, name from nUIType via sub_92C61C @0x92C61C) into m_pBackgrnd + build the close button via the game's own CreateCtrl. NOT fired by CreateWnd (which calls nullsub_82 at slot 3); a3=null -> self-formats from nUIType
+set(C_UI_WND_ON_BUTTON_CLICKED 0x0092C5AE) # CUIWnd::OnButtonClicked (vftable slot 8); __thiscall(UINT nControlId). Stock close-button (id 1000) handler; our slot-8 override forwards unknown ids here so the stock close button still works
 set(SIZEOF_C_UI_WND_V83_1 1456)            # 0x5B0; IDA struct ordinal 226 size; matches dtor's last touched member at offset 0x5AC + 4 == 0x5B0
 
 set(C_CTRL_BUTTON_CTOR 0x004258E4)         # CCtrlButton::CCtrlButton(void) -- nullary ctor (??0CCtrlButton@@QAE@XZ ends in XZ = no params); plan's (x,y,w,h,name,CREATEPARAM*) is wrong, setup happens via virtual CreateCtrl at 0x004BFFFB (signature: CWnd*, UINT, LONG, LONG, LONG, void*)

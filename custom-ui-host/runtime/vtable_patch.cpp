@@ -18,13 +18,6 @@ void* g_cloned_cuiwnd_vtable = nullptr;
 
 namespace {
 
-// Slot 13: CUIWnd::OnCreate -- int __thiscall(this, int unused, const wchar_t*).
-// A no-op return-0 suppresses the stock WZ background load + close-button
-// creation; our custom windows draw themselves and own their controls.
-int __fastcall OnCreate_Override(void* /*self*/, void* /*edx*/, int /*unused*/, const unsigned short* /*arg*/) {
-    return 0;
-}
-
 // Slot 8: CUIWnd::OnButtonClicked -- void __thiscall(this, UINT nControlId).
 // The argument is the control id we assigned in CreateCtrl, not the control
 // pointer. Dispatch by id to the owning ControlEntry's callback under SEH.
@@ -40,7 +33,10 @@ void __fastcall OnButtonClicked_Override(void* self, void* /*edx*/, unsigned int
         }
         return;
     }
-    // Unknown id: it's our window with no base button behaviour -- do nothing.
+    // Unknown id: this is the stock close button (id 1000) built by
+    // CUIWnd::OnCreate. Forward to the stock handler so it still closes.
+    reinterpret_cast<void(__fastcall*)(void*, void*, unsigned int)>(C_UI_WND_ON_BUTTON_CLICKED)(self, nullptr,
+                                                                                                nControlId);
 }
 
 // Slot 11: CWnd::Draw -- void __thiscall(this, const tagRECT* pClip). Paint the
@@ -84,11 +80,13 @@ bool InitCustomUIWndVtable() {
 
     clone[8] = reinterpret_cast<void*>(&OnButtonClicked_Override);
     clone[11] = reinterpret_cast<void*>(&Draw_Override);
-    clone[13] = reinterpret_cast<void*>(&OnCreate_Override);
+    // Slot 13 (OnCreate) is left as the stock CUIWnd::OnCreate: we *call* it
+    // (from Show, after CreateWnd) to load the WZ background + close button
+    // rather than suppressing it. Overriding it would defeat that.
     Log("custom-ui-host: CUIWnd vtable cloned + overrides set");
 
     g_cloned_cuiwnd_vtable = clone;
-    Log("custom-ui-host: cloned CUIWnd vtable ready (%zu slots; overrode 8/11/13)", slots);
+    Log("custom-ui-host: cloned CUIWnd vtable ready (%zu slots; overrode 8/11)", slots);
     return true;
 }
 

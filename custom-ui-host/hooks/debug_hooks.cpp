@@ -17,9 +17,8 @@ PcCreateIWzFont_t _PcCreateIWzFont = nullptr;
 void __cdecl PcCreateIWzFont_Hook(const wchar_t* a1, void** a2, int a3) {
     // %ls dereferences a1; SEH-guard in case a1 is not a valid string pointer
     // (an unguarded fault here would crash the client's render/UI thread).
-    SafeDispatch("DBG IWzFont", [a1, a3] {
-        Log("DBG PcCreateObject::IWzFont a1=[%ls] a3=%d", a1 ? a1 : L"(null)", a3);
-    });
+    SafeDispatch("DBG IWzFont",
+                 [a1, a3] { Log("DBG PcCreateObject::IWzFont a1=[%ls] a3=%d", a1 ? a1 : L"(null)", a3); });
     _PcCreateIWzFont(a1, a2, a3);
 }
 

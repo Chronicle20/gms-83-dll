@@ -46,7 +46,8 @@ struct FrameworkExtras {
     // Desired screen rectangle, applied by CWnd::CreateWnd on first Show
     // (Task 5.4). Stored here at Create time.
     int x = 0, y = 0, w = 0, h = 0;
-    bool layer_created = false; // CreateWnd has run at least once
+    bool layer_created = false;  // CreateWnd has run at least once
+    bool on_create_done = false; // stock CUIWnd::OnCreate has run (background + close button)
     bool was_visible = false;
     bool is_visible = false;
 };

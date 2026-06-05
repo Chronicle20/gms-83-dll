@@ -5,6 +5,7 @@
 #include "abi/abi_globals.h"
 #include "logger.h"
 #include "memory_map.h"
+#include "runtime/seh_dispatch.h"
 
 #include <cstring>
 #include <new>
@@ -32,13 +33,17 @@ CustomUIWnd* CustomUIWnd::Create(int x, int y, int w, int h, const char* /*title
         return nullptr;
     std::memset(buf, 0, kBufSize);
 
-    // Construct the game-side CUIWnd in place via the INT-ONLY ctor (no WZ
-    // background, no null-deref). nUIType=1 (benign existing slot),
-    // closeType=0 (no close button), remaining args 0. The ctor writes the
-    // game's vftable pointer at buf[0..3].
+    // Construct the game-side CUIWnd in place via the INT-ONLY ctor (the
+    // string ctor 0x0092C17F dereferences its UOL arg and would crash on
+    // null). We mirror CUIEquip's exact ctor args so the stock
+    // CUIWnd::OnCreate path (driven later from Show) loads a real, always-
+    // present WZ panel: nUIType=1 -> "Equip" (sub_92C61C), closeType=3 ->
+    // UI/Basic.img/BtClose close button, closeX/closeY = Equip's close-button
+    // offsets, nBackgrnd=1 -> OnCreate's background block is enabled
+    // (gated on [this+0x598] != 0). The ctor writes the game vftable at buf[0..3].
     reinterpret_cast<void(__fastcall*)(void*, void*, int, int, int, int, int, int, int)>(C_UI_WND_CTOR_INT)(
-        buf, nullptr, /*nUIType*/ 1, /*closeType*/ 0, /*closeX*/ 0,
-        /*closeY*/ 0, /*nBackgrnd*/ 0, /*nBackgrndX*/ 0, /*nBackgrndY*/ 0);
+        buf, nullptr, /*nUIType*/ 1, /*closeType*/ 3, /*closeX*/ 155,
+        /*closeY*/ 6, /*nBackgrnd*/ 1, /*nBackgrndX*/ 0, /*nBackgrndY*/ 0);
 
     // If the cloned CUIWnd vtable is available (Task 5.3), patch the vptr to
     // it. If not yet initialised, leave the stock game vftable in place —
@@ -110,6 +115,23 @@ void CustomUIWnd::Show() {
             /*z*/ 10, /*bScreenCoord*/ 1, /*pData*/ 0,
             /*bSetFocus*/ 1);
         fe.layer_created = true;
+
+        // Now that the layer exists, drive the stock CUIWnd::OnCreate exactly
+        // as a real window's OnCreate does (cf. sub_809CCC: it calls the base
+        // OnCreate with an empty UOL). With nUIType=1/nBackgrnd=1 this loads
+        // "UI/UIWindow.img/Equip/backgrnd" into m_pBackgrnd (blitted by the
+        // stock CWnd::Draw our Draw override calls first) and builds the
+        // close button via the game's own CreateCtrl. CreateCtrl can throw a
+        // _com_error if a WZ node is unexpectedly missing; the background is
+        // loaded *before* the close button, so SafeDispatch keeps a button
+        // failure from losing the already-loaded background. Run once.
+        if (!fe.on_create_done) {
+            SafeDispatch("CustomUI OnCreate", [buf] {
+                reinterpret_cast<void(__fastcall*)(void*, void*, void*, const unsigned short*)>(C_UI_WND_ON_CREATE)(
+                    buf, nullptr, /*pData*/ nullptr, /*sBackgrndUOL*/ nullptr);
+            });
+            fe.on_create_done = true;
+        }
     } else {
         // Re-show: layer already exists; re-add to the display z-list.
         reinterpret_cast<void(__cdecl*)(void*)>(C_WND_MAN_REGISTER_UI_WINDOW)(buf);
