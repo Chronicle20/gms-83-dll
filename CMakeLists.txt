@@ -77,6 +77,7 @@ add_subdirectory(redirect)
 add_subdirectory(skip-logo)
 add_subdirectory(window-mode)
 add_subdirectory(custom-ui-host)
+add_subdirectory(custom-ui-demo)
 
 # Custom target to package DLLs into the artifacts/ layout
 set(EDIT_DLL_TARGETS
@@ -91,6 +92,7 @@ set(EDIT_DLL_TARGETS
     skip-logo
     window-mode
     custom-ui-host
+    custom-ui-demo
 )
 
 set(PACKAGE_COMMANDS
