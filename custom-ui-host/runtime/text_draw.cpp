@@ -71,9 +71,30 @@ bool InitLabelFont() {
         return true;
     }
 
-    // Step A: allocate a blank IWzFont COM object.
+    // Step A: allocate a blank IWzFont COM object. The factory's FIRST arg is a
+    // COM class-hint string -- NOT a face name. The client resolves it from
+    // StringPool[SP_1410_CANVASFONT] (cf. sub_461CA8); passing a face name like
+    // "Arial" here yields CO_E_DLLNOTFOUND. Resolve the same hint at runtime.
+    //
+    // SP_1410_CANVASFONT = string-pool index 0x582 (confirmed in sub_461CA8).
+    constexpr unsigned int kStringPoolCanvasFont = 0x582;
+    // GetStringW struct-returns a ZXString<ushort> (a single m_pStr) into our
+    // 4-byte slot. We do NOT release the returned ref: the pool string is
+    // pool-owned and persistent, InitLabelFont succeeds once and caches, and
+    // for a static pool string Release is a no-op.
+    const wchar_t* fontHint = nullptr;
+    void* pool = reinterpret_cast<void*(__cdecl*)()>(C_STRING_POOL_GET_INSTANCE)();
+    reinterpret_cast<void*(__fastcall*)(void*, void*, void*, unsigned int)>(C_STRING_POOL_GET_STRING_W)(
+        pool, nullptr, &fontHint, kStringPoolCanvasFont);
+    if (!fontHint) {
+        Log("custom-ui-host: StringPool[SP_1410_CANVASFONT] empty -- label "
+            "rendering disabled");
+        Log("custom-ui-host: InitLabelFont FAILED");
+        return false;
+    }
+
     void* font = nullptr;
-    reinterpret_cast<PcCreateIWzFontFn>(C_PC_CREATE_IWZFONT)(L"Arial", &font, 0);
+    reinterpret_cast<PcCreateIWzFontFn>(C_PC_CREATE_IWZFONT)(fontHint, &font, 0);
     if (!font) {
         Log("custom-ui-host: PcCreateObject::IWzFont returned null -- label "
             "rendering disabled");
@@ -81,14 +102,17 @@ bool InitLabelFont() {
         return false;
     }
 
-    // Step B: configure face/size/color. Empty style variant = regular weight.
+    // Step B: configure face/size/color. "Arial" is the FACE here (the game
+    // uses StringPool[SP_5527_ARIAL], same string). Empty style variant =
+    // regular weight. Opaque black (0xFF000000) is the game's default label
+    // colour and reads against the light Equip-window background.
     BStr face;
     MakeBStr(&face, "Arial");
     Variant style;
     MakeVariantI4(&style, 0);
 
     long hr = reinterpret_cast<IWzFontCreateFn>(C_IWZFONT_CREATE)(font, nullptr, face.m_Data, /*height*/ 12,
-                                                                  /*argbColor*/ 0xFFFFFFFFu, &style);
+                                                                  /*argbColor*/ 0xFF000000u, &style);
     if (hr < 0) {
         Log("custom-ui-host: IWzFont::Create failed hr=0x%08lX -- label "
             "rendering disabled",

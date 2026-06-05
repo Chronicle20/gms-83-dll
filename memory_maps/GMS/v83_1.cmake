@@ -198,6 +198,8 @@ set(C_IWZFONT_CREATE 0x0046341A)          # IWzFont::Create(Ztl_bstr_t face, ulo
 set(C_PC_CREATE_IWZFONT 0x00463670)       # PcCreateObject::IWzFont(LPCWSTR hint, IWzFont** ppOut, int aggregate) __cdecl; allocates a blank IWzFont COM object
 set(C_BSTR_FROM_CSTR 0x00425ADD)          # _bstr_t::_bstr_t(const char*) ??0_bstr_t@@QAE@PBD@Z __thiscall; builds the Ztl_bstr_t text arg from ANSI (converts to wide)
 set(C_VARIANT_CTOR_I4 0x00402FAB)         # Ztl_variant_t::ctor_i4(int value, short vt=3) __thiscall; VT_I4 variant builder, used for DrawTextA opacity (alpha 0-255) + empty tab-origin
+set(C_STRING_POOL_GET_INSTANCE 0x0079E805) # StringPool::GetInstance (?GetInstance@StringPool@@SAAAV1@XZ) __cdecl static -> StringPool*; the process-wide string pool singleton
+set(C_STRING_POOL_GET_STRING_W 0x00406276) # StringPool::GetStringW (?GetStringW@StringPool@@QAE?AV?$ZXString@G@@I@Z) __thiscall; struct-returns ZXString<ushort> by value (hidden result ptr is first stack arg, then uint index). Used to resolve SP_1410_CANVASFONT (idx 0x582) -- the COM class-hint PcCreateObject::IWzFont needs as its first arg (NOT the face name)
 
 set(Z_ARRAY_REMOVE_ALL 0x00428CF1)
 
