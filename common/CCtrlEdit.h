@@ -2,7 +2,10 @@
 class CCtrlComboBox{};
 
 struct CCtrlEdit : CCtrlWnd {
-    CCtrlEdit();
+    // No C++ constructor: custom-ui-host builds edits via a raw thunk to the
+    // nullary game ctor (C_CTRL_EDIT_CTOR) on a byte buffer. Declaring one
+    // would instantiate the ZRef<CWnd> member's GetBase() against the
+    // abstract CWnd (compile error).
     struct CEditCaret {
         int m_l;
         int m_t;

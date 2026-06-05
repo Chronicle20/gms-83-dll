@@ -2,7 +2,8 @@
 
 class CCtrlButton : CCtrlWnd {
 public:
-    CCtrlButton();
+    // No C++ constructor: custom-ui-host builds buttons via a raw thunk to
+    // the nullary game ctor (C_CTRL_BUTTON_CTOR) on a byte buffer.
 
     struct CREATEPARAM {
         bool bAcceptFocus;
