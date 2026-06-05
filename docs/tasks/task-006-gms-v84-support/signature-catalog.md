@@ -291,6 +291,41 @@ not about a specific address.
 - Cross-version stability: both the SBB-singleton-store idiom and the CreateInstance(0x94-alloc + ctor) shape are stable; locate via the ctor/CreateInstance, not the raw global address.
 - Notes: v84 C_CLIENT_SOCKET_INSTANCE_ADDR @ 0x00C40C64; C_CLIENT_SOCKET_CREATE_INSTANCE @ 0x00A43D0B. CreateInstance moved out of the v83 0x9F9Exx singleton cluster into the 0xA43Dxx region — found by call-graph (sole ctor caller), NOT address arithmetic.
 
+### COutPacket::COutPacket (ctor)   (memory-map key: C_OUT_PACKET)
+- Primary anchor: IDB symbol (mangled name)
+- Detail: `??0COutPacket@@QAE@J@Z` survives in the v84 IDB. Body zeroes the buffer member (`*((DWORD*)this+1) = 0`), calls the ZArray<unsigned char>::_Alloc helper with initial capacity 256 (0x100), then calls COutPacket::Init(a2). The 256-byte initial allocation feeding an Init call is the structural fingerprint.
+- Fallback anchor: structure — the `member+4 = 0` then `_Alloc(256)` then Init(seq) shape; the COutPacket layout (buf at +4, len at +8) is shared with the encoders' grow helper.
+- Cross-version stability: mangled name present in v83 and v84; the 256-byte initial alloc + Init call shape is structurally identical across both.
+- Notes: v84 @ 0x00703CFA (256-alloc = sub_49BBBE, Init = sub_703DD5). HIGH-VALUE (needs-main-review). Two different kinds (symbol + structure). Spot-check: the buffer-grow helper (_EnsureCapacity, sub_40663D) called by every encoder operates on exactly the +4/+8 members this ctor initializes — independent structural tie-in.
+
+### COutPacket::Encode1 / Encode2 / Encode4   (memory-map keys: C_OUT_PACKET_ENCODE_1 / C_OUT_PACKET_ENCODE_2 / C_OUT_PACKET_ENCODE_4)
+- Primary anchor: IDB symbol (mangled name)
+- Detail: All three retain mangled names in the v84 IDB: `?Encode1@COutPacket@@QAEXE@Z`, `?Encode2@COutPacket@@QAEXG@Z`, `?Encode4@COutPacket@@QAEXK@Z`. Each is a tiny (~0x1E-0x21 byte) function that calls the shared buffer-grow helper with its byte width then stores. **Disambiguate by store width, never by address:** Encode1 appends 1 byte (`mov [eax+ecx], dl` then `inc [esi+8]`); Encode2 appends 2 bytes (`mov [eax+ecx], dx` then `add [esi+8], 2`); Encode4 appends 4 bytes (`mov [eax+ecx], edx` then `add [esi+8], 4`). The push immediate to the grow helper (1/2/4) matches the store width.
+- Fallback anchor: call-graph — all three (plus EncodeStr and EncodeBuffer) are the only callers of the COutPacket buffer-grow helper (`_EnsureCapacity`, v84 sub_40663D / v83 sub_406567); an xrefs_to that helper returns exactly the five sibling encoders.
+- Cross-version stability: mangled names present in v83 and v84; the grow(width) + width-specific store idiom is structurally identical. The buffer-grow callee address moves per version (v83 0x406567, v84 0x40663D) — anchor on the store width / symbol, not the callee address.
+- Notes: v84 Encode1 (C_OUT_PACKET_ENCODE_1) @ 0x0040661F, Encode2 (C_OUT_PACKET_ENCODE_2) @ 0x00428A68, Encode4 (C_OUT_PACKET_ENCODE_4) @ 0x0040667C. HIGH-VALUE (needs-main-review). Two different kinds (symbol + shared-grow-callee call-graph). Spot-check: the actual store width (1/2/4-byte) read from each body, independent of the symbol.
+
+### COutPacket::EncodeStr   (memory-map key: C_OUT_PACKET_ENCODE_STR)
+- Primary anchor: IDB symbol (mangled name)
+- Detail: `?EncodeStr@COutPacket@@QAEXV?$ZXString@D@@@Z` survives in the v84 IDB. Reads the ZXString length (`*(arg-4)` when non-null, else 0), grows the buffer by `len + 2`, copies the string via a ZXString assign + copy helper, advances the length by the copied count, and finally calls the ZXString destructor (`~ZXString<char>`) in an EH unwind slot.
+- Fallback anchor: structure — the `grow(len + 2)` (the +2 length prefix) plus a ZXString construct/copy/destruct triple; the only grow-helper caller that touches a ZXString.
+- Cross-version stability: mangled name present in v83 and v84; the len+2 grow + ZXString copy shape is structurally identical.
+- Notes: v84 @ 0x00471EB0. HIGH-VALUE (needs-main-review). Two different kinds (symbol + structure). Spot-check: shared-grow-callee call-graph (one of the five sub_40663D callers), independent of the symbol.
+
+### COutPacket::EncodeBuffer   (memory-map key: C_OUT_PACKET_ENCODE_BUFFER)
+- Primary anchor: IDB symbol (mangled name)
+- Detail: `?EncodeBuffer@COutPacket@@QAEXPBXI@Z` survives in the v84 IDB (note the void* `PBX` form, NOT the `PBE` byte-pointer form). Takes a (Src, Size); grows the buffer by Size, `memcpy(buf + len, Src, Size)`, then `len += Size`. The grow→memcpy→advance triple with a caller-supplied length is the fingerprint.
+- Fallback anchor: structure — the only grow-helper caller that does a memcpy of a caller-supplied Size then advances the length by that same Size.
+- Cross-version stability: mangled name present in v83 and v84 (the exact signature suffix differs — v83 was a __userpurge `PBX I` too); the grow(Size)+memcpy+advance shape is structurally identical.
+- Notes: v84 @ 0x0046E5FE. HIGH-VALUE (needs-main-review). Two different kinds (symbol + structure). Spot-check: shared-grow-callee call-graph (one of the five sub_40663D callers), independent of the symbol. The mangled signature must be `PBXI` (void*, size) — the `PBEI` (unsigned char*) variant does not exist.
+
+### COutPacket::MakeBufferList   (memory-map key: C_OUT_PACKET_MAKE_BUFFER_LIST)
+- Primary anchor: call-graph
+- Detail: The sole MakeBufferList call inside CClientSocket::SendPacket (the encoder-cluster host call). In v84 SendPacket it is the first call in the send path on the valid-socket branch: `MakeBufferList(this+80, <send-seq opcode>, this+132, 1, m_seqXor)`, immediately followed by CIGCipher::innoHash and CClientSocket::Flush. MakeBufferList itself is large and stripped (no surviving symbol).
+- Fallback anchor: constant / structure — the unique triple-pass header-obfuscation loop `v15 ^= seq + ROL(*p,3); *p++ = 71 - ROR(v15, seq--)` and the second pass `v13 ^= seq + ROL(*--p,4); *p = ROR(v13 ^ 0x13, 3)`, the 1460 / 0x5B4 MSS chunking, the ZSocketBuffer::Alloc call (v84 0x0049AEE3), and the CAESCipher::Encrypt-vs-memcpy branch on the encrypt flag.
+- Cross-version stability: the 71 / 0x13 / ROL3 / ROL4 obfuscation constants and the 1460/0x5B4 chunking are structurally identical v83→v84; the function's only caller (SendPacket) is a stable call-graph anchor. The send-seq opcode pushed by SendPacket is per-version (0x53 'S' v83, 0x54 'T' v84) — do NOT use it as an anchor.
+- Notes: v84 @ 0x00703E53 (named in the IDB during this port; ZSocketBuffer::Alloc = 0x0049AEE3, CAES encrypt = sub_42E520). HIGH-VALUE (needs-main-review). Two different kinds (call-graph + constant/structure). Spot-check: the 71/0x13 obfuscation-constant shuffle loop, independent of the SendPacket call edge.
+
 <!--
 Add one section per resolved key. Group loosely by subsystem to mirror
 memory-map.md. Leave the two stubs above as worked examples of the schema.
