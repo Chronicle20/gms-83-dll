@@ -30,7 +30,10 @@ unsigned int SnapshotModifiers() {
 
 long __fastcall ProcessKey_Hook(CWndMan* self, void* /*edx*/, unsigned int msg, unsigned int vk, long lParam) {
     static bool s_logged = false;
-    if (!s_logged) { s_logged = true; Log("custom-ui-host: ProcessKey hook first fire"); }
+    if (!s_logged) {
+        s_logged = true;
+        Log("custom-ui-host: ProcessKey hook first fire");
+    }
     // Only rising-edge WM_KEYDOWN / WM_SYSKEYDOWN. lParam bit 30 == 1
     // means the previous key state was down (auto-repeat).
     if ((msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) && (lParam & (1L << 30)) == 0) {

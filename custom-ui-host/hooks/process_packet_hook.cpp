@@ -18,7 +18,10 @@ ProcessPacket_t _ProcessPacket = nullptr;
 
 void __fastcall ProcessPacket_Hook(CClientSocket* self, void* /*edx*/, CInPacket* iPacket) {
     static bool s_logged = false;
-    if (!s_logged) { s_logged = true; Log("custom-ui-host: ProcessPacket hook first fire"); }
+    if (!s_logged) {
+        s_logged = true;
+        Log("custom-ui-host: ProcessPacket hook first fire");
+    }
     if (!iPacket) {
         _ProcessPacket(self, iPacket);
         return;

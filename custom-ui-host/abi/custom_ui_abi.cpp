@@ -55,12 +55,12 @@ __declspec(dllexport) int __cdecl CustomUI_IsReady(void) {
     return custom_ui_host::g_ready.load() ? 1 : 0;
 }
 
-__declspec(dllexport) int __cdecl
-CustomUI_RunOnUIThread(void(__cdecl *fn)(void *user), void *user) {
-    if (!custom_ui_host::ReadyOrLog("RunOnUIThread")) return 0;
-    if (!fn) return 0;
-    custom_ui_host::EnqueueUIThreadTask(
-        reinterpret_cast<custom_ui_host::UIThreadFn>(fn), user);
+__declspec(dllexport) int __cdecl CustomUI_RunOnUIThread(void(__cdecl* fn)(void* user), void* user) {
+    if (!custom_ui_host::ReadyOrLog("RunOnUIThread"))
+        return 0;
+    if (!fn)
+        return 0;
+    custom_ui_host::EnqueueUIThreadTask(reinterpret_cast<custom_ui_host::UIThreadFn>(fn), user);
     return 1;
 }
 
@@ -128,8 +128,7 @@ struct PackedButtonParam {
     ZXString<unsigned short> sUOL; // packed -> offset 3, matching CCtrlButton::CreateCtrl
 };
 #pragma pack(pop)
-static_assert(offsetof(PackedButtonParam, sUOL) == 3,
-              "CCtrlButton::CREATEPARAM sUOL must be at packed offset 3");
+static_assert(offsetof(PackedButtonParam, sUOL) == 3, "CCtrlButton::CREATEPARAM sUOL must be at packed offset 3");
 
 // Default button image: a universally-present GMS node with
 // normal/mouseOver/pressed/disabled frames.
