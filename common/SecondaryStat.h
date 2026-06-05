@@ -619,9 +619,11 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rSoulStone__CS;
     int _ZtlSecureTear_tSoulStone_[2];
     unsigned int _ZtlSecureTear_tSoulStone__CS;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     // Atlas bits 82-85 (Flying / Frozen / AssistCharge / MirrorImage [v95 PDB name: nEnrage_]).
     // v87 confirmed via Reset stat-group mapping (docs/tasks/cwvscontext-port/v87_secondarystat_reset_mapping.md).
+    // task-006: v84 carries ONLY Flying+Frozen (@0xCA0, 6 tears) — gate split >=87 -> >=84 here;
+    // AssistCharge+Enrage stay >=87 (absent in v84). Restores v84=0xD20.
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 84) || defined(REGION_JMS)
     int _ZtlSecureTear_nFlying_[2];
     unsigned int _ZtlSecureTear_nFlying__CS;
     int _ZtlSecureTear_rFlying_[2];
@@ -634,6 +636,9 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rFrozen__CS;
     int _ZtlSecureTear_tFrozen_[2];
     unsigned int _ZtlSecureTear_tFrozen__CS;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    // Atlas bits 84-85 (AssistCharge / MirrorImage [v95 PDB name: nEnrage_]) — absent in v84 (kept >=87; task-006).
     int _ZtlSecureTear_nAssistCharge_[2];
     unsigned int _ZtlSecureTear_nAssistCharge__CS;
     int _ZtlSecureTear_rAssistCharge_[2];

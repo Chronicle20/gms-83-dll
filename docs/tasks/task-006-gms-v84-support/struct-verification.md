@@ -555,6 +555,89 @@ in v84 (confirmed via the v84↔v95 PARTYDATA size delta, not assumed).
   - Every rewrite must be re-validated against v83/v87/v95/v111/JMS185 (FR-13) so no other
     version's compiled branch flips.
 
+### TASK 16 — boundary-gate rewrites applied (4 headers) + cross-version validation
+
+All 4 flagged headers rewritten; the other 18 + 5 boundary-gate sites left untouched
+(audit verdicts CORRECT). Every rewrite is a single comparator change `>= 87 → >= 84`
+on a minimum contiguous region; the `|| defined(REGION_JMS)` clause is preserved
+wherever it existed. **v84 is the ONLY GMS version in the half-open interval [84, 87),
+so flipping `87 → 84` flips ONLY v84; all other versions evaluate identically before
+and after.** No ternary in any array dimension (durability/tears are separate members).
+
+**v111 disposition — SETTLED FROM CONSTANTS.** `BUILD_MAJOR_VERSION` is supplied at
+configure time (CMakeLists.txt:13; the v111 target exists — `memory_maps/GMS/v111_1.cmake`).
+For every rewritten gate the comparator is evaluated against the literal build number:
+`111 >= 84` = true AND `111 >= 87` = true, so each `>=87 → >=84` change leaves the v111
+branch in the SAME (present) state. No v111 IDB needed; correctness is decidable from
+source/constants alone.
+
+#### Truth tables (per gate, 6 versions: v83 / v84 / v87 / v95 / v111 / JMS185)
+
+Branch value of the moved field's gate `>= N || JMS`, BEFORE (`>=87`) → AFTER (`>=84`):
+
+| Version | build | `>=87`(before) | `>=84`(after) | Flip? |
+|---|---|---|---|---|
+| v83  | 83  | F | F | no (stays absent — correct) |
+| v84  | 84  | F | **T** | **YES — intended fix (field now present)** |
+| v87  | 87  | T | T | no (stays present) |
+| v95  | 95  | T | T | no (stays present) |
+| v111 | 111 | T | T | no (stays present; settled from constant) |
+| JMS185 | — (REGION_JMS) | T | T | no (region clause; unchanged where preserved) |
+
+This single table applies to ALL four rewrites — every one is the identical
+`>=87 || [JMS] → >=84 || [JMS]` comparator flip. Only v84 flips F→T; no other
+version's compiled branch changes.
+
+1. **CUIToolTip.h** — SPLIT the `>=87||JMS` font block:
+   - `m_pFontGen_Unknown`: `>=87||JMS → >=84||JMS` (now present in v84).
+   - `m_pCanvasEquip_Durability[2][2]`: `>=87||JMS → >=84||JMS` (now present in v84).
+   - `m_pFontH_White`: UNCHANGED at `>=87||JMS` (correctly absent in v84).
+   - `m_pFontStan_Prp`: UNCHANGED at `>=87` GMS-only.
+   - Result: v84=0x52C, v83=0x514, v87=0x534 (all preserved per the per-version table above).
+2. **CMob.h** — `m_aMultiTargetForBall` `>=87 → >=84` (GMS-only, no JMS clause in source);
+   `m_aRandTimeforAreaAttack`+`m_delaySkill` `>=87||JMS → >=84||JMS`. Result: v84 CMob=0x560,
+   m_bDoomReserved @0x540. v83=0x548, v87=0x588 unchanged.
+3. **SecondaryStat.h** — SPLIT the `>=87||JMS` post-SoulStone block:
+   `nFlying_`+`nFrozen_` (6 tears) `>=87||JMS → >=84||JMS`; `nAssistCharge_`+`nEnrage_`
+   stay `>=87||JMS`. `nDojangShield_` + `==87` byte-variants untouched. Result: v84=0xD20,
+   v83=0xCD8, v87=0xD74 unchanged.
+4. **CMapLoadable.h** — `m_lVisibleByQuest` `>=87||JMS → >=84||JMS`. Result: v84=0x128,
+   v83=0x114 unchanged.
+
+#### gcc -E preprocessor sanity (REGION_GMS, MINOR=1) — moved-field presence count
+
+| Header / field | v83 | v84 | v87 | Expected |
+|---|---|---|---|---|
+| CMapLoadable m_lVisibleByQuest | 0 | 1 | 1 | ✓ |
+| CMob m_aMultiTargetForBall | 0 | 1 | 1 | ✓ |
+| CMob m_aRandTimeforAreaAttack | 0 | 1 | 1 | ✓ |
+| CMob m_delaySkill | 0 | 1 | 1 | ✓ |
+| CUIToolTip m_pFontGen_Unknown | 0 | 1 | 1 | ✓ |
+| CUIToolTip m_pCanvasEquip_Durability | 0 | 1 | 1 | ✓ |
+| CUIToolTip m_pFontH_White (stays >=87) | 0 | **0** | 1 | ✓ (absent in v84) |
+| CUIToolTip m_pFontStan_Prp (stays >=87) | 0 | **0** | 1 | ✓ (absent in v84) |
+| SecondaryStat nFlying_ | 0 | 1 | 1 | ✓ |
+| SecondaryStat nFrozen_ | 0 | 1 | 1 | ✓ |
+| SecondaryStat nAssistCharge_ (stays >=87) | 0 | **0** | 1 | ✓ (absent in v84) |
+| SecondaryStat nEnrage_ (stays >=87) | 0 | **0** | 1 | ✓ (absent in v84) |
+
+All results match the audit expectations: v84 carries the `>=84` fields and excludes the
+kept-`>=87` fields; v83 excludes both; v87 carries both. Validates comparator logic.
+
+#### SecondaryStat → CWvsContext downstream reconciliation — FIX SUFFICES
+
+`SecondaryStat m_secondaryStat` is embedded BY VALUE in CWvsContext.h:110, AFTER
+`m_aClientKey` (line 99) and `m_basicStat` (line 109), BEFORE `m_forcedStat`,
+`m_temporaryStatView`, `m_townPortal`, `m_party`, … (lines 111+). The SecondaryStat
+fix grows v84 SecondaryStat by +0x48 (0xCD8 → 0xD20):
+- **Upstream of m_secondaryStat (m_aClientKey, m_basicStat): UNSHIFTED.** The Task-11
+  client-key offset (singleton+0x20A0) is unaffected — no compensating edit needed.
+- **Downstream of m_secondaryStat: each field shifts +0x48 in the v84 build.** Pre-fix
+  these header-computed v84 offsets were exactly 0x48 too LOW; the SecondaryStat growth
+  corrects them to match the v84 binary. CWvsContext.h has no v84-specific gate of its
+  own around these fields, so **the SecondaryStat fix alone reconciles CWvsContext — no
+  follow-up edit to CWvsContext.h is required.**
+
 ## The 22 version-gated headers
 
 For each, record: v84 size, which gated fields are present/absent in v84, the

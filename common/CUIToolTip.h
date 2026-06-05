@@ -121,8 +121,11 @@ class CUIToolTip
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Green;
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Yellow;
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Blue;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    // v84: m_pFontGen_Unknown present @0x478 — gate split >=87 -> >=84, task-006 (v84=0x52C)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 84) || defined(REGION_JMS)
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Unknown;
+#endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontH_White;
 #endif
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
@@ -145,7 +148,8 @@ class CUIToolTip
     _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_GrowthItem[4][2];
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberGrowthEnable;
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberGrowthDisable;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    // v84: present @0x518 — gate >=87 -> >=84, task-006 (v84=0x52C)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 84) || defined(REGION_JMS)
     _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_Durability[2][2];
 #endif
     bool m_bIngoreWeddingInfo;
