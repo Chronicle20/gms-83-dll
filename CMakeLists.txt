@@ -115,6 +115,22 @@ list(APPEND PACKAGE_COMMANDS
         "${CMAKE_BINARY_DIR}/artifacts/edits/"
 )
 
+# Custom UI host / demo INIs (only when those edits actually built).
+if (TARGET custom-ui-host)
+    list(APPEND PACKAGE_COMMANDS
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/custom-ui-host/custom-ui-host.ini"
+            "${CMAKE_BINARY_DIR}/artifacts/edits/"
+    )
+endif()
+if (TARGET custom-ui-demo)
+    list(APPEND PACKAGE_COMMANDS
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/custom-ui-demo/demo.ini"
+            "${CMAKE_BINARY_DIR}/artifacts/edits/custom-ui-demo.ini"
+    )
+endif()
+
 add_custom_target(package_dlls
     ${PACKAGE_COMMANDS}
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
