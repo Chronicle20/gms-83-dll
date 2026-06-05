@@ -20,15 +20,35 @@ bool HotkeyRegistry::IsDenylisted(unsigned int vk) {
     }
 }
 
-HotkeyId HotkeyRegistry::Bind(unsigned int vk, unsigned int /*mods*/,
-                              WindowHandle /*target*/) {
+HotkeyId HotkeyRegistry::Bind(unsigned int vk, unsigned int mods,
+                              WindowHandle target) {
     if (IsDenylisted(vk)) return 0;
-    return 0;  // not implemented yet — other failure paths in next task
+    std::lock_guard<std::mutex> g(mu_);
+    for (const auto &b : bindings_) {
+        if (b.vk == vk && b.mods == mods) return 0;
+    }
+    HotkeyBinding nb{next_id_++, vk, mods, target};
+    bindings_.push_back(nb);
+    return nb.id;
 }
 
-bool HotkeyRegistry::Unbind(HotkeyId /*id*/) { return false; }
-const HotkeyBinding *HotkeyRegistry::Lookup(unsigned int /*vk*/,
-                                            unsigned int /*mods*/) const {
+bool HotkeyRegistry::Unbind(HotkeyId id) {
+    std::lock_guard<std::mutex> g(mu_);
+    for (auto it = bindings_.begin(); it != bindings_.end(); ++it) {
+        if (it->id == id) {
+            bindings_.erase(it);
+            return true;
+        }
+    }
+    return false;
+}
+
+const HotkeyBinding *HotkeyRegistry::Lookup(unsigned int vk,
+                                            unsigned int mods) const {
+    std::lock_guard<std::mutex> g(mu_);
+    for (const auto &b : bindings_) {
+        if (b.vk == vk && b.mods == mods) return &b;
+    }
     return nullptr;
 }
 void HotkeyRegistry::Clear() {

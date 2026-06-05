@@ -19,3 +19,52 @@ TEST(HotkeyRegistry, DenylistedKeysReject) {
     EXPECT_EQ(reg.Bind(0x02, 0, 42), 0u);             // VK_RBUTTON
     EXPECT_EQ(reg.Bind(0x04, 0, 42), 0u);             // VK_MBUTTON
 }
+
+TEST(HotkeyRegistry, BindAndLookup) {
+    HotkeyRegistry reg;
+    auto id = reg.Bind(/*vk=*/0x77, /*mods=*/0, /*target=*/123);  // VK_F8
+    ASSERT_NE(id, 0u);
+    auto *b = reg.Lookup(0x77, 0);
+    ASSERT_NE(b, nullptr);
+    EXPECT_EQ(b->target, 123u);
+    EXPECT_EQ(b->vk, 0x77u);
+}
+
+TEST(HotkeyRegistry, BindRejectsConflict) {
+    HotkeyRegistry reg;
+    auto id1 = reg.Bind(0x77, 0, 1);
+    ASSERT_NE(id1, 0u);
+    auto id2 = reg.Bind(0x77, 0, 2);     // same vk+mods, different target
+    EXPECT_EQ(id2, 0u);                  // second is rejected
+    auto *b = reg.Lookup(0x77, 0);
+    ASSERT_NE(b, nullptr);
+    EXPECT_EQ(b->target, 1u);            // first still wins
+}
+
+TEST(HotkeyRegistry, SameVkDifferentModsCoexist) {
+    HotkeyRegistry reg;
+    auto id1 = reg.Bind(0x77, 0, 1);
+    auto id2 = reg.Bind(0x77, /*Ctrl=*/0x02, 2);
+    EXPECT_NE(id1, 0u);
+    EXPECT_NE(id2, 0u);
+    EXPECT_EQ(reg.Lookup(0x77, 0)->target, 1u);
+    EXPECT_EQ(reg.Lookup(0x77, 0x02)->target, 2u);
+}
+
+TEST(HotkeyRegistry, UnbindRemoves) {
+    HotkeyRegistry reg;
+    auto id = reg.Bind(0x77, 0, 1);
+    ASSERT_NE(id, 0u);
+    EXPECT_TRUE(reg.Unbind(id));
+    EXPECT_EQ(reg.Lookup(0x77, 0), nullptr);
+    EXPECT_FALSE(reg.Unbind(id));        // double unbind is idempotent failure
+}
+
+TEST(HotkeyRegistry, ClearWipesAll) {
+    HotkeyRegistry reg;
+    reg.Bind(0x77, 0, 1);
+    reg.Bind(0x78, 0, 2);
+    EXPECT_EQ(reg.Size(), 2u);
+    reg.Clear();
+    EXPECT_EQ(reg.Size(), 0u);
+}
