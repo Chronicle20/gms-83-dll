@@ -116,12 +116,42 @@ __declspec(dllexport) int __cdecl CustomUI_UnbindHotkey(CustomUI_HotkeyId) {
     return 0;
 }
 __declspec(dllexport) int __cdecl
-CustomUI_SendPacket(unsigned short, const void *, unsigned int) { return 0; }
+CustomUI_SendPacket(unsigned short opcode, const void *payload,
+                    unsigned int len) {
+    if (!custom_ui_host::ReadyOrLog("SendPacket")) return 0;
+    if (opcode < custom_ui_host::g_config.outbound_op_min ||
+        opcode > custom_ui_host::g_config.outbound_op_max) {
+        Log("custom-ui-host: SendPacket rejected -- opcode 0x%04X outside outbound range",
+            opcode);
+        return 0;
+    }
+    COutPacket op(static_cast<INT>(opcode));
+    if (payload && len) op.EncodeBuffer(payload, len);
+    auto *sock = CClientSocket::GetInstance();
+    if (!sock) {
+        Log("custom-ui-host: SendPacket -- CClientSocket singleton null");
+        return 0;
+    }
+    sock->SendPacket(&op);
+    return 1;
+}
+
 __declspec(dllexport) CustomUI_HandlerId __cdecl
-CustomUI_RegisterPacketHandler(unsigned short, CustomUI_PacketHandlerFn,
-                               void *) { return 0; }
+CustomUI_RegisterPacketHandler(unsigned short opcode,
+                               CustomUI_PacketHandlerFn fn, void *user) {
+    if (!custom_ui_host::ReadyOrLog("RegisterPacketHandler")) return 0;
+    if (!fn) return 0;
+    return static_cast<CustomUI_HandlerId>(
+        custom_ui_host::g_packets->Register(opcode, fn, user));
+}
+
 __declspec(dllexport) int __cdecl
-CustomUI_UnregisterPacketHandler(CustomUI_HandlerId) { return 0; }
+CustomUI_UnregisterPacketHandler(CustomUI_HandlerId id) {
+    if (!custom_ui_host::ReadyOrLog("UnregisterPacketHandler")) return 0;
+    return custom_ui_host::g_packets->Unregister(static_cast<unsigned int>(id))
+               ? 1
+               : 0;
+}
 __declspec(dllexport) void __cdecl CustomUI_DumpRegistries(void) {}
 
 } // extern "C"
