@@ -42,6 +42,7 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
     }
 
     custom_ui_host::LoadHostConfig();
+    Log("custom-ui-host: config loaded");
 
     // The cloned CUIWnd vtable must exist before any custom window is created
     // (CustomUIWnd::Create patches the vptr from g_cloned_cuiwnd_vtable).
@@ -49,10 +50,12 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
         Log("custom-ui-host: vtable init failed -- staying inert");
         return 0;
     }
+    Log("custom-ui-host: vtable ready");
 
     // Registries must exist before the host signals ready; InitAbiGlobals
     // reads g_config (packet range) so it must run after LoadHostConfig.
     custom_ui_host::InitAbiGlobals();
+    Log("custom-ui-host: registries ready");
 
     // Detours hook installs. Each installer is fail-fast: on a Detours
     // rejection we log and stay inert (return 0) rather than run partially
@@ -62,18 +65,22 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
         Log("custom-ui-host: ProcessKey hook install failed -- staying inert");
         return 0;
     }
+    Log("custom-ui-host: ProcessKey hook installed");
     if (!custom_ui_host::InstallProcessPacketHook()) {
         Log("custom-ui-host: ProcessPacket hook install failed -- staying inert");
         return 0;
     }
+    Log("custom-ui-host: ProcessPacket hook installed");
     if (!custom_ui_host::InstallStageDtorHook()) {
         Log("custom-ui-host: StageDtor hook install failed -- staying inert");
         return 0;
     }
+    Log("custom-ui-host: StageDtor hook installed");
     if (!custom_ui_host::InstallSUpdateHook()) {
         Log("custom-ui-host: s_Update hook install failed -- staying inert");
         return 0;
     }
+    Log("custom-ui-host: sUpdate hook installed");
 
     // Vtable cloning lands in Phase 5.
     custom_ui_host::g_ready.store(true);

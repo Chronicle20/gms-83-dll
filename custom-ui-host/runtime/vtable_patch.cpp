@@ -80,11 +80,7 @@ bool InitCustomUIWndVtable() {
     clone[8] = reinterpret_cast<void*>(&OnButtonClicked_Override);
     clone[11] = reinterpret_cast<void*>(&Draw_Override);
     clone[13] = reinterpret_cast<void*>(&OnCreate_Override);
-
-    if (!InitLabelFont()) {
-        Log("custom-ui-host: label font init failed -- continuing without "
-            "label rendering");
-    }
+    Log("custom-ui-host: CUIWnd vtable cloned + overrides set");
 
     g_cloned_cuiwnd_vtable = clone;
     Log("custom-ui-host: cloned CUIWnd vtable ready (%zu slots; overrode 8/11/13)", slots);

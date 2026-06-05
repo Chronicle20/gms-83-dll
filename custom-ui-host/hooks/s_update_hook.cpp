@@ -17,6 +17,8 @@ typedef CWnd**(__cdecl* SUpdate_t)();
 SUpdate_t _SUpdate = nullptr;
 
 CWnd** __cdecl SUpdate_Hook() {
+    static bool s_logged = false;
+    if (!s_logged) { s_logged = true; Log("custom-ui-host: sUpdate hook first fire"); }
     CWnd** rv = _SUpdate();
     if (g_pending_restore.exchange(false)) {
         RestoreSuspendedWindows();

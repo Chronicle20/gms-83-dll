@@ -65,8 +65,11 @@ void MakeVariantI4(Variant* out, int value) {
 } // namespace
 
 bool InitLabelFont() {
-    if (g_label_font)
+    Log("custom-ui-host: InitLabelFont begin");
+    if (g_label_font) {
+        Log("custom-ui-host: InitLabelFont ok");
         return true;
+    }
 
     // Step A: allocate a blank IWzFont COM object.
     void* font = nullptr;
@@ -74,6 +77,7 @@ bool InitLabelFont() {
     if (!font) {
         Log("custom-ui-host: PcCreateObject::IWzFont returned null -- label "
             "rendering disabled");
+        Log("custom-ui-host: InitLabelFont FAILED");
         return false;
     }
 
@@ -89,16 +93,22 @@ bool InitLabelFont() {
         Log("custom-ui-host: IWzFont::Create failed hr=0x%08lX -- label "
             "rendering disabled",
             static_cast<unsigned long>(hr));
+        Log("custom-ui-host: InitLabelFont FAILED");
         return false;
     }
 
     g_label_font = font;
+    Log("custom-ui-host: InitLabelFont ok");
     return true;
 }
 
 void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8) {
-    if (!g_label_font || !utf8)
+    if (!utf8)
         return;
+    if (!g_label_font) {
+        if (!InitLabelFont()) // font unavailable -> skip text this frame
+            return;
+    }
 
     // 1. window-layer canvas (owned _com_ptr_t<IWzCanvas>). The storage's first
     //    pointer is the raw IWzCanvas*.

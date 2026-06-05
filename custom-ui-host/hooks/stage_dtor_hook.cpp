@@ -19,6 +19,8 @@ typedef void(__thiscall* StageDtor_t)(CStage*);
 StageDtor_t _StageDtor = nullptr;
 
 void __fastcall StageDtor_Hook(CStage* self, void* /*edx*/) {
+    static bool s_logged = false;
+    if (!s_logged) { s_logged = true; Log("custom-ui-host: StageDtor hook first fire"); }
     SnapshotAndSuspendVisibleWindows();
     g_pending_restore.store(true);
     _StageDtor(self);
