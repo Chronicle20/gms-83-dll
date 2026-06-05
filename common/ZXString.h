@@ -543,6 +543,13 @@ private:
     {
         return wcslen(reinterpret_cast<const wchar_t*>(s));
     }
+
+    size_t TStrLen(const unsigned short* s) {
+        size_t n = 0;
+        while (s && s[n])
+            ++n;
+        return n;
+    }
 };
 
 assert_size(sizeof(ZXString<char>), 0x04)
