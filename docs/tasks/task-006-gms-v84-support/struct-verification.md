@@ -264,6 +264,169 @@ CDialog/CWnd-derived UI windows embedding a CUIToolTip).
   coverage. (`m_pFontStan_Prp` stays `>=87` GMS-only, as today.)
 - All other 7 headers: gates correct, no change.
 
+### VERDICTS — Task 14 read-only audit (Mob/stat family — 4 headers)
+
+v84 IDB = `GMS_v84.1_U_DEVM.exe` (port 13341, confirmed active via `list_instances`
+before every probe). Cross-anchored vs v83 (port 13337) and v87 (port 13338).
+Read-only: `disasm`/`decompile` + v83 `type_inspect` (UDT oracle) + `find_bytes`
+(eh-vector locator); **no `set_type`/`declare_type`/rename applied to any IDB**.
+
+**Headline:** TWO of the four headers NEED CHANGE. v84's CMob and SecondaryStat are
+genuine **intermediates** (larger than v83, smaller than v87) — v84 carries a
+SUBSET of the `>=87` fields, so the blanket `>=87` gates are wrong for v84.
+CMapLoadable's `>=87` field is also present in v84. MobStat is clean.
+
+#### Size anchors (load-bearing)
+
+| Struct | v83 | **v84** | v87 | v84 anchor |
+|---|---|---|---|---|
+| **CMob** | 0x548 (1352) | **0x560 (1376)** | 0x588 (1416) | `CreateMob` @ 0x678024: `push 560h` before `call CMob::CMob` (0x678060). v83 `push 548h` @ 0x6621a8; v87 `push 588h` @ 0x69c5c5. |
+| **MobStat** | 0x208 (520) | **0x208 (520)** | 0x208 (520) | embedded `m_stat` @ CMob+0x1A0; next field m_rgHorz/m_nTeamForMCarnival @ 0x3A8/0x3B0 ⇒ 0x3A8−0x1A0 = 0x208. v83 UDT = 520. No 83/84/87 gates. |
+| **SecondaryStat** | 0xCD8 (3288) | **0xD20 (3360)** | 0xD74 (3444) | ctor `sub_79ED3E` eh-vector `lea eax,[esi+0CE8h]; push 8; push 7` (@ 0x79ed5c) ⇒ aTemporaryStat[7] @ 0xCE8 ⇒ size 0xCE8+0x38 = 0xD20. v83 @ 0xCA0 (ctor 0x77c25f); v87 @ 0xD3C (ctor 0x7ca8d2). |
+| **CMapLoadable** | 0x114 (276) | **0x128 (296)** | — | ctor `sub_64EAB3`; first CLogin-own field @ 0x12C (= base+4 of m_pConnectionDlg com_ptr) ⇒ base 0x128. v83 ctor 0x639401, CLogin field @ 0x118 ⇒ base 0x114 (UDT confirms). +0x14 = one ZList (m_lVisibleByQuest). |
+
+#### CMob.h — gates `<95`, `>=87` (×5), `>=95` (×3) — ⚠️ **NEEDS CHANGE**
+
+- **`<95` `unknown1` ZList — PRESENT in v84** (84<95 → true). ✅ correct.
+  (v83/v84/v87 all carry it; in v83/v87 IDA names it `dummy1` @ the 4th of the
+  four post-`m_lpLayerASIcon` ZLists.)
+- **`>=87` `m_aMultiTargetForBall` (ZArray, 4B) — PRESENT in v84 @ 0x528. ⚠️ NEEDS
+  CHANGE → `>=84`.**
+- **`>=87`||JMS `m_aRandTimeforAreaAttack` (ZArray, 4B) + `m_delaySkill` (DelaySkill,
+  16B) — PRESENT in v84 @ 0x52C / 0x530-0x53C. ⚠️ NEEDS CHANGE → `>=84`||JMS.**
+  v84 ctor doom region (disasm @ 0x67826c-0x6782b3): m_nHPpercentage=100 @ 0x520,
+  m_bWaitingToBeSetTossed @ 0x524, **m_aMultiTargetForBall @ 0x528, m_aRandTimeforAreaAttack
+  @ 0x52C, m_delaySkill[4] @ 0x530/534/538/53C**, m_bDoomReserved @ 0x540, m_bDoomReservedSN
+  @ 0x544, m_lpStatChangeReserved ZList @ 0x548. **Contrast v83 ctor @ 0x6621d9:**
+  m_nHPpercentage @ 0x520, m_bWaitingToBeSetTossed @ 0x524, m_bDoomReservedSN @ 0x52C,
+  m_lpStatChangeReserved @ 0x530 — **NO m_aMultiTargetForBall / m_aRandTimeforAreaAttack
+  / m_delaySkill**. The inserted 24 bytes (4+4+16) exactly equal the v84−v83 size delta
+  (0x560−0x548 = 0x18).
+- **`>=87` `SECPOINT m_ptPos`/`m_ptPosPrev` (else: 4 ints) — v84 takes the ELSE (2-int)
+  form, layout-neutral.** ✅ gate correct (build 84<87). m_ptPos region (0x510-0x51F,
+  16B) is byte-identical size in v83 and v84 (both lead to m_nHPpercentage @ 0x520);
+  no secure-coordinate init (no `sub_42B612` pairs) in v84, unlike v87.
+- **`>=87`||JMS `m_bChasing` (TSecType<int>, 12B) — ABSENT in v84.** ✅ gate correct.
+  m_lpStatChangeReserved ZList ends @ 0x55C; struct = 0x560 (4 bytes left) — no room
+  for a 12B TSecType. v84 ctor has no `sub_6AD8AE`(m_bChasing) call (v87 @ 0x69c8af does).
+- **`>=95` `m_nPhase` / `m_arcMultiBody*` / the `>=95`||JMS doom-bomb tail block — ABSENT.**
+  ✅ correct (build 84<95).
+- **Doom field (Task 11 confirmed):** m_bDoomReserved @ 0x540 zero-inited (`mov [esi+540h],ebx`
+  @ 0x6782ad), m_bDoomReservedSN @ 0x544 (`mov [esi+544h],bl`). v84 reproduces the v87 fix.
+
+**VERDICT: NEEDS CHANGE.** The `>=87` gates on `m_aMultiTargetForBall` (line 228-230) and
+`m_aRandTimeforAreaAttack`+`m_delaySkill` (line 231-234) fire too late for v84 — they must
+become **`>=84`** (and `>=84`||JMS for the JMS-shared block). As written, the header compiles
+v84 CMob at **0x548 (24 B too small)**, dropping those 3 fields and shifting m_bDoomReserved
+back to 0x528 — which would corrupt the doom-fix offset and every field after. All other
+CMob gates correct. **Flag for Task 16.**
+
+#### MobStat.h — gates `>=95`||JMS, `>=95` (×2) — ✅ all gates correct
+
+No gate sits at the 83/84/87 boundary, so v84 = v83 layout. **v84 size 0x208 (520)**,
+anchored by the embedded `m_stat` extent inside CMob (0x1A0 … 0x3A8) and the v83 UDT
+(`MobStat` = 520). The `>=95`||JMS TimeBomb block (4 fields), the `>=95` MagicCrash/
+DamagedElemAttr/HealByDamage block (9 fields), and `>=95` `bCannotEvade` are all
+compiled out for build 84. **VERDICT: all gates correct.**
+
+#### SecondaryStat.h — gates `>=87`/`==87`/`>=95` (size-critical embedded UDT) — ⚠️ **NEEDS CHANGE**
+
+**v84 SecondaryStat = 0xD20 (3360).** v83 = 0xCD8 (3288), v87 = 0xD74 (3444). v84 is a
+genuine **intermediate** — it does NOT equal v83 and does NOT equal v87. Anchored
+INDEPENDENTLY from the ctor's `aTemporaryStat[7]` eh-vector (the array is the always-present
+last member): v84 `lea eax,[esi+0CE8h]` ⇒ array @ 0xCE8 ⇒ size 0xCE8 + 7×8 = 0xD20.
+
+Per-gate findings (v84 ctor `sub_79ED3E`; v84 Clear `sub_79F3A1`, cross-diffed dword-for-dword
+against v83 Clear `SecondaryStat::Clear` @ 0x77c8a4):
+
+- **`>=87`||JMS `nDojangShield_` (3 secure-tears, MID-struct, after nBarrier) — ABSENT in
+  v84.** ✅ gate correct. v84 Clear's mid-struct dword indices match v83 EXACTLY (both jump
+  nBarrier → nReverseInput with no insertion); a mid-struct insertion would shift every
+  later index. (build 84<87)
+- **`==87`||JMS byte-variants `nReverseInput_` / `rDojangBerserk_` (char vs int) — v84 takes
+  the ELSE (int, 12B) form**, same as v83. ✅ gate correct (the `==87`-EXCLUSIVE byte form
+  is v87-only; v84 sides with v83). Confirmed by matching Clear indices through dword 807.
+- **`>=87`||JMS post-SoulStone block (4 stats: nFlying/nFrozen/nAssistCharge/nEnrage,
+  12 secure-tears) — PARTIALLY PRESENT in v84.** ⚠️ **NEEDS CHANGE / SPLIT.** v84 carries
+  ONLY the first **2 stats** = `nFlying_` + `nFrozen_` (6 secure-tears = 72 B) at dwords
+  808-825 (bytes 0xCA0-0xCE7, immediately after v83's old end-of-struct, immediately before
+  aTemporaryStat). `nAssistCharge_` and `nEnrage_` are **ABSENT** in v84. Evidence: v84 Clear
+  has exactly 6 extra secure-tears past v83's last field (nSoulStone @ dword ~805): bases @
+  808/811/814/817/820/823 (each = int[2]+CS), then the aTemporaryStat loop @ dword 826
+  (0xCE8). 6×12 B = 0x48 = the v84−v83 size delta. (Atlas oracle lists all 4 as one `>=87`
+  block — that is the v87 server wire layout; the v84 CLIENT disasm is authoritative and
+  shows only 2.)
+- **`>=95`||JMS SuddenDeath-onward block + `>=95` rEMDD/Guard/Mine/SafetyDamage/… tail —
+  ABSENT in v84.** ✅ correct (build 84<95). No fields between Flying/Frozen and aTemporaryStat.
+
+**VERDICT: NEEDS CHANGE — size-critical.** The header's single `>=87`||JMS block
+(`nFlying_`/`nFrozen_`/`nAssistCharge_`/`nEnrage_`, file lines 622-649) must be **SPLIT**:
+`nFlying_` + `nFrozen_` move to **`>=84`** (present in v84), while `nAssistCharge_` +
+`nEnrage_` STAY `>=87` (absent in v84). `nDojangShield_` and the `==87` byte-variants stay
+as-is (correctly excluded from v84). The fix must restore v84 SecondaryStat to **0xD20**.
+**Because SecondaryStat is embedded (in CUser, and any CWvsContext-adjacent stat holder), a
+wrong size shifts every following field** — as written, the header compiles v84 at 0xCD8
+(72 B too small). Re-validate v83 (0xCD8, neither Flying nor Frozen), v87 (0xD74, all four)
+so no other version flips. **Flag for Task 16.** *(JMS caveat: the existing block carries an
+`||JMS` clause; the new `>=84` gate for Flying/Frozen must RETAIN `|| defined(REGION_JMS)`,
+and AssistCharge/Enrage keep `>=87 || JMS` — do not drop JMS coverage.)*
+
+#### CMapLoadable.h — gates `>=95` (×3), `>=87`||JMS (×1) — ⚠️ **NEEDS CHANGE**
+
+**v84 CMapLoadable = 0x128 (296).** v83 = 0x114 (276). Delta +0x14 = exactly one ZList.
+
+- **`>=87`||JMS `m_lVisibleByQuest` (ZList, 0x14) — PRESENT in v84 @ 0xA0. ⚠️ NEEDS CHANGE
+  → `>=84`||JMS.** v84 ctor `sub_64EAB3` has **THREE** ZLists before the three ZMaps:
+  vtables @ 0x78 (m_lpObstacle), 0x8C (m_lpRefInfo), **0xA0 (m_lVisibleByQuest)**, then
+  m_mNamedObj ZMap @ 0xB4. **Contrast v83 ctor @ 0x639401:** only TWO ZLists — m_lpObstacle
+  @ 0x78, m_lpRefInfo @ 0x8C, then m_mNamedObj ZMap @ **0xA0** (no third ZList). The extra
+  ZList @ 0xA0 in v84 shifts m_mNamedObj/m_mTagedObj/m_mlLayerBack and all later fields +0x14.
+- **`>=95` `m_bField` (@ 0x34 in v95) — ABSENT in v84.** ✅ correct. v84/v83 both place
+  m_pSpace2D directly after m_pPropField; no m_bField. (The header's IDA comment block
+  showing sizeof 0x148 with m_bField @ 0x34 is a v95 dump, not v84.)
+- **`>=95` `m_lpLayerLetterBox` (ZList) — ABSENT in v84.** ✅ correct.
+- **`>=95` `m_bPlayHoldedBGM` / `m_tPlayHoldedBGM` (trailing 2 ints) — ABSENT in v84.**
+  ✅ correct. The v84 size (0x128 = v83 0x114 + only the m_lVisibleByQuest ZList) leaves no
+  room for any `>=95` field.
+
+**VERDICT: NEEDS CHANGE.** `m_lVisibleByQuest`'s `>=87`||JMS gate (line 153) fires too late
+for v84 — must become **`>=84`||JMS** (present in v84). As written, the header compiles v84
+CMapLoadable at **0x114 (20 B too small)**, dropping the ZList and shifting the three ZMaps
+and everything after by 0x14. All `>=95` gates correct. **Flag for Task 16.** README flags
+CMapLoadable as minimally-important, but the size IS wrong for v84 and CMapLoadable is the
+base of CLogin/CField, so the shift propagates.
+
+**Task-14 Task-16 cross-check flags (3 of 4 headers NEED CHANGE):**
+- **CMob.h:** move `m_aMultiTargetForBall` and `m_aRandTimeforAreaAttack`+`m_delaySkill`
+  from `>=87`(`||JMS`) to **`>=84`**(`||JMS`). Restores v84 CMob to 0x560 and the doom field
+  to 0x540. `m_ptPos` SECPOINT (`>=87`), `m_bChasing` (`>=87`||JMS), and all `>=95` gates
+  stay (correctly excluded from v84).
+- **SecondaryStat.h (size-critical):** SPLIT the `>=87`||JMS post-SoulStone block — move
+  `nFlying_`+`nFrozen_` (6 tears) to **`>=84`**(`||JMS`); keep `nAssistCharge_`+`nEnrage_`
+  at `>=87`||JMS. Restores v84 to 0xD20. `nDojangShield_` (`>=87`||JMS, mid-struct) and the
+  `==87` byte-variants stay (excluded from v84).
+- **CMapLoadable.h:** move `m_lVisibleByQuest` from `>=87`||JMS to **`>=84`**||JMS. Restores
+  v84 to 0x128.
+- **MobStat.h:** gates correct, no change.
+- Every rewrite must be re-validated against v83 (smaller, none present), v87 (larger, all
+  present) and v95/v111/JMS185 so no other version's branch flips (FR-13).
+
+**SecondaryStat ⊂ CWvsContext — embedding & blast radius (verified in spec review):**
+`SecondaryStat m_secondaryStat` is embedded BY VALUE in CWvsContext (CWvsContext.h ~line 110),
+**AFTER** `m_aClientKey` (line 99, Task-11-verified @0x20A0). Source order between them:
+m_aClientKey → m_bTesterAccount(`>=87`) → m_dwCharacterId → … → m_basicStat → m_secondaryStat.
+- **m_aClientKey is SAFE:** growing SecondaryStat by +0x48 for v84 does NOT shift m_aClientKey
+  or anything upstream of m_secondaryStat. The current (pre-fix) header is NOT wrong about the
+  client key for v84 — no compensating factor needed.
+- **Downstream blast radius (Task-16 MUST re-verify):** every CWvsContext field AFTER
+  m_secondaryStat shifts +0x48 in v84 once the fix lands (m_forcedStat, m_temporaryStatView,
+  m_townPortal, m_party, guild/alliance, … ). After applying the SecondaryStat split, confirm
+  these downstream CWvsContext offsets still match the v84 binary.
+- **v87 reconciliation flag (pre-existing, NOT a v84 issue):** the SecondaryStat header's v87
+  path appears ~0xC short of the binary v87 size (multiple `>=87`/`==87` gated regions). v83/v84
+  math is exact; the v87 gap is a separate concern worth a dedicated v87 pass, but does not
+  affect any v84 verdict here.
+
 ## The 22 version-gated headers
 
 For each, record: v84 size, which gated fields are present/absent in v84, the
@@ -275,10 +438,10 @@ disassembly anchor, and the verdict (gate correct / gate needs change).
 | common/CWvsContext.h | `> 83`, `>= 87`, `>= 95` | ~0x3920 (≈14624; upper bound 0x3F70) | ✅ all gates correct | OnConnect @ 0x499DCD; ctor sub_A4BF0B; see Task-12 notes |
 | common/CClientSocket.h | `>= 111` | 0x94 (148) | ✅ gate correct | CreateInstance @ 0xA43D0B `push 94h`; see Task-12 notes |
 | common/CLogin.h | `>= 95`, `== 83` | 0x28C (652) | ✅ all gates correct | alloc `push 28Ch` @ 0xA6FD1C; ctor @ 0x608B15; see Task-12 notes |
-| common/CMapLoadable.h | _audit_ | | ☐ | README-critical |
+| common/CMapLoadable.h | `>= 95` (×3), `>= 87`\|\|JMS (×1) | 0x128 (296) | ⚠️ **NEEDS CHANGE** (`m_lVisibleByQuest` mis-gated `>=87`) | v84 ctor sub_64EAB3: THREE ZLists @ 0x78/0x8C/**0xA0** (m_lVisibleByQuest present) before ZMaps @ 0xB4; v83 ctor 0x639401 has only TWO (ZMap @ 0xA0). `>=95` all absent. See Task-14 notes. |
 | common/CLogo.h | _audit_ | | ☐ | |
-| common/CMob.h | _audit_ | | ☐ | |
-| common/MobStat.h | _audit_ | | ☐ | |
+| common/CMob.h | `<95`, `>=87` (×5), `>=95` (×3) | 0x560 (1376) | ⚠️ **NEEDS CHANGE** (3 fields mis-gated `>=87`) | CreateMob @ 0x678024 `push 560h`; v84 ctor @ 0x678060 has m_aMultiTargetForBall @ 0x528, m_aRandTimeforAreaAttack @ 0x52C, m_delaySkill @ 0x530-0x53C (absent in v83 ctor 0x6621d9); m_bDoomReserved @ 0x540. m_bChasing & SECPOINT m_ptPos & all `>=95` absent. See Task-14 notes. |
+| common/MobStat.h | `>=95`\|\|JMS, `>=95` (×2) | 0x208 (520) — v83-identical | ✅ all gates correct | embedded m_stat @ CMob+0x1A0 … 0x3A8 (m_nTeamForMCarnival @ 0x3B0); v83 UDT MobStat=520; no 83/84/87 gate. See Task-14 notes. |
 | common/ConfigSysOpt.h | _audit_ | | ☐ | |
 | common/CFuncKeyMappedMan.h | _audit_ | | ☐ | |
 | common/CFadeWnd.h | `>= 87` (+ `REGION_GMS` `m_bUserAlarm`) | 0xD4 (212) | ✅ all gates correct | v84 ctor sub_52ACD8: `mov [esi+0C8h],eax` (m_sInviter) is highest field → m_dwSN @ 0xCC adjacent (no `>=87` 3-int block). See Task-13 notes. |
@@ -292,7 +455,7 @@ disassembly anchor, and the verdict (gate correct / gate needs change).
 | common/GuildData.h | `>= 95` | | ☐ | |
 | common/PartyMember.h | `< 95` | | ☐ | |
 | common/PartyData.h | `>= 95` | | ☐ | |
-| common/SecondaryStat.h | `>= 95` | | ☐ | embedded UDT; size-critical |
+| common/SecondaryStat.h | `>=87`/`==87`/`>=95` | **0xD20 (3360)** (v83=0xCD8, v87=0xD74) | ⚠️ **NEEDS CHANGE** — size-critical (intermediate; `>=87` block half-present) | ctor sub_79ED3E eh-vector `lea eax,[esi+0CE8h]` ⇒ aTemporaryStat[7] @ 0xCE8 ⇒ 0xD20. v84 carries nFlying_+nFrozen_ (6 tears @ 0xCA0-0xCE7) but NOT nAssistCharge_/nEnrage_; nDojangShield_ & `==87` byte-variants absent. See Task-14 SecondaryStat note. |
 
 (Threshold column is filled in during the audit by grepping each file; the four
 boundary-gate rows above are pre-flagged.)
