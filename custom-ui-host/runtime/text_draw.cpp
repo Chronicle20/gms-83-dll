@@ -27,6 +27,9 @@ struct Variant {
 
 // Cached raw IWzFont* for label rendering. Null until InitLabelFont succeeds.
 void* g_label_font = nullptr;
+// Set once we've tried (and failed) to build the font, so DrawLabel doesn't
+// re-attempt every frame and spam the log with the same diagnostics.
+bool g_font_init_attempted = false;
 
 // __thiscall surrogate (ecx=this) for _bstr_t::_bstr_t(const char*).
 using BStrCtorFn = void(__fastcall*)(void* /*this*/, void* /*edx*/, const char* ansi);
@@ -65,61 +68,67 @@ void MakeVariantI4(Variant* out, int value) {
 } // namespace
 
 bool InitLabelFont() {
-    Log("custom-ui-host: InitLabelFont begin");
-    if (g_label_font) {
-        Log("custom-ui-host: InitLabelFont ok");
+    if (g_label_font)
         return true;
-    }
+    if (g_font_init_attempted) // already tried and failed -- don't spam / re-throw every frame
+        return false;
+    g_font_init_attempted = true;
+    Log("custom-ui-host: InitLabelFont begin");
 
-    // Step A: allocate a blank IWzFont COM object. The factory's FIRST arg is a
-    // COM class-hint string -- NOT a face name. The client resolves it from
-    // StringPool[SP_1410_CANVASFONT] (cf. sub_461CA8); passing a face name like
-    // "Arial" here yields CO_E_DLLNOTFOUND. Resolve the same hint at runtime.
-    //
-    // SP_1410_CANVASFONT = string-pool index 0x582 (confirmed in sub_461CA8).
+    // The game's COM helpers (PcCreateObject::IWzFont, IWzFont::Create) THROW a
+    // _com_error on failure rather than returning a code, so each step is
+    // wrapped to pinpoint which one fails and to keep the throw out of the
+    // game's render loop. This runs once (guarded above).
+
+    // Step A: resolve the COM class-hint. The factory's FIRST arg is NOT a face
+    // name; the client pulls it from StringPool[SP_1410_CANVASFONT] (idx 0x582,
+    // cf. sub_461CA8). GetStringW struct-returns a ZXString<ushort> (single
+    // m_pStr) into our 4-byte slot; the pool string is persistent so we don't
+    // release the ref.
     constexpr unsigned int kStringPoolCanvasFont = 0x582;
-    // GetStringW struct-returns a ZXString<ushort> (a single m_pStr) into our
-    // 4-byte slot. We do NOT release the returned ref: the pool string is
-    // pool-owned and persistent, InitLabelFont succeeds once and caches, and
-    // for a static pool string Release is a no-op.
     const wchar_t* fontHint = nullptr;
-    void* pool = reinterpret_cast<void*(__cdecl*)()>(C_STRING_POOL_GET_INSTANCE)();
-    reinterpret_cast<void*(__fastcall*)(void*, void*, void*, unsigned int)>(C_STRING_POOL_GET_STRING_W)(
-        pool, nullptr, &fontHint, kStringPoolCanvasFont);
-    if (!fontHint) {
-        Log("custom-ui-host: StringPool[SP_1410_CANVASFONT] empty -- label "
-            "rendering disabled");
-        Log("custom-ui-host: InitLabelFont FAILED");
+    try {
+        void* pool = reinterpret_cast<void*(__cdecl*)()>(C_STRING_POOL_GET_INSTANCE)();
+        reinterpret_cast<void*(__fastcall*)(void*, void*, void*, unsigned int)>(C_STRING_POOL_GET_STRING_W)(
+            pool, nullptr, &fontHint, kStringPoolCanvasFont);
+    } catch (...) {
+        Log("custom-ui-host: InitLabelFont: StringPool resolve THREW");
         return false;
     }
+    Log("custom-ui-host: InitLabelFont: SP_1410 hint=[%ls] ptr=%p", fontHint ? fontHint : L"(null)",
+        reinterpret_cast<const void*>(fontHint));
+    if (!fontHint)
+        return false;
 
+    // Step B: allocate the IWzFont COM object from the hint.
     void* font = nullptr;
-    reinterpret_cast<PcCreateIWzFontFn>(C_PC_CREATE_IWZFONT)(fontHint, &font, 0);
-    if (!font) {
-        Log("custom-ui-host: PcCreateObject::IWzFont returned null -- label "
-            "rendering disabled");
-        Log("custom-ui-host: InitLabelFont FAILED");
+    try {
+        reinterpret_cast<PcCreateIWzFontFn>(C_PC_CREATE_IWZFONT)(fontHint, &font, 0);
+    } catch (...) {
+        Log("custom-ui-host: InitLabelFont: PcCreateObject::IWzFont THREW (hint rejected)");
         return false;
     }
+    Log("custom-ui-host: InitLabelFont: IWzFont created=%p", font);
+    if (!font)
+        return false;
 
-    // Step B: configure face/size/color. "Arial" is the FACE here (the game
-    // uses StringPool[SP_5527_ARIAL], same string). Empty style variant =
-    // regular weight. Opaque black (0xFF000000) is the game's default label
-    // colour and reads against the light Equip-window background.
+    // Step C: configure face/size/color. "Arial" is the FACE (== StringPool
+    // [SP_5527_ARIAL]); opaque black is the game's default label colour.
     BStr face;
     MakeBStr(&face, "Arial");
     Variant style;
     MakeVariantI4(&style, 0);
-
-    long hr = reinterpret_cast<IWzFontCreateFn>(C_IWZFONT_CREATE)(font, nullptr, face.m_Data, /*height*/ 12,
-                                                                  /*argbColor*/ 0xFF000000u, &style);
-    if (hr < 0) {
-        Log("custom-ui-host: IWzFont::Create failed hr=0x%08lX -- label "
-            "rendering disabled",
-            static_cast<unsigned long>(hr));
-        Log("custom-ui-host: InitLabelFont FAILED");
+    long hr = 0;
+    try {
+        hr = reinterpret_cast<IWzFontCreateFn>(C_IWZFONT_CREATE)(font, nullptr, face.m_Data, /*height*/ 12,
+                                                                 /*argbColor*/ 0xFF000000u, &style);
+    } catch (...) {
+        Log("custom-ui-host: InitLabelFont: IWzFont::Create THREW");
         return false;
     }
+    Log("custom-ui-host: InitLabelFont: Create hr=0x%08lX", static_cast<unsigned long>(hr));
+    if (hr < 0)
+        return false;
 
     g_label_font = font;
     Log("custom-ui-host: InitLabelFont ok");
