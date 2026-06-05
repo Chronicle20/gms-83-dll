@@ -4,10 +4,11 @@ Reusable in-DLL UI framework for the MS client edit collection.
 
 ## What it does
 
-The host installs three Detours hooks on the client and exposes a stable
-C ABI through `GetProcAddress`. Consumer DLLs `LoadLibrary` the host and
-call `CustomUI_*` to declare windows, hotkeys, and custom packet
-handlers — without installing their own hooks.
+The host installs four Detours hooks on the client (packet dispatch,
+hotkey, and a two-part stage-end auto-hide) and exposes a stable C ABI
+through `GetProcAddress`. Consumer DLLs `LoadLibrary` the host and call
+`CustomUI_*` to declare windows, hotkeys, and custom packet handlers —
+without installing their own hooks.
 
 ## C ABI summary
 

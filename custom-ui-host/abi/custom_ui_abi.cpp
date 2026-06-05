@@ -325,6 +325,11 @@ CustomUI_BindHotkey(unsigned int vk, unsigned int modifiers,
 
     auto id = custom_ui_host::g_hotkeys->Bind(vk, modifiers,
                                               static_cast<unsigned int>(target));
+    if (id == 0) {
+        Log("custom-ui-host: BindHotkey rejected -- vk=0x%02X denied (denylist or already bound)",
+            vk);
+        return 0;
+    }
     return static_cast<CustomUI_HotkeyId>(id);
 }
 
@@ -360,6 +365,12 @@ CustomUI_RegisterPacketHandler(unsigned short opcode,
                                CustomUI_PacketHandlerFn fn, void *user) {
     if (!custom_ui_host::ReadyOrLog("RegisterPacketHandler")) return 0;
     if (!fn) return 0;
+    if (opcode < custom_ui_host::g_config.inbound_op_min ||
+        opcode > custom_ui_host::g_config.inbound_op_max) {
+        Log("custom-ui-host: RegisterPacketHandler rejected -- opcode 0x%04X outside inbound range",
+            opcode);
+        return 0;
+    }
     return static_cast<CustomUI_HandlerId>(
         custom_ui_host::g_packets->Register(opcode, fn, user));
 }
