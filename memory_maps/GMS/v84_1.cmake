@@ -162,9 +162,15 @@ set(C_WVS_APP_CALL_UPDATE 0x00A41D42)
 set(C_WVS_APP_RUN 0x00A3E7E8)
 set(C_WVS_APP_SET_UP 0x00A3DDCC)
 
-set(C_WVS_CONTEXT_INSTANCE_ADDR 0x00BE7918)
-set(C_WVS_CONTEXT_ON_ENTER_GAME 0x00A03935) # TODO do we still need these
-set(C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET 0x10) # TODO do we still need these
+set(C_WVS_CONTEXT_INSTANCE_ADDR 0x00C40C68)
+# CWvsContext::OnEnterGame: enter-game handler invoked by SetStage on the CWvsContext
+# singleton in the GetCharacterData!=0 branch (OnEnterGame/OnLeaveGame/OnGameStageChanged trio).
+set(C_WVS_CONTEXT_ON_ENTER_GAME 0x00A4E263)
+# Re-measured from v84 OnEnterGame disasm: first body instruction after EH-prolog +
+# register-save block (lea ecx,[esi+35FCh] @ 0xA4E272). v84 prologue is shorter than v83
+# (no large sub esp / push 1), so 0x0F, NOT v83's 0x10 (cf. v87/v95 = 0x11). Not consumed
+# by any active edit; carried for parity with sibling maps.
+set(C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET 0x0F)
 
 set(WIN_MAIN 0x00A39FA0)
 set(WIN_MAIN_AD_BALLOON_CONDITIONAL 0xA6E) # jz @ 0xA3AA0E (guards ShowADBalloon); patch 74->EB
@@ -184,14 +190,26 @@ set(Z_X_STRING_GET_BUFFER 0x00429824)
 set(Z_X_STRING_TRIM_RIGHT 0x004772DD)
 set(Z_X_STRING_TRIM_LEFT 0x00477392)
 
-set(C_FIELD_SEND_JOIN_PARTY_MSG 0x0052FECF)
-set(C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET 0x65)
+# CField::SendJoinPartyMsg(name): COutPacket(0x7E)+Encode1(4)+EncodeStr(name)+SendPacket.
+# needs-main-review. OFFSET = jnb @ 0x53C101 (the level<10 check, jnb short loc_53C135)
+# re-measured: 0x53C101-0x53C061 = 0xA0 (NOT v83's 0x65 — v84 adds a guest-id-check block
+# before the level check). Edit overwrites the jnb (0x73) with 0xEB to reach the send path.
+set(C_FIELD_SEND_JOIN_PARTY_MSG 0x0053C061)
+set(C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET 0xA0) # level-gate jnb @ host+0xA0 (0x53C101, bytes 73 32); edit patches 73->EB. NOT v83 0x65 (added guest-id block)
 
-set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG 0x52FCE1)
-set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET 0xA4)
+# CField::SendCreateNewPartyMsg(): COutPacket(0x7E)+Encode1(1)+SendPacket. needs-main-review.
+# OFFSET = jnb @ 0x53BEDB (level<10 check, jnb short loc_53BF11) re-measured:
+# 0x53BEDB-0x53BE37 = 0xA4 (coincides with v83 0xA4; preamble length identical).
+# Edit overwrites the jnb (0x73) with 0xEB to reach the send path.
+set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG 0x0053BE37)
+set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET 0xA4) # level-gate jnb @ host+0xA4 (0x53BEDB, bytes 73 34); edit patches 73->EB. Coincides w/ v83 (re-measured, not copied)
 
-set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x00A12522)
-set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9)
+# CWvsContext::SendMigrateToITCRequest(): COutPacket(0xA0)+SendPacket. needs-main-review.
+# OFFSET = jz @ 0xA5CA48 (ITC-restriction and-1 check, jz short loc_A5CA70) re-measured:
+# 0xA5CA48-0xA5C95F = 0xE9 (coincides with v83 0xE9; preamble length identical).
+# Edit overwrites the jz (0x74) with 0xEB to reach the send path.
+set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x00A5C95F)
+set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9) # ITC-gate jz @ host+0xE9 (0xA5CA48, bytes 74 26); edit patches 74->EB. Coincides w/ v83 (re-measured, not copied)
 
 set(DR_CHECK 0x00000000) # does not exist
 set(CE_TRACER_RUN 0x00000000) # does not exist

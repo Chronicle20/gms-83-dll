@@ -181,9 +181,9 @@ catalogued. Group order follows `include/memory_map.h.in`.
 | C_WVS_APP_CALL_UPDATE | addr | 0x009F84D0 | ✔ 0x00A41D42 |
 | C_WVS_APP_RUN | addr | 0x009F5C50 | ✔ 0x00A3E7E8 |
 | C_WVS_APP_SET_UP | addr | 0x009F5239 | ✔ 0x00A3DDCC |
-| C_WVS_CONTEXT_INSTANCE_ADDR | addr | 0x00BE7918 | ☐ |
-| C_WVS_CONTEXT_ON_ENTER_GAME | addr | 0x00A03935 | ☐ |
-| C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET | offset | 0x10 | ☐ |
+| C_WVS_CONTEXT_INSTANCE_ADDR | addr | 0x00BE7918 | ✔ 0x00C40C68 |
+| C_WVS_CONTEXT_ON_ENTER_GAME | addr | 0x00A03935 | ✔ 0x00A4E263 |
+| C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET | offset | 0x10 | ✔ 0x0F (re-measured; host OnEnterGame, target lea ecx,[esi+35FCh] @ 0xA4E272) |
 | WIN_MAIN | addr | 0x009F19F2 | ✔ 0x00A39FA0 |
 | WIN_MAIN_AD_BALLOON_CONDITIONAL | offset | 0xA3D | ✔ 0xA6E |
 | WIN_MAIN_PATCHER_OFFSET | offset | 0x212 | ✔ 0x241 |
@@ -193,12 +193,12 @@ catalogued. Group order follows `include/memory_map.h.in`.
 | Z_X_STRING_GET_BUFFER | addr | 0x00414617 | ✔ 0x00429824 (needs-main-review: cstr-assign vs _Cat) |
 | Z_X_STRING_TRIM_RIGHT | addr | 0x00474414 | ✔ 0x004772DD |
 | Z_X_STRING_TRIM_LEFT | addr | 0x004744C9 | ✔ 0x00477392 |
-| C_FIELD_SEND_JOIN_PARTY_MSG | addr | 0x0052FECF | ☐ |
-| C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET | offset | 0x65 | ☐ |
-| C_FIELD_SEND_CREATE_NEW_PARTY_MSG | addr | 0x52FCE1 | ☐ |
-| C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET | offset | 0xA4 | ☐ |
-| C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST | addr | 0x00A12522 | ☐ |
-| C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET | offset | 0xE9 | ☐ |
+| C_FIELD_SEND_JOIN_PARTY_MSG | addr | 0x0052FECF | ✔ 0x0053C061 (needs-main-review; opcode 0x7E/Encode1(4); spot-checked) |
+| C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET | offset | 0x65 | ✔ 0xA0 (re-measured; jnb @ 0x53C101 level-check; NOT v83 0x65) |
+| C_FIELD_SEND_CREATE_NEW_PARTY_MSG | addr | 0x52FCE1 | ✔ 0x0053BE37 (needs-main-review; opcode 0x7E/Encode1(1); spot-checked) |
+| C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET | offset | 0xA4 | ✔ 0xA4 (re-measured; jnb @ 0x53BEDB level-check; coincides with v83) |
+| C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST | addr | 0x00A12522 | ✔ 0x00A5C95F (needs-main-review; opcode 0xA0; string-xref; spot-checked) |
+| C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET | offset | 0xE9 | ✔ 0xE9 (re-measured; jz @ 0xA5CA48 ITC-check; coincides with v83) |
 | DR_CHECK | sentinel | 0x00000000 | ☐ |
 | CE_TRACER_RUN | sentinel | 0x00000000 | ☐ |
 | SEND_HS_LOG | addr | 0x009F191B | ✔ 0x00A39EC9 |
