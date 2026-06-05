@@ -489,6 +489,97 @@ memory-map.md. Leave the two stubs above as worked examples of the schema.
 - Cross-version stability: the Decode1==4 gate + the OnCheckClientIntegrityRequest dispatch are stable v83→v84; the Security method region relocated (v83 0x00A4Bxxx → v84 0x00A97xxx, the same region as the CSecurityClient ctor 0x00A9790F).
 - Notes: v84 0x00A97DF1. **HIGH-VALUE (needs-main-review).** Two DIFFERENT kinds (constant/import gate + call-graph). Spot-check (independent kind): the callee OnCheckClientIntegrityRequest builds the integrity reply with `COutPacket(26); Encode1(4); … SendPacket` — the Encode1(**4**) reply opcode matches the Decode1==4 request gate, and the throw of CSecurityThreatDetected on a bad scan is the security-specific behavior, confirming the function identity independently of the call edge.
 
+### GetSEPrivilege   (memory-map key: GET_SE_PRIVILEGE)
+- Primary anchor: import call
+- Detail: The only function calling OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES=0x20) -> LookupPrivilegeValueA(0, "SeDebugPrivilege", &luid) -> AdjustTokenPrivileges -> CloseHandle.
+- Fallback anchor: string xref — `SeDebugPrivilege` (the only referencer).
+- Cross-version stability: the SeDebugPrivilege string + the token-API quartet are stable v83->v84.
+- Notes: v84 @ 0x0044FEF9 (v83 0x0044E824). Free function; the v83 cmake value pointed at a different (later) address in this version's space — relocated by string+import, NOT by carrying the v83 value.
+
+### CConfig::CConfig (ctor)   (memory-map keys: C_CONFIG / C_CONFIG_INSTANCE_ADDR)
+- Primary anchor: string xref (StringPool) + singleton store
+- Detail: The CConfig object is the `a1` passed in (placement ctor; not a ZAllocEx::Alloc result). Installs vtable off_B43860, member-inits the fixed pattern (a1[41]=31, a1[43]=100, a1[44]=24), StringPool::GetString(2548 = SOFTWARE\Wizet\MapleStory; v83 was 2547), RegOpenKeyExA (dword_C49CB0, HKLM root) into a1+48, memset(a1+157, 0, 0x1BD/445), then LoadGlobal + ResetSessionInfo. The singleton store is `g_CConfig_pInstance = (a1+1!=0)?a1:0` (the SBB idiom) = C_CONFIG_INSTANCE_ADDR.
+- Fallback anchor: call-graph — it is the sole caller of CConfig::LoadGlobal (the goPartySearch/goAlliance UI-option reader) and ResetSessionInfo; ctor size 0x109 matches v83.
+- Cross-version stability: the member-init constants (31/100/24), the SOFTWARE\Wizet StringPool string, the RegOpenKeyExA(HKLM) + memset(445) shape, and the SBB-singleton-store idiom are stable; the StringPool ID shifted (2547->2548) so do NOT byte-search the ID; locate via ctor, not raw global.
+- Notes: v84 C_CONFIG @ 0x004A127C; C_CONFIG_INSTANCE_ADDR (g_CConfig_pInstance) @ 0x00C452EC. LoadGlobal = sub_4A14AA; ResetSessionInfo = sub_4A42B8.
+
+### CConfig::GetPartnerCode   (memory-map key: C_CONFIG_GET_PARTNER_CODE)
+- Primary anchor: string xref
+- Detail: Sole referencer of the literal `uiWndZ0`; builds the ZXString via Format then calls CConfig::GetOpt_Int(0, key, 0, 0x80000000, 0x7FFFFFFF) and releases the temp.
+- Fallback anchor: structure — the GetOpt_Int(.,.,0,INT_MIN,INT_MAX) call with the single uiWndZ0 key.
+- Cross-version stability: the `uiWndZ0` literal + the GetOpt_Int(min,max) shape are stable v83->v84.
+- Notes: v84 @ 0x0060BC34 (v83 0x005F6CFB). GetOpt_Int = sub_4A3FCE; the v84 decompile drops the implicit `this` (it is a CConfig method).
+
+### CConfig::ApplySysOpt   (memory-map key: C_CONFIG_APPLY_SYS_OPT)
+- Primary anchor: structure + call-graph
+- Detail: `qmemcpy(this+25, a2, 0x30)`; reads the game-start-mode this[35] and writes the two CWvsContext singleton flags at +14376/+14380; calls get_field; computes the BGM/SE volumes as `100*(this[26]+1)/20` (gated on this[27]/this[29]); routes to CRadioManager::SetVolume / CSoundMan::SetBGMVolume / CSoundMan::SetSEVolume; finally writes CInputSystem singleton +2416 = this[31].
+- Fallback anchor: call-graph — the SetBGMVolume/SetSEVolume + get_field trio; reads g_CRadioManager_pInstance (0x00C45848, Task-6) and g_CInputSystem_pInstance (0x00C456B4, Task-5).
+- Cross-version stability: the game-start-mode->CWvsContext write, the 100*(x+1)/20 volume math, and the sound/radio/input singleton routing are structurally identical v83->v84; the CWvsContext member byte-offsets (14376/14380) and singleton addresses are per-version.
+- Notes: v84 @ 0x004A3A9C (v83 0x0049EA33).
+
+### CConfig::CheckExecPathReg   (memory-map key: C_CONFIG_CHECK_EXEC_PATH_REG)
+- Primary anchor: string xref (StringPool exec-path pair) + structure
+- Detail: Reads this[48] (the reg key handle from the ctor); StringPool::GetString(3138 = ExecPath value, 3139 = MapleStory.exe; v83 were 3135/3136); builds a `"\\"`(92) separator; compares the stored exec path against the running path via strcmp; on mismatch concatenates ExecPath + MapleStory.exe and tests it with GetFileAttributes (dword_C49A4C -> -1 or `& 0x10`); writes the value back via RegSetValueExA wrapper.
+- Fallback anchor: structure — the this[48] reg-handle gate + the 92 backslash build + the GetFileAttributes(`==-1 || &0x10`) directory check.
+- Cross-version stability: the reg-handle gate + backslash + GetFileAttributes(&0x10) shape is stable; the StringPool IDs shifted (3135/3136 -> 3138/3139) so do NOT byte-search them.
+- Notes: v84 @ 0x004A1D5C (v83 0x0049CCF3).
+
+### CConfig sys-opt windowed-mode flag   (memory-map key: C_CONFIG_SYS_OPT_WINDOWED_MODE)
+- Primary anchor: reader code site (two already-labeled functions)
+- Detail: The global read by BOTH CWvsApp::CreateMainWindow (the `flag != 0 ? 0x80000000 : 720896` window-style branch + the `?8:0` exstyle) AND CWvsApp::InitializeGr2D (the windowed-vs-fullscreen device branch) — exactly the same two-reader pattern as v83's 0xBF1AC8.
+- Fallback anchor: the 0x80000000 (WS_POPUP fullscreen) vs 720896 (0x000B0000 windowed) style immediates fed by this flag in CreateMainWindow.
+- Cross-version stability: the two-reader (CreateMainWindow + InitializeGr2D) pattern + the 0x80000000/720896 branch are stable; the global address is per-version.
+- Notes: v84 @ 0x00C4B150 (g_CConfig_SysOpt_WindowedMode; v83 0xBF1AC8). Both readers were labeled in Task 2.
+
+### CIGCipher::innoHash   (memory-map key: C_IG_CIPHER_INNO_HASH)
+- Primary anchor: call-graph (sole callee of CIGCipher::bShuffle; called from CClientSocket::SendPacket between MakeBufferList and Flush)
+- Detail: Loops `CIGCipher::bShuffle(v3, buf[i])` over `len` bytes and returns `*v3`; when no key pointer is supplied (`if(!a3) v3=&v6`) it seeds with the no-key default `v6 = -967814158` (0xC6EF3720). Called in CClientSocket::SendPacket between COutPacket::MakeBufferList and CClientSocket::Flush (innoHash(this+132, 4, 0)).
+- Fallback anchor: the -967814158 (0xC6EF3720) seed immediate — stable v83->v84 but treat as per-version; confirm by reading the `if(!a3)` branch, do NOT byte-search it.
+- Cross-version stability: the 0xC6EF3720 seed + the bShuffle-loop shape + the SendPacket call position are stable v83->v84.
+- Notes: v84 @ 0x00A9669E (v83 0x00A4A838); bShuffle = sub_A966D9.
+
+### ZSynchronizedHelper<ZFatalSection> ctor/dtor   (memory-map keys: Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR / _DTOR)
+- Primary anchor: structure (critical-section acquire/release) + byte-identity with v83
+- Detail: CTOR (0x403166): `push esi; mov esi,ecx; <Enter loop>` — calls the ZFatalSection acquire thunk off_C35A80; while it returns non-zero, Sleep(0) (dword_C499F4) and retry; pop esi; retn. Size 0x25. DTOR (ctor+0x25 = 0x40318B): `mov eax,[ecx]; dec dword[eax+4]; jnz +; and dword[eax],0; retn` — decrements the fatal-section recursion count and clears on last release.
+- Fallback anchor: the ctor's Enter/Sleep(0) retry loop is near-unique; the dtor is the tiny adjacent dec-and-clear immediately following the ctor's retn.
+- Cross-version stability: both at the same low addresses 0x403166/0x40318B v83->v84 (tiny RAII helper that happened not to move; the surrounding early-.text region DID shift, so confirm the body, don't assume the address). The CTOR identity is confirmed by its near-unique Enter/Sleep(0) retry loop. NOTE: this is a dump IDB with address-aliasing — IDA's function database maps 0x40318B onto an unrelated large EH function (sub_A1DFFC in v84 / sub_9D5DEA in v83), and `get_bytes` operates in a divergent address space here so a raw byte-read of the dtor is NOT reproducible. The DTOR identity is instead confirmed via paired-xref RAII structure: 0x40318B is called as the release half of an acquire/release pair with the ctor 0x403166 from many tiny (~0x51-byte) RAII wrappers. Do NOT trust list_funcs/disasm at 0x40318B in these dumps.
+- Notes: v84 CTOR @ 0x00403166, DTOR @ 0x0040318B (both unchanged from v83). The ctor is the SendPacket per-socket-lock acquire (catalog §SendPacket).
+
+### CSystemInfo: ctor / Init / GetMachineId / GetGameRoomClient   (memory-map keys: C_SYSTEM_INFO / C_SYSTEM_INFO_INIT / C_SYSTEM_INFO_GET_MACHINE_ID / C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT)
+- Primary anchor: IDB symbol (ctor/Init/GetMachineId retain mangled names) + string xref (Init)
+- Detail: ctor `??0CSystemInfo@@QAE@XZ` installs vtable off_B94FC4 (1 instruction). Init `?Init@CSystemInfo@@QAEXXZ` is the machine-id builder: Netbios (NCB_ASTAT/NCB_RESET MAC query), the `SOFTWARE\Microsoft\Windows\CurrentVersion` reg open, the `CxSupportId` value (RegQueryValueExA, 16 bytes), CoCreateGuid fallback; called from CLogin::SendCheckPasswordPacket. GetMachineId `?GetMachineId@CSystemInfo@@QAEPBEXZ` returns this+20 (the cached 16-byte id). GetGameRoomClient is the huge (0x11B4) process-table function referencing `bluenetterm.exe` / `client.exe` / the agent*.bin list, comparing the parent-process exe against the table.
+- Fallback anchor: GetGameRoomClient via the `bluenetterm.exe` string xref (sole referencer) + adjacency to GetMachineId; Init via CxSupportId. (The 0x11B4 function size is a per-version descriptor — corroborating only, re-measure per version.)
+- Cross-version stability: the three mangled names survived v83->v84; the CxSupportId + SOFTWARE\Microsoft\...\CurrentVersion + Netbios anchors and the bluenetterm.exe process-table are stable.
+- Notes: v84 ctor 0x00AA0D10 (vtable off_B94FC4); Init 0x00AA0D50; GetMachineId 0x00AA1030 (this+20); GetGameRoomClient 0x00AA1130. The whole cluster relocated from v83 0xA54Bxx to v84 0xAA0Dxx/0xAA1xxx.
+
+### ZArray<unsigned char>::RemoveAll   (memory-map key: Z_ARRAY_REMOVE_ALL)
+- Primary anchor: structure + call-graph
+- Detail: `if(*this){ ZAllocEx::Free(*this - 4); *this = 0 }` — frees the array data at (base-4) and nulls the pointer. It is the FIRST call inside ZArray<uchar>::_Alloc (sub_49BBBE), which the COutPacket ctor (0x00703CFA) uses with capacity 256 — i.e. _Alloc clears the old array via RemoveAll before allocating.
+- Fallback anchor: the `*this-4` Free + `*this=0` shape; sole "clear" callee at the top of the packet-buffer _Alloc.
+- Cross-version stability: structurally identical; v83 used 2-arg `ZAllocEx::Free(heapsel, *this-4)`, v84 collapsed to 1-arg `Free(*this-4)` (read the single arg). This `unsigned char` instantiation has STRIDE 1 (no `imul`); the generic ZArray<T>::RemoveAll variants used as struct-audit tools in later tasks carry an `imul stride, count` element-walk + per-element dtor before the Free — re-derive the stride per element type, do not assume 1.
+- Notes: v84 @ 0x004297E5 (v83 0x00428CF1). ZAllocEx::Free = sub_4031ED; _Alloc = sub_49BBBE.
+
+### ZXString<char>::GetBuffer (cstr-assign)   (memory-map key: Z_X_STRING_GET_BUFFER)
+- Primary anchor: ABI/structure + call-graph
+- Detail: Repo wrapper calls it as `_fastcall(this, NULL, src, size)` (ZXString.h:55) to set the string in place. v83 (0x414617) was `__userpurge(this@ecx, a2@esi, Src, Size)` — pure cstr-assign (inner GetBuffer(bRetain=0) + single memcpy + ReleaseBuffer). v84's nearest in-place primitive with the matching `(this, Src, Size)` ABI is the _Cat-family entry sub_429824: on an empty/zeroed ZXString it does `inner_GetBuffer(this, Size, 0) + memcpy(Src, Size) + ReleaseBuffer` (== assign); on a non-empty string it doubles capacity and appends. Because the repo wrapper is only ever invoked on freshly-managed ZXStrings, it behaves as the v83 assign.
+- Fallback anchor: structure — the inner-GetBuffer (sub_417123) + memcpy + ReleaseBuffer (sub_4171CE) sequence operating in place on `this`.
+- Cross-version stability: inner GetBuffer (sub_417123 = v83 0x416674's `?GetBuffer@?$ZXString@D@@QAEPADHH@Z`) is byte-stable; the outer assign primitive's identity is the uncertainty.
+- Notes: v84 @ 0x00429824. **needs-main-review**: the v83 key was a PURE-assign (always replaces); v84's matched function is the _Cat/append family that assigns only when the target is empty. Confirm the repo never calls GetBuffer on a non-empty ZXString (it does not in the current source) or locate a dedicated pure-assign primitive if one exists.
+
+### ZXString<char>::TrimRight / TrimLeft   (memory-map keys: Z_X_STRING_TRIM_RIGHT / Z_X_STRING_TRIM_LEFT)
+- Primary anchor: string literal (whitespace default) + structure
+- Detail: Both default `Str` to the literal `" \t\r\n"` (asc_B4337C) when NULL and use `strchr(Str, c)` to test set-membership, calling the inner GetBuffer (sub_417123, bRetain=1). TrimRight (0x4772DD) scans from the last char backward, NUL-terminates after the last non-set char, ReleaseBuffer(newlen). TrimLeft (0x477392) scans forward to the first non-set char, then memcpy-shifts the remainder to the front. They are ADJACENT in the image (same as v83) and call the same empty-result helper sub_415124.
+- Fallback anchor: the `" \t\r\n"` literal (shared by exactly these two) + the right-scan vs left-scan+memcpy distinction; sizes 0xB5 / 0xB8 (v83 0xB5 / 0xB4).
+- Cross-version stability: the whitespace literal + strchr + inner-GetBuffer(retain) shape are stable v83->v84; the string global address is per-version (v83 asc_AF2244, v84 asc_B4337C).
+- Notes: v84 TrimRight @ 0x004772DD (v83 0x00474414); TrimLeft @ 0x00477392 (v83 0x004744C9). Repo calls them `(this, NULL, s)` (ZXString.h:209/214) — the NULL consumes the edx slot; the v84 functions are thiscall(this, Str).
+
+### CMob::CMob (ctor)   (memory-map key: C_MOB_C_MOB)
+- Primary anchor: IDB symbol (mangled name) — HIGH-VALUE, needs-main-review (Task-11 doom-fix hook target)
+- Detail: `??0CMob@@QAE@PAVCMobTemplate@@@Z` survives in the v84 IDB. Body: CLife base ctor (sub_604FFD); zero-inits the member block; stores `m_pTemplate = pMobTemplate` at this+0x188 (this+98 dword); installs the three CMob vtables at this+0 (IGObj off_B49998), this+1 (ZRefCounted off_B49974), this+2 (off_B49970); runs the `_ZtlSecureTear<>` chain (sub_5F1CCA / sub_417060 / sub_4F05AD / sub_4F0662) over the secured stat members; calls MobStat::SetFrom-equivalent (sub_7AE276) with m_pTemplate; get_update_time (sub_9C7771); ends with StringPool::GetStringW(960 = SP_CANVAS) + PcCreateObject::IWzCanvas (sub_403819) into the HP-indicator canvas at this+1248.
+- Fallback anchor (SPOT-CHECK, independent kind): StringPool ID 960 (CANVAS) + the PcCreateObject::IWzCanvas tail call + the CMobTemplate store + the CLife base ctor + the three-vtable install — confirm the ctor identity WITHOUT relying on the symbol.
+- Cross-version stability: the CLife-base + 3-vtable-install + CMobTemplate-store + _ZtlSecureTear chain + SP_CANVAS/IWzCanvas tail are stable v83->v84; the StringPool ID 956(v83)->960(v84) shifted and the vtable globals are per-version.
+- Notes: v84 @ 0x00678060 (v83 0x006621D9). **HIGH-VALUE / needs-main-review** (Task-11). Two DIFFERENT kinds (symbol + structure/vtable+SP-canvas) + spot-check. **Doom-field observation (Task 11):** the ctor stores `m_pTemplate` at this+0x188 (this+98) and zeroes the adjacent `m_pTemplateByDoom` at this+0x18C (this+99 = 0 at 0x67814c); the doom-reserved template pointer is left NULL on construction (no doom hook installed by the ctor itself), so a doom-fix must populate m_pTemplateByDoom later.
+
 ## v84 IDB baseline
 
 Recorded 2026-06-05 via `mcp__ida-pro__survey_binary` with instance routed to port 13341.

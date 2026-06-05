@@ -8,7 +8,7 @@ set(VERSION_HEADER 8)
 set(PLAYER_LOGGED_IN 0x14)
 set(CLIENT_START_ERROR 0x19)
 
-set(GET_SE_PRIVILEGE 0x0044E824)
+set(GET_SE_PRIVILEGE 0x0044FEF9)
 
 set(C_ACTION_MAN_CREATE_INSTANCE_ADDR 0x00A43C5E)
 set(C_ACTION_MAN_INSTANCE_ADDR 0x00C40C24)
@@ -34,12 +34,12 @@ set(Z_SOCKET_BASE_CLOSE_SOCKET 0x0049974A)
 
 set(Z_SOCKET_BUFFER_ALLOC 0x0049AEE3)
 
-set(C_CONFIG 0x0049C213)
-set(C_CONFIG_INSTANCE_ADDR 0x00BEBF9C)
-set(C_CONFIG_GET_PARTNER_CODE 0x005F6CFB)
-set(C_CONFIG_APPLY_SYS_OPT 0x0049EA33)
-set(C_CONFIG_CHECK_EXEC_PATH_REG 0x0049CCF3)
-set(C_CONFIG_SYS_OPT_WINDOWED_MODE 0x00BF1AC8)
+set(C_CONFIG 0x004A127C)
+set(C_CONFIG_INSTANCE_ADDR 0x00C452EC)
+set(C_CONFIG_GET_PARTNER_CODE 0x0060BC34)
+set(C_CONFIG_APPLY_SYS_OPT 0x004A3A9C)
+set(C_CONFIG_CHECK_EXEC_PATH_REG 0x004A1D5C)
+set(C_CONFIG_SYS_OPT_WINDOWED_MODE 0x00C4B150) # sys-opt windowed-mode flag; read by CreateMainWindow + InitializeGr2D (0x80000000 vs 720896 branch)
 
 set(C_FUNC_KEY_MAPPED_MAN 0x0059DD00)
 set(C_FUNC_KEY_MAPPED_MAN_VFTABLE 0x00B46B08)
@@ -93,8 +93,11 @@ set(C_OUT_PACKET_ENCODE_STR 0x00471EB0)
 set(C_OUT_PACKET_ENCODE_BUFFER 0x0046E5FE)
 set(C_OUT_PACKET_MAKE_BUFFER_LIST 0x00703E53)
 
-set(C_IG_CIPHER_INNO_HASH 0x00A4A838)
+set(C_IG_CIPHER_INNO_HASH 0x00A9669E)
 
+# byte-identical to v83; ctor = critical-section Enter loop (off_C35A80 + Sleep dword_C499F4);
+# dtor (ctor+0x25) = mov eax,[ecx]; dec [eax+4]; jnz; and [eax],0; retn (verified via raw bytes —
+# IDA func-db can't represent 0x40318B due to dump address-aliasing). See signature-catalog.md.
 set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR 0x00403166)
 set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR 0x0040318B)
 
@@ -128,10 +131,10 @@ set(RESET_LSP 0x0044ED47) # does not exist
 set(C_STAGE_ON_MOUSE_ENTER 0x0079892C)
 set(C_STAGE_ON_PACKET 0x0079894B)
 
-set(C_SYSTEM_INFO 0x00A54B90)
-set(C_SYSTEM_INFO_INIT 0x00A54BD0)
-set(C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT 0x00A54FB0)
-set(C_SYSTEM_INFO_GET_MACHINE_ID 0x00A54EB0)
+set(C_SYSTEM_INFO 0x00AA0D10)
+set(C_SYSTEM_INFO_INIT 0x00AA0D50)
+set(C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT 0x00AA1130)
+set(C_SYSTEM_INFO_GET_MACHINE_ID 0x00AA1030)
 
 set(C_UI_TITLE_INSTANCE_ADDR 0x00C47064)
 
@@ -170,11 +173,16 @@ set(WIN_MAIN_PATCHER_OFFSET 0x241) # call ShowStartUpWndModal @ 0xA3A1E1; NOP 5 
 set(C_WND_MAN_S_UPDATE 0x00A2CBEB)
 set(C_WND_MAN_REDRAW_INVALIDATED_WINDOWS 0x00A2C96F)
 
-set(Z_ARRAY_REMOVE_ALL 0x00428CF1)
+set(Z_ARRAY_REMOVE_ALL 0x004297E5) # ZArray<uchar>::RemoveAll: if(*this){ZAllocEx::Free(*this-4); *this=0}; stride-1 (uchar)
 
-set(Z_X_STRING_GET_BUFFER 0x00414617)
-set(Z_X_STRING_TRIM_RIGHT 0x00474414)
-set(Z_X_STRING_TRIM_LEFT 0x004744C9)
+# cstr-assign primitive (in-place this=src[0..size)); v84 nearest in-place ABI match is the
+# _Cat-family entry which assigns on empty / appends on non-empty. Repo wrapper is always called
+# on a fresh/managed ZXString so behaves as assign. needs-main-review. See signature-catalog.md.
+set(Z_X_STRING_GET_BUFFER 0x00429824)
+
+# TrimRight/TrimLeft below are NOT under review (no assign/append ambiguity) — anchored on the " \t\r\n" set.
+set(Z_X_STRING_TRIM_RIGHT 0x004772DD)
+set(Z_X_STRING_TRIM_LEFT 0x00477392)
 
 set(C_FIELD_SEND_JOIN_PARTY_MSG 0x0052FECF)
 set(C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET 0x65)
@@ -189,7 +197,7 @@ set(DR_CHECK 0x00000000) # does not exist
 set(CE_TRACER_RUN 0x00000000) # does not exist
 set(SEND_HS_LOG 0x00A39EC9)
 
-set(C_MOB_C_MOB 0x006621D9)
+set(C_MOB_C_MOB 0x00678060) # CMob::CMob ctor (doom-fix hook target, Task-11). m_pTemplate=this+0x188, m_pTemplateByDoom(this+0x18C)=0. needs-main-review
 
 set(C_SECURITY_CLIENT_ON_PACKET_RET_STUB 0x00000000) # JMS only
 set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only
