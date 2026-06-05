@@ -2,6 +2,7 @@
 
 #include "abi/abi_globals.h"
 #include "host_globals.h"
+#include "hooks/process_key_hook.h"
 #include "hooks/process_packet_hook.h"
 #include "hooks/s_update_hook.h"
 #include "hooks/stage_dtor_hook.h"
@@ -49,7 +50,10 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
     // rejection we log and stay inert (return 0) rather than run partially
     // hooked. Grouped together so the future H2 (CWndMan::ProcessKey, Task
     // 7.1) install can be inserted ahead of the others.
-    // H2 (CWndMan::ProcessKey) install is added in Task 7.1 (pending) -- here.
+    if (!custom_ui_host::InstallProcessKeyHook()) {
+        Log("custom-ui-host: ProcessKey hook install failed -- staying inert");
+        return 0;
+    }
     if (!custom_ui_host::InstallProcessPacketHook()) {
         Log("custom-ui-host: ProcessPacket hook install failed -- staying inert");
         return 0;
