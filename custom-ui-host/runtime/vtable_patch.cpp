@@ -52,11 +52,16 @@ void __fastcall Draw_Override(void* self, void* /*edx*/, const void* pClip) {
     FrameworkExtras* fe = CustomUIWnd::ExtrasOf(self);
     if (!fe)
         return;
-    for (const ControlEntry& entry : fe->controls) {
-        if (!entry.text.empty()) {
-            DrawLabel(self, entry.draw_x, entry.draw_y, entry.text.c_str());
+    // Text drawing creates a font + COM canvas and can throw (_com_error) or
+    // AV if a graphics resource is unavailable. This runs inside the game's
+    // render loop, so an unguarded fault would crash the client. Contain it.
+    SafeDispatch("CustomUI draw labels", [self, fe] {
+        for (const ControlEntry& entry : fe->controls) {
+            if (!entry.text.empty()) {
+                DrawLabel(self, entry.draw_x, entry.draw_y, entry.text.c_str());
+            }
         }
-    }
+    });
 }
 
 } // namespace
