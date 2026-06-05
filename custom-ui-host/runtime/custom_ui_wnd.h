@@ -62,4 +62,12 @@ struct CustomUIWnd {
     void *GameWnd();  // returns pointer to the placed CUIWnd (== this buffer)
 };
 
+// Walks all registered windows; for each visible one, records the
+// visibility in FrameworkExtras::was_visible and calls Hide().
+void SnapshotAndSuspendVisibleWindows();
+
+// For each window where was_visible is true, calls Show() and clears the
+// flag.
+void RestoreSuspendedWindows();
+
 } // namespace custom_ui_host

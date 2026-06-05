@@ -2,6 +2,7 @@
 
 #include "runtime/custom_ui_wnd.h"
 
+#include "abi/abi_globals.h"
 #include "logger.h"
 #include "memory_map.h"
 
@@ -126,6 +127,26 @@ void CustomUIWnd::Hide() {
 
 bool CustomUIWnd::IsVisible() const {
     return const_cast<CustomUIWnd *>(this)->Extras().is_visible;
+}
+
+void SnapshotAndSuspendVisibleWindows() {
+    if (!g_windows) return;
+    g_windows->ForEach([](CustomUIWnd *wnd) {
+        auto &fe = wnd->Extras();
+        fe.was_visible = fe.is_visible;
+        if (fe.is_visible) wnd->Hide();
+    });
+}
+
+void RestoreSuspendedWindows() {
+    if (!g_windows) return;
+    g_windows->ForEach([](CustomUIWnd *wnd) {
+        auto &fe = wnd->Extras();
+        if (fe.was_visible) {
+            wnd->Show();
+            fe.was_visible = false;
+        }
+    });
 }
 
 }  // namespace custom_ui_host
