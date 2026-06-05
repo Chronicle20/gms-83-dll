@@ -1,5 +1,8 @@
 #pragma once
 struct CUIWnd : CWnd {
+    CUIWnd(int nUIType, int closeType, int closeX, int closeY,
+           const unsigned short *sBackgrndUOL, int nBackgrndX, int nBackgrndY);
+
     ZRef<CCtrlButton> m_pBtClose;
     CUIToolTip m_uiToolTip;
     int m_nUIType;
