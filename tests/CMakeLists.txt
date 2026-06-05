@@ -23,6 +23,15 @@ add_executable(byte_ops_tests
 target_include_directories(byte_ops_tests PRIVATE ${CMAKE_SOURCE_DIR}/common)
 target_link_libraries(byte_ops_tests PRIVATE gtest_main)
 
+add_executable(hotkey_registry_tests
+    test_hotkey_registry.cpp
+    ${CMAKE_SOURCE_DIR}/custom-ui-host/registries/hotkey_registry.cpp)
+target_include_directories(hotkey_registry_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/custom-ui-host/registries
+    ${CMAKE_SOURCE_DIR}/common)
+target_link_libraries(hotkey_registry_tests PRIVATE gtest_main)
+
 include(GoogleTest)
 gtest_discover_tests(parse_ini_tests)
 gtest_discover_tests(byte_ops_tests)
+gtest_discover_tests(hotkey_registry_tests)
