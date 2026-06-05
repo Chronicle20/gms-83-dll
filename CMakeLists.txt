@@ -76,6 +76,7 @@ add_subdirectory(proxy)
 add_subdirectory(redirect)
 add_subdirectory(skip-logo)
 add_subdirectory(window-mode)
+add_subdirectory(custom-ui-host)
 
 # Custom target to package DLLs into the artifacts/ layout
 set(EDIT_DLL_TARGETS
@@ -89,6 +90,7 @@ set(EDIT_DLL_TARGETS
     redirect
     skip-logo
     window-mode
+    custom-ui-host
 )
 
 set(PACKAGE_COMMANDS
@@ -96,10 +98,12 @@ set(PACKAGE_COMMANDS
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/artifacts/edits"
 )
 foreach(t ${EDIT_DLL_TARGETS})
-    list(APPEND PACKAGE_COMMANDS
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "$<TARGET_FILE:${t}>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
-    )
+    if (TARGET ${t})
+        list(APPEND PACKAGE_COMMANDS
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "$<TARGET_FILE:${t}>" "${CMAKE_BINARY_DIR}/artifacts/edits/"
+        )
+    endif()
 endforeach()
 list(APPEND PACKAGE_COMMANDS
     COMMAND ${CMAKE_COMMAND} -E copy
