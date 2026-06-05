@@ -205,8 +205,8 @@ set(C_RESMAN_INSTANCE_PTR 0x00BF14E8)      # global _com_ptr holding the IWzResM
 set(C_RESMAN_GET_OBJECT_A 0x00403A93)      # IWzResMan::GetObjectA (?GetObjectA@IWzResMan@@QAE?AVZtl_variant_t@@VZtl_bstr_t@@ABV2@1@Z) __thiscall, struct-returns Ztl_variant_t (hidden result ptr first stack arg), args (Ztl_bstr_t sUOL byval=m_Data, Ztl_variant_t* vParam, Ztl_variant_t* vAux). vParam/vAux are the "omitted optional" variant (VT_ERROR/PARAMNOTFOUND). Consumes (releases) sUOL. Loads a WZ object by UOL path
 set(C_VARIANT_GET_UNKNOWN 0x004032B2)      # Ztl_variant_t::GetUnknown (?GetUnknown@Ztl_variant_t@@QBEPAUIUnknown@@_N0@Z) __thiscall(this=&variant, 0, 0) -> IUnknown* (borrowed from the variant)
 set(C_QI_CANVAS 0x0041E527)                # sub_41E527: QueryInterface helper -- __thiscall(_com_ptr<IWzCanvas>* out, IUnknown** in); QIs *in to IWzCanvas (IID dword_BD82F8), stores AddRef'd ptr in *out, returns hr
-set(C_CANVAS_GET_WIDTH 0x0040B920)         # sub_40B920: IWzCanvas::GetWidth wrapper -- __thiscall(canvas) -> LONG width (calls COM vtable slot +0x40)
-set(C_CANVAS_GET_HEIGHT 0x0040B947)        # sub_40B947: IWzCanvas::GetHeight wrapper -- __thiscall(canvas) -> LONG height (COM vtable slot +0x44)
+set(C_CANVAS_GET_WIDTH 0x0040B947)         # IWzCanvas::GetWidth wrapper -- __thiscall(canvas) -> LONG width (COM vtable slot +0x44). (Runtime-verified: border piece 0 is 33 wide.)
+set(C_CANVAS_GET_HEIGHT 0x0040B920)        # IWzCanvas::GetHeight wrapper -- __thiscall(canvas) -> LONG height (COM vtable slot +0x40). The blit-image method is COM vtable slot 32 (byte +0x80), __stdcall(this, x, y, IWzCanvas* img, Ztl_variant_t vAlpha spread as 4 dwords) -- hardcoded in text_draw.cpp, cf. CWnd::Draw / sub_98812C
 
 set(Z_ARRAY_REMOVE_ALL 0x00428CF1)
 

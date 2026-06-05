@@ -74,6 +74,8 @@ void MakeVariantMissing(Variant* out) {
 // Cached border-piece canvases (IWzCanvas*), one per WZ node. Index -> role:
 // 0=top-left 1=top 2=top-right 3=left 4=right 5=bottom-left 6=bottom 7=bottom-right.
 void* g_border[8] = {};
+int g_border_w[8] = {};
+int g_border_h[8] = {};
 bool g_border_attempted = false;
 int g_border_base = -1; // index into kBorderBases that resolved
 
@@ -145,17 +147,65 @@ bool InitBorder() {
         g_border[i] = LoadUICanvas(uol);
     }
     for (int i = 0; i < 8; ++i) {
-        int w = -1, h = -1;
         if (g_border[i]) {
             try {
-                w = CanvasWidth(g_border[i]);
-                h = CanvasHeight(g_border[i]);
+                g_border_w[i] = CanvasWidth(g_border[i]);
+                g_border_h[i] = CanvasHeight(g_border[i]);
             } catch (...) {
             }
         }
-        Log("custom-ui-host: border[%d] (%s/%d) canvas=%p %dx%d", i, kBorderBases[g_border_base], i, g_border[i], w, h);
+        Log("custom-ui-host: border[%d] (%s/%d) canvas=%p %dx%d", i, kBorderBases[g_border_base], i, g_border[i],
+            g_border_w[i], g_border_h[i]);
     }
     return true;
+}
+
+// Blit a loaded IWzCanvas image onto the destination canvas at (x,y), native
+// size, fully opaque. The blit-image method is COM vtable slot 32 (+0x80),
+// __stdcall(this, x, y, img, <VT_I4 255 alpha spread as 4 dwords>).
+void BlitCanvas(void* dstCanvas, void** dstVtbl, int x, int y, void* img) {
+    if (!img)
+        return;
+    Variant alpha;
+    std::memset(&alpha, 0, sizeof(alpha));
+    *reinterpret_cast<unsigned short*>(alpha.bytes) = 3;      // vt = VT_I4
+    *reinterpret_cast<unsigned long*>(alpha.bytes + 8) = 255; // lVal = 255 (full alpha)
+    const unsigned long* a = reinterpret_cast<const unsigned long*>(alpha.bytes);
+    reinterpret_cast<long(__stdcall*)(void*, int, int, void*, unsigned long, unsigned long, unsigned long,
+                                      unsigned long)>(dstVtbl[32])(dstCanvas, x, y, img, a[0], a[1], a[2], a[3]);
+}
+
+// Compose the WorldMap 9-slice border onto dstCanvas for a w x h dialog: four
+// corners at the corners, the four edges tiled along each side. Pieces:
+// 0=TL 1=top 2=TR 3=left 4=right 5=BL 6=bottom 7=BR.
+void DrawBorder(void* dstCanvas, void** dstVtbl, int w, int h) {
+    const int wTL = g_border_w[0], hTL = g_border_h[0];
+    const int wTR = g_border_w[2], hTR = g_border_h[2];
+    const int wBL = g_border_w[5], hBL = g_border_h[5];
+    const int wBR = g_border_w[7], hBR = g_border_h[7];
+
+    // Corners.
+    BlitCanvas(dstCanvas, dstVtbl, 0, 0, g_border[0]);
+    BlitCanvas(dstCanvas, dstVtbl, w - wTR, 0, g_border[2]);
+    BlitCanvas(dstCanvas, dstVtbl, 0, h - hBL, g_border[5]);
+    BlitCanvas(dstCanvas, dstVtbl, w - wBR, h - hBR, g_border[7]);
+
+    // Top edge (piece 1) tiled horizontally between the top corners.
+    if (g_border[1] && g_border_w[1] > 0)
+        for (int x = wTL; x < w - wTR; x += g_border_w[1])
+            BlitCanvas(dstCanvas, dstVtbl, x, 0, g_border[1]);
+    // Bottom edge (piece 6) tiled along the bottom, aligned to the piece bottom.
+    if (g_border[6] && g_border_w[6] > 0)
+        for (int x = wBL; x < w - wBR; x += g_border_w[6])
+            BlitCanvas(dstCanvas, dstVtbl, x, h - g_border_h[6], g_border[6]);
+    // Left edge (piece 3) tiled vertically between the left corners.
+    if (g_border[3] && g_border_h[3] > 0)
+        for (int y = hTL; y < h - hBL; y += g_border_h[3])
+            BlitCanvas(dstCanvas, dstVtbl, 0, y, g_border[3]);
+    // Right edge (piece 4) tiled along the right, aligned to the piece right.
+    if (g_border[4] && g_border_h[4] > 0)
+        for (int y = hTR; y < h - hBR; y += g_border_h[4])
+            BlitCanvas(dstCanvas, dstVtbl, w - g_border_w[4], y, g_border[4]);
 }
 
 } // namespace
@@ -258,10 +308,8 @@ void DrawFrame(void* cuiwnd_self, int w, int h) {
     if (w <= 0 || h <= 0)
         return;
 
-    // Stage B (validation): load the WorldMap border pieces once and log their
-    // sizes. Blitting them is the next step; for now the FillRect frame below
-    // still draws so the dialog stays visible regardless.
-    InitBorder();
+    // Load the WorldMap border pieces once (cached).
+    const bool haveBorder = InitBorder();
 
     void* canvas_storage = nullptr;
     reinterpret_cast<GetCanvasFn>(C_WND_GET_CANVAS)(cuiwnd_self, nullptr, &canvas_storage);
@@ -271,17 +319,24 @@ void DrawFrame(void* cuiwnd_self, int w, int h) {
 
     // IWzCanvas::FillRect = raw COM vtable slot 35 (+0x8C), __stdcall(this, x, y,
     // w, h, argb): confirmed in CUIToolTip::MakeLayer (`mov edx,[esi]; push args;
-    // push canvas; call [edx+8Ch]`). Colour is 24-bit RGB (high byte ignored);
-    // the same call draws tooltip boxes. Body fill then 1px border lines.
+    // push canvas; call [edx+8Ch]`). Colour is ARGB -- alpha 0x00 is fully
+    // TRANSPARENT (an earlier 0x00xxxxxx body drew nothing), so use 0xFF alpha.
     void** vtbl = *reinterpret_cast<void***>(canvas);
     auto fill = reinterpret_cast<long(__stdcall*)(void*, int, int, int, int, unsigned int)>(vtbl[35]);
-    constexpr unsigned int kBodyColor = 0xE6E6E6;   // light grey panel
-    constexpr unsigned int kBorderColor = 0x2A2A2A; // dark border
+    constexpr unsigned int kBodyColor = 0xFFECE6D8;   // opaque light parchment panel
+    constexpr unsigned int kBorderColor = 0xFF2A2A2A; // fallback border (no WZ art)
+
+    // Opaque body fill, then the WorldMap 9-slice border art on top. If the art
+    // failed to load, fall back to a plain 1px FillRect border.
     fill(canvas, 0, 0, w, h, kBodyColor);
-    fill(canvas, 0, 0, w, 1, kBorderColor);     // top
-    fill(canvas, 0, h - 1, w, 1, kBorderColor); // bottom
-    fill(canvas, 0, 0, 1, h, kBorderColor);     // left
-    fill(canvas, w - 1, 0, 1, h, kBorderColor); // right
+    if (haveBorder) {
+        DrawBorder(canvas, vtbl, w, h);
+    } else {
+        fill(canvas, 0, 0, w, 1, kBorderColor);     // top
+        fill(canvas, 0, h - 1, w, 1, kBorderColor); // bottom
+        fill(canvas, 0, 0, 1, h, kBorderColor);     // left
+        fill(canvas, w - 1, 0, 1, h, kBorderColor); // right
+    }
 
     // release the canvas ref (raw IUnknown::Release, slot 2, __stdcall -- see
     // DrawLabel step 5 for why the convention differs from the C++ wrappers).
