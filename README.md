@@ -40,6 +40,18 @@ Removes the display of the MapleStory patcher window on launch.
 ### redirect
 Redirect IP the game uses for socket connections. Provided configuration produces a "localhost".
 
+### custom-ui-host
+Reusable in-DLL UI framework. Consumer edits load this DLL and call its
+C ABI (`CustomUI_*`) to declare hotkey-toggled windows, custom packet
+opcodes, and click/handler callbacks. See `custom-ui-host/README.md`.
+GMS v83.1 only.
+
+### custom-ui-demo
+Reference consumer for `custom-ui-host`. Builds a 240x80 window with a
+"Server says: ?" label and a "Ping" button bound to VK_F8 by default;
+clicking Ping sends opcode `0x0F00`, the server echoes via `0x2000`,
+and the label updates. See `custom-ui-demo/README.md`. GMS v83.1 only.
+
 ## Notes
 
 ### Build Environment
