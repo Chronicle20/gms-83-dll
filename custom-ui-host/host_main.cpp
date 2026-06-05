@@ -3,6 +3,8 @@
 #include "abi/abi_globals.h"
 #include "host_globals.h"
 #include "hooks/process_packet_hook.h"
+#include "hooks/s_update_hook.h"
+#include "hooks/stage_dtor_hook.h"
 #include "logger.h"
 #include "runtime/host_config.h"
 
@@ -50,6 +52,14 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
     // H2 (CWndMan::ProcessKey) install is added in Task 7.1 (pending) -- here.
     if (!custom_ui_host::InstallProcessPacketHook()) {
         Log("custom-ui-host: ProcessPacket hook install failed -- staying inert");
+        return 0;
+    }
+    if (!custom_ui_host::InstallStageDtorHook()) {
+        Log("custom-ui-host: StageDtor hook install failed -- staying inert");
+        return 0;
+    }
+    if (!custom_ui_host::InstallSUpdateHook()) {
+        Log("custom-ui-host: s_Update hook install failed -- staying inert");
         return 0;
     }
 
