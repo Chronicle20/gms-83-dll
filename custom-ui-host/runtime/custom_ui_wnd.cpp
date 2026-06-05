@@ -20,6 +20,26 @@ namespace {
 constexpr std::size_t kCUIWndSize = SIZEOF_C_UI_WND_V83_1;
 constexpr std::size_t kBufSize = kCUIWndSize + sizeof(FrameworkExtras);
 
+// CWnd::m_pLayer.m_pInterface byte offset (confirmed: CWnd::CreateWnd reads
+// [this+0x18]; CWndMan::RegisterUIWindow reads *(wnd+24)).
+constexpr std::size_t kLayerInterfaceOffset = 24;
+// IWzGr2DLayer vtable byte offset 0x11C (slot 71) = put_visible(BOOL).
+// Evidence: CMapLoadable::SetLayerListVisible @0x644ac5 calls
+// (*(*layer + 284))(layer, bVisible) on each layer. RemoveWindow only
+// delists from CWndMan and never hides the layer, so a hidden window keeps
+// compositing its last-blitted content unless we toggle this explicitly.
+constexpr std::size_t kLayerPutVisibleSlot = 71;
+
+// Toggle the window layer's COM visibility. COM methods here are __stdcall
+// with `this` as the first stack arg (cf. CreateWnd's push this; call [vtbl+N]).
+void SetLayerVisible(void* buf, int visible) {
+    void* layer = *reinterpret_cast<void**>(static_cast<unsigned char*>(buf) + kLayerInterfaceOffset);
+    if (!layer)
+        return;
+    void** vtbl = *reinterpret_cast<void***>(layer);
+    reinterpret_cast<long(__stdcall*)(void*, int)>(vtbl[kLayerPutVisibleSlot])(layer, visible);
+}
+
 } // namespace
 
 FrameworkExtras* CustomUIWnd::ExtrasOf(void* cuiwnd_self) {
@@ -136,6 +156,9 @@ void CustomUIWnd::Show() {
         // Re-show: layer already exists; re-add to the display z-list.
         reinterpret_cast<void(__cdecl*)(void*)>(C_WND_MAN_REGISTER_UI_WINDOW)(buf);
     }
+    // Ensure the layer is visible. Hide() sets put_visible(FALSE), and
+    // delist/relist alone does not re-show it, so a re-Show must flip it back.
+    SafeDispatch("CustomUI show layer", [buf] { SetLayerVisible(buf, 1); });
     fe.is_visible = true;
 }
 
@@ -143,6 +166,10 @@ void CustomUIWnd::Hide() {
     auto& fe = Extras();
     if (!fe.is_visible)
         return;
+    // Hide the COM layer FIRST: CWndMan::RemoveWindow only delists the window
+    // for input/draw dispatch -- it never hides the layer, so the layer keeps
+    // compositing its last-blitted content. put_visible(FALSE) removes it.
+    SafeDispatch("CustomUI hide layer", [this] { SetLayerVisible(GameWnd(), 0); });
     // Remove from the display z-list; the layer/object persists for re-show.
     reinterpret_cast<void(__cdecl*)(void*)>(C_WND_MAN_UNREGISTER_UI_WINDOW)(GameWnd());
     fe.is_visible = false;
