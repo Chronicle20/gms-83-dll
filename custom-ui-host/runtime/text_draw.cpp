@@ -34,9 +34,6 @@ bool g_font_init_attempted = false;
 // __thiscall surrogate (ecx=this) for _bstr_t::_bstr_t(const char*).
 using BStrCtorFn = void(__fastcall*)(void* /*this*/, void* /*edx*/, const char* ansi);
 
-// __thiscall surrogate for Ztl_variant_t::ctor_i4(int value, short vt).
-using VariantCtorI4Fn = void(__fastcall*)(void* /*this*/, void* /*edx*/, int value, short vt);
-
 // __cdecl PcCreateObject::IWzFont(LPCWSTR hint, IWzFont** ppOut, int aggregate).
 using PcCreateIWzFontFn = void(__cdecl*)(const wchar_t* hint, void** ppOut, int aggregate);
 
@@ -60,9 +57,16 @@ void MakeBStr(BStr* out, const char* ansi) {
     reinterpret_cast<BStrCtorFn>(C_BSTR_FROM_CSTR)(out, nullptr, ansi);
 }
 
-void MakeVariantI4(Variant* out, int value) {
+// The COM "optional argument omitted" variant: VT_ERROR (0x000A) with scode
+// DISP_E_PARAMNOTFOUND (0x80020004). This is exactly the global `pvargSrc` the
+// game copies for IWzFont::Create's style and IWzCanvas::DrawTextA's alpha +
+// tab-origin args (cf. sub_4275F0 / sub_461CA8) -- i.e. "use defaults". Passing
+// a real VT_I4 instead makes those COM methods reject the arg and throw a
+// _com_error (this was why IWzFont::Create threw).
+void MakeVariantMissing(Variant* out) {
     std::memset(out, 0, sizeof(*out));
-    reinterpret_cast<VariantCtorI4Fn>(C_VARIANT_CTOR_I4)(out, nullptr, value, 3);
+    *reinterpret_cast<unsigned short*>(out->bytes) = 0x000A;         // vt = VT_ERROR
+    *reinterpret_cast<unsigned long*>(out->bytes + 8) = 0x80020004u; // scode = DISP_E_PARAMNOTFOUND
 }
 
 } // namespace
@@ -117,7 +121,7 @@ bool InitLabelFont() {
     BStr face;
     MakeBStr(&face, "Arial");
     Variant style;
-    MakeVariantI4(&style, 0);
+    MakeVariantMissing(&style); // optional style omitted -> regular weight
     long hr = 0;
     try {
         hr = reinterpret_cast<IWzFontCreateFn>(C_IWZFONT_CREATE)(font, nullptr, face.m_Data, /*height*/ 12,
@@ -155,12 +159,14 @@ void DrawLabel(void* cuiwnd_self, int x, int y, const char* utf8) {
     BStr text;
     MakeBStr(&text, utf8);
 
-    // 3. opacity variant (VT_I4, alpha 255 = fully opaque; RGB lives on the
-    //    font) and an empty tab-origin variant.
+    // 3. alpha + tab-origin variants. The game (sub_4275F0) passes the
+    //    "omitted optional" variant for both -> default opacity (opaque; RGB
+    //    lives on the font) and default tab origin. A real VT_I4 here makes
+    //    DrawTextA's inner COM call reject the arg and throw.
     Variant vAlpha;
-    MakeVariantI4(&vAlpha, 255);
+    MakeVariantMissing(&vAlpha);
     Variant vTab;
-    MakeVariantI4(&vTab, 0);
+    MakeVariantMissing(&vTab);
 
     // 4. draw.
     reinterpret_cast<DrawTextAFn>(C_DRAW_TEXT_A)(raw_canvas, nullptr, x, y, text.m_Data, g_label_font, &vAlpha, &vTab);
