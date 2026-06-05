@@ -10,7 +10,11 @@ if (NOT (BUILD_REGION STREQUAL "GMS"
     return()
 endif()
 
-add_edit_dll(custom-ui-host SOURCES
+# OUTPUT_NAME is the STABLE, unversioned "custom-ui-host.dll" — consumer edits
+# resolve it by that literal name (LoadLibrary("custom-ui-host.dll") +
+# GetProcAddress). ABI versioning is exposed via CustomUI_GetAbiVersion(), not
+# the filename, so the host must NOT carry the default "-1.0.0" suffix.
+add_edit_dll(custom-ui-host OUTPUT_NAME custom-ui-host SOURCES
     dllmain.cpp
     host_main.cpp
     abi/custom_ui_abi.cpp
