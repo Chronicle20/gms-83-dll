@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "abi/abi_globals.h"
-#include "hooks/debug_hooks.h"
 #include "hooks/process_key_hook.h"
 #include "hooks/process_packet_hook.h"
 #include "hooks/s_update_hook.h"
@@ -83,11 +82,6 @@ DWORD WINAPI MainProc(LPVOID /*lpParam*/) {
     }
     Log("custom-ui-host: sUpdate hook installed");
 
-    if (!custom_ui_host::InstallDebugHooks()) {
-        Log("custom-ui-host: debug hooks install failed");
-    }
-
-    // Vtable cloning lands in Phase 5.
     custom_ui_host::g_ready.store(true);
     Log("custom-ui-host: ready");
     return 0;

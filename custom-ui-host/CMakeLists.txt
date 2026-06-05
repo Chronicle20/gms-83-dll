@@ -22,7 +22,6 @@ add_edit_dll(custom-ui-host OUTPUT_NAME custom-ui-host SOURCES
     hooks/process_key_hook.cpp
     hooks/stage_dtor_hook.cpp
     hooks/s_update_hook.cpp
-    hooks/debug_hooks.cpp
     registries/window_registry.cpp
     registries/hotkey_registry.cpp
     registries/packet_registry.cpp

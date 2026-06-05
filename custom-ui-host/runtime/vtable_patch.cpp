@@ -34,9 +34,13 @@ void __fastcall OnButtonClicked_Override(void* self, void* /*edx*/, unsigned int
         return;
     }
     // Unknown id: this is the stock close button (id 1000) built by
-    // CUIWnd::OnCreate. Forward to the stock handler so it still closes.
-    reinterpret_cast<void(__fastcall*)(void*, void*, unsigned int)>(C_UI_WND_ON_BUTTON_CLICKED)(self, nullptr,
-                                                                                                nControlId);
+    // CUIWnd::OnCreate. We must NOT forward to stock CUIWnd::OnButtonClicked --
+    // it closes by type id (CWvsContext::UI_Close(m_nUIType)), which targets
+    // the real Equip window registered under nUIType=1, not our `this`. Hide
+    // our own window instead.
+    if (nControlId == 1000) {
+        SafeDispatch("CustomUI close button", [self] { reinterpret_cast<CustomUIWnd*>(self)->Hide(); });
+    }
 }
 
 // Slot 11: CWnd::Draw -- void __thiscall(this, const tagRECT* pClip). Paint the
