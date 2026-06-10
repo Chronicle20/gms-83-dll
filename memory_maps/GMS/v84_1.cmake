@@ -244,6 +244,4 @@ set(C_TI_TERMINATE_EXCEPTION  0x00B986C0) # __TI3?AVCTerminateException@@
 set(C_TI_PATCH_EXCEPTION       0x00BA72F0) # __TI3?AVCPatchException@@
 set(C_TI_ZEXCEPTION            0x00B98E40) # __TI1?AVZException@@
 set(C_PATCH_EXCEPTION_BUILDER  0x00527978) # builds CPatchException obj from m_nTargetVersion (Run: v3=sub_527978(this[16]))
-set(C_PATCH_EXCEPTION_BUILDER_KIND 0) # 0=free fn (version)->obj* ; 1=__thiscall ctor(buf,version)
-set(C_COM_RAISE_ERROR          0x00AAC743) # _com_raise_error(hr,0)  (Run com path: sub_AAC743(v37,0))
 set(C_COM_RAISE_ERROR_EX       0x00AABF64) # _com_raise_errorex(hr)  (Run render-fail: sub_AABF64(hr))

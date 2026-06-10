@@ -196,6 +196,4 @@ set(C_TI_TERMINATE_EXCEPTION  0x00BF74B8) # __TI3?AVCTerminateException@@
 set(C_TI_PATCH_EXCEPTION       0x00C07518) # __TI3?AVCPatchException@@
 set(C_TI_ZEXCEPTION            0x00BF7C38) # __TI1?AVZException@@
 set(C_PATCH_EXCEPTION_BUILDER  0x0055127C) # __thiscall ctor(buffer,version)->buffer; writes *buf=0x20000000
-set(C_PATCH_EXCEPTION_BUILDER_KIND 1) # buffer in ECX (lea ecx), version pushed on stack; returns this
-set(C_COM_RAISE_ERROR          0x00B4DCEF) # ?_com_raise_error@@YGXJPAUIErrorInfo@@@Z (hr, IErrorInfo*=0)
 set(C_COM_RAISE_ERROR_EX       0x00B4D510) # ?_com_issue_error@@YGXJ@Z (1-arg HRESULT raiser)

@@ -14,7 +14,7 @@
 
 **IDB lane discipline:** `select_instance` is global shared state — never run two IDA tasks concurrently; always `get_metadata` after selecting to confirm the loaded IDB before drawing version conclusions. Ports: GMS v83 `13337`, v87 `13338`, v95 `13339`, JMS185 `13340`, v84 `13341`; GMS v111 has no live IDB (open its `.i64` with `open_file`).
 
-**The 8 keys (per build target):** `C_TI_DISCONNECT_EXCEPTION`, `C_TI_TERMINATE_EXCEPTION`, `C_TI_PATCH_EXCEPTION`, `C_TI_ZEXCEPTION`, `C_PATCH_EXCEPTION_BUILDER`, `C_PATCH_EXCEPTION_BUILDER_KIND` (0 = free fn `(version)->obj*`; 1 = `__thiscall` ctor `(buf,version)`), `C_COM_RAISE_ERROR`, `C_COM_RAISE_ERROR_EX`. (The KIND key was added mid-execution after discovery showed the CPatch builder ABI diverges across versions — v84 is a free fn returning the object pointer, v83/v87 are ctors building into a caller buffer.)
+**The 6 keys (per build target):** `C_TI_DISCONNECT_EXCEPTION`, `C_TI_TERMINATE_EXCEPTION`, `C_TI_PATCH_EXCEPTION`, `C_TI_ZEXCEPTION`, `C_PATCH_EXCEPTION_BUILDER` (a `__thiscall` ctor `(buf,version)` in all six versions), `C_COM_RAISE_ERROR_EX` (the 1-arg `__stdcall` `_com_error` raiser, used for both the `m_hrComErrorCode` and FAILED-render paths). (Discovery initially scaffolded 8 keys; `C_PATCH_EXCEPTION_BUILDER_KIND` was dropped once all six builders proved to be `__thiscall` ctors, and the 2-arg `C_COM_RAISE_ERROR` was dropped once it proved redundant with the 1-arg raiser — the client always passes `perrinfo=0`. The earlier v84 "free fn" reading was a folded-pseudocode artifact; `sub_527978` is in fact `__thiscall(this, version)`.)
 
 **Per-version discovery procedure (referenced by Tasks 2–6):** In that version's IDB, decompile `CWvsApp::Run` (find via WinMain's call to it, or by the `CPatch/CDisconnect/CTerminate/ZException` `_ThrowInfo` trio). Read directly from its disassembly: the `_com_raise_error(hr,0)` callee → `C_COM_RAISE_ERROR`; the four `_CxxThrowException(..., &_TI…)` `_ThrowInfo` operands → the four `C_TI_*`; the patch-object builder called just before the `CPatch` throw → `C_PATCH_EXCEPTION_BUILDER`, **and record its `C_PATCH_EXCEPTION_BUILDER_KIND`** (0 if it is a free function taking `version` and returning the object pointer; 1 if it is a `__thiscall` constructor called as `ctor(buffer, version)`); the render-failure `_com_raise_errorex(hr)` callee → `C_COM_RAISE_ERROR_EX`. Cross-check each `_ThrowInfo` against the IDA RTTI symbol name (`__TI3?AVCDisconnectException@@`, etc.). **Re-derive every value from that binary — never copy v84's.** Confirm the `m_hrZExceptionCode` code ranges in that version's `Run` match v84's (`0x20000000` / `0x21000000–06` / `0x22000000–0D`); if they differ, record the version's ranges in the signature catalog (Task 9 handles them generically, so divergence only needs documenting).
 
@@ -251,12 +251,11 @@ git commit -m "feat(exceptions): client_exception raise API"
 extern "C" void __stdcall _CxxThrowException(void* pObject, void* pThrowInfo);
 
 namespace {
-// Calling conventions confirmed from the v84 Run disasm in Task 1; re-confirm if a
-// later version's Run uses a different cc and gate this typedef accordingly.
-using ComRaiseFn    = void(__stdcall*)(HRESULT, void*);      // _com_raise_error(hr, IErrorInfo*=0); ?...@@YG.. = __stdcall
-using ComRaiseExFn  = void(__stdcall*)(HRESULT);             // _com_issue_error(hr) (1-arg, __stdcall)
-using PatchFreeFn   = void*(__cdecl*)(int);                  // KIND 0: builder(version) -> obj*
-using PatchCtorFn   = void*(__thiscall*)(void*, int);        // KIND 1: ctor(buf, version) -> buf
+// Confirmed per-version (signature-catalog.md): every client builds CPatchException via a
+// __thiscall ctor(buffer, version); the COM raiser is the 1-arg __stdcall _com_error raiser
+// (?_com_issue_error@@YGXJ@Z / v84 sub_AABF64), reused for both COM paths.
+using PatchCtorFn = void*(__thiscall*)(void*, int);  // ctor(buf, version) -> buf
+using ComRaiseFn  = void(__stdcall*)(HRESULT);       // throws _com_error(hr); 1-arg __stdcall
 } // namespace
 
 [[noreturn]] void RaiseDisconnect(int code) {
@@ -275,20 +274,13 @@ using PatchCtorFn   = void*(__thiscall*)(void*, int);        // KIND 1: ctor(buf
 }
 
 [[noreturn]] void RaisePatch() {
-    // The client's CPatchException builder has a per-version ABI, captured by
-    // C_PATCH_EXCEPTION_BUILDER_KIND: KIND 0 = free fn returning the object
-    // pointer (v84); KIND 1 = __thiscall ctor constructing into a caller buffer
-    // (v83/v87). _CxxThrowException copies the object (size per the client
-    // _ThrowInfo) synchronously before any unwinding, so a stack object is safe.
-    int version = CWvsApp::GetInstance()->m_nTargetVersion;
-#if (C_PATCH_EXCEPTION_BUILDER_KIND == 1)
-    unsigned char buf[2048]; // >= any version's CPatchException (v84 = 1288)
+    // All six clients build CPatchException via a __thiscall ctor(buffer, version) that
+    // constructs into a caller buffer and returns it. _CxxThrowException copies the object
+    // (size per the client _ThrowInfo) synchronously before any unwinding, so the stack
+    // buffer is safe. 2048 >= any version's CPatchException (v84 = 1288 bytes).
+    unsigned char buf[2048];
     auto ctor = reinterpret_cast<PatchCtorFn>(C_PATCH_EXCEPTION_BUILDER);
-    void* obj = ctor(buf, version);
-#else
-    auto build = reinterpret_cast<PatchFreeFn>(C_PATCH_EXCEPTION_BUILDER);
-    void* obj = build(version);
-#endif
+    void* obj = ctor(buf, CWvsApp::GetInstance()->m_nTargetVersion);
     _CxxThrowException(obj, reinterpret_cast<void*>(C_TI_PATCH_EXCEPTION));
     __assume(0);
 }
@@ -312,13 +304,15 @@ using PatchCtorFn   = void*(__thiscall*)(void*, int);        // KIND 1: ctor(buf
     RaiseZException(code);
 }
 
-[[noreturn]] void RaiseComError(HRESULT hr) {
-    reinterpret_cast<ComRaiseFn>(C_COM_RAISE_ERROR)(hr, 0);
+// Both COM paths throw _com_error(hr) via the single 1-arg __stdcall raiser. Kept as two
+// named entry points so the call sites read intentionally (m_hrComErrorCode vs FAILED-render).
+[[noreturn]] void RaiseComError(HRESULT hr) {   // m_hrComErrorCode path
+    reinterpret_cast<ComRaiseFn>(C_COM_RAISE_ERROR_EX)(hr);
     __assume(0);
 }
 
-[[noreturn]] void RaiseComErrorEx(HRESULT hr) {
-    reinterpret_cast<ComRaiseExFn>(C_COM_RAISE_ERROR_EX)(hr);
+[[noreturn]] void RaiseComErrorEx(HRESULT hr) { // FAILED-render path
+    reinterpret_cast<ComRaiseFn>(C_COM_RAISE_ERROR_EX)(hr);
     __assume(0);
 }
 ```
@@ -340,9 +334,9 @@ add_edit_dll(bypass SOURCES
 )
 ```
 
-- [ ] **Step 3: Confirm the v84 helper calling conventions**
+- [ ] **Step 3: (Calling conventions already confirmed — no IDA needed)**
 
-In the v84 IDB, inspect `sub_AAC743`, `sub_AABF64`, `sub_527978` prologues/`retn N` to confirm `__cdecl` (caller-cleaned, `retn`) vs `__stdcall`/`__thiscall`. Adjust the three `using` typedefs in Step 1 if needed and note the cc in the signature catalog. (Pure verification; full compile is CI.)
+The cc's were verified during discovery and baked into the Step 1 typedefs: the builder is `__thiscall(buf, version)` (e.g. v84 `sub_527978` decompiles as `char* __thiscall(char* this, __int16)`), and the COM raiser is the 1-arg `__stdcall` `_com_issue_error` (`?_com_issue_error@@YGXJ@Z`; v84 `sub_AABF64` = `__stdcall(hr)` → `sub_AAC743(hr,0)`). Nothing to do here.
 
 - [ ] **Step 4: Commit**
 
