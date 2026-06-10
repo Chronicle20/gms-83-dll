@@ -3,6 +3,14 @@
 Anchor: each version's `CWvsApp::Run` exception-dispatch block. Re-derived per
 binary, never copied. Verify the IDB with `get_metadata` before recording.
 
+> **Note (post-discovery):** Two columns below were discovered but **dropped from the
+> final memory map** (see `report.md`). `C_PATCH_EXCEPTION_BUILDER_KIND` is gone —
+> every builder turned out to be a `__thiscall` ctor(buf, version) (KIND 1), so
+> `RaisePatch` always uses the ctor path. The 2-arg `C_COM_RAISE_ERROR` is gone —
+> the 1-arg `__stdcall` `C_COM_RAISE_ERROR_EX` serves both COM paths (the client
+> always passes `perrinfo=0`). The addresses remain catalogued here as evidence; the
+> live key set per version is the 6 keys in the `.cmake` files.
+
 ## GMS v84.1 (port 13341) — Run @ 0xA3E7E8
 | Key | Address | Anchor |
 |---|---|---|
