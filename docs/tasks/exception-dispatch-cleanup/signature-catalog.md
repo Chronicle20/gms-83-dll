@@ -49,3 +49,23 @@ Ranges (v87, IDENTICAL to v84/v83): Patch `==0x20000000` · Disconnect `0x210000
 Notes:
 - v87 `CWvsApp::Run` @0xA88B81 (size 0x1028) is fully non-virtualized; the entire exception-dispatch block (m_hrComErrorCode + m_hrZExceptionCode checks + four `_CxxThrowException` calls) decompiles cleanly with all callees symbol-resolved. No VM thunk indirection (unlike v83).
 - C_COM_RAISE_ERROR_EX is VERBATIM-CONFIRMED in v87: the FAILED-render HRESULT raiser is a discrete call `_com_issue_error(-2147467261)` @0xa89465, guarded by `if(!dword_CA4128)` between `CWvsApp::CallUpdate`/`CWndMan::RedrawInvalidatedWindows` and `IWzGr2D::RenderFrame`. This is NOT the v83 limitation — the render path is in Run directly, not buried in the CallUpdate VM.
+
+## GMS v95.1 (port 13339) — Run @ 0x9C5F00
+| Key | Address | Anchor |
+|---|---|---|
+| C_TI_DISCONNECT_EXCEPTION | 0x00BBD474 | __TI3?AVCDisconnectException@@; `push offset __TI3?AVCDisconnectException@@` @0x9c67a5 → `call __CxxThrowException@8` @0x9c67b1 (0x21000000–0x21000006) |
+| C_TI_TERMINATE_EXCEPTION  | 0x00BB8F64 | __TI3?AVCTerminateException@@; `push offset __TI3?AVCTerminateException@@` @0x9c6819 → `call __CxxThrowException@8` @0x9c6825 (0x22000000–0x2200000E) |
+| C_TI_PATCH_EXCEPTION       | 0x00BC9A34 | __TI3?AVCPatchException@@; `push offset __TI3?AVCPatchException@@` @0x9c6731 → `call __CxxThrowException@8` @0x9c673d (==0x20000000) |
+| C_TI_ZEXCEPTION            | 0x00BB9228 | __TI1?AVZException@@; default `push offset __TI1?AVZException@@` @0x9c6856 → `call __CxxThrowException@8` @0x9c6862 |
+| C_PATCH_EXCEPTION_BUILDER  | 0x00520FA0 | `??0CPatchException@@QAE@J@Z`; `mov ecx,[eax+54h]` (nTargetVersion) `push ecx` / `lea ecx,[ebp+var_CD8]` / `call ??0CPatchException@@QAE@J@Z` @0x9c6700 → `rep movsd` (0x142 dwords = 0x508B) @0x9c672f then throw CPatch |
+| C_COM_RAISE_ERROR          | 0x00A2FDA0 | `?_com_raise_error@@YGXJPAUIErrorInfo@@@Z`; `push 0`/`push hr`/`call ?_com_raise_error@@...` @0x9c66c5 on ExtractComErrorCode/m_hrComErrorCode path |
+| C_COM_RAISE_ERROR_EX       | 0x00A2FD00 | `?_com_issue_error@@YGXJ@Z` (= 1-arg HRESULT raiser); NOT a discrete call in Run. See concern below. |
+
+Builder KIND: **1** — `??0CPatchException@@QAE@J@Z` is a `__thiscall` constructor invoked as `ctor(buffer=[ebp+var_CD8], version)` (`lea ecx,[ebp+var_CD8]; push <version>; call ??0CPatchException@@QAE@J@Z` @0x9c6700). It builds into a caller-owned stack buffer (var_CD8, size 0x508), which is then `rep movsd`-copied into pExceptionObject before the throw. Not a free function returning a pointer.
+
+Ranges (v95): Patch `==0x20000000` · Disconnect `0x21000000–0x21000006` · Terminate `0x22000000–0x2200000E` · else ZException.
+- NOTE: Terminate upper bound is **0x2200000E** in v95 (`cmp [ebp+hr],2200000Eh; jg`), vs 0x2200000D in v83/v84/v87. All other ranges identical.
+
+Notes:
+- v95 `CWvsApp::Run` @0x9C5F00 (size 0x1586) Hex-Rays decompilation FAILS, but the function body is fully non-virtualized and disassembles cleanly. The exception-dispatch block (ExtractComErrorCode→_com_raise_error, then ExtractZExceptionCode→4-way range dispatch with four `__CxxThrowException@8` calls) is contiguous at 0x9c66a6–0x9c6867 with all callees symbol-resolved. All four `_ThrowInfo` operands and all builder/ctor/dtor calls are verbatim from the listing.
+- CONCERN on C_COM_RAISE_ERROR_EX (FLAGGED, same limitation as v83): v95 Run does NOT contain a discrete FAILED-render `_com_issue_error(hr)` call site. The render path is `CWvsApp::CallUpdate` @0x9c5360 (called from Run @0x9c6946); CallUpdate's callee list contains no `_com_issue_error`/`_com_raise_error*` — the FAILED-HRESULT raise is emitted inside the `_com_ptr_t<IWzGr2D>`/`UpdateCurrentTime` COM wrapper, not in Run/CallUpdate directly. `?_com_issue_error@@YGXJ@Z` @0xA2FD00 (the binary's canonical 1-arg HRESULT raiser, `_com_issue_error(hr)`) is recorded as the structural/semantic equivalent. This is NOT independently confirmed at a render-path call site in v95 (unlike v87, where it was verbatim).
