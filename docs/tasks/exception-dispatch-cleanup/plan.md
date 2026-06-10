@@ -253,8 +253,8 @@ extern "C" void __stdcall _CxxThrowException(void* pObject, void* pThrowInfo);
 namespace {
 // Calling conventions confirmed from the v84 Run disasm in Task 1; re-confirm if a
 // later version's Run uses a different cc and gate this typedef accordingly.
-using ComRaiseFn    = void(__cdecl*)(HRESULT, int);          // _com_raise_error(hr, 0)
-using ComRaiseExFn  = void(__cdecl*)(HRESULT);               // _com_raise_errorex(hr)
+using ComRaiseFn    = void(__stdcall*)(HRESULT, void*);      // _com_raise_error(hr, IErrorInfo*=0); ?...@@YG.. = __stdcall
+using ComRaiseExFn  = void(__stdcall*)(HRESULT);             // _com_issue_error(hr) (1-arg, __stdcall)
 using PatchFreeFn   = void*(__cdecl*)(int);                  // KIND 0: builder(version) -> obj*
 using PatchCtorFn   = void*(__thiscall*)(void*, int);        // KIND 1: ctor(buf, version) -> buf
 } // namespace
@@ -297,7 +297,9 @@ using PatchCtorFn   = void*(__thiscall*)(void*, int);        // KIND 1: ctor(buf
     if (code == 0x20000000) {
         RaisePatch();
     }
-    if (code >= 0x21000000 && code <= 0x21000006) {
+    // Disconnect upper bound is the union of per-version maxima: v83/v84/v87/v95 = 0x21000006,
+    // v111 = 0x21000007. Safe to widen (a disconnect code only occurs in the version defining it).
+    if (code >= 0x21000000 && code <= 0x21000007) {
         RaiseDisconnect(code);
     }
     // Terminate upper bound is the UNION of per-version maxima: v83/v84/v87 = 0x2200000D,
