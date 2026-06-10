@@ -300,7 +300,11 @@ using PatchCtorFn   = void*(__thiscall*)(void*, int);        // KIND 1: ctor(buf
     if (code >= 0x21000000 && code <= 0x21000006) {
         RaiseDisconnect(code);
     }
-    if (code >= 0x22000000 && code <= 0x2200000D) {
+    // Terminate upper bound is the UNION of per-version maxima: v83/v84/v87 = 0x2200000D,
+    // v95 = 0x2200000E (re-confirm/extend after JMS185 + v111 discovery). Safe because a
+    // terminate code only occurs in the version that defines it, so widening never
+    // misclassifies a code another version would route elsewhere.
+    if (code >= 0x22000000 && code <= 0x2200000E) {
         RaiseTerminate(code);
     }
     RaiseZException(code);
