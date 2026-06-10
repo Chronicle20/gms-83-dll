@@ -32,3 +32,20 @@ Ranges (v83, IDENTICAL to v84): Patch `==0x20000000` · Disconnect `0x21000000�
 Notes:
 - v83 `CWvsApp::Run` and `CWvsApp::CallUpdate` are virtualized (thunk at 0x9F5C50 / 0x9F84D0 jumps into the shared 0xC22xxx VM dispatcher). The faithful exception dispatch + message-pump body is the contiguous non-virtualized chunk at **0x9F5FD9** (defined as a function during this analysis; lies in the gap between `?Run@CWvsApp@@`+0x58 and `?CleanUp@CWvsApp@@` @0x9F69B7).
 - CONCERN on C_COM_RAISE_ERROR_EX: unlike v84 (which has a *distinct* client `sub_AABF64` for the FAILED-render path), v83's Run body contains only ONE com-raise call — `_com_raise_error(hr,0)` (the standard comdef helper) for `m_hrComErrorCode`. The render-FAILED HRESULT path lives inside the obfuscated `CallUpdate` VM and could not be resolved to a discrete call site. `_com_issue_error` @0xA5FDE4 (= `_com_raise_error(hr,0)`, the 1-arg HRESULT raiser) is recorded as the structural/semantic v83 analog of v84's `_com_raise_errorex(hr)`. If the faithful port needs the exact render-path entry, it is NOT independently confirmed in v83.
+
+## GMS v87.1 (port 13338) — Run @ 0xA88B81
+| Key | Address | Anchor |
+|---|---|---|
+| C_TI_DISCONNECT_EXCEPTION | 0x00BF0B80 | __TI3?AVCDisconnectException@@; `_CxxThrowException(&v10,&_TI3_AVCDisconnectException__)` @0xa892f8 (0x21000000–0x21000006) |
+| C_TI_TERMINATE_EXCEPTION  | 0x00BEC9D0 | __TI3?AVCTerminateException@@; `_CxxThrowException(&v8,&_TI3_AVCTerminateException__)` @0xa8935f (0x22000000–0x2200000D) |
+| C_TI_PATCH_EXCEPTION       | 0x00BFC420 | __TI3?AVCPatchException@@; `_CxxThrowException(pExceptionObject,&_TI3_AVCPatchException__)` @0xa89291 (==0x20000000) |
+| C_TI_ZEXCEPTION            | 0x00BED150 | __TI1?AVZException@@; default `_CxxThrowException(&v6,&_TI1_AVZException__)` @0xa89388 |
+| C_PATCH_EXCEPTION_BUILDER  | 0x0054154E | `??0CPatchException@@QAE@J@Z`; `CPatchException::CPatchException(v11, this->m_nTargetVersion)` @0xa89257 → qmemcpy 1288B @0xa89283 then throw CPatch |
+| C_COM_RAISE_ERROR          | 0x00AFA623 | `?_com_raise_error@@YGXJPAUIErrorInfo@@@Z`; `_com_raise_error(m_hrComErrorCode, 0)` @0xa891e8 on this->m_hrComErrorCode |
+| C_COM_RAISE_ERROR_EX       | 0x00AF9E44 | `?_com_issue_error@@YGXJ@Z`; `_com_issue_error(-2147467261)` @0xa89465 on FAILED render path (`if(!dword_CA4128)` after CallUpdate/RedrawInvalidatedWindows, before RenderFrame) |
+
+Ranges (v87, IDENTICAL to v84/v83): Patch `==0x20000000` · Disconnect `0x21000000–0x21000006` · Terminate `0x22000000–0x2200000D` · else ZException.
+
+Notes:
+- v87 `CWvsApp::Run` @0xA88B81 (size 0x1028) is fully non-virtualized; the entire exception-dispatch block (m_hrComErrorCode + m_hrZExceptionCode checks + four `_CxxThrowException` calls) decompiles cleanly with all callees symbol-resolved. No VM thunk indirection (unlike v83).
+- C_COM_RAISE_ERROR_EX is VERBATIM-CONFIRMED in v87: the FAILED-render HRESULT raiser is a discrete call `_com_issue_error(-2147467261)` @0xa89465, guarded by `if(!dword_CA4128)` between `CWvsApp::CallUpdate`/`CWndMan::RedrawInvalidatedWindows` and `IWzGr2D::RenderFrame`. This is NOT the v83 limitation — the render path is in Run directly, not buried in the CallUpdate VM.

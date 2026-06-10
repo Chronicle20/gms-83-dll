@@ -186,3 +186,12 @@ set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only
 set(C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET 0x00000000) # JMS only
 set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x00000000) # JMS only
 set(WIN_MAIN_LAUNCHER_STUB 0x00000000) # JMS only
+
+# --- Faithful client exception dispatch (docs/tasks/exception-dispatch-cleanup) ---
+set(C_TI_DISCONNECT_EXCEPTION 0x00BF0B80) # __TI3?AVCDisconnectException@@
+set(C_TI_TERMINATE_EXCEPTION  0x00BEC9D0) # __TI3?AVCTerminateException@@
+set(C_TI_PATCH_EXCEPTION       0x00BFC420) # __TI3?AVCPatchException@@
+set(C_TI_ZEXCEPTION            0x00BED150) # __TI1?AVZException@@
+set(C_PATCH_EXCEPTION_BUILDER  0x0054154E) # builds CPatchException obj from version (Run dispatch)
+set(C_COM_RAISE_ERROR          0x00AFA623) # _com_raise_error(hr,0)
+set(C_COM_RAISE_ERROR_EX       0x00AF9E44) # _com_raise_errorex/_com_issue_error(hr)
