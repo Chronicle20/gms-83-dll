@@ -14,9 +14,9 @@
 
 **IDB lane discipline:** `select_instance` is global shared state — never run two IDA tasks concurrently; always `get_metadata` after selecting to confirm the loaded IDB before drawing version conclusions. Ports: GMS v83 `13337`, v87 `13338`, v95 `13339`, JMS185 `13340`, v84 `13341`; GMS v111 has no live IDB (open its `.i64` with `open_file`).
 
-**The 7 keys (per build target):** `C_TI_DISCONNECT_EXCEPTION`, `C_TI_TERMINATE_EXCEPTION`, `C_TI_PATCH_EXCEPTION`, `C_TI_ZEXCEPTION`, `C_PATCH_EXCEPTION_BUILDER`, `C_COM_RAISE_ERROR`, `C_COM_RAISE_ERROR_EX`.
+**The 8 keys (per build target):** `C_TI_DISCONNECT_EXCEPTION`, `C_TI_TERMINATE_EXCEPTION`, `C_TI_PATCH_EXCEPTION`, `C_TI_ZEXCEPTION`, `C_PATCH_EXCEPTION_BUILDER`, `C_PATCH_EXCEPTION_BUILDER_KIND` (0 = free fn `(version)->obj*`; 1 = `__thiscall` ctor `(buf,version)`), `C_COM_RAISE_ERROR`, `C_COM_RAISE_ERROR_EX`. (The KIND key was added mid-execution after discovery showed the CPatch builder ABI diverges across versions — v84 is a free fn returning the object pointer, v83/v87 are ctors building into a caller buffer.)
 
-**Per-version discovery procedure (referenced by Tasks 2–6):** In that version's IDB, decompile `CWvsApp::Run` (find via WinMain's call to it, or by the `CPatch/CDisconnect/CTerminate/ZException` `_ThrowInfo` trio). Read directly from its disassembly: the `_com_raise_error(hr,0)` callee → `C_COM_RAISE_ERROR`; the four `_CxxThrowException(..., &_TI…)` `_ThrowInfo` operands → the four `C_TI_*`; the patch-object builder called just before the `CPatch` throw → `C_PATCH_EXCEPTION_BUILDER`; the render-failure `_com_raise_errorex(hr)` callee → `C_COM_RAISE_ERROR_EX`. Cross-check each `_ThrowInfo` against the IDA RTTI symbol name (`__TI3?AVCDisconnectException@@`, etc.). **Re-derive every value from that binary — never copy v84's.** Confirm the `m_hrZExceptionCode` code ranges in that version's `Run` match v84's (`0x20000000` / `0x21000000–06` / `0x22000000–0D`); if they differ, record the version's ranges in the signature catalog (Task 9 handles them generically, so divergence only needs documenting).
+**Per-version discovery procedure (referenced by Tasks 2–6):** In that version's IDB, decompile `CWvsApp::Run` (find via WinMain's call to it, or by the `CPatch/CDisconnect/CTerminate/ZException` `_ThrowInfo` trio). Read directly from its disassembly: the `_com_raise_error(hr,0)` callee → `C_COM_RAISE_ERROR`; the four `_CxxThrowException(..., &_TI…)` `_ThrowInfo` operands → the four `C_TI_*`; the patch-object builder called just before the `CPatch` throw → `C_PATCH_EXCEPTION_BUILDER`, **and record its `C_PATCH_EXCEPTION_BUILDER_KIND`** (0 if it is a free function taking `version` and returning the object pointer; 1 if it is a `__thiscall` constructor called as `ctor(buffer, version)`); the render-failure `_com_raise_errorex(hr)` callee → `C_COM_RAISE_ERROR_EX`. Cross-check each `_ThrowInfo` against the IDA RTTI symbol name (`__TI3?AVCDisconnectException@@`, etc.). **Re-derive every value from that binary — never copy v84's.** Confirm the `m_hrZExceptionCode` code ranges in that version's `Run` match v84's (`0x20000000` / `0x21000000–06` / `0x22000000–0D`); if they differ, record the version's ranges in the signature catalog (Task 9 handles them generically, so divergence only needs documenting).
 
 ---
 
@@ -253,9 +253,10 @@ extern "C" void __stdcall _CxxThrowException(void* pObject, void* pThrowInfo);
 namespace {
 // Calling conventions confirmed from the v84 Run disasm in Task 1; re-confirm if a
 // later version's Run uses a different cc and gate this typedef accordingly.
-using ComRaiseFn   = void(__cdecl*)(HRESULT, int); // _com_raise_error(hr, 0)
-using ComRaiseExFn = void(__cdecl*)(HRESULT);      // _com_raise_errorex(hr)
-using PatchBuildFn = void*(__cdecl*)(int);         // builder(m_nTargetVersion) -> obj*
+using ComRaiseFn    = void(__cdecl*)(HRESULT, int);          // _com_raise_error(hr, 0)
+using ComRaiseExFn  = void(__cdecl*)(HRESULT);               // _com_raise_errorex(hr)
+using PatchFreeFn   = void*(__cdecl*)(int);                  // KIND 0: builder(version) -> obj*
+using PatchCtorFn   = void*(__thiscall*)(void*, int);        // KIND 1: ctor(buf, version) -> buf
 } // namespace
 
 [[noreturn]] void RaiseDisconnect(int code) {
@@ -274,11 +275,20 @@ using PatchBuildFn = void*(__cdecl*)(int);         // builder(m_nTargetVersion) 
 }
 
 [[noreturn]] void RaisePatch() {
-    // Builder returns a live object; _CxxThrowException copies it (size per the
-    // client's _ThrowInfo) synchronously before any unwinding, so throwing the
-    // returned pointer directly is safe and version-size-agnostic.
-    auto build = reinterpret_cast<PatchBuildFn>(C_PATCH_EXCEPTION_BUILDER);
-    void* obj = build(CWvsApp::GetInstance()->m_nTargetVersion);
+    // The client's CPatchException builder has a per-version ABI, captured by
+    // C_PATCH_EXCEPTION_BUILDER_KIND: KIND 0 = free fn returning the object
+    // pointer (v84); KIND 1 = __thiscall ctor constructing into a caller buffer
+    // (v83/v87). _CxxThrowException copies the object (size per the client
+    // _ThrowInfo) synchronously before any unwinding, so a stack object is safe.
+    int version = CWvsApp::GetInstance()->m_nTargetVersion;
+#if (C_PATCH_EXCEPTION_BUILDER_KIND == 1)
+    unsigned char buf[2048]; // >= any version's CPatchException (v84 = 1288)
+    auto ctor = reinterpret_cast<PatchCtorFn>(C_PATCH_EXCEPTION_BUILDER);
+    void* obj = ctor(buf, version);
+#else
+    auto build = reinterpret_cast<PatchFreeFn>(C_PATCH_EXCEPTION_BUILDER);
+    void* obj = build(version);
+#endif
     _CxxThrowException(obj, reinterpret_cast<void*>(C_TI_PATCH_EXCEPTION));
     __assume(0);
 }

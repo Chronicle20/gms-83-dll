@@ -193,5 +193,6 @@ set(C_TI_TERMINATE_EXCEPTION  0x00B44760) # __TI3?AVCTerminateException@@
 set(C_TI_PATCH_EXCEPTION       0x00B52FC8) # __TI3?AVCPatchException@@
 set(C_TI_ZEXCEPTION            0x00B44EE0) # __TI1?AVZException@@
 set(C_PATCH_EXCEPTION_BUILDER  0x0051E834) # builds CPatchException obj from version (Run dispatch sub_51E834)
+set(C_PATCH_EXCEPTION_BUILDER_KIND 1) # __thiscall ctor sub_51E834(buf,version)
 set(C_COM_RAISE_ERROR          0x00A605C3) # _com_raise_error(hr,0) on m_hrComErrorCode (Run @0x9F6103)
 set(C_COM_RAISE_ERROR_EX       0x00A5FDE4) # _com_issue_error(hr)=_com_raise_error(hr,0); v83 1-arg HRESULT raiser (render FAILED analog)
