@@ -3,7 +3,7 @@
 #include "socket_hooks.h"
 #include "socket_hooks_internal.h"
 
-#include "CTerminateException.h"
+#include "client_exception.h"
 #include "hooker.h"
 #include "logger.h"
 
@@ -89,7 +89,7 @@ bool decode_handshake(const char* buf, int len, unsigned short& outMajorVersion,
     result += CIOBufferManipulator::Decode1(&versionHeader, const_cast<char*>(result), end - result);
 
     if (result < end) {
-        // Buffer underrun — caller throws CTerminateException(570425351).
+        // Buffer underrun — caller calls RaiseTerminate(0x22000007).
         return false;
     }
 
@@ -184,19 +184,19 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
         }
     }
     if (nVersionHeader != VERSION_HEADER) {
-        throw CTerminateException(570425351);
+        RaiseTerminate(0x22000007);
     }
     if (majorVersion > BUILD_MAJOR_VERSION) {
-        throw CPatchException();
+        RaisePatch();
     }
     if (majorVersion != BUILD_MAJOR_VERSION) {
-        throw CTerminateException(570425351);
+        RaiseTerminate(0x22000007);
     }
     if (minorVersionValue > BUILD_MINOR_VERSION) {
-        throw CPatchException();
+        RaisePatch();
     }
     if (!minorVersionValue) {
-        throw CTerminateException(570425351);
+        RaiseTerminate(0x22000007);
     }
     pThis->ClearSendReceiveCtx();
     pThis->m_ctxConnect.lAddr.RemoveAll();
@@ -204,7 +204,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
     socklen_t peerAddrLen = sizeof(pThis->m_addr);
     if (getpeername(pThis->m_sock._m_hSocket, reinterpret_cast<struct sockaddr*>(&pThis->m_addr), &peerAddrLen) == -1) {
         int lastError = WSAGetLastError();
-        throw CTerminateException(570425351);
+        RaiseTerminate(0x22000007);
     }
 
     if (pThis->m_ctxConnect.bLogin) {
