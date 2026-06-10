@@ -184,7 +184,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp* pThis, PVOID edx, int* pbTerminate) {
                     isError = 1;
                 }
                 if (isError) {
-                    Log("Do proper _com_raise_error");
+                    Log("Do proper _com_raise_error [m_hrComErrorCode=0x%08X]", m_hrComErrorCode);
                     return;
                 }
                 if (pThis->m_hrZExceptionCode) {
@@ -194,7 +194,7 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp* pThis, PVOID edx, int* pbTerminate) {
                     isError = 1;
                 }
                 if (isError) {
-                    Log("Do proper _com_raise_error");
+                    Log("Do proper _com_raise_error [m_hrZExceptionCode=0x%08X]", m_hrComErrorCode);
                     return;
                 }
             } while (!*pbTerminate && msg.message != 18);
