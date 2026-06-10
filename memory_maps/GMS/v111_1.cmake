@@ -186,3 +186,13 @@ set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only
 set(C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET 0x00000000) # JMS only
 set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x00000000) # JMS only
 set(WIN_MAIN_LAUNCHER_STUB 0x00000000) # JMS only
+
+# --- Faithful client exception dispatch (docs/tasks/exception-dispatch-cleanup) ---
+set(C_TI_DISCONNECT_EXCEPTION 0x00F20BB8) # __TI3?AVCDisconnectException@@
+set(C_TI_TERMINATE_EXCEPTION  0x00F1B8A4) # __TI3?AVCTerminateException@@
+set(C_TI_PATCH_EXCEPTION       0x00F30A04) # __TI3?AVCPatchException@@
+set(C_TI_ZEXCEPTION            0x00F1BB68) # __TI1?AVZException@@
+set(C_PATCH_EXCEPTION_BUILDER  0x00564AE0) # __thiscall ctor(buffer, version): lea ecx,buf; push version; call sub_564AE0 @0xc07717; CMSException::CMSException(this,0x20000000)
+set(C_PATCH_EXCEPTION_BUILDER_KIND 1) # buffer in ECX, version on stack (push eax @0xc07710 / lea ecx @0xc07711); result rep movsd-copied to pExceptionObject
+set(C_COM_RAISE_ERROR          0x00C91D40) # _com_raise_error(hr,0): Run m_hrComErrorCode path sub_C91D40(v48,0) @0xc076e2
+set(C_COM_RAISE_ERROR_EX       0x00C91CC0) # _com_issue_errorex: FAILED-render raiser; IWzGr2D::RenderFrame @0x811420 calls it on result<0 [FLAG: 3-arg ex variant, not 1-arg; 1-arg _com_issue_error @0x00C91CA0]
