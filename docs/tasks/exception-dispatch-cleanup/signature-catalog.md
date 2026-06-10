@@ -69,3 +69,33 @@ Ranges (v95): Patch `==0x20000000` · Disconnect `0x21000000–0x21000006` · Te
 Notes:
 - v95 `CWvsApp::Run` @0x9C5F00 (size 0x1586) Hex-Rays decompilation FAILS, but the function body is fully non-virtualized and disassembles cleanly. The exception-dispatch block (ExtractComErrorCode→_com_raise_error, then ExtractZExceptionCode→4-way range dispatch with four `__CxxThrowException@8` calls) is contiguous at 0x9c66a6–0x9c6867 with all callees symbol-resolved. All four `_ThrowInfo` operands and all builder/ctor/dtor calls are verbatim from the listing.
 - CONCERN on C_COM_RAISE_ERROR_EX (FLAGGED, same limitation as v83): v95 Run does NOT contain a discrete FAILED-render `_com_issue_error(hr)` call site. The render path is `CWvsApp::CallUpdate` @0x9c5360 (called from Run @0x9c6946); CallUpdate's callee list contains no `_com_issue_error`/`_com_raise_error*` — the FAILED-HRESULT raise is emitted inside the `_com_ptr_t<IWzGr2D>`/`UpdateCurrentTime` COM wrapper, not in Run/CallUpdate directly. `?_com_issue_error@@YGXJ@Z` @0xA2FD00 (the binary's canonical 1-arg HRESULT raiser, `_com_issue_error(hr)`) is recorded as the structural/semantic equivalent. This is NOT independently confirmed at a render-path call site in v95 (unlike v87, where it was verbatim).
+
+## JMS v185.1 (port 13340) — Run @ 0x00AD8328 (virtualized; dispatch actually in CClientSocket::OnConnect @ 0x004B0066)
+
+**MAJOR STRUCTURAL DIVERGENCE FROM GMS.** JMS v185 does NOT dispatch exceptions from `CWvsApp::Run` by an `m_hrZExceptionCode` range. `CWvsApp::Run` @0x00AD8328 is virtualized (jumps into the 0x00D2xxxx VM). The faithful version/login exception dispatch lives in `CClientSocket::OnConnect` @0x004B0066, keyed on the **version word decoded from the login-handshake packet**, not on an HRESULT range.
+
+| Key | Address | Anchor |
+|---|---|---|
+| C_TI_DISCONNECT_EXCEPTION | 0x00BFB678 | __TI3?AVCDisconnectException@@; `push offset __TI3?AVCDisconnectException@@` → `call __CxxThrowException@8` @0x4b00d9 (code 0x21000001, connect-fail/no-more-addrs path) |
+| C_TI_TERMINATE_EXCEPTION  | 0x00BF74B8 | __TI3?AVCTerminateException@@; throws @0x4b00b9 (code 0x22000001, bLogin path), @0x4b02e0 (0x22000007, recv-flag!=3), @0x4b0384 (0x22000007, version!=185) |
+| C_TI_PATCH_EXCEPTION       | 0x00C07518 | __TI3?AVCPatchException@@; `push offset __TI3?AVCPatchException@@` → `call __CxxThrowException@8` @0x4b0320 (version>185) and @0x4b0362 (version==185 & data present) |
+| C_TI_ZEXCEPTION            | 0x00BF7C38 | __TI1?AVZException@@; multiple buffer-underrun throws (code 38) @0x4b020b,0x4b0259,0x4b027a,0x4b029c and getpeername-fail @0x4b03cc |
+| C_PATCH_EXCEPTION_BUILDER  | 0x0055127C | __thiscall builder; `movzx eax,ax; push eax; lea ecx,[ebp+var_FB0]; call sub_55127C` @0x4b02fc / @0x4b033e. Writes `*this=0x20000000`, `*(this+4)=185`, `*(this+3)=version`, fills strings; returns `this`. Result `rep movsd`-copied (0x142 dwords = 0x508B) into pExceptionObject before throw. |
+| C_COM_RAISE_ERROR          | 0x00B4DCEF | ?_com_raise_error@@YGXJPAUIErrorInfo@@@Z — standard 2-arg `_com_raise_error(hr, IErrorInfo*=0)` comdef helper |
+| C_COM_RAISE_ERROR_EX       | 0x00B4D510 | ?_com_issue_error@@YGXJ@Z — canonical 1-arg HRESULT raiser (`_com_issue_error(hr)`, tail-calls _com_raise_error(hr,0)). See concern below. |
+
+Builder KIND: **1** — `sub_55127C` is a `__thiscall` invoked as `ctor(buffer, version)`: buffer/object pointer loaded into ECX (`lea ecx,[ebp+var_FB0]`) and version pushed on the stack (`push eax`), at 0x4b02fc and 0x4b033e. It returns `this` (the buffer). IDA types it `char *__thiscall sub_55127C(char *this, __int16 a2)`. Although it returns the object pointer, the calling convention is thiscall-ctor (buffer in ECX, not a stack arg), matching v83/v87/v95 KIND=1 — not the v84 free-function form.
+
+Ranges (JMS185): **DIFFERENT SCHEME — dispatch is by VERSION WORD, not by HRESULT range.**
+- `cmp ax, 0xB9` (0xB9 = 185): **version > 185** → CPatchException (`sub_55127C(version)`, code tag 0x20000000) @0x4b0320
+- **version == 185** AND handshake data present (`Src != 0`) → CPatchException (`sub_55127C(185)`) @0x4b0362; sets `CWvsApp::m_nTargetVersion = 185` @0x4b0334
+- **version != 185** (and not >185, i.e. version < 185) → CTerminateException (code 0x22000007) @0x4b0384
+- recv control byte `!= 3` → CTerminateException (code 0x22000007) @0x4b02e0
+- connect failure, login session → CTerminateException (code 0x22000001) @0x4b00b9; otherwise → CDisconnectException (code 0x21000001) @0x4b00d9
+- packet buffer underruns / getpeername failure → ZException (code 38 / WSA error)
+
+The embedded exception **code tags** (for any union/HRESULT calc): CPatch=0x20000000, CDisconnect=0x21000001, CTerminate=0x22000001 and 0x22000007, ZException uses 38 (0x26) or a raw WSA error code. NOTE: unlike GMS these are NOT contiguous ranges — they are discrete literals at fixed throw sites.
+
+Notes / flags:
+- **JMS-DIVERGENT (flag):** There is no `m_hrZExceptionCode`/`m_hrComErrorCode` range dispatch in a clean `CWvsApp::Run`. The 4 exception types still exist with identical C++ mangled names and the 4 `_ThrowInfo` globals are present and verbatim-confirmed by RTTI symbol. The PatchException builder and KIND are verbatim-confirmed from the OnConnect disassembly.
+- **CONCERN on C_COM_RAISE_ERROR / C_COM_RAISE_ERROR_EX (FLAGGED):** Because `CWvsApp::Run` and the CallUpdate/render path are virtualized (0x00D2xxxx VM), the specific `m_hrComErrorCode` and FAILED-render call sites could NOT be resolved to discrete instructions in a Run body. Recorded values are the binary's canonical comdef helpers: 2-arg `?_com_raise_error@@YGXJPAUIErrorInfo@@@Z` @0x00B4DCEF (key 7, semantic `_com_raise_error(hr,0)`) and 1-arg `?_com_issue_error@@YGXJ@Z` @0x00B4D510 (key 8, the 1-arg HRESULT raiser). These are the correct semantic/structural equivalents but are NOT independently confirmed at a render-path call site in JMS v185 (same limitation as v83/v95, more severe here because Run itself is virtualized).
