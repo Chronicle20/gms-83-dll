@@ -49,6 +49,14 @@ public:
     int m_aDialogVisible[1];
     int m_nLastConnectedVersion;
     int m_tStartTime;
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111
+    // v111's real CConfig is 3024 bytes vs our v95-shaped layout (>= 1592, guaranteed by the
+    // passing v95 build). We read NO CConfig data member and it's never memcpy'd, so exact v111
+    // layout is unnecessary — only no-underflow matters (the real ctor runs into Alloc(sizeof)).
+    // Pad the 1592 floor up to the v111 real size so the ctor can't overrun the heap. If our
+    // struct is already > 1592 this lands harmlessly above 3024 (the gate is >=, not ==).
+    char m_v111Pad[3024 - 1592];
+#endif
 
     CConfig();
 
@@ -64,10 +72,11 @@ public:
 // CConfig is allocated with Alloc(sizeof(CConfig)) in CWvsApp::SetUp, then the REAL client
 // ctor runs into that block — so our struct must be AT LEAST the real per-version size or
 // the ctor overruns the heap (CConfig is a long-lived global, so corruption surfaces later).
-// Real sizes (WinMain alloc immediate): v83=1072  v84=1084  v87=1108  v111=3024  (v95/JMS TBD).
-// Our struct is v87-shaped (~1108): >= for v83/v84/v87 (safe, no overflow), but FAR too small
-// for v111 (3024) -> heap overrun. (Our GMS layout has no per-major gate; the v84/v83 offsets
-// are technically v87-shaped, but harmless since our code reads no GMS CConfig data member.)
+// Real sizes (WinMain alloc immediate): v83=1072  v84=1084  v87=1108  v95=1592  v111=3024 (JMS TBD).
+// Our GMS layout is v95-shaped (>= 1592: the [43] UI-window arrays + FUNCKEY[89]); it has no
+// per-major gate, so the v83/v84/v87 offsets are technically v95-shaped — harmless, since our code
+// reads no GMS CConfig data member and it's never memcpy'd. The v111 branch adds m_v111Pad to lift
+// that 1592 floor up to the v111 real size (3024) so its larger ctor can't overrun the heap.
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111
 static_assert(sizeof(CConfig) >= 3024, "CConfig too small for GMS v111 (need >= 3024) -> WinMain heap overflow");
 #elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 95

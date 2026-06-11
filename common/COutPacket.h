@@ -6,6 +6,12 @@ public:
     ZArray<unsigned char> m_aSendBuff;
     unsigned int m_uOffset;
     bool m_bIsEncryptedByShanda;
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111
+    // v111 appended a 4-byte field at +0x10: the ctor (sub_74C0C0) writes this[4]=0, while
+    // this[1]=m_aSendBuff(+4) and this[2]=m_uOffset(+8) are unchanged from v83/v87. Pads 0x10 -> 0x14
+    // so the real ctor's write lands in-bounds. (Verified in the v111 IDB: COutPacket ctor @0x74C290.)
+    int dummy1;
+#endif
 
     explicit COutPacket(INT nType);
     ~COutPacket();
