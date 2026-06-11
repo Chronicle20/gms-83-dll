@@ -197,8 +197,13 @@ BOOL InstallSecurityHooks() {
     // TopLevelExceptionFilter detour is the reliable interception (NMCO calls
     // into it, so it can't route around it). See security_hooks.cpp top half.
     InstallAntiTamperVeh();
-    INITMAPLEHOOK_OR_RETURN(_TopLevelExceptionFilter, _TopLevelExceptionFilter_t, TopLevelExceptionFilter_Hook,
-                            TOP_LEVEL_EXCEPTION_FILTER);
+    // Best-effort (NOT _OR_RETURN): this anti-tamper defang is not load-bearing
+    // for login/field, so a hook failure must degrade to the freeze, never abort
+    // MainProc and break the socket-redirect hooks installed after us.
+    // _TopLevelExceptionFilter is a file-scope global (declared above), so no
+    // HOOKTYPEDEF_C here -- INITMAPLEHOOK assigns the trampoline into it.
+    INITMAPLEHOOK(_TopLevelExceptionFilter, _TopLevelExceptionFilter_t, TopLevelExceptionFilter_Hook,
+                  TOP_LEVEL_EXCEPTION_FILTER);
 #endif
 
     return TRUE;
