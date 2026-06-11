@@ -132,7 +132,18 @@ namespace WinHooks {
 
     HMODULE WINAPI GetModuleHandleA_Hook(LPCSTR lpModuleName) {
         if (lpModuleName && !strcmp("ehsvc.dll", lpModuleName)) {
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 84
+            // v84 TEST: spoofing a fake non-null handle (1) for ehsvc.dll is fine
+            // for a boolean "is HackShield loaded?" check, but v84's movement
+            // anti-tamper *dereferences* the handle (PE-walk / GetProcAddress) and
+            // ends up calling through NULL -- that's the per-frame call-0 trap (and
+            // the RtlImageNtHeaderEx PE-scan we saw at the very first freeze). Fall
+            // through to the real result (NULL = not loaded) so the check skips
+            // ehsvc gracefully instead of trapping. We already skip HackShield init
+            // (CWvsApp::SetUp is reimplemented), so nothing needs the fake handle.
+#else
             return (HMODULE) 1;
+#endif
         }
 
         // Call the original function
