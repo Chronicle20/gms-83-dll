@@ -10,9 +10,6 @@
 #include <WS2tcpip.h>
 #include <timeapi.h>
 
-#include "parse_ini.h"
-#include <cstdlib>
-
 // ---- forward declarations (same-TU) ------------------------------------
 VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket* pThis, PVOID edx, const sockaddr_in* pAddr);
 
@@ -105,69 +102,6 @@ bool decode_handshake(const char* buf, int len, unsigned short& outMajorVersion,
 }
 
 } // anonymous namespace
-
-#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 84
-// ---- v84 login reroute (maplestory-level, not winsock SPI) --------------
-// v84's in-game anti-tamper scans the winsock SPI proc-table for hooks and traps
-// the bypass when redirect.dll is loaded (it swaps WSPConnect/WSPGetPeerName).
-// The login IP+port reroute doesn't have to live there: we do it here, in the
-// CClientSocket::Connect detour -- a normal function hook the anti-tamper does
-// not inspect -- reading the same edits/redirect.ini. For the v84 build, do NOT
-// load redirect.dll (this replaces it).
-namespace {
-struct RedirectCfg {
-    bool loaded = false;
-    std::vector<std::string> originalIps;
-    std::string redirectIp;
-    unsigned short redirectPort = 0;
-};
-
-const RedirectCfg& GetRedirectCfg() {
-    static const RedirectCfg cfg = [] {
-        RedirectCfg c;
-        ms::ini::Parsed ini;
-        if (!ms::ini::Parse("edits/redirect.ini", ini, [](const char* m) { Log("%s", m); })) {
-            Log("REDIR> v84 reroute: edits/redirect.ini not found -- reroute disabled");
-            return c;
-        }
-        auto last = [&](const char* key) -> std::string {
-            auto it = ini.entries.find(std::string("Main.") + key);
-            return (it == ini.entries.end() || it->second.empty()) ? std::string() : it->second.back();
-        };
-        c.redirectIp = last("RedirectIP");
-        c.redirectPort = static_cast<unsigned short>(std::strtoul(last("RedirectPort").c_str(), nullptr, 10));
-        // Collect Main.OriginalIP<N> keys (the format edits/redirect.ini uses).
-        const std::string prefix = "Main.OriginalIP";
-        for (const auto& kv : ini.entries) {
-            if (kv.first.size() <= prefix.size() || kv.first.compare(0, prefix.size(), prefix) != 0)
-                continue;
-            for (const auto& v : kv.second)
-                if (!v.empty())
-                    c.originalIps.push_back(v);
-        }
-        c.loaded = !c.redirectIp.empty() && c.redirectPort != 0 && !c.originalIps.empty();
-        Log("REDIR> v84 reroute %s: %zu originalIPs -> %s:%u", c.loaded ? "active" : "INCOMPLETE",
-            c.originalIps.size(), c.redirectIp.c_str(), c.redirectPort);
-        return c;
-    }();
-    return cfg;
-}
-
-void RerouteGameAddr(sockaddr_in* addr) {
-    const RedirectCfg& cfg = GetRedirectCfg();
-    if (!cfg.loaded)
-        return;
-    for (const auto& oip : cfg.originalIps) {
-        if (addr->sin_addr.S_un.S_addr == inet_addr(oip.c_str())) {
-            addr->sin_addr.S_un.S_addr = inet_addr(cfg.redirectIp.c_str());
-            break;
-        }
-    }
-    if (ntohs(addr->sin_port) == 8484)
-        addr->sin_port = htons(cfg.redirectPort);
-}
-} // namespace
-#endif
 
 // ---- hook bodies --------------------------------------------------------
 
@@ -326,14 +260,7 @@ VOID __fastcall CClientSocket__Connect_Addr_Hook(CClientSocket* pThis, PVOID edx
     const long eventMask = FD_READ | FD_WRITE | FD_CONNECT | FD_CLOSE;
 
     int asyncResult = WSAAsyncSelect(socketHandle, hwnd, WM_SOCKET, eventMask);
-    sockaddr_in connectAddr = *pAddr;
-#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 84
-    // Reroute login IP+port here (maplestory layer) instead of via redirect.dll's
-    // winsock SPI hook, which v84's anti-tamper detects. Channel hops (non-8484,
-    // non-original-IP) pass through unchanged. Do NOT load redirect.dll on v84.
-    RerouteGameAddr(&connectAddr);
-#endif
-    int connectResult = connect(socketHandle, reinterpret_cast<const sockaddr*>(&connectAddr), sizeof(sockaddr_in));
+    int connectResult = connect(socketHandle, reinterpret_cast<const sockaddr*>(pAddr), sizeof(sockaddr_in));
     int lastError = WSAGetLastError();
 
     Log("CClientSocket::Connect ADR asyncResult [%d], connectResult [%d], lastError [%d].", asyncResult, connectResult,
