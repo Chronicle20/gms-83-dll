@@ -41,6 +41,13 @@ static DWORD ResetLSP() {
 // ---- hook bodies --------------------------------------------------------
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime) {
+    // --- freeze-bisection markers (v84 channel-enter hang) -----------------
+    // A hard anti-tamper hang persists once tripped, so the LAST marker in the
+    // log localizes which per-frame phase never returned:
+    //   last="FRAME> update"     -> hang in stage->Update()/CWndMan (CGame load)
+    //   last="FRAME> sweepcache"  -> hang in CActionMan::SweepCache integrity trap
+    //   pairs end cleanly at "FRAME> render-done" -> hang is in the msg-loop pump
+    Log("FRAME> callupdate-enter");
     if (pThis->m_bFirstUpdate) {
         pThis->m_tUpdateTime = tCurTime;
 #if defined(REGION_GMS)
@@ -53,6 +60,7 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime
     }
 
     while (tCurTime - pThis->m_tUpdateTime > 0) {
+        Log("FRAME> update");
         CStage* stage = get_stage();
         if (stage) {
             stage->Update();
@@ -75,7 +83,9 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime
         Log("Some sort of com error");
         return;
     }
+    Log("FRAME> sweepcache");
     CActionMan::GetInstance()->SweepCache();
+    Log("FRAME> sweepcache-done");
 }
 
 VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp* pThis, PVOID edx) {
@@ -209,12 +219,14 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp* pThis, PVOID edx, int* pbTerminate) {
                 return;
             }
             CWvsApp__CallUpdate_Hook(pThis, edx, tCurTime);
+            Log("FRAME> render");
             CWndMan::RedrawInvalidatedWindows();
             hr = get_gr()->RenderFrame();
             if (FAILED(hr)) {
                 Log("Do proper _com_raise_errorex");
                 return;
             }
+            Log("FRAME> render-done");
             Sleep(1u);
         }
     } while (!*pbTerminate && msg.message != 18);
