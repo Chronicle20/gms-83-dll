@@ -34,7 +34,6 @@ VOID __fastcall SendHSLog_Hook(void* ecx, void* edx, char a1) {}
 // faulting context once per occurrence, and resumes past the trapped call.
 static PVOID g_hAntiTamperVeh = nullptr;
 static volatile LONG g_antiTamperHits = 0;
-static volatile LONG g_avSeen = 0; // any C0000005 our VEH is reached for (ordering probe)
 
 static LONG CALLBACK AntiTamperTrapVeh(EXCEPTION_POINTERS* ep) {
     const EXCEPTION_RECORD* er = ep->ExceptionRecord;
@@ -42,18 +41,11 @@ static LONG CALLBACK AntiTamperTrapVeh(EXCEPTION_POINTERS* ep) {
     if (er->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
         return EXCEPTION_CONTINUE_SEARCH;
 
-    // Ordering probe: prove whether our handler is even reached for AVs, and
-    // where they land. If we see other AVs but never the at-0 trap, something
-    // (NMCO) is intercepting it before the VEH chain (dispatcher hook).
-    const LONG seen = InterlockedIncrement(&g_avSeen);
-    const DWORD info0 = er->NumberParameters >= 1 ? static_cast<DWORD>(er->ExceptionInformation[0]) : 0xFFFFFFFF;
-    if (seen <= 40)
-        Log("VEH> saw AV #%ld at=%p info0=%lu (0=read 1=write 8=exec)", seen, er->ExceptionAddress, info0);
-
-    // The trap: executing at address 0.
+    // The trap: EIP jumped to 0 (call/jmp through NULL). The CPU faults trying
+    // to FETCH the instruction at address 0, which surfaces as a *read* AV at
+    // address 0 (info0=0), not an execute/DEP one -- so match ExceptionAddress
+    // alone, not the access sub-code.
     if (er->ExceptionAddress != nullptr)
-        return EXCEPTION_CONTINUE_SEARCH;
-    if (er->NumberParameters < 2 || er->ExceptionInformation[0] != 8 /* execute */)
         return EXCEPTION_CONTINUE_SEARCH;
 
     CONTEXT* ctx = ep->ContextRecord;
@@ -116,8 +108,9 @@ static _TopLevelExceptionFilter_t _TopLevelExceptionFilter = nullptr;
 
 static LONG __stdcall TopLevelExceptionFilter_Hook(EXCEPTION_POINTERS* ep) {
     const EXCEPTION_RECORD* er = ep->ExceptionRecord;
-    if (er->ExceptionCode == EXCEPTION_ACCESS_VIOLATION && er->ExceptionAddress == nullptr &&
-        er->NumberParameters >= 2 && er->ExceptionInformation[0] == 8 /* execute */) {
+    // EIP jumped to 0 (call/jmp through NULL); the instruction fetch at 0 faults
+    // as a read AV at address 0 -- match ExceptionAddress alone, not the sub-code.
+    if (er->ExceptionCode == EXCEPTION_ACCESS_VIOLATION && er->ExceptionAddress == nullptr) {
         CONTEXT* ctx = ep->ContextRecord;
         const DWORD esp = ctx->Esp;
         DWORD retaddr = 0;
