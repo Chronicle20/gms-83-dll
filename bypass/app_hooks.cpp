@@ -63,10 +63,18 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime
         Log("FRAME> update");
         CStage* stage = get_stage();
         if (stage) {
+            // vtbl=%p is the key datum: if it's a clean client .text/.rdata
+            // address the stage is a valid CGame and the hang is inside the real
+            // Update (anti-cheat or a sub-pool); if it's garbage/non-image the
+            // stage pointer itself is corrupt (struct/vtable layout mismatch).
+            Log("FRAME> stage-update begin stage=%p vtbl=%p", stage, *(void**)stage);
             stage->Update();
+            Log("FRAME> stage-update end");
         }
 
+        Log("FRAME> wndman begin");
         CWndMan::s_Update();
+        Log("FRAME> wndman end");
         pThis->m_tUpdateTime += 30;
         if (tCurTime - pThis->m_tUpdateTime > 0) {
             auto gr = get_gr();
