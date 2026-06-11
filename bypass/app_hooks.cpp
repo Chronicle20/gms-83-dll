@@ -41,13 +41,6 @@ static DWORD ResetLSP() {
 // ---- hook bodies --------------------------------------------------------
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime) {
-    // --- freeze-bisection markers (v84 channel-enter hang) -----------------
-    // A hard anti-tamper hang persists once tripped, so the LAST marker in the
-    // log localizes which per-frame phase never returned:
-    //   last="FRAME> update"     -> hang in stage->Update()/CWndMan (CGame load)
-    //   last="FRAME> sweepcache"  -> hang in CActionMan::SweepCache integrity trap
-    //   pairs end cleanly at "FRAME> render-done" -> hang is in the msg-loop pump
-    Log("FRAME> callupdate-enter");
     if (pThis->m_bFirstUpdate) {
         pThis->m_tUpdateTime = tCurTime;
 #if defined(REGION_GMS)
@@ -60,21 +53,12 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime
     }
 
     while (tCurTime - pThis->m_tUpdateTime > 0) {
-        Log("FRAME> update");
         CStage* stage = get_stage();
         if (stage) {
-            // vtbl=%p is the key datum: if it's a clean client .text/.rdata
-            // address the stage is a valid CGame and the hang is inside the real
-            // Update (anti-cheat or a sub-pool); if it's garbage/non-image the
-            // stage pointer itself is corrupt (struct/vtable layout mismatch).
-            Log("FRAME> stage-update begin stage=%p vtbl=%p", stage, *(void**)stage);
             stage->Update();
-            Log("FRAME> stage-update end");
         }
 
-        Log("FRAME> wndman begin");
         CWndMan::s_Update();
-        Log("FRAME> wndman end");
         pThis->m_tUpdateTime += 30;
         if (tCurTime - pThis->m_tUpdateTime > 0) {
             auto gr = get_gr();
@@ -91,9 +75,7 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime
         Log("Some sort of com error");
         return;
     }
-    Log("FRAME> sweepcache");
     CActionMan::GetInstance()->SweepCache();
-    Log("FRAME> sweepcache-done");
 }
 
 VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp* pThis, PVOID edx) {
@@ -227,14 +209,12 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp* pThis, PVOID edx, int* pbTerminate) {
                 return;
             }
             CWvsApp__CallUpdate_Hook(pThis, edx, tCurTime);
-            Log("FRAME> render");
             CWndMan::RedrawInvalidatedWindows();
             hr = get_gr()->RenderFrame();
             if (FAILED(hr)) {
                 Log("Do proper _com_raise_errorex");
                 return;
             }
-            Log("FRAME> render-done");
             Sleep(1u);
         }
     } while (!*pbTerminate && msg.message != 18);
