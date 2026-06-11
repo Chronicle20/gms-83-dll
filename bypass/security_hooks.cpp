@@ -68,6 +68,33 @@ static LONG CALLBACK AntiTamperTrapVeh(EXCEPTION_POINTERS* ep) {
             n, retaddr, ctx->Eax, ctx->Ecx, vtbl, ctx->Edx, ctx->Ebx, ctx->Esi, ctx->Edi, ctx->Ebp);
     }
 
+    // Stack walk (first 3 traps): scan upward from ESP and log values that fall
+    // in maplestory .text and are preceded by a call instruction -- that's the
+    // real .text return-address chain into the Themida trap, so we can see which
+    // function actually invokes it (movement vs. a separable security routine).
+    if (n <= 3 && !IsBadReadPtr(reinterpret_cast<void*>(esp), 0x400)) {
+        const DWORD* sp = reinterpret_cast<const DWORD*>(esp);
+        int found = 0;
+        for (unsigned i = 0; i < 0x100 && found < 16; ++i) {
+            const DWORD v = sp[i];
+            if (v < 0x00401000 || v >= 0x00AC0000) // maplestory code range only
+                continue;
+            const BYTE* p = reinterpret_cast<const BYTE*>(v);
+            char kind = '?'; // classify the instruction that would have called here
+            if (!IsBadReadPtr(reinterpret_cast<void*>(v - 6), 6)) {
+                if (p[-5] == 0xE8) kind = 'C';      // call rel32
+                else if (p[-2] == 0xFF) kind = 'v'; // call [reg]            (FF /2, 2 bytes)
+                else if (p[-3] == 0xFF) kind = 'v'; // call [reg+disp8]      (3 bytes)
+                else if (p[-6] == 0xFF) kind = 'm'; // call [reg+disp32]/mem (6 bytes)
+                else kind = '.';                    // in-range but not a call return (data)
+            }
+            if (kind == '?' || kind == '.')
+                continue; // only log plausible return addresses
+            Log("VEH>   stk[+%03X]=%08X (%c)", i * 4, v, kind);
+            ++found;
+        }
+    }
+
     // Skip the trapped call: pop the pushed return address, resume after it.
     if (retaddr) {
         ctx->Eip = retaddr;
