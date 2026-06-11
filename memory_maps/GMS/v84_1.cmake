@@ -222,12 +222,6 @@ set(DR_CHECK 0x00000000)
 # confirmed absent in v84: no CeTracer/eTracer fn/string (positive ?Run@CeTracer@@QAEXXZ confirmed in v95 @ 0x9BF370); GMS v95+ feature
 set(CE_TRACER_RUN 0x00000000)
 set(SEND_HS_LOG 0x00A39EC9)
-# TopLevelExceptionFilter ENTRY (SetUnhandledExceptionFilter target, registered
-# by sub_7BB798): push [esp+4]; mov ecx,&byte_C49E30; call sub_7BB9BB; retn 4.
-# (0x7BB9B8 is its tail `retn 4`, NOT the entry.) v84's movement anti-cheat
-# funnels its deliberate call-NULL trap through here, which then hangs in NMCO;
-# the bypass detours the entry to skip the trapped call and resume the thread.
-set(TOP_LEVEL_EXCEPTION_FILTER 0x007BB9AA)
 
 set(C_MOB_C_MOB 0x00678060) # CMob::CMob ctor (doom-fix hook target, Task-11). m_pTemplate=this+0x188, m_pTemplateByDoom(this+0x18C)=0. needs-main-review
 

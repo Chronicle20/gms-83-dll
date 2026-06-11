@@ -178,7 +178,6 @@ set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9)
 set(DR_CHECK 0x00000000) # does not exist
 set(CE_TRACER_RUN 0x00000000) # does not exist
 set(SEND_HS_LOG 0x009F191B)
-set(TOP_LEVEL_EXCEPTION_FILTER 0x00000000) # v84-only anti-tamper defang; unused here
 
 set(C_MOB_C_MOB 0x006621D9)
 

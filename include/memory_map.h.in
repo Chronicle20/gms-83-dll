@@ -184,11 +184,6 @@
 #define CE_TRACER_RUN @CE_TRACER_RUN@
 #define SEND_HS_LOG @SEND_HS_LOG@
 
-// Registered SetUnhandledExceptionFilter target. v84's movement anti-cheat
-// routes its deliberate call-NULL trap through here (which then hangs in NMCO);
-// the bypass detours it to repair the context and resume. 0 where unused.
-#define TOP_LEVEL_EXCEPTION_FILTER @TOP_LEVEL_EXCEPTION_FILTER@
-
 #define C_MOB_C_MOB @C_MOB_C_MOB@
 
 #define C_SECURITY_CLIENT_ON_PACKET_RET_STUB @C_SECURITY_CLIENT_ON_PACKET_RET_STUB@
