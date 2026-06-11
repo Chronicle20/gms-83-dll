@@ -219,6 +219,12 @@ set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9) # ITC-gate jz @ host+
 
 # confirmed absent in v84: no DR_check fn / _DR_INFO type (positive ?DR_check@@YAHPAU_DR_INFO@@... confirmed in v87 @ 0x4A1AD3); GMS v87+ feature
 set(DR_CHECK 0x00000000)
+# DR_init (?DR_init@@YAXXZ): anti-debug setup. Called from CWvsApp::SetUp (@0xA3DE0F) on the CLEAN
+# v84 client. Resolves NtGetContextThread into dword_C457FC; the in-field DR check (sub_496208,
+# reached via CVecCtrlUser::EndUpdateActive movement path) does call(dword_C45808 ^ dword_C457FC).
+# Our SetUp reimpl MUST call this — omitting it leaves the pointer NULL -> call(0) -> AV at 0x0
+# ~2-3s into the field. v84 does NOT hook DR_check, so this call is the fix. task-006.
+set(DR_INIT 0x00495942)
 # confirmed absent in v84: no CeTracer/eTracer fn/string (positive ?Run@CeTracer@@QAEXXZ confirmed in v95 @ 0x9BF370); GMS v95+ feature
 set(CE_TRACER_RUN 0x00000000)
 set(SEND_HS_LOG 0x00A39EC9)

@@ -176,6 +176,7 @@ set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x00AA7F49)
 set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9)
 
 set(DR_CHECK 0x004A1AD3)
+set(DR_INIT 0x004A1414) # ?DR_init@@YAXXZ. Clean v87 SetUp calls it; our reimpl restores the call. DR_check is also hooked here.
 set(CE_TRACER_RUN 0x00000000) # does not exist
 set(SEND_HS_LOG 0x00A8411D)
 
