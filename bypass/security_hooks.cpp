@@ -23,6 +23,66 @@ VOID __fastcall CeTracer__Run_Hook(int* pThis, PVOID edx) {}
 
 VOID __fastcall SendHSLog_Hook(void* ecx, void* edx, char a1) {}
 
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 84
+// --- v84 movement anti-cheat call-NULL defang ----------------------------
+// v84's CVecCtrl movement update validates ZtlSecureTear-encrypted coordinates
+// through a Themida-protected routine that, when it detects the bypass, jumps
+// to a deliberately-NULL pointer (EIP=0, C0000005 DEP-execute) on the first
+// movement frame -> NMCO's exception handler then hangs the process. We register
+// a vectored handler that runs FIRST, recognizes exactly that trap (and nothing
+// else, so Themida's own exception-based control flow is untouched), logs the
+// faulting context once per occurrence, and resumes past the trapped call.
+static PVOID g_hAntiTamperVeh = nullptr;
+static volatile LONG g_antiTamperHits = 0;
+
+static LONG CALLBACK AntiTamperTrapVeh(EXCEPTION_POINTERS* ep) {
+    const EXCEPTION_RECORD* er = ep->ExceptionRecord;
+
+    // Match ONLY the trap: access violation, executing at address 0.
+    if (er->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
+        return EXCEPTION_CONTINUE_SEARCH;
+    if (er->ExceptionAddress != nullptr)
+        return EXCEPTION_CONTINUE_SEARCH;
+    if (er->NumberParameters < 2 || er->ExceptionInformation[0] != 8 /* execute */)
+        return EXCEPTION_CONTINUE_SEARCH;
+
+    CONTEXT* ctx = ep->ContextRecord;
+    const DWORD esp = ctx->Esp;
+
+    // The faulting `call 0` already pushed the return address; [ESP] is it.
+    DWORD retaddr = 0;
+    if (!IsBadReadPtr(reinterpret_cast<void*>(esp), 4))
+        retaddr = *reinterpret_cast<DWORD*>(esp);
+
+    // ECX is `this` for the trapped thiscall (the moving object's CVecCtrl).
+    DWORD vtbl = 0;
+    if (ctx->Ecx && !IsBadReadPtr(reinterpret_cast<void*>(ctx->Ecx), 4))
+        vtbl = *reinterpret_cast<DWORD*>(ctx->Ecx);
+
+    const LONG n = InterlockedIncrement(&g_antiTamperHits);
+    if (n <= 24) {
+        Log("VEH> call-NULL trap #%ld ret=%08X EAX=%08X ECX(this)=%08X [ECX]vtbl=%08X "
+            "EDX=%08X EBX=%08X ESI=%08X EDI=%08X EBP=%08X",
+            n, retaddr, ctx->Eax, ctx->Ecx, vtbl, ctx->Edx, ctx->Ebx, ctx->Esi, ctx->Edi, ctx->Ebp);
+    }
+
+    // Skip the trapped call: pop the pushed return address, resume after it.
+    if (retaddr) {
+        ctx->Eip = retaddr;
+        ctx->Esp = esp + 4;
+        return EXCEPTION_CONTINUE_EXECUTION;
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+void InstallAntiTamperVeh() {
+    if (g_hAntiTamperVeh)
+        return;
+    g_hAntiTamperVeh = AddVectoredExceptionHandler(1 /* call first */, AntiTamperTrapVeh);
+    Log("VEH> v84 anti-tamper call-NULL defang installed: %p", g_hAntiTamperVeh);
+}
+#endif
+
 BOOL InstallSecurityHooks() {
     // The pre-refactor MainProc interleaved CSecurityClient byte patches
     // BEFORE CWvsApp::CallUpdate / ConnectLogin. The TU split groups them
@@ -51,31 +111,26 @@ BOOL InstallSecurityHooks() {
     }
 #endif
 
-    // === TASK-006 v84 freeze bisection (DIAGNOSTIC, revert after) ===========
-    // The v84 channel-enter freeze is an anti-tamper integrity check that first
-    // appears at v84 and lives only in Themida-virtualized memory (no DR_check
-    // function exists in v84 to no-op, unlike v87). It CRCs maplestory .text,
-    // detects one of our detour byte-patches, and retaliates with a call-NULL
-    // (EIP=0, DEP) ~3-4s into the field tick. The anti-cheat's OWN functions
-    // (CSecurityClient::OnPacket, SendHSLog) are the likeliest watched bytes,
-    // so skip those two detours on v84 only and observe: if the freeze stops,
-    // the check protects these; if it persists, the scan is broader / elsewhere.
-#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 84
-    Log("SEC> v84 bisection: SKIPPING CSecurityClient::OnPacket + SendHSLog detours");
-#else
     HOOKTYPEDEF_C(CSecurityClient__OnPacket);
     INITMAPLEHOOK_OR_RETURN(_CSecurityClient__OnPacket, _CSecurityClient__OnPacket_t, CSecurityClient__OnPacket_Hook,
                             C_SECURITY_CLIENT_ON_PACKET);
-#endif
 
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     HOOKTYPEDEF_C(CeTracer__Run);
     INITMAPLEHOOK_OR_RETURN(_CeTracer__Run, _CeTracer__Run_t, CeTracer__Run_Hook, CE_TRACER_RUN);
 #endif
 
-#if defined(REGION_GMS) && BUILD_MAJOR_VERSION != 84
+#if defined(REGION_GMS)
     HOOKTYPEDEF_C(SendHSLog);
     INITMAPLEHOOK_OR_RETURN(_SendHSLog, _SendHSLog_t, SendHSLog_Hook, SEND_HS_LOG);
+#endif
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 84
+    // v84's movement anti-cheat (CVecCtrl + ZtlSecureTear, Themida-protected)
+    // retaliates against the bypass with a deliberate call-through-NULL on the
+    // first movement update. Install a vectored handler that logs the trap
+    // context and skips the call so the field survives. See InstallAntiTamperVeh.
+    InstallAntiTamperVeh();
 #endif
 
     return TRUE;
