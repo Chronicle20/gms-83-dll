@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "app_hooks.h"
+#include "security_hooks.h"        // RearmAntiTamperVeh (v84 anti-tamper VEH)
 #include "socket_hooks_internal.h" // CClientSocket__OnConnect_Hook fwd-decl
 
 #include "hooker.h"
@@ -41,6 +42,10 @@ static DWORD ResetLSP() {
 // ---- hook bodies --------------------------------------------------------
 
 VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime) {
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 84
+    // Stay ahead of NMCO's exception handler (it registers after us in-field).
+    RearmAntiTamperVeh();
+#endif
     if (pThis->m_bFirstUpdate) {
         pThis->m_tUpdateTime = tCurTime;
 #if defined(REGION_GMS)

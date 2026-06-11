@@ -34,13 +34,23 @@ VOID __fastcall SendHSLog_Hook(void* ecx, void* edx, char a1) {}
 // faulting context once per occurrence, and resumes past the trapped call.
 static PVOID g_hAntiTamperVeh = nullptr;
 static volatile LONG g_antiTamperHits = 0;
+static volatile LONG g_avSeen = 0; // any C0000005 our VEH is reached for (ordering probe)
 
 static LONG CALLBACK AntiTamperTrapVeh(EXCEPTION_POINTERS* ep) {
     const EXCEPTION_RECORD* er = ep->ExceptionRecord;
 
-    // Match ONLY the trap: access violation, executing at address 0.
     if (er->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
         return EXCEPTION_CONTINUE_SEARCH;
+
+    // Ordering probe: prove whether our handler is even reached for AVs, and
+    // where they land. If we see other AVs but never the at-0 trap, something
+    // (NMCO) is intercepting it before the VEH chain (dispatcher hook).
+    const LONG seen = InterlockedIncrement(&g_avSeen);
+    const DWORD info0 = er->NumberParameters >= 1 ? static_cast<DWORD>(er->ExceptionInformation[0]) : 0xFFFFFFFF;
+    if (seen <= 40)
+        Log("VEH> saw AV #%ld at=%p info0=%lu (0=read 1=write 8=exec)", seen, er->ExceptionAddress, info0);
+
+    // The trap: executing at address 0.
     if (er->ExceptionAddress != nullptr)
         return EXCEPTION_CONTINUE_SEARCH;
     if (er->NumberParameters < 2 || er->ExceptionInformation[0] != 8 /* execute */)
@@ -80,6 +90,16 @@ void InstallAntiTamperVeh() {
         return;
     g_hAntiTamperVeh = AddVectoredExceptionHandler(1 /* call first */, AntiTamperTrapVeh);
     Log("VEH> v84 anti-tamper call-NULL defang installed: %p", g_hAntiTamperVeh);
+}
+
+// Re-register at the FRONT of the VEH chain. NMCO installs its own handler
+// after us at field entry, pushing itself ahead; re-arming each frame keeps us
+// first. Add-then-remove so there is never a window with no handler installed.
+void RearmAntiTamperVeh() {
+    PVOID prev = g_hAntiTamperVeh;
+    g_hAntiTamperVeh = AddVectoredExceptionHandler(1, AntiTamperTrapVeh);
+    if (prev)
+        RemoveVectoredExceptionHandler(prev);
 }
 #endif
 
