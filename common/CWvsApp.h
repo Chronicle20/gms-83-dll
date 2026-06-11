@@ -1,5 +1,7 @@
 #pragma once
 
+#include "asserts.h"
+
 class CWvsApp {
 public:
     virtual ~CWvsApp() = default;
@@ -87,3 +89,17 @@ public:
 
     static char * GetExceptionFileName();
 };
+
+// Stack-constructed in WinMain; our ctor/SetUp hooks write its fields and Run/CallUpdate read
+// them every frame, so a wrong size = wrong field offsets = corruption. Real sizes (size sweep):
+// v83/v84 = 0x60, v87 = 0x6C, v111 = 0x8C, JMS = 0x64 (v95 TBD). These pass with the current
+// version gates — locking them here guards against a gate regression.
+#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 83 || BUILD_MAJOR_VERSION == 84)
+assert_size(sizeof(CWvsApp), 0x60)
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 87
+assert_size(sizeof(CWvsApp), 0x6C)
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95
+assert_size(sizeof(CWvsApp), 0x8C) // v95 and v111 both 0x8C
+#elif defined(REGION_JMS)
+assert_size(sizeof(CWvsApp), 0x64)
+#endif

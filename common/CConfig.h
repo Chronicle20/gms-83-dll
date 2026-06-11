@@ -1,5 +1,7 @@
 #pragma once
 
+#include "asserts.h"
+
 class CConfig {
 public:
     virtual ~CConfig() = default;
@@ -58,3 +60,20 @@ public:
 
     void CheckExecPathReg(ZXString<char> sModulePath);
 };
+
+// CConfig is allocated with Alloc(sizeof(CConfig)) in CWvsApp::SetUp, then the REAL client
+// ctor runs into that block — so our struct must be AT LEAST the real per-version size or
+// the ctor overruns the heap (CConfig is a long-lived global, so corruption surfaces later).
+// Real sizes (WinMain alloc immediate): v83=1072  v84=1084  v87=1108  v111=3024  (v95/JMS TBD).
+// Our struct is v87-shaped (~1108): >= for v83/v84/v87 (safe, no overflow), but FAR too small
+// for v111 (3024) -> heap overrun. (Our GMS layout has no per-major gate; the v84/v83 offsets
+// are technically v87-shaped, but harmless since our code reads no GMS CConfig data member.)
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111
+static_assert(sizeof(CConfig) >= 3024, "CConfig too small for GMS v111 (need >= 3024) -> WinMain heap overflow");
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 95
+static_assert(sizeof(CConfig) == 1592, "CConfig must match the v95 PDB base exactly (1592)");
+#elif defined(REGION_GMS)
+// v83/v84/v87: our struct is v95-shaped (arrays ungated) so it's oversized for these (safe,
+// no overflow) — only assert no-underflow against the smallest GMS real size.
+static_assert(sizeof(CConfig) >= 1072, "CConfig smaller than any GMS real size -> heap overflow");
+#endif
