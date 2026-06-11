@@ -71,7 +71,9 @@ public:
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111
 static_assert(sizeof(CConfig) >= 3024, "CConfig too small for GMS v111 (need >= 3024) -> WinMain heap overflow");
 #elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 95
-static_assert(sizeof(CConfig) == 1592, "CConfig must match the v95 PDB base exactly (1592)");
+// >= not ==: 1592 is the REAL v95 client size; ours need only be at least that
+// (no heap overflow). CConfig is never memcpy'd into, so exact layout isn't required.
+static_assert(sizeof(CConfig) >= 1592, "CConfig smaller than the v95 real size (1592) -> heap overflow");
 #elif defined(REGION_GMS)
 // v83/v84/v87: our struct is v95-shaped (arrays ungated) so it's oversized for these (safe,
 // no overflow) — only assert no-underflow against the smallest GMS real size.
