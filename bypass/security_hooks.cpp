@@ -101,6 +101,49 @@ void RearmAntiTamperVeh() {
     if (prev)
         RemoveVectoredExceptionHandler(prev);
 }
+
+// --- TopLevelExceptionFilter detour --------------------------------------
+// NMCO hooks the exception dispatcher, so it routes the movement-anti-cheat
+// call-NULL trap around the VEH chain (our VEH above never sees it) and into
+// maplestory's registered SetUnhandledExceptionFilter target, which then hangs
+// in NMCO's crash path. We detour that filter itself: for exactly this trap we
+// repair the faulting context (skip the trapped `call 0`) and resume the thread
+// via NtContinue, before NMCO's hang runs. Everything else falls through to the
+// original filter so genuine crashes behave normally.
+typedef LONG(__stdcall* _TopLevelExceptionFilter_t)(EXCEPTION_POINTERS*);
+typedef LONG(__stdcall* _NtContinue_t)(CONTEXT*, BOOLEAN);
+static _TopLevelExceptionFilter_t _TopLevelExceptionFilter = nullptr;
+
+static LONG __stdcall TopLevelExceptionFilter_Hook(EXCEPTION_POINTERS* ep) {
+    const EXCEPTION_RECORD* er = ep->ExceptionRecord;
+    if (er->ExceptionCode == EXCEPTION_ACCESS_VIOLATION && er->ExceptionAddress == nullptr &&
+        er->NumberParameters >= 2 && er->ExceptionInformation[0] == 8 /* execute */) {
+        CONTEXT* ctx = ep->ContextRecord;
+        const DWORD esp = ctx->Esp;
+        DWORD retaddr = 0;
+        if (!IsBadReadPtr(reinterpret_cast<void*>(esp), 4))
+            retaddr = *reinterpret_cast<DWORD*>(esp);
+
+        const LONG n = InterlockedIncrement(&g_antiTamperHits);
+        if (n <= 24)
+            Log("TLEF> call-NULL trap #%ld ret=%08X ECX=%08X EAX=%08X EDX=%08X EBX=%08X -> resuming", n, retaddr,
+                ctx->Ecx, ctx->Eax, ctx->Edx, ctx->Ebx);
+
+        if (retaddr) {
+            // Pop the pushed return address and resume just after the trapped call.
+            ctx->Eip = retaddr;
+            ctx->Esp = esp + 4;
+            // NtContinue forces the resume regardless of how this filter was
+            // invoked; it does not return on success.
+            static _NtContinue_t pNtContinue =
+                reinterpret_cast<_NtContinue_t>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtContinue"));
+            if (pNtContinue)
+                pNtContinue(ctx, FALSE);
+            return EXCEPTION_CONTINUE_EXECUTION; // fallback if NtContinue unavailable
+        }
+    }
+    return _TopLevelExceptionFilter ? _TopLevelExceptionFilter(ep) : EXCEPTION_CONTINUE_SEARCH;
+}
 #endif
 
 BOOL InstallSecurityHooks() {
@@ -148,9 +191,14 @@ BOOL InstallSecurityHooks() {
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 84
     // v84's movement anti-cheat (CVecCtrl + ZtlSecureTear, Themida-protected)
     // retaliates against the bypass with a deliberate call-through-NULL on the
-    // first movement update. Install a vectored handler that logs the trap
-    // context and skips the call so the field survives. See InstallAntiTamperVeh.
+    // first movement update. NMCO hooks the exception dispatcher and routes the
+    // fault around the VEH chain into the registered unhandled-exception filter,
+    // which then hangs. The VEH below is kept as a first-chance fast path; the
+    // TopLevelExceptionFilter detour is the reliable interception (NMCO calls
+    // into it, so it can't route around it). See security_hooks.cpp top half.
     InstallAntiTamperVeh();
+    INITMAPLEHOOK_OR_RETURN(_TopLevelExceptionFilter, _TopLevelExceptionFilter_t, TopLevelExceptionFilter_Hook,
+                            TOP_LEVEL_EXCEPTION_FILTER);
 #endif
 
     return TRUE;
