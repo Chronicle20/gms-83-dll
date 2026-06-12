@@ -180,6 +180,17 @@ set(DR_INIT 0x004AB380) # ?DR_init@@YAXXZ. Clean v95 SetUp calls it; our reimpl 
 set(CE_TRACER_RUN 0x009BF370)
 set(SEND_HS_LOG 0x009BF6C0)
 
+# --- File-stream report read for CLIENT_START_ERROR (docs/tasks/task-007-socket-connect-fidelity) ---
+# v95 inlines CreateFileA in OnConnect (no standalone Open) — the relay replicates the
+# inline open (OPEN_INLINE=1, OPEN unused) and drives the resolved ZFileStream helpers.
+set(C_FILE_STREAM_RESOLVED     1)
+set(C_FILE_STREAM_OPEN_INLINE  1)          # CreateFileA inlined in OnConnect; no __thiscall Open()
+set(C_FILE_STREAM_OPEN         0x0)        # unused (inline open)
+set(C_FILE_STREAM_GET_LENGTH   0x004ACD30) # ZFileStream::GetLength
+set(C_FILE_STREAM_READ         0x004ACD60) # ZFileStream::Read(dst,len)
+set(C_FILE_STREAM_CLOSE        0x004AD7C0) # ZFileStream::Close
+set(C_FILE_STREAM_VFTABLE      0x00B49E30) # ??_7ZFileStream@@6B@
+
 set(C_MOB_C_MOB 0x0064CA30)
 
 set(C_SECURITY_CLIENT_ON_PACKET_RET_STUB 0x00000000) # JMS only

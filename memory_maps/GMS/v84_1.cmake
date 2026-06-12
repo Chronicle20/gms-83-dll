@@ -253,6 +253,7 @@ set(C_PATCH_EXCEPTION_BUILDER  0x00527978) # builds CPatchException obj from m_n
 set(C_COM_RAISE_ERROR_EX       0x00AABF64) # _com_raise_errorex(hr)  (Run render-fail: sub_AABF64(hr))
 
 set(C_FILE_STREAM_RESOLVED     1)
+set(C_FILE_STREAM_OPEN_INLINE  0)
 set(C_FILE_STREAM_OPEN         0x0049A615) # __thiscall CFileStream::Open(name,access,share,…) -> CreateFileA
 set(C_FILE_STREAM_GET_LENGTH   0x0049A79E) # __thiscall GetLength() -> size
 set(C_FILE_STREAM_READ         0x0049A8C9) # __thiscall Read(dst,len)

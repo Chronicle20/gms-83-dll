@@ -197,6 +197,7 @@ set(C_PATCH_EXCEPTION_BUILDER  0x0051E834) # builds CPatchException obj from ver
 set(C_COM_RAISE_ERROR_EX       0x00A5FDE4) # _com_issue_error(hr)=_com_raise_error(hr,0); v83 1-arg HRESULT raiser (render FAILED analog)
 
 set(C_FILE_STREAM_RESOLVED     0)          # relay gated off: OnConnect CFG-obfuscated, helpers unrecoverable
+set(C_FILE_STREAM_OPEN_INLINE  0)
 set(C_FILE_STREAM_OPEN         0x0)
 set(C_FILE_STREAM_GET_LENGTH   0x0)
 set(C_FILE_STREAM_READ         0x0)

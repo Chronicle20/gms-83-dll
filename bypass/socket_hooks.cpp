@@ -29,14 +29,14 @@ typedef VOID(__thiscall* _CClientSocket__SendPacket_t)(CClientSocket* pThis, COu
 // at [+0x34], so total object >= 0x38; pad[0x3C] (total 0x40) is the conservative
 // cover.
 struct ClientFileStream {
-    void* vftable;     // [+0x00] -> C_FILE_STREAM_VFTABLE
-    char  pad[0x3C];   // [+0x04] conservative; covers the [+0x34] flag write
+    void* vftable;  // [+0x00] -> C_FILE_STREAM_VFTABLE
+    char pad[0x3C]; // [+0x04] conservative; covers the [+0x34] flag write
 };
 
-using FileStreamOpenFn  = int(__thiscall*)(void* self, const char* name, unsigned access,
-                                           unsigned share, int a3, unsigned disp, int a5, int a6);
-using FileStreamLenFn   = unsigned(__thiscall*)(void* self);
-using FileStreamReadFn  = int(__thiscall*)(void* self, void* dst, unsigned len);
+using FileStreamOpenFn = int(__thiscall*)(void* self, const char* name, unsigned access, unsigned share, int a3,
+                                          unsigned disp, int a5, int a6);
+using FileStreamLenFn = unsigned(__thiscall*)(void* self);
+using FileStreamReadFn = int(__thiscall*)(void* self, void* dst, unsigned len);
 using FileStreamCloseFn = void(__thiscall*)(void* self);
 
 // ---- OnConnect helpers (§4.2 refactor) ---------------------------------
@@ -135,10 +135,10 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
             pThis->Close();
             if (pThis->m_ctxConnect.bLogin) {
                 Log("CClientSocket::OnConnect connect failed (login) -> RaiseTerminate(0x22000001)");
-                RaiseTerminate(0x22000001);   // CTerminateException, magic 570425345
+                RaiseTerminate(0x22000001); // CTerminateException, magic 570425345
             }
             Log("CClientSocket::OnConnect connect failed -> RaiseDisconnect(0x21000001)");
-            RaiseDisconnect(0x21000001);       // CDisconnectException, magic 553648129
+            RaiseDisconnect(0x21000001); // CDisconnectException, magic 553648129
         }
 
         // Advance the load-balancing cursor (GetNext returns the current node and
@@ -146,7 +146,7 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
         auto* pos = reinterpret_cast<ZInetAddr*>(pThis->m_ctxConnect.posList);
         ZInetAddr* current = pThis->m_ctxConnect.lAddr.GetNext(&pos);
         pThis->m_ctxConnect.posList = reinterpret_cast<__POSITION*>(pos);
-        CClientSocket__Connect_Addr_Hook(pThis, edx, current);   // ZInetAddr : sockaddr_in
+        CClientSocket__Connect_Addr_Hook(pThis, edx, current); // ZInetAddr : sockaddr_in
         return 0;
     }
 
@@ -245,8 +245,19 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
             ClientFileStream fs{};
             fs.vftable = reinterpret_cast<void*>(C_FILE_STREAM_VFTABLE);
 
+#if C_FILE_STREAM_OPEN_INLINE
+            // v95 has no standalone Open(): the stock OnConnect inlines CreateFileA and
+            // stores the handle at [+0x10], then ORs the open flag into the state dword
+            // at [+0x34]. Replicate that exact inline open, then drive the resolved
+            // GetLength/Read/Close by address (the existence guard above already made a
+            // routine missing file a no-op, mirroring the stock INVALID_HANDLE_VALUE throw).
+            *reinterpret_cast<HANDLE*>(reinterpret_cast<char*>(&fs) + 0x10) = CreateFileA(
+                fileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+            *reinterpret_cast<unsigned*>(reinterpret_cast<char*>(&fs) + 0x34) |= 1u;
+#else
             // Open(name, GENERIC_READ=0x80000000, share=128, 1, disp=0, 0, 0)
             reinterpret_cast<FileStreamOpenFn>(C_FILE_STREAM_OPEN)(&fs, fileName, 0x80000000u, 128, 1, 0, 0, 0);
+#endif
             unsigned len = reinterpret_cast<FileStreamLenFn>(C_FILE_STREAM_GET_LENGTH)(&fs);
 
             ZArray<char> report;

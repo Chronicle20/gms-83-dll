@@ -200,6 +200,7 @@ set(C_PATCH_EXCEPTION_BUILDER  0x0055127C) # __thiscall ctor(buffer,version)->bu
 set(C_COM_RAISE_ERROR_EX       0x00B4D510) # ?_com_issue_error@@YGXJ@Z (1-arg HRESULT raiser)
 
 set(C_FILE_STREAM_RESOLVED     1)
+set(C_FILE_STREAM_OPEN_INLINE  0)
 set(C_FILE_STREAM_OPEN         0x004B0864) # __thiscall Open -> CreateFileA
 set(C_FILE_STREAM_GET_LENGTH   0x004B09ED) # __thiscall GetLength()
 set(C_FILE_STREAM_READ         0x004B0B18) # __thiscall Read(dst,len)

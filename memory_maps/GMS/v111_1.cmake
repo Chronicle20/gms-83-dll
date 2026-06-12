@@ -197,6 +197,7 @@ set(C_PATCH_EXCEPTION_BUILDER  0x00564AE0) # __thiscall ctor(buffer, version): l
 set(C_COM_RAISE_ERROR_EX       0x00C91CA0) # 1-arg _com_issue_error(hr) (__stdcall) for consistency with the uniform 1-arg RaiseComErrorEx; the render path's actual 3-arg _com_issue_errorex is @0x00C91CC0 (both throw _com_error)
 
 set(C_FILE_STREAM_RESOLVED     0)          # relay gated off: redesigned stream class, no vtable __thiscall Open
+set(C_FILE_STREAM_OPEN_INLINE  0)
 set(C_FILE_STREAM_OPEN         0x0)
 set(C_FILE_STREAM_GET_LENGTH   0x0)
 set(C_FILE_STREAM_READ         0x0)

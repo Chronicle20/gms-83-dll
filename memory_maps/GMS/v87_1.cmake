@@ -197,6 +197,7 @@ set(C_PATCH_EXCEPTION_BUILDER  0x0054154E) # builds CPatchException obj from ver
 set(C_COM_RAISE_ERROR_EX       0x00AF9E44) # _com_raise_errorex/_com_issue_error(hr)
 
 set(C_FILE_STREAM_RESOLVED     1)
+set(C_FILE_STREAM_OPEN_INLINE  0)
 set(C_FILE_STREAM_OPEN         0x004A7710) # __thiscall Open -> CreateFileA
 set(C_FILE_STREAM_GET_LENGTH   0x004A7899) # __thiscall GetLength()
 set(C_FILE_STREAM_READ         0x004A79C4) # __thiscall Read(dst,len)
