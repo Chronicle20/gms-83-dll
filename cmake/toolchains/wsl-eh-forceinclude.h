@@ -29,6 +29,5 @@
 #ifdef __cplusplus
 struct _ThrowInfo;
 
-extern "C" __declspec(noreturn) void __stdcall
-_CxxThrowException(void* pExceptionObject, _ThrowInfo* pThrowInfo);
+extern "C" __declspec(noreturn) void __stdcall _CxxThrowException(void* pExceptionObject, _ThrowInfo* pThrowInfo);
 #endif
