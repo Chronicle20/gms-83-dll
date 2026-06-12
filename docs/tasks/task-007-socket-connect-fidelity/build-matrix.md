@@ -7,10 +7,17 @@ edit DLL linked.
 | Region/Version | Build | `C_FILE_STREAM_RESOLVED` | Relay path compiled | Notes |
 |---|---|---|---|---|
 | GMS 83 1 | ✅ exit 0 | 0 | `#else` Log-only no-op | OnConnect CFG-obfuscated → gated off |
-| GMS 84 1 | ✅ exit 0 | 1 | resolved relay | anchor version; addresses audited |
-| GMS 87 1 | ✅ exit 0 | 1 | resolved relay | addresses audited |
+| GMS 84 1 | ✅ exit 0 | 1 | resolved relay (standalone Open) | anchor version; addresses audited |
+| GMS 87 1 | ✅ exit 0 | 1 | resolved relay (standalone Open) | addresses audited |
+| GMS 95 1 | ✅ exit 0 | 1 | resolved relay (inline open) | `C_FILE_STREAM_OPEN_INLINE 1`; CI builds this version |
 | GMS 111 1 | ✅ exit 0 | 0 | `#else` Log-only no-op | redesigned non-vtable stream class → gated off |
-| JMS 185 1 | ✅ exit 0 | 1 | resolved relay | major 185 ≥ 95 → also exercises the gated SendPacket-hook typedef; opcode corrected 0x15→0x0F |
+| JMS 185 1 | ✅ exit 0 | 1 | resolved relay (standalone Open) | major 185 ≥ 95 → also exercises the gated SendPacket-hook typedef; opcode corrected 0x15→0x0F |
+
+> **GMS v95.1 was added to this matrix after the first CI run** revealed CI builds 6 versions
+> (the 5 PRD targets + the v95 PDB reference). v95 inlines `CreateFileA` in `OnConnect`, so it
+> uses the new `C_FILE_STREAM_OPEN_INLINE 1` path (relay replicates the inline open, drives the
+> resolved `ZFileStream` GetLength/Read/Close). The other five versions set
+> `C_FILE_STREAM_OPEN_INLINE 0`. All 6 build clean via `scripts/wsl-build.sh`.
 
 ## New-warning scan (touched files only)
 

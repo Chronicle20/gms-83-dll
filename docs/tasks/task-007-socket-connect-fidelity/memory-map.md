@@ -79,13 +79,27 @@ For each version, `C_FILE_STREAM_RESOLVED = 1` means the four helpers + vtable w
 and will be emitted to that version's cmake; `= 0` means the relay is gated off (helpers are
 `0x0` placeholders in Task 4).
 
-| Version | `C_FILE_STREAM_RESOLVED` | Reason if 0 |
-|---|---|---|
-| GMS v84.1 | `1` | — (anchor verified) |
-| GMS v83.1 | `0` | OnConnect CFG-obfuscated; helpers unrecoverable (see N/A) |
-| GMS v87.1 | `1` | — (symbols present, vtable `off_B95EA4`) |
-| GMS v111.1 | `0` | different stream class — no vtable `__thiscall Open` (see N/A) |
-| JMS v185.1 | `1` | — (vtable `off_BE4CAC`; ⚠️ but report opcode is 0x0F not 0x15) |
+| Version | `C_FILE_STREAM_RESOLVED` | `C_FILE_STREAM_OPEN_INLINE` | Reason if 0 |
+|---|---|---|---|
+| GMS v84.1 | `1` | `0` | — (anchor verified) |
+| GMS v83.1 | `0` | `0` | OnConnect CFG-obfuscated; helpers unrecoverable (see N/A) |
+| GMS v87.1 | `1` | `0` | — (symbols present, vtable `off_B95EA4`) |
+| GMS v95.1 | `1` | `1` | — (inline open; resolved below — CI builds this version) |
+| GMS v111.1 | `0` | `0` | different stream class — no vtable `__thiscall Open` (see N/A) |
+| JMS v185.1 | `1` | `0` | — (vtable `off_BE4CAC`; report opcode corrected 0x15→0x0F) |
+
+> **GMS v95.1 — resolved with inline open (added after CI surfaced that CI builds v95).**
+> v95 has the same `[+0x10]` handle / `[+0x34]` state-flag stream object as v84, but
+> `CClientSocket::OnConnect` (`0x004AEF10`) **inlines `CreateFileA`** instead of exposing a
+> standalone `__thiscall Open(name,access,…)`. The named `ZFileStream` helpers exist:
+> GetLength `0x004ACD30`, Read `0x004ACD60`, Close `0x004AD7C0`, vtable `0x00B49E30`
+> (`??_7ZFileStream@@6B@`). Report opcode confirmed `0x1A` (matches cmake). Object size `0x38`
+> (highest write `[+0x34]`), so the `0x40` `ClientFileStream` covers it.
+> Because there is no `Open()` to call, v95 sets `C_FILE_STREAM_OPEN_INLINE 1` and
+> `C_FILE_STREAM_OPEN 0x0` (unused); the relay replicates the inline open
+> (`CreateFileA(name, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)`
+> → handle at `[+0x10]`, `[+0x34] |= 1`) then drives the resolved GetLength/Read/Close.
+> `C_FILE_STREAM_OPEN_INLINE` is a new per-version key (0 for every other version).
 
 ## OQ-1 — `ClientFileStream` object size
 Settled on v84.1 (active IDB `GMS_v84.1_U_DEVM.exe`). Stream object = stack var `v34`
