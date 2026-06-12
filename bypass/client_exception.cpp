@@ -4,7 +4,12 @@
 
 // MSVC CRT EH entry; we pass the CLIENT's _ThrowInfo so the client's
 // __CxxFrameHandler (installed by WinMain) matches the catch by its own RTTI.
-extern "C" void __stdcall _CxxThrowException(void* pObject, void* pThrowInfo);
+// The second parameter must be _ThrowInfo* to match MSVC's canonical extern "C"
+// declaration (defined in <ehdata.h>); declaring it as void* is rejected with
+// C2733 ("cannot overload a function with extern C linkage"). We only need the
+// pointer type, so a forward declaration of the tag is sufficient.
+struct _ThrowInfo;
+extern "C" void __stdcall _CxxThrowException(void* pObject, _ThrowInfo* pThrowInfo);
 
 namespace {
 // Confirmed per-version (signature-catalog.md): every client builds CPatchException via a
@@ -15,17 +20,17 @@ using ComRaiseFn  = void(__stdcall*)(HRESULT);       // throws _com_error(hr); 1
 } // namespace
 
 [[noreturn]] void RaiseDisconnect(int code) {
-    _CxxThrowException(&code, reinterpret_cast<void*>(C_TI_DISCONNECT_EXCEPTION));
+    _CxxThrowException(&code, reinterpret_cast<_ThrowInfo*>(C_TI_DISCONNECT_EXCEPTION));
     __assume(0);
 }
 
 [[noreturn]] void RaiseTerminate(int code) {
-    _CxxThrowException(&code, reinterpret_cast<void*>(C_TI_TERMINATE_EXCEPTION));
+    _CxxThrowException(&code, reinterpret_cast<_ThrowInfo*>(C_TI_TERMINATE_EXCEPTION));
     __assume(0);
 }
 
 [[noreturn]] void RaiseZException(int code) {
-    _CxxThrowException(&code, reinterpret_cast<void*>(C_TI_ZEXCEPTION));
+    _CxxThrowException(&code, reinterpret_cast<_ThrowInfo*>(C_TI_ZEXCEPTION));
     __assume(0);
 }
 
@@ -37,7 +42,7 @@ using ComRaiseFn  = void(__stdcall*)(HRESULT);       // throws _com_error(hr); 1
     unsigned char buf[2048];
     auto ctor = reinterpret_cast<PatchCtorFn>(C_PATCH_EXCEPTION_BUILDER);
     void* obj = ctor(buf, CWvsApp::GetInstance()->m_nTargetVersion);
-    _CxxThrowException(obj, reinterpret_cast<void*>(C_TI_PATCH_EXCEPTION));
+    _CxxThrowException(obj, reinterpret_cast<_ThrowInfo*>(C_TI_PATCH_EXCEPTION));
     __assume(0);
 }
 
@@ -56,7 +61,7 @@ using ComRaiseFn  = void(__stdcall*)(HRESULT);       // throws _com_error(hr); 1
 
 // Both COM paths throw _com_error(hr) via the single 1-arg __stdcall raiser. Kept as two
 // named entry points so the call sites read intentionally (m_hrComErrorCode vs FAILED-render).
-[[noreturn]] void RaiseComError(HRESULT hr) {   // m_hrComErrorCode path
+[[noreturn]] void RaiseComError(HRESULT hr) { // m_hrComErrorCode path
     reinterpret_cast<ComRaiseFn>(C_COM_RAISE_ERROR_EX)(hr);
     __assume(0);
 }
