@@ -30,33 +30,45 @@ for t in clang-cl lld-link llvm-lib ninja; do printf "%-12s" "$t:"; command -v $
 ```
 Expected: likely all `MISSING` on a fresh WSL (only `cmake` is preinstalled via Homebrew).
 
-- [ ] **Step 2: Install LLVM (provides clang-cl, lld-link, llvm-lib, llvm-rc) and ninja via Homebrew**
+- [ ] **Step 2: Install LLVM, LLD, and ninja via Homebrew**
 
-Homebrew is already on this machine (`/home/linuxbrew/.linuxbrew`), so no sudo is needed.
+Homebrew is already on this machine (`/home/linuxbrew/.linuxbrew`), so no sudo is
+needed. **NOTE (correction from bring-up):** Homebrew's `llvm` formula ships
+`clang-cl`, `llvm-lib`, `llvm-rc`, and `lldb` (debugger) but **not** `lld` (the
+linker). `lld-link` comes from the *separate* `lld` formula, and it installs into
+a **different keg** (`$(brew --prefix lld)/bin`, not the llvm bin). Both are needed.
 
 Run:
 ```bash
-brew install llvm ninja
+brew install llvm lld ninja
 ```
-Expected: completes (llvm is ~1.5 GB; may take several minutes).
+Expected: completes (llvm is ~1.5 GB; lld ~8 MB; may take several minutes).
 
-- [ ] **Step 3: Put the LLVM bin dir on PATH and verify the four tools resolve**
+- [ ] **Step 3: Verify the tools resolve across both kegs**
 
-`brew install llvm` is keg-only, so its tools are NOT symlinked into the default
-Homebrew bin. Resolve the prefix and verify:
+Both `llvm` and `lld` are keg-only, so their tools are NOT symlinked into the
+default Homebrew bin. clang-cl/llvm-lib/llvm-rc live under the llvm keg; lld-link
+under the lld keg:
 ```bash
 LLVM_BIN="$(brew --prefix llvm)/bin"
-for t in clang-cl lld-link llvm-lib llvm-rc ninja; do printf "%-12s" "$t:"; "$LLVM_BIN/$t" --version >/dev/null 2>&1 && echo "OK ($LLVM_BIN/$t)" || command -v "$t" || echo MISSING; done
+LLD_BIN="$(brew --prefix lld)/bin"
+for t in clang-cl llvm-lib llvm-rc; do printf "%-12s" "$t:"; [[ -x "$LLVM_BIN/$t" ]] && echo "OK ($LLVM_BIN/$t)" || echo MISSING; done
+printf "%-12s" "lld-link:"; [[ -x "$LLD_BIN/lld-link" ]] && echo "OK ($LLD_BIN/lld-link)" || echo MISSING
+printf "%-12s" "ninja:"; ninja --version >/dev/null 2>&1 && echo OK || echo MISSING
 ```
-Expected: `clang-cl`, `lld-link`, `llvm-lib`, `llvm-rc` resolve under `$(brew --prefix llvm)/bin`; `ninja` resolves on PATH. Record `LLVM_BIN` — the driver script (Task 4) and toolchain file (Task 3) reference these tools by absolute path so a non-interactive shell finds them.
+Expected: every tool prints `OK`. Record both `LLVM_BIN` and `LLD_BIN` — the driver
+script (Task 4) and toolchain file (Task 3) reference these tools by absolute path
+so a non-interactive shell finds them.
 
-- [ ] **Step 4: Capture the LLVM bin path for later tasks**
+- [ ] **Step 4: Capture both bin paths for later tasks**
 
 Run:
 ```bash
 echo "LLVM_BIN=$(brew --prefix llvm)/bin"
+echo "LLD_BIN=$(brew --prefix lld)/bin"
 ```
-Expected: prints e.g. `LLVM_BIN=/home/linuxbrew/.linuxbrew/opt/llvm/bin`. No commit (host setup only).
+Expected: prints e.g. `LLVM_BIN=/home/linuxbrew/.linuxbrew/opt/llvm/bin` and
+`LLD_BIN=/home/linuxbrew/.linuxbrew/opt/lld/bin`. No commit (host setup only).
 
 ---
 
@@ -66,25 +78,29 @@ Expected: prints e.g. `LLVM_BIN=/home/linuxbrew/.linuxbrew/opt/llvm/bin`. No com
 
 - [ ] **Step 1: Install the xwin binary**
 
-Prefer a prebuilt release binary (no Rust toolchain needed). Run:
+**CORRECTION (from bring-up):** xwin has a Homebrew formula (simpler than the
+release tarball), and the current version is **0.9.0**, not 0.6.6. Install via brew:
 ```bash
-XWIN_VER=0.6.6
-cd /tmp
-curl -fsSL "https://github.com/Jake-Shadle/xwin/releases/download/${XWIN_VER}/xwin-${XWIN_VER}-x86_64-unknown-linux-musl.tar.gz" -o xwin.tgz
-tar -xzf xwin.tgz
-install -m755 "xwin-${XWIN_VER}-x86_64-unknown-linux-musl/xwin" "$(brew --prefix)/bin/xwin"
+brew install xwin
 xwin --version
 ```
-Expected: prints `xwin 0.6.6` (or the pinned version). If the download 404s, fall back to `cargo install xwin` (requires `brew install rust` first).
+Expected: prints `xwin 0.9.0`. In 0.9.0 the `--arch` filter is a **global** option
+(before the subcommand): `xwin --arch x86 splat ...`.
 
 - [ ] **Step 2: Download + splat the CRT and Windows SDK (Win32/x86 only)**
 
 This accepts the Microsoft redistributable license and writes ~1 GB to `~/.xwin-splat`.
-Run:
+
+**CORRECTION (from bring-up):** xwin *moves* files from its cache to the output by
+default. In this WSL `/tmp` (cache) and `/home` (output) are different filesystems,
+so the move fails with `Invalid cross-device link (EXDEV)`. Use `--copy` to copy
+instead of move. Keep the cache on `/tmp` to reuse any prior download.
 ```bash
-xwin --accept-license --arch x86 splat --output "$HOME/.xwin-splat"
+xwin --accept-license --arch x86 --cache-dir /tmp/.xwin-cache \
+     splat --output "$HOME/.xwin-splat" --copy
 ```
-Expected: completes with a `crt/` and `sdk/` tree under `~/.xwin-splat`. (Downloads are cached under `./.xwin-cache`; delete `/tmp/.xwin-cache` afterward if created.)
+Expected: completes silently with a `crt/` and `sdk/` tree under `~/.xwin-splat`.
+Symlinks are on by default — that is what fixes `#include <Windows.h>` casing.
 
 - [ ] **Step 3: Verify the splat contains the headers and libs this project needs**
 
@@ -112,6 +128,14 @@ ls -la "$S/sdk/lib/um/x86/" | grep -i 'ws2_32\.lib'
 ```
 Expected: a `ws2_32.lib` entry exists (xwin lowercases SDK lib names and/or creates case symlinks by default). Note the actual casing — if only one case exists and it differs from a `#pragma comment(lib, ...)` spelling, that is the case-sensitivity risk materializing; the fallback is a symlink added in Task 4's script. No commit (host setup only).
 
+**FINDING (from bring-up):** The real file is `WS2_32.Lib`; xwin created symlinks
+`ws2_32.lib` and `WS2_32.lib` (636 case symlinks in that dir total), so the
+`#pragma comment(lib, "WS2_32.lib")` spelling resolves. BUT `cmake/CommonLib.cmake`
+references the mixed-case `Ws2_32.lib` (capital W, lowercase `s2_32`), and xwin did
+**not** create that exact permutation. This is the one casing gap; the driver script
+(Task 4) creates the `Ws2_32.lib` symlink idempotently. All other libs
+(`winmm.lib`, `comsuppw.lib`, vendored `detours.lib`) resolve as-is.
+
 ---
 
 ### Task 3: Write the CMake toolchain file
@@ -121,109 +145,36 @@ Expected: a `ws2_32.lib` entry exists (xwin lowercases SDK lib names and/or crea
 
 - [ ] **Step 1: Write the toolchain file**
 
-Create `cmake/toolchains/clang-cl-win32.cmake` with exactly:
-```cmake
-# Cross-compile the Win32 MSVC-ABI edit DLLs in WSL with clang-cl + lld-link,
-# using an xwin-produced splat of the MSVC CRT + Windows SDK. Dev-only check
-# loop; CI on windows-2025 remains authoritative. See
-# docs/tasks/wsl-cross-compile/design.md.
-
-set(CMAKE_SYSTEM_NAME Windows)
-set(CMAKE_SYSTEM_PROCESSOR x86)
-
-# --- locate the xwin splat (override with -DXWIN_SPLAT=... or env XWIN_SPLAT) ---
-if(NOT XWIN_SPLAT)
-    if(DEFINED ENV{XWIN_SPLAT})
-        set(XWIN_SPLAT "$ENV{XWIN_SPLAT}")
-    else()
-        set(XWIN_SPLAT "$ENV{HOME}/.xwin-splat")
-    endif()
-endif()
-if(NOT EXISTS "${XWIN_SPLAT}/crt/include")
-    message(FATAL_ERROR
-        "xwin splat not found at '${XWIN_SPLAT}'. "
-        "Run scripts/wsl-build.sh (it checks/installs) or see "
-        "docs/tasks/wsl-cross-compile/README.md.")
-endif()
-
-# --- locate the LLVM tools (override with -DLLVM_BIN=... or env LLVM_BIN) ---
-if(NOT LLVM_BIN AND DEFINED ENV{LLVM_BIN})
-    set(LLVM_BIN "$ENV{LLVM_BIN}")
-endif()
-if(LLVM_BIN)
-    set(_clang_cl  "${LLVM_BIN}/clang-cl")
-    set(_lld_link  "${LLVM_BIN}/lld-link")
-    set(_llvm_lib  "${LLVM_BIN}/llvm-lib")
-    set(_llvm_rc   "${LLVM_BIN}/llvm-rc")
-else()
-    set(_clang_cl  clang-cl)
-    set(_lld_link  lld-link)
-    set(_llvm_lib  llvm-lib)
-    set(_llvm_rc   llvm-rc)
-endif()
-
-set(CMAKE_C_COMPILER   "${_clang_cl}")
-set(CMAKE_CXX_COMPILER "${_clang_cl}")
-set(CMAKE_LINKER       "${_lld_link}")
-set(CMAKE_AR           "${_llvm_lib}")
-set(CMAKE_RC_COMPILER  "${_llvm_rc}")
-
-# 32-bit MSVC target triple for both languages.
-set(CMAKE_C_COMPILER_TARGET   i686-pc-windows-msvc)
-set(CMAKE_CXX_COMPILER_TARGET i686-pc-windows-msvc)
-
-# Compile-only the toolchain probe so configure doesn't depend on a linkable
-# entry point. Real link validation happens when we build the DLLs.
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
-
-# MSVC-system include dirs from the splat. /imsvc keeps them on the system path
-# (no -Wnonportable-include-path noise from the SDK's own headers).
-set(_xwin_incs
-    "/imsvc${XWIN_SPLAT}/crt/include"
-    "/imsvc${XWIN_SPLAT}/sdk/include/ucrt"
-    "/imsvc${XWIN_SPLAT}/sdk/include/um"
-    "/imsvc${XWIN_SPLAT}/sdk/include/shared")
-string(JOIN " " _xwin_incflags ${_xwin_incs})
-
-# -fasm-blocks: parse the MS-style __asm jmp thunks in proxy/ijl15.cpp.
-set(_common_flags "-fms-compatibility -fms-extensions -fasm-blocks ${_xwin_incflags}")
-set(CMAKE_C_FLAGS_INIT   "${_common_flags}")
-set(CMAKE_CXX_FLAGS_INIT "${_common_flags}")
-
-# Library search paths for lld-link.
-set(_xwin_libs
-    "/libpath:${XWIN_SPLAT}/crt/lib/x86"
-    "/libpath:${XWIN_SPLAT}/sdk/lib/um/x86"
-    "/libpath:${XWIN_SPLAT}/sdk/lib/ucrt/x86")
-string(JOIN " " _xwin_libflags ${_xwin_libs})
-set(_link_init "/machine:x86 ${_xwin_libflags}")
-set(CMAKE_EXE_LINKER_FLAGS_INIT    "${_link_init}")
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "${_link_init}")
-set(CMAKE_MODULE_LINKER_FLAGS_INIT "${_link_init}")
-
-# Only search the splat for headers/libs; never the (empty) host Windows roots.
-set(CMAKE_FIND_ROOT_PATH "${XWIN_SPLAT}")
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-```
+**CORRECTION (from bring-up):** the toolchain file resolves `lld-link` from a
+SEPARATE keg (`LLD_BIN`) than clang-cl/llvm-lib/llvm-rc (`LLVM_BIN`), per the
+Task 1 finding. The committed file is the source of truth; create
+`cmake/toolchains/clang-cl-win32.cmake` matching the repository copy. Its shape:
+`CMAKE_SYSTEM_NAME=Windows`, `_PROCESSOR=x86`; resolve the splat from
+`-DXWIN_SPLAT`/env/`~/.xwin-splat`; resolve tools from `-DLLVM_BIN` and `-DLLD_BIN`
+(env fallback, then bare names on PATH); set `CMAKE_{C,CXX}_COMPILER=clang-cl`,
+`CMAKE_LINKER=lld-link`, `CMAKE_AR=llvm-lib`, `CMAKE_RC_COMPILER=llvm-rc`;
+`CMAKE_{C,CXX}_COMPILER_TARGET=i686-pc-windows-msvc`;
+`CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY` (compile-only probe);
+`/imsvc` include flags for `crt/include` + `sdk/include/{ucrt,um,shared}`;
+`-fms-compatibility -fms-extensions -fasm-blocks` in `CMAKE_{C,CXX}_FLAGS_INIT`;
+`/machine:x86` + `/libpath:` for `crt/lib/x86` + `sdk/lib/{um,ucrt}/x86` in the
+linker `*_INIT` flags; and `CMAKE_FIND_ROOT_PATH` pinned to the splat.
 
 - [ ] **Step 2: Verify configure succeeds (the toolchain probe)**
 
-Run:
+Run (note BOTH `LLVM_BIN` and `LLD_BIN`):
 ```bash
-LLVM_BIN="$(brew --prefix llvm)/bin" \
+LLVM_BIN="$(brew --prefix llvm)/bin" LLD_BIN="$(brew --prefix lld)/bin" \
 cmake -G Ninja -B /tmp/wsl-cfg-probe \
   --toolchain "$PWD/cmake/toolchains/clang-cl-win32.cmake" \
   -DBUILD_REGION=GMS -DBUILD_MAJOR_VERSION=83 -DBUILD_MINOR_VERSION=1
 ```
 Expected: ends with `-- Configuring done` / `-- Generating done`, with
-`-- The C compiler identification is Clang` and `MSVC`-like behavior detected.
-If it fails at "The C compiler ... is not able to compile a simple test program",
-read `/tmp/wsl-cfg-probe/CMakeFiles/CMakeError.log` — that is the precise bring-up
-signal (usually a missing `/imsvc` path or a tool not found). Fix the toolchain file
-and re-run until configure passes.
+`-- The C compiler identification is Clang 22.1.7 with MSVC-like command-line`.
+(Bring-up result: PASS.) If it instead fails at "The C compiler ... is not able to
+compile a simple test program", read
+`/tmp/wsl-cfg-probe/CMakeFiles/CMakeError.log` — usually a missing `/imsvc` path or
+a tool not found. Fix the toolchain file and re-run until configure passes.
 
 - [ ] **Step 3: Clean up the probe dir**
 
