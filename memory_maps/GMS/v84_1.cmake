@@ -243,3 +243,11 @@ set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x00000000)
 # JMS only: launcher/StartUpDlgClass stub forced to ret-1 (positive JMS185 @ 0x7F3CE0).
 # GMS v84 no-patcher NOPs WIN_MAIN+WIN_MAIN_PATCHER_OFFSET (0x241) instead; stays 0.
 set(WIN_MAIN_LAUNCHER_STUB 0x00000000)
+
+# --- Faithful client exception dispatch (docs/tasks/exception-dispatch-cleanup) ---
+set(C_TI_DISCONNECT_EXCEPTION 0x00B9C7B8) # __TI3?AVCDisconnectException@@
+set(C_TI_TERMINATE_EXCEPTION  0x00B986C0) # __TI3?AVCTerminateException@@
+set(C_TI_PATCH_EXCEPTION       0x00BA72F0) # __TI3?AVCPatchException@@
+set(C_TI_ZEXCEPTION            0x00B98E40) # __TI1?AVZException@@
+set(C_PATCH_EXCEPTION_BUILDER  0x00527978) # builds CPatchException obj from m_nTargetVersion (Run: v3=sub_527978(this[16]))
+set(C_COM_RAISE_ERROR_EX       0x00AABF64) # _com_raise_errorex(hr)  (Run render-fail: sub_AABF64(hr))

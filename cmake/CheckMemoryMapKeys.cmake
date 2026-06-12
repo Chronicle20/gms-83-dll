@@ -24,7 +24,7 @@ foreach(_LINE IN LISTS _LINES)
 endforeach()
 list(REMOVE_DUPLICATES _KEYS)
 # BUILD_REGION is supplied by the build invocation (-DBUILD_REGION), not the
-# memory map file, so it is not one of the 146 memory-map keys. Exclude it here
+# memory map file, so it is not one of the 152 memory-map keys. Exclude it here
 # so this standalone check reflects exactly the memory-map key set.
 list(REMOVE_ITEM _KEYS BUILD_REGION)
 set(_MISSING "")

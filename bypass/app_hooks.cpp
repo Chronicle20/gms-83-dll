@@ -3,6 +3,7 @@
 #include "app_hooks.h"
 #include "socket_hooks_internal.h" // CClientSocket__OnConnect_Hook fwd-decl
 
+#include "client_exception.h"
 #include "hooker.h"
 #include "logger.h"
 
@@ -137,9 +138,6 @@ VOID __fastcall CWvsApp__ConnectLogin_Hook(CWvsApp* pThis, PVOID edx) {
     auto handle = pSock->m_sock._m_hSocket;
     if (handle == 0 || handle == -1) {
         Log("CWvsApp::ConnectLogin Should issue exception here.");
-        //        CTerminateException ex(570425345);
-        //        int* exceptionObject = reinterpret_cast<int*>(&ex); // if needed
-        //        _CxxThrowException(exceptionObject, &_TI3_AVCTerminateException__);
     }
 }
 
@@ -175,27 +173,17 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp* pThis, PVOID edx, int* pbTerminate) {
                 }
                 TranslateMessage(&msg);
                 DispatchMessageA(&msg);
-                int isError = 0;
-                int m_hrComErrorCode = 0;
                 if (pThis->m_hrComErrorCode) {
-                    m_hrComErrorCode = pThis->m_hrComErrorCode;
+                    HRESULT hr = pThis->m_hrComErrorCode;
                     pThis->m_hrComErrorCode = 0;
                     pThis->m_hrZExceptionCode = 0;
-                    isError = 1;
-                }
-                if (isError) {
-                    Log("Do proper _com_raise_error [m_hrComErrorCode=0x%08X]", m_hrComErrorCode);
-                    return;
+                    RaiseComError(hr);
                 }
                 if (pThis->m_hrZExceptionCode) {
-                    m_hrComErrorCode = pThis->m_hrZExceptionCode;
+                    int code = pThis->m_hrZExceptionCode;
                     pThis->m_hrComErrorCode = 0;
                     pThis->m_hrZExceptionCode = 0;
-                    isError = 1;
-                }
-                if (isError) {
-                    Log("Do proper _com_raise_error [m_hrZExceptionCode=0x%08X]", m_hrComErrorCode);
-                    return;
+                    RaiseClientException(code);
                 }
             } while (!*pbTerminate && msg.message != 18);
         } else {
@@ -205,15 +193,13 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp* pThis, PVOID edx, int* pbTerminate) {
             auto tCurTime = 0;
             auto hr = get_gr()->GetnextRenderTime(&tCurTime);
             if (FAILED(hr)) {
-                Log("Do proper _com_raise_errorex");
-                return;
+                RaiseComErrorEx(hr);
             }
             CWvsApp__CallUpdate_Hook(pThis, edx, tCurTime);
             CWndMan::RedrawInvalidatedWindows();
             hr = get_gr()->RenderFrame();
             if (FAILED(hr)) {
-                Log("Do proper _com_raise_errorex");
-                return;
+                RaiseComErrorEx(hr);
             }
             Sleep(1u);
         }
@@ -282,8 +268,7 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
     SetForegroundWindow(pThis->m_hWnd);
     auto hr = get_gr()->RenderFrame();
     if (FAILED(hr)) {
-        Log("Do proper _com_raise_errorex");
-        return;
+        RaiseComErrorEx(hr);
     }
 #endif
 

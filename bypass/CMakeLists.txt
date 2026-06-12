@@ -5,5 +5,6 @@ add_edit_dll(bypass SOURCES
     login_hooks.cpp
     security_hooks.cpp
     app_hooks.cpp
+    client_exception.cpp
     key_mapped_hooks.cpp
 )

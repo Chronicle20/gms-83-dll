@@ -187,3 +187,11 @@ set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only
 set(C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET 0x00000000) # JMS only
 set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x00000000) # JMS only
 set(WIN_MAIN_LAUNCHER_STUB 0x00000000) # JMS only
+
+# --- Faithful client exception dispatch (docs/tasks/exception-dispatch-cleanup) ---
+set(C_TI_DISCONNECT_EXCEPTION 0x00BBD474) # __TI3?AVCDisconnectException@@
+set(C_TI_TERMINATE_EXCEPTION  0x00BB8F64) # __TI3?AVCTerminateException@@
+set(C_TI_PATCH_EXCEPTION       0x00BC9A34) # __TI3?AVCPatchException@@
+set(C_TI_ZEXCEPTION            0x00BB9228) # __TI1?AVZException@@
+set(C_PATCH_EXCEPTION_BUILDER  0x00520FA0) # ??0CPatchException@@QAE@J@Z (__thiscall ctor(this,version))
+set(C_COM_RAISE_ERROR_EX       0x00A2FD00) # _com_issue_error(hr) ?_com_issue_error@@YGXJ@Z [FLAG: render raiser buried in COM-ptr wrapper; binary 1-arg equivalent]

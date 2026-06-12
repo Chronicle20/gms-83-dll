@@ -187,3 +187,14 @@ set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00B3B5F7)
 set(C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET 0x19)
 set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x94)
 set(WIN_MAIN_LAUNCHER_STUB 0x007F3CE0)
+
+# --- Faithful client exception dispatch (docs/tasks/exception-dispatch-cleanup) ---
+# NOTE (JMS divergence): dispatch lives in CClientSocket::OnConnect (0x004B0066),
+# NOT CWvsApp::Run (which is virtualized). Selection is by version word, not by an
+# m_hrZExceptionCode range. See signature-catalog.md.
+set(C_TI_DISCONNECT_EXCEPTION 0x00BFB678) # __TI3?AVCDisconnectException@@
+set(C_TI_TERMINATE_EXCEPTION  0x00BF74B8) # __TI3?AVCTerminateException@@
+set(C_TI_PATCH_EXCEPTION       0x00C07518) # __TI3?AVCPatchException@@
+set(C_TI_ZEXCEPTION            0x00BF7C38) # __TI1?AVZException@@
+set(C_PATCH_EXCEPTION_BUILDER  0x0055127C) # __thiscall ctor(buffer,version)->buffer; writes *buf=0x20000000
+set(C_COM_RAISE_ERROR_EX       0x00B4D510) # ?_com_issue_error@@YGXJ@Z (1-arg HRESULT raiser)

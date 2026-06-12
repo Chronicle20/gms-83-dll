@@ -187,3 +187,11 @@ set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only
 set(C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET 0x00000000) # JMS only
 set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x00000000) # JMS only
 set(WIN_MAIN_LAUNCHER_STUB 0x00000000) # JMS only
+
+# --- Faithful client exception dispatch (docs/tasks/exception-dispatch-cleanup) ---
+set(C_TI_DISCONNECT_EXCEPTION 0x00F20BB8) # __TI3?AVCDisconnectException@@
+set(C_TI_TERMINATE_EXCEPTION  0x00F1B8A4) # __TI3?AVCTerminateException@@
+set(C_TI_PATCH_EXCEPTION       0x00F30A04) # __TI3?AVCPatchException@@
+set(C_TI_ZEXCEPTION            0x00F1BB68) # __TI1?AVZException@@
+set(C_PATCH_EXCEPTION_BUILDER  0x00564AE0) # __thiscall ctor(buffer, version): lea ecx,buf; push version; call sub_564AE0 @0xc07717; CMSException::CMSException(this,0x20000000)
+set(C_COM_RAISE_ERROR_EX       0x00C91CA0) # 1-arg _com_issue_error(hr) (__stdcall) for consistency with the uniform 1-arg RaiseComErrorEx; the render path's actual 3-arg _com_issue_errorex is @0x00C91CC0 (both throw _com_error)
