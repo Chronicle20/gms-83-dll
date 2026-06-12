@@ -324,8 +324,20 @@ git commit -m "build(wsl): driver script for clang-cl cross-compile check loop"
 **Files:** none (exercises the existing tree end-to-end).
 
 This task surfaces the remaining design risks together: the `__asm` thunks
-(`proxy/ijl15.cpp`, needs `-fasm-blocks`), `comsuppw.lib`, SEH (`memedit.cpp`),
-and the vendored `common/detours.lib` link.
+(`proxy/ijl15.cpp`), `comsuppw.lib`, SEH (`memedit.cpp`), and the vendored
+`common/detours.lib` link.
+
+**FINDING (from bring-up):** one more toolchain-difference surfaced here —
+`bypass/client_exception.cpp` uses `_CxxThrowException` / `_ThrowInfo`, which it
+relies on being visible "through `<windows.h>`". On MSVC that holds because the
+c1xx frontend force-injects `<ehdata_forceinclude.h>` into every C++ TU; clang-cl
+does not, and that header is not directly includable (MSVC pre-pass tokens). Fix
+(WSL-only, no client-source change): a force-include shim
+`cmake/toolchains/wsl-eh-forceinclude.h` declaring just those two symbols with the
+MSVC ABI signature, applied via `/FI` to **CXX flags only** (it is `extern "C"`,
+which is a syntax error in C — it broke CMake's C compiler probe until scoped to
+CXX). CI never sees the shim, so the C2733/C2371 clashes the .cpp comment warns
+about cannot occur.
 
 - [ ] **Step 1: Build everything for GMS 83.1**
 

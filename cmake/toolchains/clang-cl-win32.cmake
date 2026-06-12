@@ -87,9 +87,18 @@ string(JOIN " " _xwin_incflags ${_xwin_incs})
 # -fms-extensions already enables the MS-style __asm jmp thunks in
 # proxy/ijl15.cpp (verified: clang-cl compiles `__asm jmp dword ptr[p]` under
 # -fms-extensions with no extra flag; -fasm-blocks is an unknown arg in clang-cl).
+#
+# /FI wsl-eh-forceinclude.h: MSVC's frontend force-injects the internal EH
+# declarations (_CxxThrowException / _ThrowInfo) into every C++ TU; clang-cl does
+# not, so bypass/client_exception.cpp would not compile. This shim supplies just
+# those two symbols for the cross-build (CI never sees it). See the header.
+set(_force_inc "/FI${CMAKE_CURRENT_LIST_DIR}/wsl-eh-forceinclude.h")
 set(_common_flags "-fms-compatibility -fms-extensions ${_xwin_incflags}")
+# The EH shim is C++-only (extern "C" is a syntax error in C, and CMake's C
+# compiler probe would choke). Force-include it for CXX only; the project has no
+# C TUs anyway.
 set(CMAKE_C_FLAGS_INIT   "${_common_flags}")
-set(CMAKE_CXX_FLAGS_INIT "${_common_flags}")
+set(CMAKE_CXX_FLAGS_INIT "${_common_flags} ${_force_inc}")
 
 # Library search paths for lld-link.
 set(_xwin_libs
