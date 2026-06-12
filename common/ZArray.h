@@ -275,6 +275,27 @@ public:
 	}
 
 	/// <summary>
+	/// Allocate exactly n elements, set the count header to n, and return the
+	/// data pointer. Models the stock report-buffer resize (sub_49BBBE) for a
+	/// fresh read into an empty array: Alloc() frees any prior block, allocates
+	/// n*sizeof(T)+sizeof(PVOID), and writes the count header = n.
+	/// </summary>
+	T* SetSize(size_t n)
+	{
+		this->Alloc(n);
+		return this->a;
+	}
+
+	/// <summary>
+	/// Raw pointer to element 0 (base of the allocation, after the count header).
+	/// Intention-revealing alias of GetTailPosition() for buffer call sites.
+	/// </summary>
+	T* GetData()
+	{
+		return this->a;
+	}
+
+	/// <summary>
 	/// Removes all items from the array and calls their destructors.
 	/// </summary>
 	void RemoveAll()
