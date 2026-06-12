@@ -95,4 +95,3 @@ static_assert(sizeof(CLogo) == 0x48, "CLogo must match the v95 PDB base exactly 
 #elif defined(REGION_GMS)
 static_assert(sizeof(CLogo) >= 0x38, "CLogo too small (need >= 0x38) -> SetUp heap overflow");
 #endif
-
