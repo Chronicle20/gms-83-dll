@@ -39,7 +39,7 @@ jobs:
     # Visual Studio instance detection ("could not find any instance of Visual Studio") at
     # the configure step. windows-2022 ships VS 2022 (17.x) where the "Visual Studio 17"
     # generator reliably finds it.
-    runs-on: windows-2022
+    runs-on: windows-2025
     strategy:
       matrix:
         config:
