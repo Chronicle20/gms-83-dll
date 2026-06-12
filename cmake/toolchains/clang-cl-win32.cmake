@@ -57,6 +57,16 @@ set(CMAKE_LINKER       "${_lld_link}")
 set(CMAKE_AR           "${_llvm_lib}")
 set(CMAKE_RC_COMPILER  "${_llvm_rc}")
 
+# Neutralize the manifest tool. Homebrew's LLVM ships no llvm-mt, and CMake's
+# find_program(mt) otherwise picks up the Linux magnetic-tape tool /usr/bin/mt,
+# which breaks the post-link step. Manifest embedding is irrelevant to a
+# compile/link check, so point CMAKE_MT at /bin/true: it is a real (found,
+# non-empty) path so find_program won't override it, and it exits 0 -- which
+# CMake's vs_link wrapper reads as "manifest not updated", keeping the linked
+# DLL without an embed step. (An empty value does NOT work: find_program
+# re-searches and re-finds /usr/bin/mt.)
+set(CMAKE_MT "/bin/true" CACHE FILEPATH "manifest tool neutralized for the WSL check loop" FORCE)
+
 # 32-bit MSVC target triple for both languages.
 set(CMAKE_C_COMPILER_TARGET   i686-pc-windows-msvc)
 set(CMAKE_CXX_COMPILER_TARGET i686-pc-windows-msvc)
@@ -74,8 +84,10 @@ set(_xwin_incs
     "/imsvc${XWIN_SPLAT}/sdk/include/shared")
 string(JOIN " " _xwin_incflags ${_xwin_incs})
 
-# -fasm-blocks: parse the MS-style __asm jmp thunks in proxy/ijl15.cpp.
-set(_common_flags "-fms-compatibility -fms-extensions -fasm-blocks ${_xwin_incflags}")
+# -fms-extensions already enables the MS-style __asm jmp thunks in
+# proxy/ijl15.cpp (verified: clang-cl compiles `__asm jmp dword ptr[p]` under
+# -fms-extensions with no extra flag; -fasm-blocks is an unknown arg in clang-cl).
+set(_common_flags "-fms-compatibility -fms-extensions ${_xwin_incflags}")
 set(CMAKE_C_FLAGS_INIT   "${_common_flags}")
 set(CMAKE_CXX_FLAGS_INIT "${_common_flags}")
 

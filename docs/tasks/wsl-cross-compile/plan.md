@@ -91,13 +91,19 @@ Expected: prints `xwin 0.9.0`. In 0.9.0 the `--arch` filter is a **global** opti
 
 This accepts the Microsoft redistributable license and writes ~1 GB to `~/.xwin-splat`.
 
-**CORRECTION (from bring-up):** xwin *moves* files from its cache to the output by
-default. In this WSL `/tmp` (cache) and `/home` (output) are different filesystems,
-so the move fails with `Invalid cross-device link (EXDEV)`. Use `--copy` to copy
-instead of move. Keep the cache on `/tmp` to reuse any prior download.
+**CORRECTIONS (from bring-up):**
+- xwin *moves* files from its cache to the output by default. In this WSL `/tmp`
+  (cache) and `/home` (output) are different filesystems, so the move fails with
+  `Invalid cross-device link (EXDEV)`. Use `--copy`. Keep the cache on `/tmp` to
+  reuse any prior download.
+- `common/pch.h` includes `<atlstr.h>` (ATL `CString`), which the default splat
+  omits → add the global `--include-atl`.
+- A Debug build links the debug CRT (`msvcrtd.lib`, `msvcprtd.lib`,
+  `comsuppwd.lib`), which the default splat omits → add the splat-level
+  `--include-debug-libs`. (Without it, Release links but Debug fails.)
 ```bash
-xwin --accept-license --arch x86 --cache-dir /tmp/.xwin-cache \
-     splat --output "$HOME/.xwin-splat" --copy
+xwin --accept-license --arch x86 --include-atl --cache-dir /tmp/.xwin-cache \
+     splat --output "$HOME/.xwin-splat" --copy --include-debug-libs
 ```
 Expected: completes silently with a `crt/` and `sdk/` tree under `~/.xwin-splat`.
 Symlinks are on by default — that is what fixes `#include <Windows.h>` casing.
@@ -108,14 +114,16 @@ Run:
 ```bash
 S="$HOME/.xwin-splat"
 ls "$S/crt/include/vcruntime.h" \
+   "$S/crt/include/atlstr.h" \
    "$S/sdk/include/um/Windows.h" \
    "$S/crt/lib/x86/libcmt.lib" \
    "$S/crt/lib/x86/comsuppw.lib" \
-   "$S/sdk/lib/um/x86/Ws2_32.lib" \
+   "$S/crt/lib/x86/msvcrtd.lib" \
+   "$S/crt/lib/x86/comsuppwd.lib" \
    "$S/sdk/lib/um/x86/winmm.lib" \
    "$S/sdk/lib/ucrt/x86/ucrt.lib"
 ```
-Expected: every path lists without error. **This step retires two tracked risks from the design at once:** `comsuppw.lib` presence and SDK header availability. If `comsuppw.lib` is missing, stop and report — it is required by the COM-using headers in `common/` and there is no clean substitute.
+Expected: every path lists without error. **This step retires three tracked risks from the design at once:** `comsuppw.lib` presence (+ its debug twin `comsuppwd.lib`), the ATL header `atlstr.h` (`--include-atl`), and the debug CRT `msvcrtd.lib` (`--include-debug-libs`). If `comsuppw.lib`/`atlstr.h` are missing, stop and report — they are required by the COM/ATL headers in `common/` and there is no clean substitute. (Note: the SDK lib `Ws2_32.lib` mixed-case spelling is verified separately in Step 4; xwin does not emit that exact permutation.)
 
 - [ ] **Step 4: Confirm case-variant resolution for bare-name libs**
 
@@ -159,6 +167,17 @@ Task 1 finding. The committed file is the source of truth; create
 `-fms-compatibility -fms-extensions -fasm-blocks` in `CMAKE_{C,CXX}_FLAGS_INIT`;
 `/machine:x86` + `/libpath:` for `crt/lib/x86` + `sdk/lib/{um,ucrt}/x86` in the
 linker `*_INIT` flags; and `CMAKE_FIND_ROOT_PATH` pinned to the splat.
+
+**CORRECTIONS (from bring-up):**
+- `-fasm-blocks` is an *unknown* clang-cl arg AND unnecessary — clang-cl compiles
+  the `proxy/ijl15.cpp` `__asm jmp dword ptr[...]` thunks under `-fms-extensions`
+  alone (verified in isolation). The flag is omitted.
+- Homebrew's LLVM ships no `llvm-mt`, and CMake's `find_program(mt)` otherwise
+  grabs the Linux magnetic-tape tool `/usr/bin/mt`, breaking the post-link
+  manifest step. The file sets `CMAKE_MT=/bin/true` (a real, found path so
+  find_program won't override it; exits 0 so CMake's vs_link wrapper reads
+  "manifest not updated" and keeps the linked DLL). An empty value does NOT work
+  — find_program re-searches and re-finds `/usr/bin/mt`.
 
 - [ ] **Step 2: Verify configure succeeds (the toolchain probe)**
 
@@ -208,6 +227,13 @@ build-wsl
 ```
 
 - [ ] **Step 2: Write the driver script**
+
+**CORRECTIONS (from bring-up):** the committed `scripts/wsl-build.sh` differs from
+the draft below in two ways, both already explained above: (1) it resolves BOTH
+`LLVM_BIN` (llvm keg) and `LLD_BIN` (lld keg) and passes both as `-D`; (2) it has
+an `ensure_lib_symlink` preflight that idempotently creates the missing
+`Ws2_32.lib` case-alias in the splat. The committed file is the source of truth;
+the block below is the original draft kept for reference.
 
 Create `scripts/wsl-build.sh` with exactly:
 ```bash
