@@ -176,6 +176,7 @@ set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x009DEF50)
 set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0x190)
 
 set(DR_CHECK 0x004AB900)
+set(DR_INIT 0x004AB380) # ?DR_init@@YAXXZ. Clean v95 SetUp calls it; our reimpl restores the call. DR_check is also hooked here.
 set(CE_TRACER_RUN 0x009BF370)
 set(SEND_HS_LOG 0x009BF6C0)
 

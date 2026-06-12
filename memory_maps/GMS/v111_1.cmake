@@ -176,6 +176,7 @@ set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x00)
 set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0x00)
 
 set(DR_CHECK 0x004D6ED0)
+set(DR_INIT 0x004D6950) # ?DR_init@@YAXXZ. Clean v111 SetUp calls it; our reimpl restores the call. DR_check is also hooked here.
 set(CE_TRACER_RUN 0x00C02F10)
 set(SEND_HS_LOG 0x00C03290)
 

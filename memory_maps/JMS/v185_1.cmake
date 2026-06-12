@@ -176,6 +176,7 @@ set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x00AA7F49)
 set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9)
 
 set(DR_CHECK 0x004A9617)
+set(DR_INIT 0x00000000) # JMS DR_check (0x4A9617) is Themida-virtualized; DR_init not statically resolvable and not invoked on JMS (DR_check is hooked; the DR_init call is GMS-gated)
 set(CE_TRACER_RUN 0x00000000) # does not exist
 set(SEND_HS_LOG 0x00000000) # does not exist
 

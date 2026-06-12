@@ -218,6 +218,16 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
     auto time = timeGetTime();
     srand(time);
 
+#if defined(REGION_GMS) && DR_INIT != 0
+    // Clean clients call DR_init here (between srand and GetSEPrivilege). It resolves
+    // NtGetContextThread into a global that the in-field DR anti-debug check calls through
+    // (reached from the CVecCtrlUser movement path). Omitting it on v84 — which does NOT hook
+    // DR_check — leaves that pointer NULL, so the check does call(0) => AV at 0x0 ~2-3s into the
+    // field. v87+ also hook DR_check, but restoring this call matches the clean client and is
+    // harmless. Best-effort: no while(1)/throw/network inside. task-006.
+    reinterpret_cast<void(__cdecl*)()>(DR_INIT)();
+#endif
+
 #if defined(REGION_GMS)
     GetSEPrivilege();
 #endif

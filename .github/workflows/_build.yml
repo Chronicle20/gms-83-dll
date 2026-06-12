@@ -35,7 +35,11 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    # Pin to windows-2022: the windows-latest -> windows-2025 migration breaks CMake's
+    # Visual Studio instance detection ("could not find any instance of Visual Studio") at
+    # the configure step. windows-2022 ships VS 2022 (17.x) where the "Visual Studio 17"
+    # generator reliably finds it.
+    runs-on: windows-2022
     strategy:
       matrix:
         config:
