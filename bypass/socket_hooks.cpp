@@ -112,16 +112,23 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
     }
     if (!bSuccess) {
         if (!pThis->m_ctxConnect.posList) {
+            // Address list exhausted: close and raise the stock typed exception,
+            // which unwinds into the client WinMain handler (both [[noreturn]]).
             pThis->Close();
             if (pThis->m_ctxConnect.bLogin) {
-                Log("CClientSocket::OnConnect 570425345");
-                return 0;
+                Log("CClientSocket::OnConnect connect failed (login) -> RaiseTerminate(0x22000001)");
+                RaiseTerminate(0x22000001);   // CTerminateException, magic 570425345
             }
-            Log("CClientSocket::OnConnect 553648129");
-            return 0;
+            Log("CClientSocket::OnConnect connect failed -> RaiseDisconnect(0x21000001)");
+            RaiseDisconnect(0x21000001);       // CDisconnectException, magic 553648129
         }
-        // TODO do i really care to do the loadbalancing logic?
-        CClientSocket__Connect_Addr_Hook(pThis, edx, pThis->m_ctxConnect.lAddr.GetHeadPosition());
+
+        // Advance the load-balancing cursor (GetNext returns the current node and
+        // moves posList to node->m_pNext) and retry the *current* node's address.
+        auto* pos = reinterpret_cast<ZInetAddr*>(pThis->m_ctxConnect.posList);
+        ZInetAddr* current = pThis->m_ctxConnect.lAddr.GetNext(&pos);
+        pThis->m_ctxConnect.posList = reinterpret_cast<__POSITION*>(pos);
+        CClientSocket__Connect_Addr_Hook(pThis, edx, current);   // ZInetAddr : sockaddr_in
         return 0;
     }
 
