@@ -151,6 +151,34 @@ and **NOT surfaced in `memory_map.h.in`** — the C++ template reproduces the be
 `C_ZARRAY_BYTE_SETSIZE` row above is kept only for traceability and marked
 `resolved-via-template (OQ-2)`; Task 4 should not plumb it.
 
+## Decisions for Task 4 / Task 5 (post-audit, 2026-06-12)
+
+An independent IDA + atlas-ms audit re-derived every RESOLVED-1 address (v87.1, JMS185.1)
+and re-confirmed OQ-1 / OQ-throw from v84.1. All addresses, the `0x38` min size, and the
+`(b)` throw decision are **CONFIRMED**. The audit further resolved the JMS opcode:
+
+1. **JMS v185.1 `CLIENT_START_ERROR` → change `0x15` to `0x0F`.** The JMS client's bLogin
+   report `COutPacket` ctor is unambiguously `push 0Fh` (raw `0x004B04B4`); `0x15` has no
+   basis on either wire end (atlas-login's JMS v185 tenant template registers *no* StartError
+   handler at `0x0F` or `0x15`). For client fidelity (the goal of task-007) the relay must
+   send what the stock client sends. **Task 4 must set `CLIENT_START_ERROR 0x0F` in
+   `memory_maps/JMS/v185_1.cmake`** (was `0x15`), with a comment citing this evidence.
+   - *Out of scope (flagged for the record):* atlas-login JMS v185 has no `StartErrorHandle`
+     binding, so the server currently ignores this packet. That is a server-side gap to fix
+     in atlas-ms separately; it does not change the client-fidelity requirement here.
+
+2. **Task 5 needs the missing-file guard (OQ-throw (b)).** Before opening the stream, skip
+   the whole relay when the report path does not exist:
+   `if (GetFileAttributesA(fileName) == INVALID_FILE_ATTRIBUTES) { /* no report */ }`
+   — only call `Open` when the file exists. Applies to every RESOLVED-1 version
+   (v84.1/v87.1/JMS185.1); the `(0 < len < 0x2000)` GetLength guard does NOT cover the throw.
+
+3. **Task 5 `ClientFileStream` size:** total `0x40` → `{ void* vftable; char pad[0x3C]; }`
+   (min `0x38`, conservative `0x40`).
+
+4. **N/A versions confirmed defensible:** v83.1 (genuine CFG flattening), v111.1 (redesigned
+   non-vtable stream class). Both → `C_FILE_STREAM_RESOLVED 0` + `0x0` placeholders in Task 4.
+
 ## Resolution recipe (per IDB)
 1. `select_instance(port)` then `server_health` to confirm the loaded IDB is the intended version.
 2. Decompile the version's `CClientSocket::OnConnect`; find the `bLogin` branch.
