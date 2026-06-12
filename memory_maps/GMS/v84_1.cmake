@@ -251,3 +251,11 @@ set(C_TI_PATCH_EXCEPTION       0x00BA72F0) # __TI3?AVCPatchException@@
 set(C_TI_ZEXCEPTION            0x00B98E40) # __TI1?AVZException@@
 set(C_PATCH_EXCEPTION_BUILDER  0x00527978) # builds CPatchException obj from m_nTargetVersion (Run: v3=sub_527978(this[16]))
 set(C_COM_RAISE_ERROR_EX       0x00AABF64) # _com_raise_errorex(hr)  (Run render-fail: sub_AABF64(hr))
+
+set(C_FILE_STREAM_RESOLVED     1)
+set(C_FILE_STREAM_OPEN_INLINE  0)
+set(C_FILE_STREAM_OPEN         0x0049A615) # __thiscall CFileStream::Open(name,access,share,…) -> CreateFileA
+set(C_FILE_STREAM_GET_LENGTH   0x0049A79E) # __thiscall GetLength() -> size
+set(C_FILE_STREAM_READ         0x0049A8C9) # __thiscall Read(dst,len)
+set(C_FILE_STREAM_CLOSE        0x0049A5B7) # __thiscall Close()/dtor
+set(C_FILE_STREAM_VFTABLE      0x00B437BC) # stream object vtable

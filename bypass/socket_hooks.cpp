@@ -21,6 +21,24 @@ typedef INT(__thiscall* _CClientSocket__OnConnect_t)(CClientSocket* pThis, INT b
 typedef VOID(__thiscall* _CClientSocket__SendPacket_t)(CClientSocket* pThis, COutPacket* oPacket);
 #endif
 
+// ---- CLIENT_START_ERROR report-read mirror (§3) -------------------------
+// Thin stack mirror of the stock CFileStream object. Only vftable@[0] and
+// handle@[+0x10] are semantically meaningful to us, but the buffer MUST be at
+// least the full stock object size so Open/Read/Close do not write OOB.
+// `pad` is sized from the v84.1 stack frame (Task 3 / OQ-1): Open writes a dword
+// at [+0x34], so total object >= 0x38; pad[0x3C] (total 0x40) is the conservative
+// cover.
+struct ClientFileStream {
+    void* vftable;  // [+0x00] -> C_FILE_STREAM_VFTABLE
+    char pad[0x3C]; // [+0x04] conservative; covers the [+0x34] flag write
+};
+
+using FileStreamOpenFn = int(__thiscall*)(void* self, const char* name, unsigned access, unsigned share, int a3,
+                                          unsigned disp, int a5, int a6);
+using FileStreamLenFn = unsigned(__thiscall*)(void* self);
+using FileStreamReadFn = int(__thiscall*)(void* self, void* dst, unsigned len);
+using FileStreamCloseFn = void(__thiscall*)(void* self);
+
 // ---- OnConnect helpers (§4.2 refactor) ---------------------------------
 namespace {
 
@@ -112,16 +130,23 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
     }
     if (!bSuccess) {
         if (!pThis->m_ctxConnect.posList) {
+            // Address list exhausted: close and raise the stock typed exception,
+            // which unwinds into the client WinMain handler (both [[noreturn]]).
             pThis->Close();
             if (pThis->m_ctxConnect.bLogin) {
-                Log("CClientSocket::OnConnect 570425345");
-                return 0;
+                Log("CClientSocket::OnConnect connect failed (login) -> RaiseTerminate(0x22000001)");
+                RaiseTerminate(0x22000001); // CTerminateException, magic 570425345
             }
-            Log("CClientSocket::OnConnect 553648129");
-            return 0;
+            Log("CClientSocket::OnConnect connect failed -> RaiseDisconnect(0x21000001)");
+            RaiseDisconnect(0x21000001); // CDisconnectException, magic 553648129
         }
-        // TODO do i really care to do the loadbalancing logic?
-        CClientSocket__Connect_Addr_Hook(pThis, edx, pThis->m_ctxConnect.lAddr.GetHeadPosition());
+
+        // Advance the load-balancing cursor (GetNext returns the current node and
+        // moves posList to node->m_pNext) and retry the *current* node's address.
+        auto* pos = reinterpret_cast<ZInetAddr*>(pThis->m_ctxConnect.posList);
+        ZInetAddr* current = pThis->m_ctxConnect.lAddr.GetNext(&pos);
+        pThis->m_ctxConnect.posList = reinterpret_cast<__POSITION*>(pos);
+        CClientSocket__Connect_Addr_Hook(pThis, edx, current); // ZInetAddr : sockaddr_in
         return 0;
     }
 
@@ -208,9 +233,52 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
     }
 
     if (pThis->m_ctxConnect.bLogin) {
-        Log("CClientSocket::OnConnect should be sending [%d]", CLIENT_START_ERROR);
-        // TODO relay CLIENT_START_ERROR
+        Log("CClientSocket::OnConnect relaying CLIENT_START_ERROR [%d]", CLIENT_START_ERROR);
+#if C_FILE_STREAM_RESOLVED
         char* fileName = CWvsApp::GetExceptionFileName();
+
+        // OQ-throw (b): the stock Open() throws ZException on a missing file and
+        // the throw escapes OnConnect. Pre-check existence so a routine missing
+        // report is a silent no-op (no packet, no exception) per FR-11. Only the
+        // (0 < len < 0x2000) guard below is insufficient — the throw is earlier.
+        if (fileName && GetFileAttributesA(fileName) != INVALID_FILE_ATTRIBUTES) {
+            ClientFileStream fs{};
+            fs.vftable = reinterpret_cast<void*>(C_FILE_STREAM_VFTABLE);
+
+#if C_FILE_STREAM_OPEN_INLINE
+            // v95 has no standalone Open(): the stock OnConnect inlines CreateFileA and
+            // stores the handle at [+0x10], then ORs the open flag into the state dword
+            // at [+0x34]. Replicate that exact inline open, then drive the resolved
+            // GetLength/Read/Close by address (the existence guard above already made a
+            // routine missing file a no-op, mirroring the stock INVALID_HANDLE_VALUE throw).
+            *reinterpret_cast<HANDLE*>(reinterpret_cast<char*>(&fs) + 0x10) = CreateFileA(
+                fileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+            *reinterpret_cast<unsigned*>(reinterpret_cast<char*>(&fs) + 0x34) |= 1u;
+#else
+            // Open(name, GENERIC_READ=0x80000000, share=128, 1, disp=0, 0, 0)
+            reinterpret_cast<FileStreamOpenFn>(C_FILE_STREAM_OPEN)(&fs, fileName, 0x80000000u, 128, 1, 0, 0, 0);
+#endif
+            unsigned len = reinterpret_cast<FileStreamLenFn>(C_FILE_STREAM_GET_LENGTH)(&fs);
+
+            ZArray<char> report;
+            if (len && len < 0x2000) {
+                char* dst = report.SetSize(len);
+                reinterpret_cast<FileStreamReadFn>(C_FILE_STREAM_READ)(&fs, dst, len);
+            }
+            reinterpret_cast<FileStreamCloseFn>(C_FILE_STREAM_CLOSE)(&fs);
+
+            if (report.GetCount()) {
+                COutPacket pkt(CLIENT_START_ERROR);
+                pkt.Encode2(static_cast<unsigned short>(report.GetCount()));
+                pkt.EncodeBuffer(report.GetData(), report.GetCount());
+                CClientSocket::GetInstance()->SendPacket(&pkt);
+            }
+            // ZArray<char> report frees itself at scope exit; fs is a stack object,
+            // its handle released by Close().
+        }
+#else
+        Log("CClientSocket::OnConnect CLIENT_START_ERROR relay gated off for this version");
+#endif
     } else {
         Log("CClientSocket::OnConnect accountId=[%d], worldId=[%d], channelId=[%d], characterId=[%d]",
             CWvsContext::GetInstance()->m_dwAccountId, CWvsContext::GetInstance()->m_nWorldID,

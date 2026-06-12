@@ -1,7 +1,7 @@
 set(VERSION_HEADER 3)
 
 set(PLAYER_LOGGED_IN 0x07)
-set(CLIENT_START_ERROR 0x15)
+set(CLIENT_START_ERROR 0x0F) # audited: JMS v185 OnConnect bLogin report ctor pushes 0Fh (raw 0x004B04B4); 0x15 had no basis on either wire end (docs/tasks/task-007-socket-connect-fidelity/memory-map.md)
 
 set(GET_SE_PRIVILEGE 0x00000000) # Does not exist in JMS
 
@@ -198,3 +198,11 @@ set(C_TI_PATCH_EXCEPTION       0x00C07518) # __TI3?AVCPatchException@@
 set(C_TI_ZEXCEPTION            0x00BF7C38) # __TI1?AVZException@@
 set(C_PATCH_EXCEPTION_BUILDER  0x0055127C) # __thiscall ctor(buffer,version)->buffer; writes *buf=0x20000000
 set(C_COM_RAISE_ERROR_EX       0x00B4D510) # ?_com_issue_error@@YGXJ@Z (1-arg HRESULT raiser)
+
+set(C_FILE_STREAM_RESOLVED     1)
+set(C_FILE_STREAM_OPEN_INLINE  0)
+set(C_FILE_STREAM_OPEN         0x004B0864) # __thiscall Open -> CreateFileA
+set(C_FILE_STREAM_GET_LENGTH   0x004B09ED) # __thiscall GetLength()
+set(C_FILE_STREAM_READ         0x004B0B18) # __thiscall Read(dst,len)
+set(C_FILE_STREAM_CLOSE        0x004B0806) # __thiscall Close()/dtor
+set(C_FILE_STREAM_VFTABLE      0x00BE4CAC) # stream object vtable off_BE4CAC

@@ -200,3 +200,17 @@
 #define C_TI_ZEXCEPTION @C_TI_ZEXCEPTION@
 #define C_PATCH_EXCEPTION_BUILDER @C_PATCH_EXCEPTION_BUILDER@
 #define C_COM_RAISE_ERROR_EX @C_COM_RAISE_ERROR_EX@
+
+// --- File-stream report read for CLIENT_START_ERROR (docs/tasks/task-007-socket-connect-fidelity) ---
+// C_FILE_STREAM_RESOLVED is 1 when this version's stream helpers were resolved
+// from its IDB, 0 when the relay body is gated off (placeholder addresses).
+// C_FILE_STREAM_OPEN_INLINE is 1 for versions (e.g. GMS v95) that inline CreateFileA
+// in OnConnect instead of exposing a standalone Open(): the relay then replicates the
+// inline open and C_FILE_STREAM_OPEN is unused (0x0).
+#define C_FILE_STREAM_RESOLVED @C_FILE_STREAM_RESOLVED@
+#define C_FILE_STREAM_OPEN_INLINE @C_FILE_STREAM_OPEN_INLINE@
+#define C_FILE_STREAM_OPEN @C_FILE_STREAM_OPEN@
+#define C_FILE_STREAM_GET_LENGTH @C_FILE_STREAM_GET_LENGTH@
+#define C_FILE_STREAM_READ @C_FILE_STREAM_READ@
+#define C_FILE_STREAM_CLOSE @C_FILE_STREAM_CLOSE@
+#define C_FILE_STREAM_VFTABLE @C_FILE_STREAM_VFTABLE@

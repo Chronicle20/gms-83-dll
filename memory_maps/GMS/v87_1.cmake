@@ -195,3 +195,11 @@ set(C_TI_PATCH_EXCEPTION       0x00BFC420) # __TI3?AVCPatchException@@
 set(C_TI_ZEXCEPTION            0x00BED150) # __TI1?AVZException@@
 set(C_PATCH_EXCEPTION_BUILDER  0x0054154E) # builds CPatchException obj from version (Run dispatch)
 set(C_COM_RAISE_ERROR_EX       0x00AF9E44) # _com_raise_errorex/_com_issue_error(hr)
+
+set(C_FILE_STREAM_RESOLVED     1)
+set(C_FILE_STREAM_OPEN_INLINE  0)
+set(C_FILE_STREAM_OPEN         0x004A7710) # __thiscall Open -> CreateFileA
+set(C_FILE_STREAM_GET_LENGTH   0x004A7899) # __thiscall GetLength()
+set(C_FILE_STREAM_READ         0x004A79C4) # __thiscall Read(dst,len)
+set(C_FILE_STREAM_CLOSE        0x004A76B2) # __thiscall Close()/dtor
+set(C_FILE_STREAM_VFTABLE      0x00B95EA4) # stream object vtable off_B95EA4
