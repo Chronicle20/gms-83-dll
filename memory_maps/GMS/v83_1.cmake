@@ -176,6 +176,7 @@ set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x00A12522)
 set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9)
 
 set(DR_CHECK 0x00000000) # does not exist
+set(DR_INIT 0x00000000) # DR anti-debug subsystem absent in v83 (cf. DR_CHECK); nothing to call
 set(CE_TRACER_RUN 0x00000000) # does not exist
 set(SEND_HS_LOG 0x009F191B)
 

@@ -150,7 +150,8 @@ public:
     ZList<ZRef<CMapLoadable::OBSTACLE>> m_lpObstacle;
     ZList<ZRef<CMapLoadable::REFLECTION_INFO> > m_lpRefInfo;
 
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    // v84: m_lVisibleByQuest present (ZList @0xA0) — gate >=87 -> >=84, task-006 (v84=0x128)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 84) || defined(REGION_JMS)
     ZList<CMapLoadable::VISIBLE_BY_QUEST> m_lVisibleByQuest;
 #endif
     ZMap<char const *, CMapLoadable::CHANGING_OBJECT, ZXString<char>> m_mNamedObj;

@@ -225,10 +225,12 @@ class CMob : CLife {
 #endif
     int m_nHPpercentage;
     int m_bWaitingToBeSetTossed;
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87)
+    // v84: present @0x528 — gate >=87 -> >=84, task-006 (CMob v84=0x560, m_bDoomReserved @0x540)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 84)
     ZArray<tagPOINT> m_aMultiTargetForBall;
 #endif
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
+    // v84: present @0x52C/0x530 — gate >=87 -> >=84, task-006 (CMob v84=0x560)
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 84) || defined(REGION_JMS)
     ZArray<long> m_aRandTimeforAreaAttack;
     DelaySkill m_delaySkill;
 #endif

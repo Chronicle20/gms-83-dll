@@ -85,3 +85,13 @@ public:
     int IsKindOf(const CRTTI *) override;
 };
 
+// CLogo: Alloc(sizeof(CLogo)) in CWvsApp::SetUp, then the real ctor runs into it -> our struct
+// must be >= the real per-version size or it overruns the heap. Real (size sweep):
+// v83/v84/v87 = 0x38, v111 = 0x4C (v95/JMS TBD).
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 111
+static_assert(sizeof(CLogo) >= 0x4C, "CLogo too small for GMS v111 (need >= 0x4C) -> SetUp heap overflow");
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 95
+static_assert(sizeof(CLogo) == 0x48, "CLogo must match the v95 PDB base exactly (0x48)");
+#elif defined(REGION_GMS)
+static_assert(sizeof(CLogo) >= 0x38, "CLogo too small (need >= 0x38) -> SetUp heap overflow");
+#endif

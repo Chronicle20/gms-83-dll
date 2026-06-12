@@ -1,5 +1,7 @@
 #pragma once
 
+#include "asserts.h"
+
 class CFuncKeyMappedMan {
 public:
     virtual ~CFuncKeyMappedMan() = default;
@@ -29,3 +31,16 @@ public:
 
     static void CreateInstance();
 };
+
+// CFuncKeyMappedMan: TSingleton-allocated, and key_mapped_hooks memcpy's into m_aFuncKeyMapped /
+// m_aQuickslotKeyMapped — member offsets must be EXACT (a wrong layout corrupts it / adjacent
+// memory). Real sizes (size sweep): v83/v84/v87 = 0x3C8, v111 = 0x3D0, JMS = 0x400 (v95 TBD).
+#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 83 || BUILD_MAJOR_VERSION == 84 || BUILD_MAJOR_VERSION == 87)
+assert_size(sizeof(CFuncKeyMappedMan), 0x3C8)
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 95
+assert_size(sizeof(CFuncKeyMappedMan), 0x3CC)
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 111
+assert_size(sizeof(CFuncKeyMappedMan), 0x3D0)
+#elif defined(REGION_JMS)
+assert_size(sizeof(CFuncKeyMappedMan), 0x400)
+#endif
