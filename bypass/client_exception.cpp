@@ -1,22 +1,21 @@
 #include "client_exception.h"
-#include "memory_map.h"
 #include "CWvsApp.h"
+#include "memory_map.h"
 
-// MSVC CRT EH entry; we pass the CLIENT's _ThrowInfo so the client's
-// __CxxFrameHandler (installed by WinMain) matches the catch by its own RTTI.
-// The second parameter must be _ThrowInfo* to match MSVC's canonical extern "C"
-// declaration (defined in <ehdata.h>); declaring it as void* is rejected with
-// C2733 ("cannot overload a function with extern C linkage"). We only need the
-// pointer type, so a forward declaration of the tag is sufficient.
-struct _ThrowInfo;
-extern "C" void __stdcall _CxxThrowException(void* pObject, _ThrowInfo* pThrowInfo);
+// We invoke MSVC's CRT entry _CxxThrowException directly, passing the CLIENT's
+// _ThrowInfo (its own per-version RTTI table) so the client's __CxxFrameHandler,
+// installed by WinMain, matches the catch by its own RTTI. Both _CxxThrowException
+// and the _ThrowInfo typedef are already declared by the CRT headers reachable
+// through <windows.h>; we deliberately do NOT redeclare them. A local prototype
+// with a mismatched signature is rejected (C2733), and a local `struct _ThrowInfo`
+// clashes with the CRT typedef (C2371) — so the casts below use the CRT's own type.
 
 namespace {
 // Confirmed per-version (signature-catalog.md): every client builds CPatchException via a
 // __thiscall ctor(buffer, version); the COM raiser is the 1-arg __stdcall _com_error raiser
 // (?_com_issue_error@@YGXJ@Z / v84 sub_AABF64), reused for both COM paths.
-using PatchCtorFn = void*(__thiscall*)(void*, int);  // ctor(buf, version) -> buf
-using ComRaiseFn  = void(__stdcall*)(HRESULT);       // throws _com_error(hr); 1-arg __stdcall
+using PatchCtorFn = void*(__thiscall*)(void*, int); // ctor(buf, version) -> buf
+using ComRaiseFn = void(__stdcall*)(HRESULT);       // throws _com_error(hr); 1-arg __stdcall
 } // namespace
 
 [[noreturn]] void RaiseDisconnect(int code) {
