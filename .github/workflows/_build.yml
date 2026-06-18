@@ -53,7 +53,7 @@ jobs:
           - { region: JMS, major: 185, minor: 1 }
     name: Build ${{ matrix.config.region }} ${{ matrix.config.major }}.${{ matrix.config.minor }} (${{ inputs.build_type }})
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up MSVC
         uses: microsoft/setup-msbuild@v3
