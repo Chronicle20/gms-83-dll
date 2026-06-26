@@ -725,3 +725,103 @@ Baseline IDB saved clean before any renaming or annotation.
 - Primary anchor: IDB symbol `?ShowCursor@CInputSystem@@QAEXH@Z`.
 - Fallback anchor: call-graph + body constant. Callers include `CWndMan::s_Update` at **0x932F48** (cursor-idle-hide path) and CWndMan::ProcessMouse (0x93221A) / CLogo::Init. Body: reads the cursor object `this[606]`, calls its vtable+224 with the show/hide selector **`a2 ? -1 : 0xFFFFFF`**, error-routes to `CWnd::CoverBackgrnd`. The `-1 / 0xFFFFFF` cursor-show/hide ternary is the fingerprint.
 - v79 address: 0x00575C4D.
+
+## Task 8 — Config / SystemInfo / IGCipher / utilities cluster
+
+> v79 retains mangled C++ symbols for nearly every function in this cluster
+> (CConfig members, CIGCipher::innoHash, CSystemInfo Init/GetMachineId/GetGameRoomClient,
+> ZArray<uchar>::RemoveAll, ZXString TrimRight/TrimLeft/_Cat, CMob ctor, GetSEPrivilege,
+> the ZSynchronizedHelper<ZFatalSection> ctor) — IDB symbol is the fastest primary
+> anchor; each entry pairs it with a SECOND structural anchor. The CConfig singleton
+> and the windowed-mode global were renamed (g_CConfig_pInstance / g_CConfig_SysOpt_WindowedMode);
+> the CSystemInfo ctor (was sub_99CDB0) was renamed ??0CSystemInfo@@QAE@XZ.
+
+### GetSEPrivilege   (memory-map key: GET_SE_PRIVILEGE)
+- Primary anchor: import call — the only fn calling OpenProcessToken (IAT 0xA2B018) -> LookupPrivilegeValueA (IAT 0xA2B01C, "SeDebugPrivilege") -> AdjustTokenPrivileges.
+- Fallback anchor: IDB name `GetSEPrivilege` (already applied); called from CWvsApp::SetUp early (srand→GetSEPrivilege per the R11 init order).
+- Cross-version stability: SeDebugPrivilege string + token-API quartet stable v79→v84.
+- v79 address: 0x0044A48E (v83 seed 0x0044E824, v84 0x0044FEF9 — relocated by string+import, not by carry).
+
+### CConfig::CConfig (ctor)   (memory-map keys: C_CONFIG / C_CONFIG_INSTANCE_ADDR)
+- Primary anchor: IDB symbol `??0CConfig@@QAE@XZ` (nullary in v79; v84 was the PBD overload).
+- Detail: SBB-singleton store `g_CConfig_pInstance = (this+4!=0)?this:0` (= C_CONFIG_INSTANCE_ADDR 0xB0BED0); installs vtable off_A2CAD0; member-inits the fixed 31/100/24 secure-fuse pattern (this[41]=31, this[43]=100, this[44]=24); StringPool::GetString(2532 = SOFTWARE\Wizet\MapleStory — v83 2547/v84 2548, DRIFT); RegOpenKeyExA(HKLM=0x80000002 via dword_B100A0) into this+192; memset(this+592, 0, 0x1BD/445); LoadGlobal (sub_493B5A) + ResetSessionInfo (sub_4968EB).
+- Fallback anchor: call-graph — sole caller of LoadGlobal/ResetSessionInfo; ctor size 0x109 (matches v83/v84). C_CONFIG_INSTANCE_ADDR is read as `GetPartnerCode(g_CConfig_pInstance)` in CLogin::SendCheckPasswordPacket.
+- Cross-version stability: 31/100/24 + SOFTWARE\Wizet StringPool + RegOpenKeyExA(HKLM)+memset(445) + SBB-singleton idioms stable; StringPool ID drifts per build.
+- v79 address: C_CONFIG 0x0049392C; C_CONFIG_INSTANCE_ADDR 0x00B0BED0 (g_CConfig_pInstance).
+
+### CConfig::GetPartnerCode   (memory-map key: C_CONFIG_GET_PARTNER_CODE)
+- Primary anchor: IDB symbol `?GetPartnerCode@CConfig@@QAEJXZ`.
+- Detail: sole referencer of literal `uiWndZ0` (aUiwndz0 @0xAC02B8); builds ZXString via CHATLOG_ADD then GetOpt_Int(0, key, 0, 0x80000000, 0x7FFFFFFF).
+- Fallback anchor: structure — the GetOpt_Int(.,.,0,INT_MIN,INT_MAX) call with the single uiWndZ0 key; called from CLogin::SendCheckPasswordPacket.
+- Cross-version stability: uiWndZ0 + GetOpt_Int(min,max) shape stable v79→v84.
+- v79 address: 0x005CC09D.
+
+### CConfig::ApplySysOpt   (memory-map key: C_CONFIG_APPLY_SYS_OPT)
+- Primary anchor: IDB symbol `?ApplySysOpt@CConfig@@QAEXPAUCONFIG_SYSOPT@@H@Z`.
+- Detail: `qmemcpy(this+100, a2, 0x30)`; writes the two CWvsContext singleton flags at +13868/+13872 from the game-start-mode this[35]; computes BGM/SE volumes `100*(this[26]+1)/20` (gated this[27]/this[29]); routes to CSoundMan::SetBGMVolume/SetSEVolume (dword_B0BEC8) and writes CInputSystem singleton +2416 = this[31] (InputSystemInstanceAddr 0xB0C29C).
+- Fallback anchor: call-graph — SetBGMVolume/SetSEVolume + get_field trio; the 100*(x+1)/20 volume math.
+- Cross-version stability: structurally identical v79→v84; member byte-offsets are per-version.
+- v79 address: 0x004960F9.
+
+### CConfig::CheckExecPathReg   (memory-map key: C_CONFIG_CHECK_EXEC_PATH_REG)
+- Primary anchor: IDB symbol `?CheckExecPathReg@CConfig@@QAEXV?$ZXString@D@@@Z` + string xref (StringPool exec-path pair).
+- Detail: gates on this[48] (the reg key handle from the ctor); StringPool::GetString(3114 = ExecPath value, 3115 = MapleStory.exe — v83 3135/3136, v84 3138/3139, DRIFT); builds a `"\\"`(92) separator via ZXString::operator=(92)+Right(1); compares stored vs running path via strcmp; on mismatch concatenates + GetFileAttributes (dword_B0FE3C -> ==-1 || &0x10) directory check; writes back via the reg-set wrapper sub_4965A9.
+- Fallback anchor: structure — this[48] reg-handle gate + 92 backslash + GetFileAttributes(&0x10).
+- Cross-version stability: reg-handle gate + backslash + GetFileAttributes(&0x10) stable; StringPool IDs drift.
+- v79 address: 0x0049440C.
+
+### CConfig sys-opt windowed-mode flag   (memory-map key: C_CONFIG_SYS_OPT_WINDOWED_MODE)
+- Primary anchor: reader code site (two labeled functions). The global read by BOTH CWvsApp::CreateMainWindow (0x9440BB — the `flag!=0 ? 0x80000000 : 720896` window-style branch + the `?8:0` exstyle) AND CWvsApp::InitializeGr2D (0x944C91 — `pvargSrc.lVal = <flag>` feeding the Gr2D device init) — exactly the v83/v84 two-reader pattern.
+- Fallback anchor: the 0x80000000 (fullscreen) vs 720896 (0x000B0000 windowed) style immediates fed by this flag in CreateMainWindow.
+- Cross-version stability: the two-reader pattern + style immediates stable; global address per-version.
+- v79 address: 0x00B11548 (renamed g_CConfig_SysOpt_WindowedMode; v83 0xBF1AC8, v84 0xC4B150). FOR TASK 13: this is the windowed-mode global the ConfigSysOpt audit cross-checks.
+
+### CIGCipher::innoHash   (memory-map key: C_IG_CIPHER_INNO_HASH)
+- Primary anchor: IDB symbol `?innoHash@CIGCipher@@SAKPAEHPAK@Z`.
+- Detail: loops `bShuffle(v3, buf[i])` (sub_99347D) over `len` bytes, returns `*v3`; with no key (`if(!a3) v3=&v6`) seeds `v6 = -967814158` (0xC6EF3720). Called in CClientSocket::SendPacket between MakeBufferList and Flush as innoHash(this+132,4,0).
+- Fallback anchor: the 0xC6EF3720 seed + bShuffle loop + the SendPacket call position.
+- Cross-version stability: seed + bShuffle shape + SendPacket position stable v79→v84.
+- v79 address: 0x00993442 (v83 0xA4A838, v84 0xA9669E).
+
+### ZSynchronizedHelper<ZFatalSection> ctor/dtor   (memory-map keys: Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR / _DTOR)
+- Primary anchor: CTOR has IDB symbol `??0?$ZSynchronizedHelper@VZFatalSection@@@@QAE@AAVZFatalSection@@@Z`; reached by call-graph as the SendPacket per-socket lock (CClientSocket::SendPacket calls it on this+124).
+- Detail: CTOR (0x402AB8, size 0x25): `result = off_AC4ECC()` (the ZFatalSection acquire thunk); while non-zero, `dword_B0FDE4(0)` (Sleep(0)) and retry. DTOR (ctor+0x25 = 0x402ADD): `mov eax,[ecx]; dec dword[eax+4]; jnz; and dword[eax],0; retn` — decrements the recursion count, clears on last release; inlined as the release half in SendPacket and reached via `jmp loc_402ADD` from RAII unwind stub loc_9BD033.
+- Fallback anchor: the acquire-loop/Sleep(0) retry (ctor) and the dec-and-clear (dtor) are near-unique; ctor+dtor are an adjacent acquire/release pair.
+- Cross-version stability: **DRIFT — v79 relocated to 0x402AB8/0x402ADD vs v83/v84's stable 0x403166/0x40318B.** Confirm by the SendPacket lock-acquire call-edge + body, NOT by carrying the v83 address. The dtor listing is aliased under ZAllocEx::Alloc in this dump (do not trust list_funcs there); identity confirmed via the RAII pair + body bytes.
+- v79 addresses: CTOR 0x00402AB8, DTOR 0x00402ADD.
+
+### CSystemInfo: ctor / Init / GetMachineId / GetGameRoomClient   (keys: C_SYSTEM_INFO / _INIT / _GET_MACHINE_ID / _GET_GAME_ROOM_CLIENT)
+- Primary anchor: IDB symbols (Init/GetMachineId/GetGameRoomClient retain mangled names) + string xref (Init). The CTOR had no symbol (was sub_99CDB0) — renamed ??0CSystemInfo@@QAE@XZ; it is the stack-construct call right before CSystemInfo::Init in CLogin::SendCheckPasswordPacket (sub_99CDB0/Init/GetMachineId/GetGameRoomClient/sub_99CDE0 dtor sequence over the same v9 stack object).
+- Detail: ctor (0x99CDB0) installs vtable off_A396E4 (1 instruction). Init (0x99CDF0) = machine-id builder: Netbios (ncb_command 55/50/51 MAC query) + GetVolumeInformationA + RegOpenKeyExA `SOFTWARE\Microsoft\Windows\CurrentVersion` (aSoftwareMicros @0xB02FB8) + `CxSupportId` (aCxsupportid @0xB02FAC, RegQueryValueExA 16 bytes) + CoCreateGuid fallback. GetMachineId (0x99D0D0) returns the cached 16-byte id. GetGameRoomClient (0x99D1D0) = the 0x11B4 process-table fn.
+- Fallback anchor: the ctor is the only construct/Init pair in SendCheckPasswordPacket; Init via CxSupportId; GetMachineId via EncodeBuffer(id,16) at the call site.
+- Cross-version stability: the three mangled names + CxSupportId/CurrentVersion/Netbios anchors stable v79→v84; the cluster relocated wholesale (v83 0xA54Bxx → v79 0x99CDxx/0x99Dxxx).
+- v79 addresses: C_SYSTEM_INFO 0x0099CDB0; C_SYSTEM_INFO_INIT 0x0099CDF0; C_SYSTEM_INFO_GET_MACHINE_ID 0x0099D0D0; C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT 0x0099D1D0.
+
+### ZArray<unsigned char>::RemoveAll   (memory-map key: Z_ARRAY_REMOVE_ALL)
+- Primary anchor: IDB symbol `?RemoveAll@?$ZArray@E@@QAEXXZ`.
+- Detail: `if(*this){ ZAllocEx::Free(*this-4); *this=0 }`. It is the FIRST call inside ZArray<uchar>::_Alloc (sub_48E8CB), which the COutPacket ctor uses with capacity 256.
+- Fallback anchor: the `*this-4` Free + `*this=0` shape; clear-callee at the top of the packet-buffer _Alloc.
+- Cross-version stability: stride-1 (no imul) instantiation; the generic ZArray<T>::RemoveAll variants used as struct-audit tools (Tasks 12–16) carry `imul stride,count` element-walks — re-derive stride per element type.
+- v79 address: 0x004260F4 (v83 0x428CF1, v84 0x4297E5).
+
+### ZXString<char>::GetBuffer (cstr-assign)   (memory-map key: Z_X_STRING_GET_BUFFER)
+- Primary anchor: ABI/structure + call-graph. Repo wrapper (ZXString.h:55) calls it as `_fastcall(this, NULL, src, size)` (the edx slot is unused) — a cstr-assign. v79 has NO dedicated pure-assign GetBuffer(PBD,H) symbol; the matching in-place primitive is `?_Cat@?$ZXString@D@@IAEAAV1@PBDH@Z`.
+- Detail: on an empty/zeroed ZXString it does `inner GetBuffer(Size,0)(0x4147bb) + memcpy(Src,Size) + ReleaseBuffer(Size)` (== assign); on a non-empty string it doubles capacity and appends — identical behavior to the v84 match.
+- Fallback anchor: structure — inner-GetBuffer (0x4147bb) + memcpy + ReleaseBuffer operating in place on `this`.
+- Cross-version stability: inner GetBuffer(HH) byte-stable; the outer assign primitive's identity is the carried uncertainty.
+- v79 address: 0x00426133. **needs-main-review**: v83 key (0x414617) was a PURE-assign; v79 (like v84) matches the _Cat/append family that assigns only when the target is empty. Repo only invokes it on freshly-managed ZXStrings, so it behaves as assign — confirm that invariant or locate a dedicated pure-assign if one is added.
+
+### ZXString<char>::TrimRight / TrimLeft   (keys: Z_X_STRING_TRIM_RIGHT / Z_X_STRING_TRIM_LEFT)
+- Primary anchor: IDB symbols `?TrimRight@?$ZXString@D@@QAEAAV1@PBD@Z` / `?TrimLeft@?$ZXString@D@@QAEAAV1@PBD@Z` + the whitespace literal.
+- Detail: both default `Str` to `" \t\r\n"` (asc_ABEDA0 @0xABEDA0) when NULL and use strchr to test set-membership, calling inner GetBuffer (0x4147bb). TrimRight scans backward, NUL-terminates after the last non-set char; TrimLeft scans forward then memcpy-shifts the remainder to the front. ADJACENT in the image.
+- Fallback anchor: the shared " \t\r\n" literal + right-scan vs left-scan+memcpy distinction.
+- Cross-version stability: whitespace literal + strchr + inner-GetBuffer shape stable v79→v84; the literal's address is per-version (v79 asc_ABEDA0). Repo calls them `(this, NULL, s)` (ZXString.h:209/214).
+- v79 addresses: TrimRight 0x0046DB7E; TrimLeft 0x0046DC33.
+
+### CMob::CMob (ctor)   (memory-map key: C_MOB_C_MOB)   [HIGH-VALUE / needs-main-review — doom-fix hook target, feeds Task 12]
+- Primary anchor: IDB symbol `??0CMob@@QAE@PAVCMobTemplate@@@Z`.
+- Detail: placement ctor over a NON-zeroed 1304-byte (0x518) allocation (sole caller CreateMob 0x630BF0 → ZAllocEx<ZAllocAnonSelector>::Alloc(1304)). Body: CLife base ctor (sub_5C5D12); zero-inits the member block; stores `m_pTemplate = pMobTemplate` at this+0x188 (this+98 dword) and zeroes the adjacent m_pTemplateByDoom at this+0x18C (this+99); installs the three CMob vtables at this+0/+1/+2 (off_A30C48/off_A30C24/off_A30C20); runs the _ZtlSecureTear chain over the secured stat members (vtable off_A2F7B4 + 31/100/24 fuse); MobStat::SetFrom(this+416, m_pTemplate); CWvsContext::SetExclRequestSent; ends with StringPool::GetStringW(957 = SP_CANVAS; v83 956/v84 960, DRIFT) + PcCreateObject::IWzCanvas into the HP-indicator canvas at this+0x4D0.
+- Fallback anchor (spot-check, independent kind): sole caller CreateMob (0x630BF0); the CLife-base + 3-vtable install + m_pTemplate store + _ZtlSecureTear chain + SP-957/IWzCanvas tail — confirm WITHOUT the symbol.
+- Cross-version stability: CLife-base + 3-vtable + CMobTemplate-store + secure-tear + SP_CANVAS/IWzCanvas tail stable v79→v84; StringPool ID and vtable globals per-version.
+- v79 address: 0x00630C2C (v83 0x6621D9, v84 0x678060).
+- **DOOM-FIELD FINDING (Task 12 / doom-fix gate `< 84`):** the v79 ctor LEAVES `m_bDoomReserved` UNINITIALIZED → v79 is correctly on the doom-fix needs-fix side. Evidence: (1) the allocation is non-zeroing (ZAllocEx::Alloc(1304), not calloc); (2) the ctor's highest member write is the secure-tear backing dword at this+325 (0x514) and the HP-canvas at this+0x4D0 — there is NO trailing zero-init block reaching a doom field. Contrast v84 (no-fix side, gate >=84): its ctor at 0x678060 explicitly zero-writes `*((_DWORD*)this+336)=0` (0x540 = m_bDoomReserved) and `*((_BYTE*)this+1348)=0` (0x544 = m_bDoomReservedSN) as a contiguous tail block right after the v84-only fields (m_aMultiTargetForBall/m_aRandTimeforAreaAttack/m_delaySkill, all `>=84`). v79 lacks both those `>=84` fields AND the corresponding doom zero-init. NOTE: the exact v79 byte offset of m_bDoomReserved was not pinned (embedded MobStat may be smaller in v79 than v84, so arithmetic from v84's 0x540 is unsafe) — Task 12's read-only struct audit will measure MobStat/CMob sizes and pin it; the uninitialized verdict stands on the v84 contrast + non-zeroing alloc + absence of any tail doom write.

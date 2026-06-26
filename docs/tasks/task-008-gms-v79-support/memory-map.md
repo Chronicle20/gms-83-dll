@@ -76,7 +76,7 @@ never copied blind.
 | VERSION_HEADER | constant | 8 | ☐ |
 | PLAYER_LOGGED_IN | opcode | 0x14 | ☐ |
 | CLIENT_START_ERROR | opcode | 0x19 | ☐ |
-| GET_SE_PRIVILEGE | addr | 0x0044E824 | ☐ |
+| GET_SE_PRIVILEGE | addr | 0x0044E824 | ✔ (v79 0x0044A48E; named GetSEPrivilege; OpenProcessToken+LookupPrivilegeValueA(SeDebugPrivilege)) |
 | C_ACTION_MAN_CREATE_INSTANCE_ADDR | addr | 0x009F9DA6 | ✔ (v79 0x00946A09; TSingleton<CActionMan>::CreateInstance, Alloc(672)+ctor) |
 | C_ACTION_MAN_INSTANCE_ADDR | addr | 0x00BE78D4 | ✔ (v79 0x00B07804; instance global stored in CreateInstance) |
 | C_ACTION_MAN_INIT | addr | 0x00406ABD | ✔ (v79 0x0040681C; symbol ?Init@CActionMan@@) |
@@ -96,12 +96,12 @@ never copied blind.
 | C_CLIENT_SOCKET_CONNECT_ADR | addr | 0x00494D2F | ✔ (v79 0x0048CA56; symbol; sole socket(2,1,0) caller) |
 | Z_SOCKET_BASE_CLOSE_SOCKET | addr | 0x00494857 | ✔ (v79 0x0048C699; symbol; shutdown+closesocket pair) |
 | Z_SOCKET_BUFFER_ALLOC | addr | 0x00495FD2 | ✔ (v79 0x0048DBEA; symbol; dual Alloc(a1,28)) |
-| C_CONFIG | addr | 0x0049C213 | ☐ |
-| C_CONFIG_INSTANCE_ADDR | addr | 0x00BEBF9C | ☐ |
-| C_CONFIG_GET_PARTNER_CODE | addr | 0x005F6CFB | ☐ |
-| C_CONFIG_APPLY_SYS_OPT | addr | 0x0049EA33 | ☐ |
-| C_CONFIG_CHECK_EXEC_PATH_REG | addr | 0x0049CCF3 | ☐ |
-| C_CONFIG_SYS_OPT_WINDOWED_MODE | addr | 0x00BF1AC8 | ☐ |
+| C_CONFIG | addr | 0x0049C213 | ✔ (v79 0x0049392C; symbol ??0CConfig@@; SBB-singleton + 31/100/24 + StringPool 2532 + RegOpenKeyExA HKLM + memset 0x1BD) |
+| C_CONFIG_INSTANCE_ADDR | addr | 0x00BEBF9C | ✔ (v79 0x00B0BED0; g_CConfig_pInstance; SBB store in ctor, read by GetPartnerCode caller) |
+| C_CONFIG_GET_PARTNER_CODE | addr | 0x005F6CFB | ✔ (v79 0x005CC09D; symbol ?GetPartnerCode@CConfig@@; uiWndZ0 + GetOpt_Int(INT_MIN,INT_MAX)) |
+| C_CONFIG_APPLY_SYS_OPT | addr | 0x0049EA33 | ✔ (v79 0x004960F9; symbol ?ApplySysOpt@CConfig@@; qmemcpy 0x30 + CWvsContext flags 13868/13872 + 100*(x+1)/20 volume) |
+| C_CONFIG_CHECK_EXEC_PATH_REG | addr | 0x0049CCF3 | ✔ (v79 0x0049440C; symbol ?CheckExecPathReg@CConfig@@; this[48] reg handle + StringPool 3114/3115 + 92 + GetFileAttributes &0x10) |
+| C_CONFIG_SYS_OPT_WINDOWED_MODE | addr | 0x00BF1AC8 | ✔ (v79 0x00B11548; g_CConfig_SysOpt_WindowedMode; read by CreateMainWindow ?0x80000000:720896 + InitializeGr2D device — Task 13 cross-check) |
 | C_FUNC_KEY_MAPPED_MAN | addr | 0x0058DD0D | ✔ (v79 0x00569DE5; symbol ??0CFuncKeyMappedMan@@ ctor; installs vtable 0xA2EB38, instance 0xB0D2A8) |
 | C_FUNC_KEY_MAPPED_MAN_VFTABLE | addr | 0x00AF5650 | ✔ (v79 0x00A2EB38; off_A2EB38 installed at *this in ctor) |
 | C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR | addr | 0x00BED5A0 | ✔ (v79 0x00B0D2A8; SBB-singleton store in ctor + read by CreateInstance) |
@@ -144,9 +144,9 @@ never copied blind.
 | C_OUT_PACKET_ENCODE_STR | addr | 0x0046F3CF | ✔ (v79 0x004694DE; ZXString len+2+CIOBufferManipulator::EncodeStr) |
 | C_OUT_PACKET_ENCODE_BUFFER | addr | 0x0046C00C | ✔ (v79 0x00466AE9; _EnsureCapacity+memcpy+len+=Size) |
 | C_OUT_PACKET_MAKE_BUFFER_LIST | addr | 0x006ECB27 | ✔ (v79 0x0067AEC4; symbol+sole SendPacket call+1460/0x5B4 chunk) |
-| C_IG_CIPHER_INNO_HASH | addr | 0x00A4A838 | ☐ |
-| Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR | addr | 0x00403166 | ☐ |
-| Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR | addr | 0x0040318B | ☐ |
+| C_IG_CIPHER_INNO_HASH | addr | 0x00A4A838 | ✔ (v79 0x00993442; symbol ?innoHash@CIGCipher@@; seed 0xC6EF3720 + bShuffle loop; called from SendPacket) |
+| Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR | addr | 0x00403166 | ✔ (v79 0x00402AB8; symbol; acquire-loop off_AC4ECC + Sleep(0); SendPacket lock. DRIFT from v83 0x403166) |
+| Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR | addr | 0x0040318B | ✔ (v79 0x00402ADD; ctor+0x25; dec [eax+4]/and [eax],0 release pair. DRIFT from v83 0x40318B; listing aliased under ZAllocEx::Alloc) |
 | C_QUEST_MAN_CREATE_INSTANCE | addr | 0x009F9AC2 | ✔ (v79 0x00946725; TSingleton<CQuestMan>::CreateInstance, Alloc(648)+ctor 0x6A86CD; instance 0xB0D318) |
 | C_QUEST_MAN_INSTANCE_ADDR | addr | 0x00BED614 | ✔ (v79 0x00B0D318; instance global) |
 | C_QUEST_MAN_LOAD_DEMAND | addr | 0x0071D8DF | ✔ (v79 0x006A8CD6; symbol ?LoadDemand@CQuestMan@@) |
@@ -164,10 +164,10 @@ never copied blind.
 | RESET_LSP | addr/sentinel | 0x0044ED47 | ☐ (resolve present/absent in v79; stale v83 comment) |
 | C_STAGE_ON_MOUSE_ENTER | addr | 0x00775FC7 | ✔ (v79 0x0092F3F8; IDB symbol ?OnMouseEnter@CStage@@UAEXH@Z; direct v79 read: CLogin secondary vtable 0xA2FA08 slot 6 (0xA2FA20)=0x0092F3F8 — inherited, CLogin does not override) |
 | C_STAGE_ON_PACKET | addr | 0x00775FE6 | ✔ (v79 0x006F079F; IDB symbol ?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z; CLogo [this+8] vtable 0xA3076C slot0=0x006F079F) |
-| C_SYSTEM_INFO | addr | 0x00A54B90 | ☐ |
-| C_SYSTEM_INFO_INIT | addr | 0x00A54BD0 | ☐ |
-| C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT | addr | 0x00A54FB0 | ☐ |
-| C_SYSTEM_INFO_GET_MACHINE_ID | addr | 0x00A54EB0 | ☐ |
+| C_SYSTEM_INFO | addr | 0x00A54B90 | ✔ (v79 0x0099CDB0; ctor renamed ??0CSystemInfo@@; vtable off_A396E4; stack-ctor in SendCheckPasswordPacket) |
+| C_SYSTEM_INFO_INIT | addr | 0x00A54BD0 | ✔ (v79 0x0099CDF0; symbol ?Init@CSystemInfo@@; Netbios + CxSupportId + CurrentVersion) |
+| C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT | addr | 0x00A54FB0 | ✔ (v79 0x0099D1D0; symbol ?GetGameRoomClient@CSystemInfo@@; called from SendCheckPasswordPacket) |
+| C_SYSTEM_INFO_GET_MACHINE_ID | addr | 0x00A54EB0 | ✔ (v79 0x0099D0D0; symbol ?GetMachineId@CSystemInfo@@; cached 16-byte id) |
 | C_UI_TITLE_INSTANCE_ADDR | addr | 0x00BEDA60 | ✔ (v79 0x00B0D738; sub_5F652C (CUITitle ctor) stores this via SBB null-check; dtor at loc_5FD04E clears it; CLogin::ForcedEnd destroys it) |
 | G_DW_TARGET_OS | addr | 0x00BE2EBC | ✔ (v79 0x00B0239C; g_dwTargetOS=1996 writer in ctor) |
 | C_WVS_APP | addr | 0x009F4FDA | ✔ (v79 0x00942D3B; symbol+WebStart/IsWow64Process) |
@@ -199,10 +199,10 @@ never copied blind.
 | WIN_MAIN_PATCHER_OFFSET | offset | 0x212 | ✔ (re-measured v79 0x212; call ShowStartUpWndModal@0x93FBC9) |
 | C_WND_MAN_S_UPDATE | addr | 0x009E47C3 | ✔ (v79 0x00932EE2) |
 | C_WND_MAN_REDRAW_INVALIDATED_WINDOWS | addr | 0x009E4547 | ✔ (v79 0x00932C66) |
-| Z_ARRAY_REMOVE_ALL | addr | 0x00428CF1 | ☐ |
-| Z_X_STRING_GET_BUFFER | addr | 0x00414617 | ☐ |
-| Z_X_STRING_TRIM_RIGHT | addr | 0x00474414 | ☐ |
-| Z_X_STRING_TRIM_LEFT | addr | 0x004744C9 | ☐ |
+| Z_ARRAY_REMOVE_ALL | addr | 0x00428CF1 | ✔ (v79 0x004260F4; symbol ?RemoveAll@?$ZArray@E@@; Free(*this-4)+null; first call in COutPacket _Alloc) |
+| Z_X_STRING_GET_BUFFER | addr | 0x00414617 | ✔ (v79 0x00426133; symbol ?_Cat@?$ZXString@D@@; assign-when-empty/append; needs-main-review — no pure-assign in v79, same as v84) |
+| Z_X_STRING_TRIM_RIGHT | addr | 0x00474414 | ✔ (v79 0x0046DB7E; symbol ?TrimRight@?$ZXString@D@@; " \t\r\n" asc_ABEDA0 + strchr + GetBuffer) |
+| Z_X_STRING_TRIM_LEFT | addr | 0x004744C9 | ✔ (v79 0x0046DC33; symbol ?TrimLeft@?$ZXString@D@@; same whitespace + memcpy-shift) |
 | C_FIELD_SEND_JOIN_PARTY_MSG | addr | 0x0052FECF | ☐ |
 | C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET | offset | 0x65 | ☐ (re-measure) |
 | C_FIELD_SEND_CREATE_NEW_PARTY_MSG | addr | 0x52FCE1 | ☐ |
@@ -213,7 +213,7 @@ never copied blind.
 | DR_INIT | sentinel | 0x00000000 | ☐ (confirm absent) |
 | CE_TRACER_RUN | sentinel | 0x00000000 | ☐ (confirm absent) |
 | SEND_HS_LOG | addr | 0x009F191B | ✔ (v79 0x0093F8E0; %s\HShield) |
-| C_MOB_C_MOB | addr | 0x006621D9 | ☐ |
+| C_MOB_C_MOB | addr | 0x006621D9 | ✔ (v79 0x00630C2C; symbol ??0CMob@@QAE@PAVCMobTemplate@@@Z; sole caller CreateMob/Alloc(1304); CLife base+3 vtables+m_pTemplate@0x188+MobStat::SetFrom+SP957/IWzCanvas. needs-main-review. m_bDoomReserved UNINITIALIZED → doom-fix(<84) needs-fix side) |
 | C_SECURITY_CLIENT_ON_PACKET_RET_STUB | JMS sentinel | 0x00000000 | ☐ |
 | C_SECURITY_CLIENT_ON_PACKET_CHECK | JMS sentinel | 0x00000000 | ☐ |
 | C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET | JMS sentinel | 0x00000000 | ☐ |

@@ -10,7 +10,7 @@ set(VERSION_HEADER 8)
 set(PLAYER_LOGGED_IN 0x14)
 set(CLIENT_START_ERROR 0x19)
 
-set(GET_SE_PRIVILEGE 0x0044E824)
+set(GET_SE_PRIVILEGE 0x0044A48E) # GetSEPrivilege (named); OpenProcessToken+LookupPrivilegeValueA("SeDebugPrivilege")+AdjustTokenPrivileges
 
 set(C_ACTION_MAN_CREATE_INSTANCE_ADDR 0x00946A09) # TSingleton<CActionMan>::CreateInstance; Alloc(672)+ctor; instance global 0xB07804
 set(C_ACTION_MAN_INSTANCE_ADDR 0x00B07804) # ActionManInstanceAddr; the mov [g],eax store in CreateInstance
@@ -36,12 +36,12 @@ set(Z_SOCKET_BASE_CLOSE_SOCKET 0x0048C699) # symbol; -1 sentinel + shutdown(s,2)
 
 set(Z_SOCKET_BUFFER_ALLOC 0x0048DBEA) # symbol; dual ZAllocEx::Alloc(a1, then 28=0x1C header); called by OnConnect with 0x5B4
 
-set(C_CONFIG 0x0049C213)
-set(C_CONFIG_INSTANCE_ADDR 0x00BEBF9C)
-set(C_CONFIG_GET_PARTNER_CODE 0x005F6CFB)
-set(C_CONFIG_APPLY_SYS_OPT 0x0049EA33)
-set(C_CONFIG_CHECK_EXEC_PATH_REG 0x0049CCF3)
-set(C_CONFIG_SYS_OPT_WINDOWED_MODE 0x00BF1AC8)
+set(C_CONFIG 0x0049392C) # symbol ??0CConfig@@QAE@XZ; SBB-singleton store -> g_CConfig_pInstance + 31/100/24 fuse + StringPool(2532) + RegOpenKeyExA(HKLM) + memset(this+592,0x1BD)
+set(C_CONFIG_INSTANCE_ADDR 0x00B0BED0) # g_CConfig_pInstance; SBB store in ctor, read by SendCheckPasswordPacket -> GetPartnerCode(g_CConfig)
+set(C_CONFIG_GET_PARTNER_CODE 0x005CC09D) # symbol ?GetPartnerCode@CConfig@@; uiWndZ0 key + GetOpt_Int(0,key,0,INT_MIN,INT_MAX)
+set(C_CONFIG_APPLY_SYS_OPT 0x004960F9) # symbol ?ApplySysOpt@CConfig@@; qmemcpy(this+100,a2,0x30)+CWvsContext flags @+13868/+13872 + 100*(x+1)/20 volume routing
+set(C_CONFIG_CHECK_EXEC_PATH_REG 0x0049440C) # symbol ?CheckExecPathReg@CConfig@@; this[48] reg handle + StringPool(3114/3115) + 92 backslash + GetFileAttributes(==-1||&0x10)
+set(C_CONFIG_SYS_OPT_WINDOWED_MODE 0x00B11548) # g_CConfig_SysOpt_WindowedMode; CreateMainWindow style branch (?0x80000000:720896 / ?8:0) + InitializeGr2D device reader (Task 13 windowed-mode offset)
 
 set(C_FUNC_KEY_MAPPED_MAN 0x00569DE5) # symbol ??0CFuncKeyMappedMan@@QAE@XZ (ctor); installs vtable 0xA2EB38, instance 0xB0D2A8
 set(C_FUNC_KEY_MAPPED_MAN_VFTABLE 0x00A2EB38) # off_A2EB38; installed at *this in the ctor
@@ -95,10 +95,10 @@ set(C_OUT_PACKET_ENCODE_STR 0x004694DE) # symbol EncodeStr; ZXString len([eax-4]
 set(C_OUT_PACKET_ENCODE_BUFFER 0x00466AE9) # symbol EncodeBuffer; _EnsureCapacity(Size)+memcpy+len+=Size; retn 8
 set(C_OUT_PACKET_MAKE_BUFFER_LIST 0x0067AEC4) # symbol; sole call in CClientSocket::SendPacket + 1460/0x5B4 chunk const
 
-set(C_IG_CIPHER_INNO_HASH 0x00A4A838)
+set(C_IG_CIPHER_INNO_HASH 0x00993442) # symbol ?innoHash@CIGCipher@@; seed -967814158 (0xC6EF3720) + bShuffle loop (sub_99347D); called from SendPacket between MakeBufferList+Flush
 
-set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR 0x00403166)
-set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR 0x0040318B)
+set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR 0x00402AB8) # symbol ??0?$ZSynchronizedHelper@VZFatalSection@@@@; acquire-loop off_AC4ECC + Sleep(0) retry (dword_B0FDE4); called from SendPacket (this+124). DRIFT: v83 0x403166
+set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR 0x00402ADD) # ctor+0x25; dec [eax+4]; jnz; and [eax],0 (release recursion count). RAII release pair w/ ctor (inlined in SendPacket; jmp from loc_9BD033). DRIFT: v83 0x40318B. Listing aliases under ZAllocEx::Alloc (dump aliasing)
 
 set(C_QUEST_MAN_CREATE_INSTANCE 0x00946725) # TSingleton<CQuestMan>::CreateInstance; Alloc(648)+ctor 0x6A86CD; instance 0xB0D318
 set(C_QUEST_MAN_INSTANCE_ADDR 0x00B0D318) # QuestManInstanceAddr (dword_B0D318)
@@ -125,10 +125,10 @@ set(RESET_LSP 0x0044ED47) # does not exist
 set(C_STAGE_ON_MOUSE_ENTER 0x0092F3F8) # IDB symbol ?OnMouseEnter@CStage@@UAEXH@Z; in CLogo IUIMsgHandler vtable (A30770) slot 41
 set(C_STAGE_ON_PACKET 0x006F079F) # IDB symbol ?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z; dispatched from ProcessPacket(48e275) via [stage+8 vtable][0]
 
-set(C_SYSTEM_INFO 0x00A54B90)
-set(C_SYSTEM_INFO_INIT 0x00A54BD0)
-set(C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT 0x00A54FB0)
-set(C_SYSTEM_INFO_GET_MACHINE_ID 0x00A54EB0)
+set(C_SYSTEM_INFO 0x0099CDB0) # ctor (renamed ??0CSystemInfo@@QAE@XZ); installs vtable off_A396E4; stack-constructed in CLogin::SendCheckPasswordPacket (sub_99CDB0/sub_99CDE0 ctor/dtor pair)
+set(C_SYSTEM_INFO_INIT 0x0099CDF0) # symbol ?Init@CSystemInfo@@; Netbios MAC + SOFTWARE\Microsoft\Windows\CurrentVersion + CxSupportId(16B) + CoCreateGuid fallback
+set(C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT 0x0099D1D0) # symbol ?GetGameRoomClient@CSystemInfo@@ (0x11B4 process-table fn); called from SendCheckPasswordPacket
+set(C_SYSTEM_INFO_GET_MACHINE_ID 0x0099D0D0) # symbol ?GetMachineId@CSystemInfo@@; returns cached 16-byte id; EncodeBuffer(id,16) in SendCheckPasswordPacket
 
 set(C_UI_TITLE_INSTANCE_ADDR 0x00B0D738) # UITitleInstanceAddr; stored by CLogo-range ctor sub_5F652C (installs vtables A30698/A3064C/A30648); cleared by dtor at loc_5FD04E
 
@@ -167,11 +167,11 @@ set(WIN_MAIN_PATCHER_OFFSET 0x212) # measured v79: call ShowStartUpWndModal(E8 C
 set(C_WND_MAN_S_UPDATE 0x00932EE2)
 set(C_WND_MAN_REDRAW_INVALIDATED_WINDOWS 0x00932C66)
 
-set(Z_ARRAY_REMOVE_ALL 0x00428CF1)
+set(Z_ARRAY_REMOVE_ALL 0x004260F4) # symbol ?RemoveAll@?$ZArray@E@@; if(*this){Free(*this-4);*this=0}; first call in ZArray<uchar>::_Alloc (sub_48E8CB) used by COutPacket ctor
 
-set(Z_X_STRING_GET_BUFFER 0x00414617)
-set(Z_X_STRING_TRIM_RIGHT 0x00474414)
-set(Z_X_STRING_TRIM_LEFT 0x004744C9)
+set(Z_X_STRING_GET_BUFFER 0x00426133) # symbol ?_Cat@?$ZXString@D@@ (in-place assign family); empty->GetBuffer(Size,0)+memcpy+ReleaseBuffer (==assign), non-empty->grow+append. needs-main-review: no dedicated pure-assign in v79 (same as v84); repo only calls on fresh ZXStrings
+set(Z_X_STRING_TRIM_RIGHT 0x0046DB7E) # symbol ?TrimRight@?$ZXString@D@@; default " \t\r\n" (asc_ABEDA0) + strchr + inner GetBuffer(0x4147bb)
+set(Z_X_STRING_TRIM_LEFT 0x0046DC33) # symbol ?TrimLeft@?$ZXString@D@@; same whitespace literal + strchr + memcpy-shift remainder to front
 
 set(C_FIELD_SEND_JOIN_PARTY_MSG 0x0052FECF)
 set(C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET 0x65)
@@ -187,7 +187,7 @@ set(DR_INIT 0x00000000) # DR anti-debug subsystem absent in v83 (cf. DR_CHECK); 
 set(CE_TRACER_RUN 0x00000000) # does not exist
 set(SEND_HS_LOG 0x0093F8E0)
 
-set(C_MOB_C_MOB 0x006621D9)
+set(C_MOB_C_MOB 0x00630C2C) # symbol ??0CMob@@QAE@PAVCMobTemplate@@@Z (sole caller CreateMob 0x630BF0, ZAllocEx::Alloc(1304) non-zeroing); CLife base + 3 vtables (off_A30C48/A30C24/A30C20) + m_pTemplate@this+0x188 + _ZtlSecureTear chain + MobStat::SetFrom + StringPool(957)/IWzCanvas tail. needs-main-review. m_bDoomReserved LEFT UNINITIALIZED (ctor's highest member write = this+325/0x514; doom field past it near struct end) -> v79 on doom-fix (<84) needs-fix side
 
 set(C_SECURITY_CLIENT_ON_PACKET_RET_STUB 0x00000000) # JMS only
 set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only
