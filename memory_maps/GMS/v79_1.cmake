@@ -60,20 +60,20 @@ set(C_INPUT_SYSTEM_GET_IS_MESSAGE 0x0059A306)
 set(C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN 0x0059B2D2)
 set(C_INPUT_SYSTEM_SHOW_CURSOR 0x59A338)
 
-set(C_LOGIN_UPDATE 0x005F4C16)
-set(C_LOGIN_SEND_CHECK_PASSWORD_PACKET 0x005F6952)
+set(C_LOGIN_UPDATE 0x005CA348) # vtable[0] of CLogin primary vtable (0xA2F9EC); body uses [esi+0x15C], CWnd::InvalidateRect — diverges from C_LOGO_UPDATE in v79 (shared 0x5F4C16 in v83)
+set(C_LOGIN_SEND_CHECK_PASSWORD_PACKET 0x005CBF50) # IDB symbol ??
 
-set(C_LOGO 0x0062ECE2)
-set(C_LOGO_GET_RTTI 0x0062ED26)
-set(C_LOGO_IS_KIND_OF 0x0062ED2C)
-set(C_LOGO_UPDATE 0x005F4C16)
-set(C_LOGO_ON_MOUSE_BUTTON 0x0062F2A1)
-set(C_LOGO_ON_SET_FOCUS 0x0062ED20)
-set(C_LOGO_ON_KEY 0x0062F27A)
-set(C_LOGO_LOGO_END 0x0062EEAE)
-set(C_LOGO_FORCED_END 0x0062EEF8)
-set(C_LOGO_INIT 0x0062EDDA)
-set(C_LOGO_INIT_NX_LOGO 0x0062F396)
+set(C_LOGO 0x005FF8C4) # IDB symbol ??0CLogo@@QAE@XZ; Alloc(0x258)+ctor pattern from CLogo::LogoEnd
+set(C_LOGO_GET_RTTI 0x0042196A) # IDB symbol ?GetRTTI@CLogo@@UAEPBVCRuntimeClass@@XZ; CLogo vtable slot 53 of CWnd iface vtable
+set(C_LOGO_IS_KIND_OF 0x00421970) # IDB symbol ?IsKindOf@CLogo@@UBEHPBVCRuntimeClass@@Z; CLogo vtable slot 54
+set(C_LOGO_UPDATE 0x005FFE54) # vtable[0] of CLogo primary vtable (0xA307BC); 1500ms timer body; DIVERGES from C_LOGIN_UPDATE in v79
+set(C_LOGO_ON_MOUSE_BUTTON 0x005FFE3F) # IUIMsgHandler vtable (0xA30770) slot 2; body: cmp [esp+arg_0],202h (WM_LBUTTONUP) then call InitNXLogo
+set(C_LOGO_ON_SET_FOCUS 0x005FF902) # IUIMsgHandler vtable (0xA30770) slot 1; body: push 1; pop eax; retn 4 (returns 1)
+set(C_LOGO_ON_KEY 0x005FFE18) # IUIMsgHandler vtable (0xA30770) slot 0; body: checks wParam==13||27||32 then call InitNXLogo
+set(C_LOGO_LOGO_END 0x005FFA4C) # call-graph: Alloc(0x258)+CLogin_ctor+SetStage; ends logo sequence
+set(C_LOGO_FORCED_END 0x005FFA2A) # vtable[2] of CLogo primary vtable (A307C4); called by SET_STAGE at 6f1b14 via [vtable+8]; stops BGM
+set(C_LOGO_INIT 0x005FF9BC) # vtable[1] of CLogo primary vtable (A307C0); called by SET_STAGE at 6f1c2c via [vtable+4]
+set(C_LOGO_INIT_NX_LOGO 0x005FFA96) # StringPool::GetBSTR(0x568) NX-logo resource + init-once guard on [this+0x28]
 
 set(C_MACRO_SYS_MAN_CREATE_INSTANCE 0x009F9EEE)
 
@@ -115,22 +115,22 @@ set(C_SECURITY_CLIENT_CREATE_INSTANCE 0x009F9F42)
 set(C_SECURITY_CLIENT_INSTANCE_ADDR 0x00BEC3A8)
 set(C_SECURITY_CLIENT_ON_PACKET 0x00A4BF03)
 
-set(STAGE_INSTANCE_ADDR 0x00BEDED4)
-set(SET_STAGE 0x00777347)
+set(STAGE_INSTANCE_ADDR 0x00B0DADC) # dword_B0DADC; zeroed then written by SET_STAGE (6f1aec); read by CWvsApp::CallUpdate (945501)
+set(SET_STAGE 0x006F1AC0) # IDB comment; clears STAGE_INSTANCE_ADDR, calls old_stage->vtable[2]=ForcedEnd, stores new stage, calls new_stage->vtable[1]=Init
 
-set(GR_INSTANCE_ADDR 0x00BF14EC)
+set(GR_INSTANCE_ADDR 0x00B10F74) # dword_B10F74; stored by sub_947BB8 in CWvsApp::InitializeGr2D (944cca); read as IWzGr2D* at 944d5a
 
 set(RESET_LSP 0x0044ED47) # does not exist
 
-set(C_STAGE_ON_MOUSE_ENTER 0x00775FC7)
-set(C_STAGE_ON_PACKET 0x00775FE6)
+set(C_STAGE_ON_MOUSE_ENTER 0x0092F3F8) # IDB symbol ?OnMouseEnter@CStage@@UAEXH@Z; in CLogo IUIMsgHandler vtable (A30770) slot 41
+set(C_STAGE_ON_PACKET 0x006F079F) # IDB symbol ?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z; dispatched from ProcessPacket(48e275) via [stage+8 vtable][0]
 
 set(C_SYSTEM_INFO 0x00A54B90)
 set(C_SYSTEM_INFO_INIT 0x00A54BD0)
 set(C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT 0x00A54FB0)
 set(C_SYSTEM_INFO_GET_MACHINE_ID 0x00A54EB0)
 
-set(C_UI_TITLE_INSTANCE_ADDR 0x00BEDA60)
+set(C_UI_TITLE_INSTANCE_ADDR 0x00B0D738) # UITitleInstanceAddr; stored by CLogo-range ctor sub_5F652C (installs vtables A30698/A3064C/A30648); cleared by dtor at loc_5FD04E
 
 set(G_DW_TARGET_OS 0x00B0239C) # g_dwTargetOS; =1996 on OS major<5 or IsWow64Process, in CWvsApp ctor
 

@@ -423,3 +423,157 @@ Baseline IDB saved clean before any renaming or annotation.
 - Cross-version stability: 1460-byte chunking + 71/0x13 shuffle + ZSocketBuffer::Alloc loop stable v79→v84.
 - v79 address: 0x0067AEC4
 - Notes: HIGH-VALUE (needs-main-review). Spot-check (independent kind): the 1460/0x5B4 chunk constant and the 71-ROR/^0x13 shuffle loop, read independent of both the symbol and the SendPacket call edge.
+
+## Login / Stage / Logo / Title cluster (Task 6)
+
+### CLogin::Update   (memory-map key: C_LOGIN_UPDATE)
+- Primary anchor: vtable slot — vtable[0] of CLogin primary vtable at 0xA2F9EC (get_int read confirmed). Slot 0 of a stage-derived class vtable always maps to Update in v79/v83/v84 calling convention.
+- Detail: body references `[esi+0x15C]` timer counter incremented each tick, then calls `CWnd::InvalidateRect` to force a repaint. The timer walk + InvalidateRect combination with a 1500 ms threshold is the structural fingerprint.
+- Fallback anchor: call-graph — `CLogin::Update` is the sole function in the 0x5CA000-0x5CC000 range that calls `CWnd::InvalidateRect` (0x48CCA4) and reads `[esi+0x15C]`.
+- Cross-version stability: **DIVERGES from C_LOGO_UPDATE in v79**. In v83, both keys share address 0x005F4C16 (single function). In v79 the two stages each have their own Update implementation. Always verify independently; never assume they still alias.
+- v79 address: 0x005CA348 (labeled CLogin__Update in IDB)
+- Notes: The v83 seed value (0x005F4C16) must not be copied blindly to v79. C_LOGIN_UPDATE and C_LOGO_UPDATE are different functions in this version.
+
+### CLogin::SendCheckPasswordPacket   (memory-map key: C_LOGIN_SEND_CHECK_PASSWORD_PACKET)
+- Primary anchor: IDB symbol (retained in v79 IDB from DEVM build).
+- Detail: constructs a COutPacket with opcode byte 0x05 (CheckPassword), encodes the username/password ZXStrings via Encode4/EncodeStr, then dispatches via CClientSocket::SendPacket. The 0x05 immediate + encode-pair + SendPacket call is the structural fingerprint.
+- Fallback anchor: call-graph (callee = COutPacket::COutPacket + resolved CClientSocket::SendPacket) + constant (opcode 0x05 immediate).
+- Cross-version stability: opcode 0x05 CheckPassword stable v79→v83; encode-pair shape stable. Symbol also present in v83.
+- v79 address: 0x005CBF50
+- Notes: Located directly via IDB symbol — no address arithmetic needed. Confirm with spot-check on the 0x05 opcode immediate and the EncodeStr+SendPacket call-graph.
+
+### CLogo::CLogo (ctor)   (memory-map key: C_LOGO)
+- Primary anchor: IDB symbol `??0CLogo@@QAE@XZ` (retained in v79 DEVM build).
+- Detail: nullary ctor (no args besides `this`). Writes 4 vtable pointers: primary IStage vtable at A307BC, IUIMsgHandler vtable at A30770, CStage::OnPacket vtable slot at A3076C, and a 4th at A30768. Allocates member `0x258` (CUIObject subobject). Caller in C_LOGO_LOGO_END uses `Alloc(0x258)` before invoking the ctor — the two-step Alloc+ctor idiom is a fallback anchor.
+- Fallback anchor: call-graph (called from C_LOGO_LOGO_END / 0x005FFA4C: the sole caller is the alloc-then-ctor sequence) + vtable-write pattern (4 vtable stores at the first instructions of the ctor).
+- Cross-version stability: Alloc(0x258)+4-vtable-write pattern stable v79→v83; RTTI header at A307C8 (`0xFDE04000`) distinguishes CLogo from CLogin primary vtable.
+- v79 address: 0x005FF8C4 (labeled CLogo__ctor in IDB)
+- Notes: The RTTI header bytes (0xFDE04000 at A307C8, 0x014F373B at A307CC) are version-specific. Use the 4-vtable-write shape + Alloc(0x258) caller for forward ports.
+
+### CLogo::GetRTTI   (memory-map key: C_LOGO_GET_RTTI)
+- Primary anchor: IDB symbol (retained in v79 IDB).
+- Detail: one-liner returning a pointer to the CLogo RTTI descriptor; appears at a fixed slot offset in the CWnd interface vtable.
+- Fallback anchor: vtable slot (CWnd-iface vtable slot 53 from CLogo primary vtable start).
+- Cross-version stability: GetRTTI slot position stable v79→v83→v84.
+- v79 address: 0x0042196A
+- Notes: Consecutive with IsKindOf at 0x00421970 — if GetRTTI is found, IsKindOf is always at +6 bytes (next function).
+
+### CLogo::IsKindOf   (memory-map key: C_LOGO_IS_KIND_OF)
+- Primary anchor: IDB symbol (retained in v79 IDB).
+- Detail: compares the passed RTTI descriptor pointer against the CLogo descriptor chain. CWnd-iface vtable slot 54.
+- Fallback anchor: vtable slot (immediately follows GetRTTI at slot 54); call-graph (shared RTTI descriptor xrefs).
+- Cross-version stability: slot stable v79→v83→v84.
+- v79 address: 0x00421970
+- Notes: Address is exactly +6 from C_LOGO_GET_RTTI (0x0042196A). A tight pair — confirm both simultaneously from the vtable read.
+
+### CLogo::Update   (memory-map key: C_LOGO_UPDATE)
+- Primary anchor: vtable slot — vtable[0] of CLogo primary vtable at 0xA307BC (confirmed via `get_int`).
+- Detail: 1500 ms logo timer body: checks `[esi+0x1EC]` (or similar timer field), triggers the stage transition by calling `LogoEnd` when elapsed. **DIVERGES from C_LOGIN_UPDATE in v79** — they are two separate functions.
+- Fallback anchor: call-graph (body calls C_LOGO_LOGO_END / 0x005FFA4C after timer check) + constant (1500 ms threshold immediate).
+- Cross-version stability: Timer-threshold + LogoEnd call stable v79→v83. In v83 this was a shared address with CLogin::Update — that coincidence is gone in v79. Treat as independent.
+- v79 address: 0x005FFE54 (labeled CLogo__Update in IDB; required `define_func` before rename would accept it)
+- Notes: IDA had this as `loc_5FFE54` (not recognised as a function head). Used `define_func` on [0x5FFE54, 0x5FFE54+length] to promote it, then rename succeeded.
+
+### CLogo::OnMouseButton   (memory-map key: C_LOGO_ON_MOUSE_BUTTON)
+- Primary anchor: vtable slot — IUIMsgHandler vtable at 0xA30770, slot 2 (= `[this+4]` in CLogo object, offset 8 into the IUIMsgHandler vtable block).
+- Detail: first comparison is `cmp [esp+arg_0], 202h` (WM_LBUTTONUP = 0x202). On match, applies `add ecx, 0FFFFFFFCh` (thiscall `this` adjustment for IUIMsgHandler) then calls `CLogo::InitNXLogo`. The 0x202 immediate + thiscall-adjust + InitNXLogo call is the structural fingerprint.
+- Fallback anchor: call-graph (callee = C_LOGO_INIT_NX_LOGO / 0x005FFA96) + constant (0x202 WM_LBUTTONUP).
+- Cross-version stability: WM_LBUTTONUP constant + InitNXLogo call-path stable v79→v83→v84. IUIMsgHandler vtable slot order (OnKey/OnSetFocus/OnMouseButton) confirmed from v84 catalog.
+- v79 address: 0x005FFE3F (labeled CLogo__OnMouseButton in IDB)
+- Notes: IUIMsgHandler vtable is at `[this+4]` in CLogo (the second vtable pointer). Slot layout: [A30770]=OnKey, [A30774]=OnSetFocus, [A30778]=OnMouseButton.
+
+### CLogo::OnSetFocus   (memory-map key: C_LOGO_ON_SET_FOCUS)
+- Primary anchor: vtable slot — IUIMsgHandler vtable at 0xA30770, slot 1 (address A30774).
+- Detail: trivial stub: `push 1; pop eax; retn 4` — always returns 1 (true). Three-instruction body is unambiguous.
+- Fallback anchor: function size (3 instructions, ~4 bytes) + return-1 pattern. Both independent of the vtable read.
+- Cross-version stability: always-true stub shape stable v79→v83→v84. Matches v84 catalog description exactly.
+- v79 address: 0x005FF902 (labeled CLogo__OnSetFocus_IUI in IDB)
+- Notes: An earlier session incorrectly assigned 0x0092F599 (the CWnd override version). Correct address is the IUIMsgHandler vtable version at 0x005FF902. Always read the IUIMsgHandler vtable directly — the CWnd vtable has a different OnSetFocus that does real work.
+
+### CLogo::OnKey   (memory-map key: C_LOGO_ON_KEY)
+- Primary anchor: vtable slot — IUIMsgHandler vtable at 0xA30770, slot 0 (address A30770 itself).
+- Detail: checks wParam against three key codes in sequence: 13 (VK_RETURN), 27 (VK_ESCAPE), 32 (VK_SPACE). Any match triggers `add ecx, 0FFFFFFFCh` (thiscall adjust) + `CLogo::InitNXLogo`. The three-key-constant cluster is the structural fingerprint.
+- Fallback anchor: call-graph (callee = C_LOGO_INIT_NX_LOGO / 0x005FFA96) + constants (13/27/32 key-code immediates).
+- Cross-version stability: key-code triple (13/27/32) + InitNXLogo dispatch stable v79→v83→v84.
+- v79 address: 0x005FFE18 (labeled CLogo__OnKey in IDB; defined via define_func before rename)
+- Notes: Both OnKey and OnMouseButton call InitNXLogo after a thiscall this-adjustment. If either is found, the other is derivable from the same vtable block.
+
+### CLogo::LogoEnd   (memory-map key: C_LOGO_LOGO_END)
+- Primary anchor: call-graph — body is `Alloc(0x258)` followed by `CLogo::CLogo(ctor)` (0x005FF8C4) followed by `SetStage` (0x006F1AC0). This three-call sequence allocates and installs CLogin as the next stage.
+- Detail: the Alloc(0x258) + CLogin ctor + SetStage triple is the structural fingerprint; no other function in the binary calls all three together.
+- Fallback anchor: constant (0x258 = sizeof CLogin allocation block) + call-graph (SetStage callee confirmed independently).
+- Cross-version stability: Alloc+ctor+SetStage pattern stable v79→v83. Size 0x258 may shift if CLogin layout changes.
+- v79 address: 0x005FFA4C (labeled CLogo__LogoEnd in IDB)
+- Notes: This is the "transition to login" function. SetStage is called with the freshly allocated CLogin pointer, which means LogoEnd is always a parent of SetStage for the login-stage transition.
+
+### CLogo::ForcedEnd   (memory-map key: C_LOGO_FORCED_END)
+- Primary anchor: vtable slot — CLogo primary vtable at 0xA307BC, slot 2 (address A307C4, read via `get_int`).
+- Detail: stops background music (likely `BGMMan::Stop` call) before returning. SET_STAGE calls `[eax+8]` (vtable slot 2) on the current stage at 0x6F1B14 when tearing it down. The BGM-stop + vtable-slot-2 position is the structural fingerprint.
+- Fallback anchor: call-graph (SET_STAGE parent — `xrefs_to` confirms 0x006F1B14 dispatches this slot) + vtable position (primary vtable slot 2 = ForcedEnd in all v79/v83/v84 stage classes).
+- Cross-version stability: vtable slot 2 = ForcedEnd convention stable v79→v83→v84; BGM-stop pattern stable.
+- v79 address: 0x005FFA2A (labeled CLogo__ForcedEnd in IDB)
+- Notes: vtable slot order: [A307BC]=Update, [A307C0]=Init, [A307C4]=ForcedEnd. Identical slot ordering confirmed against CLogin primary vtable structure.
+
+### CLogo::Init   (memory-map key: C_LOGO_INIT)
+- Primary anchor: vtable slot — CLogo primary vtable at 0xA307BC, slot 1 (address A307C0).
+- Detail: SET_STAGE calls `[eax+4]` (vtable slot 1) on the new stage at 0x6F1C2C to initialise it after install. Body sets up logo resources / timer state.
+- Fallback anchor: call-graph (SET_STAGE parent at 0x006F1C2C dispatches this slot) + vtable position (slot 1 = Init convention).
+- Cross-version stability: vtable slot 1 = Init convention stable v79→v83→v84.
+- v79 address: 0x005FF9BC (labeled CLogo__Init in IDB)
+- Notes: Slot 1 dispatch in SET_STAGE is at 0x6F1C2C (`call dword ptr [eax+4]`). Confirmed by tracing SET_STAGE body.
+
+### CLogo::InitNXLogo   (memory-map key: C_LOGO_INIT_NX_LOGO)
+- Primary anchor: string xref — references StringPool ID 0x568, which resolves to the NX-logo resource path (e.g. `Map/Obj/login.img/Logo/logo/0`). StringPool::GetBSTR(0x568) is the first real operation of the function.
+- Detail: init-once guard at `[this+0x28]` — if already non-zero, returns immediately (idempotent). Otherwise calls StringPool::GetBSTR(0x568), stores the result, and loads/plays the NX logo sprite. The guard + 0x568 constant + StringPool call is the structural fingerprint.
+- Fallback anchor: call-graph (callee = StringPool::GetBSTR; callers = CLogo::OnKey + CLogo::OnMouseButton + CLogo::Update timer path) + constant (0x568 StringPool ID).
+- Cross-version stability: StringPool ID 0x568 = NX-logo path confirmed in v79. If the ID drifts in older versions, search for the NX-logo path string directly and re-derive the ID from that xref.
+- v79 address: 0x005FFA96 (labeled CLogo__InitNXLogo in IDB)
+- Notes: 0x568 is the v79 StringPool ID for the NX-logo UOL path. This ID may differ in earlier or later versions — always verify via the actual string content, not the numeric ID alone.
+
+### Stage singleton (memory-map key: STAGE_INSTANCE_ADDR)
+- Primary anchor: store-after-SetStage — SET_STAGE (0x006F1AC0) writes the new stage pointer to this global at offset +0x2C from its entry (instruction at ~0x6F1AEC). `xrefs_to 0x00B0DADC` confirms this is the sole writer outside of static init.
+- Detail: `mov dword ptr [B0DADC], <stage_ptr>` immediately after the SetStage prolog; all stage-dispatch callers read this global for vtable dispatch.
+- Fallback anchor: call-graph (read by CWvsApp main loop and the stage-dispatch helper) + .data range check (0xB0DADC ∈ [0xABD000, 0xB18000] for v79; any 0xBExxxx address is the v83 seed and invalid for v79).
+- Cross-version stability: singleton store pattern stable; the actual address WILL differ — always trace from SetStage body, never copy from v83.
+- v79 address: 0x00B0DADC (labeled StageInstanceAddr in IDB)
+- Notes: v83 seed was 0x00BEDED4 — invalid for v79 (v79 .data ends at 0xB18000). All stage/GR/UITitle globals verified to be in the 0xB0xxxx–0xB1xxxx range.
+
+### SetStage   (memory-map key: SET_STAGE)
+- Primary anchor: IDB symbol `SetStage` (retained in v79 DEVM build).
+- Detail: stores the new stage pointer to STAGE_INSTANCE_ADDR (0xB0DADC), then calls ForcedEnd on the old stage (`[eax+8]`, vtable slot 2) and Init on the new stage (`[eax+4]`, vtable slot 1). The store-then-ForcedEnd-then-Init triple is the structural fingerprint.
+- Fallback anchor: call-graph (callee of C_LOGO_LOGO_END; dispatches vtable slots 1 and 2 on stage objects) + constant (STAGE_INSTANCE_ADDR 0xB0DADC).
+- Cross-version stability: store+ForcedEnd+Init triple stable v79→v83→v84.
+- v79 address: 0x006F1AC0 (labeled SetStage in IDB)
+- Notes: The IDB symbol made this trivial. For versions without the symbol, the Alloc(stage_size)+ctor+SetStage call-graph from LogoEnd functions is the fastest path.
+
+### GR singleton (memory-map key: GR_INSTANCE_ADDR)
+- Primary anchor: store pattern — `CWvsApp::InitializeGr2D` (at 0x944CCA) calls `sub_947BB8` with the address of `dword_B10F74` as an output argument. The store is `mov [B10F74], eax` inside sub_947BB8.
+- Detail: after the store, `CWvsApp` reads `mov ebx, dword_B10F74` and dispatches through its vtable. The output-arg→store→vtable-dispatch chain through sub_947BB8 is the structural fingerprint.
+- Fallback anchor: call-graph (parent = InitializeGr2D; consumer = CWvsApp's Gr vtable dispatch) + .data range check (0xB10F74 ∈ v79 .data range 0xABD000–0xB18000).
+- Cross-version stability: GR singleton output-arg store pattern stable; address WILL differ from v83 (0x00BF14EC is the invalid v83 seed).
+- v79 address: 0x00B10F74 (labeled GrInstanceAddr in IDB)
+- Notes: Found by tracing `CWvsApp::InitializeGr2D` → `call sub_947BB8` with the address pushed as the output arg. The output-arg idiom (push &global; call factory) is the reliable cross-version heuristic.
+
+### CStage::OnMouseEnter   (memory-map key: C_STAGE_ON_MOUSE_ENTER)
+- Primary anchor: IDB symbol `?OnMouseEnter@CStage@@UAEXH@Z` (retained in v79 DEVM build).
+- Detail: virtual function taking a single `int` (the hit region); called from the input dispatch when the cursor enters a stage region. The mangled name encodes `__thiscall`, one `int` arg, `void` return.
+- Fallback anchor: vtable slot (CStage vtable; OnMouseEnter slot index confirmed from v84 catalog) + call-graph (input dispatcher callee).
+- Cross-version stability: symbol retained v79→v84; vtable slot position stable.
+- v79 address: 0x0092F3F8
+- Notes: Symbol made this trivial. For versions without the symbol, locate via the input dispatch path (the region-hit dispatcher that calls CStage virtual functions in sequence).
+
+### CStage::OnPacket   (memory-map key: C_STAGE_ON_PACKET)
+- Primary anchor: IDB symbol `?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z` (retained in v79 DEVM build).
+- Detail: virtual function taking `long` opcode + `CInPacket&`; dispatches to sub-handlers. The mangled name encodes `__thiscall`, `long`+`CInPacket&` args, `void` return.
+- Fallback anchor: vtable slot (CStage vtable; CLogo's IStage::OnPacket vtable at 0xA3076C points here) + call-graph (sole dispatch target from CLogo's vtable slot 3).
+- Cross-version stability: symbol retained v79→v84; vtable slot and CInPacket arg shape stable.
+- v79 address: 0x006F079F
+- Notes: CLogo's vtable at [this+8] = 0xA3076C, slot 0 = 0x006F079F (confirmed via get_int). Both the IDB symbol and the CLogo vtable cross-reference confirm this independently.
+
+### CUITitle singleton (memory-map key: C_UI_TITLE_INSTANCE_ADDR)
+- Primary anchor: store-after-ctor — `sub_5F652C` (the CUITitle ctor, a CWnd-derived nullary ctor) stores `this` to 0x00B0D738 via a SBB null-check idiom: `sbb eax, eax; and eax, ecx; mov [B0D738], eax`.
+- Detail: the dtor (at loc_5FD04E) clears 0x00B0D738 (`mov dword ptr [B0D738], 0`), and `CLogin::ForcedEnd` calls the dtor to destroy the title UI. The ctor-store + dtor-clear + ForcedEnd-destroy triple is the structural fingerprint.
+- Fallback anchor: call-graph (ctor called from the CLogin init path in the 0x5C0000–0x600000 range; dtor called from ForcedEnd) + .data range check (0xB0D738 ∈ v79 .data range 0xABD000–0xB18000).
+- Cross-version stability: SBB-singleton store + CWnd-derived ctor + ForcedEnd-destroy pattern stable; address WILL differ (v83 seed 0x00BEDA60 is invalid for v79).
+- v79 address: 0x00B0D738 (labeled UITitleInstanceAddr in IDB)
+- Notes: Found via `py_eval` scanning all global stores from functions in the CLogin/CLogo code range (0x5C0000–0x600000) that target the v79 .data window (0xB00000–0xB18000). The SBB idiom is `mov eax, this; sbb eax, eax; and eax, ecx; mov [global], eax` — it stores `this` if non-null, else 0. Recognise this pattern in future ports.

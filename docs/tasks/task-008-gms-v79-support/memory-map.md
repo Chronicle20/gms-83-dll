@@ -116,19 +116,19 @@ never copied blind.
 | C_INPUT_SYSTEM_GET_IS_MESSAGE | addr | 0x0059A306 | ☐ |
 | C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN | addr | 0x0059B2D2 | ☐ |
 | C_INPUT_SYSTEM_SHOW_CURSOR | addr | 0x59A338 | ☐ |
-| C_LOGIN_UPDATE | addr | 0x005F4C16 | ☐ |
-| C_LOGIN_SEND_CHECK_PASSWORD_PACKET | addr | 0x005F6952 | ☐ |
-| C_LOGO | addr | 0x0062ECE2 | ☐ |
-| C_LOGO_GET_RTTI | addr | 0x0062ED26 | ☐ |
-| C_LOGO_IS_KIND_OF | addr | 0x0062ED2C | ☐ |
-| C_LOGO_UPDATE | addr | 0x005F4C16 | ☐ |
-| C_LOGO_ON_MOUSE_BUTTON | addr | 0x0062F2A1 | ☐ |
-| C_LOGO_ON_SET_FOCUS | addr | 0x0062ED20 | ☐ |
-| C_LOGO_ON_KEY | addr | 0x0062F27A | ☐ |
-| C_LOGO_LOGO_END | addr | 0x0062EEAE | ☐ |
-| C_LOGO_FORCED_END | addr | 0x0062EEF8 | ☐ |
-| C_LOGO_INIT | addr | 0x0062EDDA | ☐ |
-| C_LOGO_INIT_NX_LOGO | addr | 0x0062F396 | ☐ |
+| C_LOGIN_UPDATE | addr | 0x005CA348 | ✔ (v79 0x005CA348; vtable[0] CLogin primary vtable 0xA2F9EC; body: [esi+0x15C]+CWnd::InvalidateRect; DIVERGES from C_LOGO_UPDATE in v79) |
+| C_LOGIN_SEND_CHECK_PASSWORD_PACKET | addr | 0x005CBF50 | ✔ (v79 0x005CBF50; IDB symbol) |
+| C_LOGO | addr | 0x0062ECE2 | ✔ (v79 0x005FF8C4; IDB symbol ??0CLogo@@QAE@XZ; Alloc(0x258)+ctor in LogoEnd) |
+| C_LOGO_GET_RTTI | addr | 0x0042196A | ✔ (v79 0x0042196A; IDB symbol; CLogo vtable CWnd-iface slot 53) |
+| C_LOGO_IS_KIND_OF | addr | 0x0042196A | ✔ (v79 0x00421970; IDB symbol; CLogo vtable CWnd-iface slot 54) |
+| C_LOGO_UPDATE | addr | 0x005F4C16 | ✔ (v79 0x005FFE54; vtable[0] CLogo primary vtable 0xA307BC; 1500ms timer body; DIVERGES from C_LOGIN_UPDATE in v79) |
+| C_LOGO_ON_MOUSE_BUTTON | addr | 0x0062F2A1 | ✔ (v79 0x005FFE3F; IUIMsgHandler vtable 0xA30770 slot 2; body: cmp 0x202(WM_LBUTTONUP)+InitNXLogo) |
+| C_LOGO_ON_SET_FOCUS | addr | 0x0062ED20 | ✔ (v79 0x005FF902; IUIMsgHandler vtable 0xA30770 slot 1; body: push1;pop eax;retn 4) |
+| C_LOGO_ON_KEY | addr | 0x0062F27A | ✔ (v79 0x005FFE18; IUIMsgHandler vtable 0xA30770 slot 0; body: wParam==13/27/32+InitNXLogo) |
+| C_LOGO_LOGO_END | addr | 0x0062EEAE | ✔ (v79 0x005FFA4C; call-graph: Alloc(0x258)+CLogin_ctor+SetStage) |
+| C_LOGO_FORCED_END | addr | 0x0062EEF8 | ✔ (v79 0x005FFA2A; vtable[2] CLogo primary 0xA307C4; SET_STAGE calls [vtable+8] at 6f1b14; stops BGM) |
+| C_LOGO_INIT | addr | 0x0062EDDA | ✔ (v79 0x005FF9BC; vtable[1] CLogo primary 0xA307C0; SET_STAGE calls [vtable+4] at 6f1c2c) |
+| C_LOGO_INIT_NX_LOGO | addr | 0x0062F396 | ✔ (v79 0x005FFA96; StringPool::GetBSTR(0x568) NX-logo path; init-once guard [this+0x28]) |
 | C_MACRO_SYS_MAN_CREATE_INSTANCE | addr | 0x009F9EEE | ☐ |
 | C_BATTLE_RECORD_MAN_CREATE_INSTANCE | sentinel | 0x00000000 | ☐ |
 | C_MAPLE_TV_MAN_CREATE_INSTANCE | addr | 0x009F9F87 | ☐ |
@@ -158,17 +158,17 @@ never copied blind.
 | C_SECURITY_CLIENT_CREATE_INSTANCE | addr | 0x009F9F42 | ☐ |
 | C_SECURITY_CLIENT_INSTANCE_ADDR | addr | 0x00BEC3A8 | ☐ |
 | C_SECURITY_CLIENT_ON_PACKET | addr | 0x00A4BF03 | ☐ |
-| STAGE_INSTANCE_ADDR | addr | 0x00BEDED4 | ☐ |
-| SET_STAGE | addr | 0x00777347 | ☐ |
-| GR_INSTANCE_ADDR | addr | 0x00BF14EC | ☐ |
+| STAGE_INSTANCE_ADDR | addr | 0x00B0DADC | ✔ (v79 0x00B0DADC; written by SET_STAGE at 6f1aec; xrefs_to confirmed) |
+| SET_STAGE | addr | 0x006F1AC0 | ✔ (v79 0x006F1AC0; IDB symbol SetStage; stores to B0DADC+vtable dispatch) |
+| GR_INSTANCE_ADDR | addr | 0x00B10F74 | ✔ (v79 0x00B10F74; stored by sub_947BB8 in InitializeGr2D at 944cca; mov ebx,dword_B10F74+vtable dispatch) |
 | RESET_LSP | addr/sentinel | 0x0044ED47 | ☐ (resolve present/absent in v79; stale v83 comment) |
-| C_STAGE_ON_MOUSE_ENTER | addr | 0x00775FC7 | ☐ |
-| C_STAGE_ON_PACKET | addr | 0x00775FE6 | ☐ |
+| C_STAGE_ON_MOUSE_ENTER | addr | 0x0092F3F8 | ✔ (v79 0x0092F3F8; IDB symbol ?OnMouseEnter@CStage@@UAEXH@Z) |
+| C_STAGE_ON_PACKET | addr | 0x006F079F | ✔ (v79 0x006F079F; IDB symbol ?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z) |
 | C_SYSTEM_INFO | addr | 0x00A54B90 | ☐ |
 | C_SYSTEM_INFO_INIT | addr | 0x00A54BD0 | ☐ |
 | C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT | addr | 0x00A54FB0 | ☐ |
 | C_SYSTEM_INFO_GET_MACHINE_ID | addr | 0x00A54EB0 | ☐ |
-| C_UI_TITLE_INSTANCE_ADDR | addr | 0x00BEDA60 | ☐ |
+| C_UI_TITLE_INSTANCE_ADDR | addr | 0x00B0D738 | ✔ (v79 0x00B0D738; sub_5F652C (CUITitle ctor) stores this via SBB null-check; dtor at loc_5FD04E clears it; CLogin::ForcedEnd destroys it) |
 | G_DW_TARGET_OS | addr | 0x00BE2EBC | ✔ (v79 0x00B0239C; g_dwTargetOS=1996 writer in ctor) |
 | C_WVS_APP | addr | 0x009F4FDA | ✔ (v79 0x00942D3B; symbol+WebStart/IsWow64Process) |
 | C_WVS_APP_INSTANCE_ADDR | addr | 0x00BE7B38 | ✔ (v79 0x00B07A68; g_CWvsApp singleton store) |
