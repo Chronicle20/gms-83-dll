@@ -191,9 +191,9 @@ never copied blind.
 | C_WVS_APP_CALL_UPDATE | addr | 0x009F84D0 | ✔ (v79 0x009454B5) |
 | C_WVS_APP_RUN | addr | 0x009F5C50 | ✔ (v79 0x00943611; symbol+exception-TI quad) |
 | C_WVS_APP_SET_UP | addr | 0x009F5239 | ✔ (v79 0x009430F1; NO DR_init present — R11 confirmed) |
-| C_WVS_CONTEXT_INSTANCE_ADDR | addr | 0x00BE7918 | ☐ |
-| C_WVS_CONTEXT_ON_ENTER_GAME | addr | 0x00A03935 | ☐ |
-| C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET | offset | 0x10 | ☐ (re-measure) |
+| C_WVS_CONTEXT_INSTANCE_ADDR | addr | 0x00BE7918 | ✔ (v79 0x00B07848; g_pWvsContext; socket-singleton+4; this-arg to OnEnterGame in SetStage GetCharacterData!=0 branch + read by both party senders + ProcessPacket) |
+| C_WVS_CONTEXT_ON_ENTER_GAME | addr | 0x00A03935 | ✔ (v79 0x00950297; symbol ?OnEnterGame@CWvsContext@@; sole caller SetStage(6f1ac0)@6f1b69; this+0x34xx member-ctor block) |
+| C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET | offset | 0x10 | ✔ (measured v79 0x0F; first body instr lea ecx,[esi+3424h]@9502A6 after EH-prolog+reg-save; DIFFERS from v83 0x10=push 1, like v84) |
 | WIN_MAIN | addr | 0x009F19F2 | ✔ (v79 0x0093F9B7; title-string+start call-graph) |
 | WIN_MAIN_AD_BALLOON_CONDITIONAL | offset | 0xA3D | ✔ (re-measured v79 0xA3D; jz@0x9403F4) |
 | WIN_MAIN_PATCHER_OFFSET | offset | 0x212 | ✔ (re-measured v79 0x212; call ShowStartUpWndModal@0x93FBC9) |
@@ -203,12 +203,12 @@ never copied blind.
 | Z_X_STRING_GET_BUFFER | addr | 0x00414617 | ✔ (v79 0x00426133; symbol ?_Cat@?$ZXString@D@@; assign-when-empty/append; needs-main-review — no pure-assign in v79, same as v84) |
 | Z_X_STRING_TRIM_RIGHT | addr | 0x00474414 | ✔ (v79 0x0046DB7E; symbol ?TrimRight@?$ZXString@D@@; " \t\r\n" asc_ABEDA0 + strchr + GetBuffer) |
 | Z_X_STRING_TRIM_LEFT | addr | 0x004744C9 | ✔ (v79 0x0046DC33; symbol ?TrimLeft@?$ZXString@D@@; same whitespace + memcpy-shift) |
-| C_FIELD_SEND_JOIN_PARTY_MSG | addr | 0x0052FECF | ☐ |
-| C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET | offset | 0x65 | ☐ (re-measure) |
-| C_FIELD_SEND_CREATE_NEW_PARTY_MSG | addr | 0x52FCE1 | ☐ |
-| C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET | offset | 0xA4 | ☐ (re-measure) |
-| C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST | addr | 0x00A12522 | ☐ |
-| C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET | offset | 0xE9 | ☐ (re-measure) |
+| C_FIELD_SEND_JOIN_PARTY_MSG | addr | 0x0052FECF | ✔ (v79 0x0051B4C9; symbol ?SendJoinPartyMsg@CField@@; opcode 0x79+Encode1(4)+EncodeStr; needs-main-review. OPCODE DRIFT 0x7C→0x79) |
+| C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET | offset | 0x65 | ✔ (measured v79 0x5E; level-gate jnb(73 2F)@51B527; DIFFERS from v83 0x65, same instr) |
+| C_FIELD_SEND_CREATE_NEW_PARTY_MSG | addr | 0x52FCE1 | ✔ (v79 0x0051B318; symbol ?SendCreateNewPartyMsg@CField@@; nullary; opcode 0x79+Encode1(1); needs-main-review. OPCODE DRIFT 0x7C→0x79) |
+| C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET | offset | 0xA4 | ✔ (measured v79 0x9D; level-gate jnb(73 34)@51B3B5; DIFFERS from v83 0xA4, same instr) |
+| C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST | addr | 0x00A12522 | ✔ (v79 0x0095DD85; symbol ?SendMigrateToITCRequest@CWvsContext@@; "Guest ID Users" str + opcode 0x99; needs-main-review. OPCODE DRIFT 0x9C→0x99) |
+| C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET | offset | 0xE9 | ✔ (measured v79 0xE9; ITC-gate jz(74 26)@95DE6E; coincides with v83) |
 | DR_CHECK | sentinel | 0x00000000 | ☐ (confirm absent) |
 | DR_INIT | sentinel | 0x00000000 | ☐ (confirm absent) |
 | CE_TRACER_RUN | sentinel | 0x00000000 | ☐ (confirm absent) |

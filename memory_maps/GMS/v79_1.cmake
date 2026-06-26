@@ -156,9 +156,9 @@ set(C_WVS_APP_CALL_UPDATE 0x009454B5)
 set(C_WVS_APP_RUN 0x00943611)
 set(C_WVS_APP_SET_UP 0x009430F1)
 
-set(C_WVS_CONTEXT_INSTANCE_ADDR 0x00BE7918)
-set(C_WVS_CONTEXT_ON_ENTER_GAME 0x00A03935) # TODO do we still need these
-set(C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET 0x10) # TODO do we still need these
+set(C_WVS_CONTEXT_INSTANCE_ADDR 0x00B07848) # g_pWvsContext; CWvsContext singleton (g_pClientSocketInstance+4); this-arg to OnEnterGame in SetStage + read by both party senders + ProcessPacket
+set(C_WVS_CONTEXT_ON_ENTER_GAME 0x00950297) # symbol ?OnEnterGame@CWvsContext@@QAEXXZ; sole caller SetStage(6f1ac0) GetCharacterData!=0 branch; runs this+0x34xx member-ctor block
+set(C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET 0x0F) # measured v79: first body instr lea ecx,[esi+3424h] @0x9502A6 after EH-prolog+reg-save; delta from base 0x950297 (v83 0x10 = push 1; v79 omits it like v84)
 
 set(WIN_MAIN 0x0093F9B7)
 set(WIN_MAIN_AD_BALLOON_CONDITIONAL 0xA3D) # measured v79: jz(74 6F)@0x9403F4 guarding ShowADBalloon(740/300/60); delta from WinMain base 0x93F9B7
@@ -173,14 +173,14 @@ set(Z_X_STRING_GET_BUFFER 0x00426133) # symbol ?_Cat@?$ZXString@D@@ (in-place as
 set(Z_X_STRING_TRIM_RIGHT 0x0046DB7E) # symbol ?TrimRight@?$ZXString@D@@; default " \t\r\n" (asc_ABEDA0) + strchr + inner GetBuffer(0x4147bb)
 set(Z_X_STRING_TRIM_LEFT 0x0046DC33) # symbol ?TrimLeft@?$ZXString@D@@; same whitespace literal + strchr + memcpy-shift remainder to front
 
-set(C_FIELD_SEND_JOIN_PARTY_MSG 0x0052FECF)
-set(C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET 0x65)
+set(C_FIELD_SEND_JOIN_PARTY_MSG 0x0051B4C9) # symbol ?SendJoinPartyMsg@CField@@QAEXABV?$ZXString@D@@@Z; COutPacket(0x79)+Encode1(4)+EncodeStr(name)+SendPacket; one-arg invitee
+set(C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET 0x5E) # measured v79: level-gate jnb(73 2F)@0x51B527 (cmp al,0Ah); delta from base 0x51B4C9 (v83 0x65 = same jnb instr, shorter v79 preamble)
 
-set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG 0x52FCE1)
-set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET 0xA4)
+set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG 0x0051B318) # symbol ?SendCreateNewPartyMsg@CField@@QAEXXZ; COutPacket(0x79)+Encode1(1)+SendPacket; nullary
+set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET 0x9D) # measured v79: level-gate jnb(73 34)@0x51B3B5 (cmp al,0Ah); delta from base 0x51B318 (v83 0xA4 = same jnb instr, shorter v79 preamble)
 
-set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x00A12522)
-set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9)
+set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x0095DD85) # symbol ?SendMigrateToITCRequest@CWvsContext@@QAEXXZ; "Guest ID Users" string + COutPacket(0x99)+SendPacket
+set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9) # measured v79: ITC-gate jz(74 26)@0x95DE6E (get_field+0x124>>4&1); delta from base 0x95DD85 (coincides with v83 0xE9)
 
 set(DR_CHECK 0x00000000) # does not exist
 set(DR_INIT 0x00000000) # DR anti-debug subsystem absent in v83 (cf. DR_CHECK); nothing to call

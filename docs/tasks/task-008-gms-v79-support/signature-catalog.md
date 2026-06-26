@@ -825,3 +825,48 @@ Baseline IDB saved clean before any renaming or annotation.
 - Cross-version stability: CLife-base + 3-vtable + CMobTemplate-store + secure-tear + SP_CANVAS/IWzCanvas tail stable v79→v84; StringPool ID and vtable globals per-version.
 - v79 address: 0x00630C2C (v83 0x6621D9, v84 0x678060).
 - **DOOM-FIELD FINDING (Task 12 / doom-fix gate `< 84`):** the v79 ctor LEAVES `m_bDoomReserved` UNINITIALIZED → v79 is correctly on the doom-fix needs-fix side. Evidence: (1) the allocation is non-zeroing (ZAllocEx::Alloc(1304), not calloc); (2) the ctor's highest member write is the secure-tear backing dword at this+325 (0x514) and the HP-canvas at this+0x4D0 — there is NO trailing zero-init block reaching a doom field. Contrast v84 (no-fix side, gate >=84): its ctor at 0x678060 explicitly zero-writes `*((_DWORD*)this+336)=0` (0x540 = m_bDoomReserved) and `*((_BYTE*)this+1348)=0` (0x544 = m_bDoomReservedSN) as a contiguous tail block right after the v84-only fields (m_aMultiTargetForBall/m_aRandTimeforAreaAttack/m_delaySkill, all `>=84`). v79 lacks both those `>=84` fields AND the corresponding doom zero-init. NOTE: the exact v79 byte offset of m_bDoomReserved was not pinned (embedded MobStat may be smaller in v79 than v84, so arithmetic from v84's 0x540 is unsafe) — Task 12's read-only struct audit will measure MobStat/CMob sizes and pin it; the uninitialized verdict stands on the v84 contrast + non-zeroing alloc + absence of any tail doom write.
+
+---
+
+## Task 9 — Party / migrate / context senders + offsets
+
+> The v79 IDB retains the full mangled C++ symbols for all four functions in this
+> cluster (`?SendJoinPartyMsg@CField@@…`, `?SendCreateNewPartyMsg@CField@@…`,
+> `?SendMigrateToITCRequest@CWvsContext@@…`, `?OnEnterGame@CWvsContext@@…`), so the
+> IDB symbol is the fast primary anchor; each entry records a second STRUCTURAL
+> anchor (opcode/encoder-chain, string xref, or SetStage-trio call-graph) per the
+> two-anchor rule. **Opcode drift (R7): the v79 party opcode is 0x79 (v83 0x7C) and
+> the v79 ITC opcode is 0x99 (v83 0x9C) — read, never copied.** All four offsets
+> were re-measured from v79 disasm and cross-checked against the v83 host at the
+> v83 offset (same patch-point instruction kind in both).
+
+### CField::SendCreateNewPartyMsg   (keys: C_FIELD_SEND_CREATE_NEW_PARTY_MSG / _OFFSET)   [HIGH-VALUE / needs-main-review]
+- Primary anchor: IDB symbol `?SendCreateNewPartyMsg@CField@@QAEXXZ` (nullary).
+- Detail: reads the CWvsContext singleton (g_pWvsContext @0xB07848), runs the job-id gate (`_ZtlSecureFuse<short>` job at +0x39/+0x3D vs 0/3E8h/7D0h) and the `_ZtlSecureFuse<uchar>` level gate (`cmp al,0Ah; jnb`), then on pass `COutPacket(0x79)` -> `Encode1(1)` (create sub-opcode) -> `CClientSocket::SendPacket`. Nullary + sub-opcode 1, no EncodeStr — distinguishes it from SendJoinPartyMsg.
+- Fallback anchor (2nd kind): opcode/encoder-chain — the COutPacket(0x79) ctor + Encode1(1) + SendPacket tail with no string arg.
+- Cross-version stability: the 3E8/7D0 job constants + `cmp al,0Ah` level gate + Encode1(1)/SendPacket tail stable v83→v84→v79. **OPCODE per-version: v83 0x7C → v84 0x7E → v79 0x79.** StringPool error IDs shift (v79 320/324).
+- v79 address: 0x0051B318 (size 0x118).
+- **OFFSET (C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET):** patch-point = level-gate `jnb short loc_51B3EB` @0x51B3B5 (bytes `73 34`); the no-beginner-party edit overwrites 0x73→0xEB. Delta 0x51B3B5−0x51B318 = **0x9D** — DIFFERS from v83 0xA4 (v79 preamble is 7 bytes shorter; same jnb instruction confirmed in v83 @0x52FD85 = `73 34`).
+
+### CField::SendJoinPartyMsg   (keys: C_FIELD_SEND_JOIN_PARTY_MSG / _OFFSET)   [HIGH-VALUE / needs-main-review]
+- Primary anchor: IDB symbol `?SendJoinPartyMsg@CField@@QAEXABV?$ZXString@D@@@Z` (one-arg invitee ZXString).
+- Detail: same job-id + level gates as SendCreateNewPartyMsg, plus a `strcmp` vs the player's own name and a `GetPartyMemberNumber < 6` party-full guard; on pass `COutPacket(0x79)` -> `Encode1(4)` (invite sub-opcode) -> `EncodeStr(name)` -> `CClientSocket::SendPacket`. String arg + EncodeStr + sub-opcode 4 distinguish it from CreateNewParty.
+- Fallback anchor (2nd kind): opcode/encoder-chain — COutPacket(0x79)+Encode1(4)+EncodeStr+SendPacket; reads g_pWvsContext. **Both party senders share opcode 0x79 — disambiguate by sub-opcode (4=invite vs 1=create) + EncodeStr, never by a second opcode.**
+- Cross-version stability: gates + strcmp + GetPartyMemberNumber(<6) + Encode1(4)/EncodeStr/SendPacket stable v83→v84→v79. **OPCODE per-version: v83 0x7C → v84 0x7E → v79 0x79.** StringPool IDs shift (v79 324/325/326/330).
+- v79 address: 0x0051B4C9 (size 0x1EB).
+- **OFFSET (C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET):** patch-point = level-gate `jnb short loc_51B558` @0x51B527 (bytes `73 2F`); edit overwrites 0x73→0xEB. Delta 0x51B527−0x51B4C9 = **0x5E** — DIFFERS from v83 0x65 (v79 preamble shorter; the v79 guest-id/own-name checks come AFTER the level gate, unlike v84's pre-gate guest-id block; same jnb instruction confirmed in v83 @0x52FF34 = `73 2F`).
+
+### CWvsContext::SendMigrateToITCRequest   (keys: C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST / _OFFSET)   [HIGH-VALUE / needs-main-review]
+- Primary anchor: string xref — the unique literal `The MapleStory Trading System is not available for the Guest ID Users.` (aTheMaplestoryT @0xB027FC).
+- Detail: guest-ID guard ([this+0x2090]), a `>= 0x1F4` throttle (SetExclRequestSent delta), and the ITC-availability gate (`get_field()`->[+0x124]->`shr 4`->`and 1`->`jz`), then on pass `COutPacket(0x99)` -> `CClientSocket::SendPacket` (no encoder body).
+- Fallback anchor (2nd kind): opcode/SendPacket call-graph — COutPacket(0x99) ctor + SendPacket tail with no encoders; reads CWvsContext member throttle timestamps at this+0x20A4/+0x20A8.
+- Cross-version stability: Guest-ID string + and-1 ITC gate + 0x1F4 throttle stable v83→v84→v79. **OPCODE per-version: v83 0x9C → v84 0xA0 → v79 0x99.**
+- v79 address: 0x0095DD85 (size 0x163).
+- **OFFSET (C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET):** patch-point = ITC-gate `jz short loc_95DE96` @0x95DE6E (bytes `74 26`); the no-enter-mts edit overwrites 0x74→0xEB to always take the send path. Delta 0x95DE6E−0x95DD85 = **0xE9** — coincides with v83 0xE9 (same jz instruction confirmed in v83 @0xA1260B = `74 26`; identical preamble length).
+
+### CWvsContext singleton / CWvsContext::OnEnterGame   (keys: C_WVS_CONTEXT_INSTANCE_ADDR / C_WVS_CONTEXT_ON_ENTER_GAME / _OFFSET)
+- Primary anchor: call-graph (SetStage trio) — SetStage (SET_STAGE @0x6F1AC0) at 0x6F1B63 does `mov ecx, g_pWvsContext; call OnEnterGame` in its GetCharacterData!=0 branch (the OnEnterGame/OnLeaveGame/OnGameStageChanged trio). OnEnterGame itself runs the CWvsContext member sub-object ctors at this+0x34xx.
+- Fallback anchor: IDB symbol `?OnEnterGame@CWvsContext@@QAEXXZ`; the singleton (g_pWvsContext @0xB07848) is the only global shared by the SetStage trio AND both CField party senders (as GetCharacterData `this`) AND CClientSocket::ProcessPacket (Task 4) — and it sits at g_pClientSocketInstance(0xB07844)+4, the canonical v83 socket-then-context layout.
+- Cross-version stability: SetStage-trio + GetCharacterData branch shape stable v83→v84→v79; the singleton VA and CWvsContext member offsets are per-version (v83 0x2EDx → v84 0x35xx → v79 0x34xx) — locate via SetStage's trio, not the raw address. The singleton has no TSingleton<CWvsContext> CreateInstance symbol in v79 (plain global, renamed g_pWvsContext in the IDB).
+- v79 addresses: C_WVS_CONTEXT_INSTANCE_ADDR 0x00B07848; C_WVS_CONTEXT_ON_ENTER_GAME 0x00950297 (size 0x1F1).
+- **OFFSET (C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET):** the first body instruction after the EH-prolog + register-save block (`push ecx/push esi/mov esi,ecx/push edi`) — in v79 that is `lea ecx,[esi+3424h]` @0x9502A6 (the first this+0x34xx member-ctor). Delta 0x9502A6−0x950297 = **0x0F** — DIFFERS from v83 0x10 (whose +0x10 is `push 1` = `6A 01`; v79 omits the `push 1` setup, matching v84's 0x0F). Not consumed by an active edit (carried for sibling-map parity).
