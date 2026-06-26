@@ -112,8 +112,8 @@ minimum; expand to per-field where a gate boundary moves.
 
 | Header | v79 size | Gate verdict | Deciding v79 evidence |
 |---|---|---|---|
-| CWvsApp.h | ☐ | ☐ (Cat A — add v79 branch @ :97) | |
-| CFuncKeyMappedMan.h | 904 (0x388) | ◐ (Cat A — size measured; v79 likely joins 83/84/87 branch @ :38) | Task 2 anchor: CreateInstance (0x946AFB) `Alloc(904)`; ctor (0x569DE5) field-init extent vtable@0 + 2×0x1BD arrays (@+4,@+449) + dwords @+896/+900 → 904. vtable off_A2EB38 (0xA2EB38), singleton dword_B0D2A8. Full key set = Task 7. |
+| CWvsApp.h | 0x60 (96) | **v79-branch-added** (Cat A, World A) @ :97 — `79` added to the `0x60` branch | task-008: ctor `??0CWvsApp@@QAE@PBD@Z` @0x942D3B writes the exact v83/84 base layout (vtable@0; @8,@0xC,@0x10,@0x14,@0x18,@0x1C; ZXString@0x20; ints @0x24..0x38) — NO below-floor surprise member; CWvsApp.h has no `<84`/`==83` member gate so v79 ≡ v83 by construction. Header computes 0x60 for v79; clang-cl static_assert(sizeof==0x60) **PASSED**. |
+| CFuncKeyMappedMan.h | 0x388 (904) | **v79-member-shift CONFIRMED — DEFER to struct audit (Task 12/16)** (Cat A→B). No v79 assert written (a 0x388 assert FAILS to compile). | task-008 re-measure (2 independent anchors): TSingleton `CreateInstance` @0x946AFB `push 388h`→`Alloc(0x388=904)`; ctor `??0CFuncKeyMappedMan@@QAE@XZ` @0x569DE5 field-init extent = vtable@0 + memcpy 0x1BD@+4 + memcpy 0x1BD@+0x1C1 (arrays end @0x37E) + dwords zeroed @+0x380/+0x384 → ends 0x388. Header computes 0x3C8 (968): clang-cl scratch probe `assert_size(...,0x388)` for v79 FAILED with `expression evaluates to '968 == 904'` — proving a 0x40 below-floor MEMBER shift (the two `m_aQuickslotKeyMapped[8]` int arrays, 0x40 bytes, absent in v79), which a size-assert cannot express. NOTE: v79 cmake map `C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE=0x009F9E98` is STALE (points to `sub_753F6A`, an unwind funclet) — flag for Task 7. |
 | CUIToolTip.h | ☐ | ☐ (Cat B/C) | |
 | CMob.h | ☐ | ☐ (Cat C/D + doom-field) | |
 | CMapLoadable.h | ☐ | ☐ (Cat C) | |
@@ -144,4 +144,36 @@ branch. Adding `79` to an enumerated list, or lowering a `>= 83` floor to `>= 79
 must not change any other version's truth value — verify each rewrite's truth table
 across the full matrix before committing. CI builds all versions on PR; a green
 matrix is the final confirmation.
+
+### Task-008 (Cat A) truth table — verified
+
+`CWvsApp.h` (only change: `79 ||` prepended to the `0x60` branch; disjoint `==79` cannot flip any other version):
+
+| Version | Branch selected | assert_size | Changed? |
+|---|---|---|---|
+| GMS 79 | `(==79\|\|==83\|\|==84)` | 0x60 | NEW (was: no branch) |
+| GMS 83 | `(==79\|\|==83\|\|==84)` | 0x60 | unchanged |
+| GMS 84 | `(==79\|\|==83\|\|==84)` | 0x60 | unchanged |
+| GMS 87 | `==87` | 0x6C | unchanged |
+| GMS 95 | `>=95` | 0x8C | unchanged |
+| GMS 111 | `>=95` | 0x8C | unchanged |
+| JMS 185 | `REGION_JMS` | 0x64 | unchanged |
+
+`CFuncKeyMappedMan.h` (World B — gate logic UNCHANGED; only a deferral comment added):
+
+| Version | Branch selected | assert_size | Changed? |
+|---|---|---|---|
+| GMS 79 | none (deferred to Task 12/16) | (no assert — same as before) | unchanged |
+| GMS 83/84/87 | `(==83\|\|==84\|\|==87)` | 0x3C8 | unchanged |
+| GMS 95 | `==95` | 0x3CC | unchanged |
+| GMS 111 | `==111` | 0x3D0 | unchanged |
+| JMS 185 | `REGION_JMS` | 0x400 | unchanged |
+
+**Empirical verification (clang-cl + xwin via `scripts/wsl-build.sh`, target `bypass`):**
+- `wsl-build.sh GMS 79 1 bypass` → `>> OK` (links `bypass-1.0.0.dll`). Compiles `app_hooks.cpp` (CWvsApp.h, new v79 0x60 assert PASSES) + `CFuncKeyMappedMan.cpp`/`key_mapped_hooks.cpp` (CFuncKeyMappedMan.h, no v79 assert).
+- `wsl-build.sh GMS 83 1 bypass` → `>> OK` (neighbor sanity; v83 still selects its original branches).
+- World-B scratch probe (`assert_size(sizeof(CFuncKeyMappedMan),0x388)` for v79) → compile FAILED `static assertion failed ... expression evaluates to '968 == 904'`; probe reverted.
+- `cmake -P cmake/CheckMemoryMapKeys.cmake` (GMS 79.1) → `OK: all 159 keys defined and non-empty`.
+
+**Build-blocked status:** v79 was NOT genuinely build-blocked before this change — both headers compiled (the unmatched v79 simply fired no `assert_size`, silently losing its guard). The CWvsApp amendment restores the guard; CFuncKeyMappedMan's guard remains deferred pending the member-gate fix.
 </content>
