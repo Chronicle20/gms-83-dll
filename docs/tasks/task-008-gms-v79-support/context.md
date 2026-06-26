@@ -65,7 +65,7 @@ concurrently. One serialized lane. [[feedback-verify-ida-target]]
 
 | File | Role |
 |---|---|
-| `memory_maps/GMS/v79_1.cmake` | **output** — 155 keys; seed from `v83_1.cmake`, relocate per cluster |
+| `memory_maps/GMS/v79_1.cmake` | **output** — 159 keys; seed from `v83_1.cmake`, relocate per cluster |
 | `memory_maps/GMS/v83_1.cmake` | seed source + primary anchor values |
 | `include/memory_map.h.in` | the 159-key contract (CI fails on any missing key) |
 | `cmake/CheckMemoryMapKeys.cmake` | **already exists** (task-006) — standalone, MSVC-free completeness check: `cmake -DREGION=GMS -DMAJOR=79 -DMINOR=1 -P cmake/CheckMemoryMapKeys.cmake` |
