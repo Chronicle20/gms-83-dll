@@ -81,7 +81,7 @@ Baseline IDB saved clean before any renaming or annotation.
 ### SendHSLog   (memory-map key: SEND_HS_LOG)
 - Primary anchor: string xref
 - Detail: References `%s\HShield` (@0xB02260) and `MapleStory_Global:%s` (@0xB02248); final call is the AhnLab HS-log thunk.
-- Fallback anchor: call-graph/adjacency — sits immediately before WinMain (0x93F8E0 + 0xD7 = 0x93F9B7) and is called 3× from WinMain.
+- Fallback anchor: call-graph — called 3× from WinMain
 - Cross-version stability: both format strings present in v79, v83, v84. IDB pre-named `SendHSLog`.
 - v79 address: 0x0093F8E0 (size 0xD7)
 - Notes: clean transfer from the v84 anchor.
@@ -92,12 +92,12 @@ Baseline IDB saved clean before any renaming or annotation.
 - Fallback anchor: call-graph — invoked from WinMain right before SetUp.
 - Cross-version stability: command-line keyword strings + IsWow64Process probe stable v79→v84. Singleton + g_dwTargetOS writer idioms identical.
 - v79 address: 0x00942D3B (size 0x353)
-- Notes: HIGH-VALUE (needs-main-review). Two kinds (symbol + WebStart/IsWow64Process string cluster). Spot-check: WebStart xref → same fn, independent of symbol.
+- Notes: HIGH-VALUE (needs-main-review). Two kinds (IDB symbol [kind 1] + call-graph from WinMain [kind 3]); WebStart xref used as independent spot-check.
 
 ### CWvsApp::SetUp   (memory-map key: C_WVS_APP_SET_UP)
 - Primary anchor: IDB symbol (`?SetUp@CWvsApp@@QAEXXZ`)
 - Detail: Init driver, called from WinMain right after the ctor. v79 NOT virtualized (clean body). References `Global\meteora` (strcpy literal) + `ehsvc.dll` (@0xB023E8) + `ws2_32.dll`/`getpeername`/`WSAStartup`; builds the CRC32 table (poly 0xDD04D9C1). Walking its callees is the call-graph anchor for the whole Initialize*/Create* cluster.
-- Fallback anchor: distinctive strings — meteora/ehsvc/getpeername; the WS2_32 IAT-clone integrity scan.
+- Fallback anchor: call-graph — called from WinMain right after the CWvsApp ctor (WinMain → ctor → SetUp call-edge); this call-graph is also the primary anchor for the entire Initialize*/Create* cluster walkdown
 - Cross-version stability: v83 SetUp is control-flow-virtualized; v79 (like v84) is de-virtualized/clean — anchor on call-graph + meteora/ehsvc, not byte layout.
 - v79 address: 0x009430F1 (size 0x520)
 - Notes: HIGH-VALUE (needs-main-review). **R11 / init-call order (v79): srand → GetSEPrivilege → WS2_32 IAT-clone memcpy → InitSafeDll loop → WSAStartup/getpeername integrity → HideDll loop → CSecurityClient CreateInstance/InitModule/StartModule → InitializePCOM → CreateMainWindow → CClientSocket::CreateInstance → ConnectLogin → CFuncKeyMappedMan/CQuickslotKeyMappedMan CreateInstance → InitializeResMan → InitializeGr2D → InitializeInput → InitializeSound → InitializeGameData → CreateWndManager → ApplySysOpt → CActionMan/CAnimationDisplayer/CMapleTVMan/CQuestMan/CMonsterBookMan inits → Global\meteora + ehsvc + IAT-clone anti-tamper → CheckExecPathReg → CLogo ctor → CRC32 table build.** NO InitializeAuth call (NMCO absent, see below). **NO DR/anti-debug DR_init step present** — anti-tamper is only CSecurityClient + meteora + ehsvc + IAT-clone (confirms v79 lacks the DR subsystem that caused the v84 freeze; feeds Task 10). Drift vs v84: v84 calls InitializeAuth first + srand; v79 omits InitializeAuth and orders srand first. Spot-check: ehsvc.dll xref → same fn, independent of WinMain call edge.
