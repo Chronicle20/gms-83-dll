@@ -16,10 +16,13 @@ as success ([[verification-before-completion]]).
   — that is an environment issue (R12), not a build-correctness failure.
 
 ## Step 1 — Get the GMS 79.1 artifacts
-Either:
-- **From CI:** download the `artifacts-GMS-79.1-Release` (and/or `-Debug`)
-  artifact from the green PR run, **or**
-- **Local build:** build the repo with a VS2022 x86 toolchain configured for v79:
+> **Note:** the PR matrix build (`pull-request.yml`) runs with `upload: false`, so it
+> verifies compilation but does **not** publish downloadable DLLs. Use one of:
+- **From CI (post-merge):** the `Build Snapshot` workflow runs on push to `main`
+  (`upload: true`); after this PR merges, download the `snapshot-GMS-79.1-Release`
+  artifact from that run. (Or trigger `release.yml` via `workflow_dispatch`.)
+- **Local build (pre-merge — recommended for this smoke test):** build the repo with a
+  VS2022 x86 toolchain configured for v79:
   `cmake -B build -G "Visual Studio 17" -A Win32 -DBUILD_REGION=GMS -DBUILD_MAJOR_VERSION=79 -DBUILD_MINOR_VERSION=1`
   then build, then `--target package_dlls`. Artifacts land in `build/artifacts/`.
 
