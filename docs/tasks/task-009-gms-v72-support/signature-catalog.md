@@ -28,6 +28,24 @@ directly or drifted in the older build.
 - Notes: <anything that will help the next, older port>
 ```
 
+## v72 IDB identity (confirmed at task-1 baseline)
+
+| Field | Value |
+|-------|-------|
+| Module | `GMS_v72.1_U_DEVM.exe` |
+| IDB path | `E:\Programs\Nexon\IDBs_v9\GMS\v72\GMS_v72.1_U_DEVM.exe.i64` |
+| IDA port | 13343 |
+| Image base | `0x400000` |
+| Image size | `0x86f000` |
+| MD5 | `05a62ca755b1d3719223426b4eee41a9` |
+| SHA256 | `a989875b85668cf1d62ad4eede948da0357b36075740a1db1f6255c943281a96` |
+| Total functions | 44,435 (named: 2,289; library: 503; unnamed: 41,643) — sparse/unverified IDB |
+| `.text` segment | `0x401000`–`0x9cf000` (`0x5ce000` bytes, rx) |
+| `.data` segment | `0xa59000`–`0xaae000` (`0x55000` bytes, rw) |
+| Entry `start` | `0x955da3` |
+
+WinMain offset math anchor: image base `0x400000`. All v72 addresses are in the `0x40xxxx`–`0x9cxxxx` range. Baseline IDB saved at task-1 start (no labels applied yet).
+
 ## Catalog (fill during the port, grouped by subsystem)
 
 ### CWvsApp lifecycle
