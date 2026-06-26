@@ -18,8 +18,14 @@ class CWnd : public IGObj, public IUIMsgHandler, public ZRefCounted {
 
     unsigned int m_dwWndKey;
     _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayer;
+    // v79: the two secondary-layer com_ptrs are ABSENT (CWnd 0x64 vs v83 0x6C, -8; base ctor
+    // sub_92D5ED never touches 0x1C/0x20, jumps m_pLayer@0x18 -> m_nBackgrndX@0x38). Present in
+    // v83+/JMS. Gate excludes ONLY v79; the -8 propagates to CDialog/CUIWnd/CFadeWnd/CUITitle/
+    // CUILoginStart. verified task-008
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 83 || defined(REGION_JMS)
     _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pAnimationLayer;
     _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pOverlabLayer;
+#endif
     int m_width;
     int m_height;
     tagRECT m_rcInvalidated;

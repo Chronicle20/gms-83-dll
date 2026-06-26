@@ -241,4 +241,80 @@ matrix is the final confirmation.
 - `cmake -P cmake/CheckMemoryMapKeys.cmake` (GMS 79.1) → `OK: all 159 keys defined and non-empty`.
 
 **Build-blocked status:** v79 was NOT genuinely build-blocked before this change — both headers compiled (the unmatched v79 simply fired no `assert_size`, silently losing its guard). The CWvsApp amendment restores the guard; CFuncKeyMappedMan's guard remains deferred pending the member-gate fix.
-</content>
+
+### Task-17 (below-floor gate rewrites) truth tables — verified
+
+All six gate rewrites add a **disjoint `== 79` exclusion** (via `>= 83 || JMS`, or an
+`== 79` assert branch, or `< 84 → == 83`). A disjoint exclusion of v79 cannot flip any
+other version's branch. **v111** (not loaded): every gate is a monotonic threshold/equality
+on the literal `111` — `111 >= 83` is trivially TRUE, `111 == 83` / `111 < 84` are trivially
+FALSE — so **every v111 case is fully settleable from build constants + `v111_1.cmake`; none
+is left uncertain.** The clang-cl build of GMS 79.1 (`>> OK`) + GMS 83.1 neighbor (`>> OK`,
+all 69 targets incl. doom-fix/bypass) is the empirical confirmation.
+
+**1. `CFuncKeyMappedMan.h` — quickslot pair member gate `>= 83 || JMS`; new `== 79` → 0x388 assert**
+
+| Version | quickslot pair | assert_size | Changed? |
+|---|---|---|---|
+| GMS 79 | EXCLUDED | 0x388 (`== 79`) | NEW (was: present + no assert) |
+| GMS 83 | included | 0x3C8 | unchanged |
+| GMS 84 | included | 0x3C8 | unchanged |
+| GMS 87 | included | 0x3C8 | unchanged |
+| GMS 95 | included | 0x3CC | unchanged |
+| GMS 111 | included | 0x3D0 | unchanged |
+| JMS 185 | included | 0x400 | unchanged |
+
+**2. `CMob.h` — doom/reserved tail region gate `>= 83 || JMS`** (no assert in header)
+
+| Version | doom region (m_bDoomReserved/SN/m_lpStatChangeReserved) | Changed? |
+|---|---|---|
+| GMS 79 | EXCLUDED (sizeof 0x518) | NEW (was: present) |
+| GMS 83/84/87/95/111 | included | unchanged |
+| JMS 185 | included | unchanged |
+
+**3. `doom-fix/dllmain.cpp` — `m_bDoomReserved = 0` write gate `< 84 → == 83`**
+
+| Version | write applied? (before → after) | Changed? |
+|---|---|---|
+| GMS 79 | TRUE → **FALSE** | CHANGED (the fix — field absent, write was OOB) |
+| GMS 83 | TRUE → TRUE | unchanged (field present-but-uninit; still patched) |
+| GMS 84 | FALSE → FALSE | unchanged |
+| GMS 87/95/111 | FALSE → FALSE | unchanged |
+| JMS 185 | FALSE → FALSE | unchanged (not REGION_GMS) |
+
+**4. `MobStat.h` — Weakness group gate `>= 83 || JMS`** (no assert; 0xC fields + 4B `long double` align pad = 0x10 shrink → v79 0x1F8)
+
+| Version | nWeakness_/rWeakness_/tWeakness_ | MobStat size | Changed? |
+|---|---|---|---|
+| GMS 79 | EXCLUDED | 0x1F8 | NEW (was: present, 0x208) |
+| GMS 83/84/87/95/111 | included | 0x208 (+>=95 tail) | unchanged |
+| JMS 185 | included | unchanged | unchanged |
+
+**5. `CWnd.h` — secondary-layer com_ptrs gate `>= 83 || JMS`** (no assert; −8 propagates to CDialog/CUIWnd/CFadeWnd/CUITitle/CUILoginStart by inheritance — none has an assert to update)
+
+| Version | m_pAnimationLayer + m_pOverlabLayer | CWnd size | Changed? |
+|---|---|---|---|
+| GMS 79 | EXCLUDED | 0x64 | NEW (was: present, 0x6C) |
+| GMS 83/84/87/95/111 | included | 0x6C | unchanged |
+| JMS 185 | included | unchanged | unchanged |
+
+**m_ptCursorRel spot-check (v79, IDA port 13339 GMS_v79_1_DEVM, active):** CONFIRMS the verdict —
+PRESENT @0x40/0x44. Base ctor `sub_92D5ED` writes the m_lpChildren ZList vtable at `[esi+48h]`
+(`mov dword ptr [esi+48h], offset off_A38464`), m_pFocusChild `[esi+5Ch]`, m_pBackgrnd `[esi+60h]`,
+and zeroes m_nBackgrndX/Y at `[esi+38h]/[esi+3Ch]` — leaving an exact 8-byte gap at 0x40/0x44
+before the ZList@0x48 = m_ptCursorRel (2 ints). The ctor never touches 0x1C/0x20 →
+m_pAnimationLayer/m_pOverlabLayer absent (the −8). The `< 87` 2-int else-branch is CORRECT.
+
+**6. `CConfig.h` — doc-only comment fix** (no gate, no truth table): table now records v79=1048 (0x418);
+the `>= 1072` assert remains safe (our struct is v95-shaped, sizeof ≥ 1592 ≫ 1048).
+
+**Consumer follow-through (`bypass/key_mapped_hooks.cpp`):** gating the quickslot members out
+left the ctor-reimpl hook referencing them (build error `no member named 'm_aQuickslotKeyMapped'`).
+The two `memcpy` calls were gated `>= 83 || JMS` to match the header (v79: no quickslot region;
+`DEFAULT_QKM_INSTANCE_ADDR=0x0`). Same truth table as edit 1's member gate.
+
+**Empirical verification (Task-17):**
+- `scripts/wsl-build.sh GMS 79 1` → `>> OK` (links `bypass-1.0.0.dll`; v79 0x388 assert PASSES).
+- `scripts/wsl-build.sh GMS 83 1` → `>> OK` (all 69 targets incl. doom-fix + bypass; no regression).
+- `cmake -DREGION=GMS -DMAJOR=79 -DMINOR=1 -P cmake/CheckMemoryMapKeys.cmake` → `OK: all 159 keys defined and non-empty`.
+- Preprocess (`gcc -E`, `{79,83,84}`): m_aQuickslotKeyMapped / m_bDoomReserved / nWeakness_ / m_pAnimationLayer all **absent@79, present@83/84**.

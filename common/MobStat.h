@@ -122,9 +122,14 @@ class MobStat {
     int nBodyPressure_;
     int rBodyPressure_;
     int tBodyPressure_;
+    // v79: lacks the Weakness group; removing it also reclaims the 4B alignment pad before the
+    // 8-aligned `long double nFs` (0xC + 4B = 0x10 shrink → MobStat 0x1F8 vs v83 0x208;
+    // lBurnedInfo v79@0x1E0 vs v83@0x1F0). Present in v83+/JMS. Gate excludes ONLY v79. verified task-008
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 83 || defined(REGION_JMS)
     int nWeakness_;
     int rWeakness_;
     int tWeakness_;
+#endif
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95) || defined(REGION_JMS)
     int nTimeBomb_;
     int rTimeBomb_;

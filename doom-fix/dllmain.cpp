@@ -21,8 +21,10 @@ _CMob_CMob_t _CMob_CMob;
 
 VOID __fastcall CMob_CMob_Hook(CMob* pThis, PVOID edx, CMobTemplate* pMobTemplate) {
     _CMob_CMob(pThis, pMobTemplate);
-    // primarily noticed in v83, may be broken earlier. fixed in v84
-#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION < 84)
+    // v83 ctor leaves m_bDoomReserved uninitialized (the bug this patches); fixed in v84.
+    // v79: m_bDoomReserved does NOT exist (CMob 0x518) — the write would be out-of-bounds, so
+    // exclude v79. Apply ONLY on v83 where the field exists+uninit. verified task-008
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 83)
     pThis->m_bDoomReserved = 0;
 #endif
 }
