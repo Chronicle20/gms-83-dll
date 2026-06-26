@@ -19,22 +19,22 @@ set(C_ACTION_MAN_SWEEP_CACHE 0x00411BBB)
 
 set(C_ANIMATION_DISPLAYER_CREATE_INSTANCE 0x009F9DFC)
 
-set(C_CLIENT_SOCKET_INSTANCE_ADDR 0x00BE7914)
-set(C_CLIENT_SOCKET_CREATE_INSTANCE 0x009F9E53)
-set(C_CLIENT_SOCKET_SEND_PACKET 0x0049637B)
-set(C_CLIENT_SOCKET_FLUSH 0x00496403)
-set(C_CLIENT_SOCKET_MANIPULATE_PACKET 0x0049651D)
-set(C_CLIENT_SOCKET_PROCESS_PACKET 0x004965F1)
-set(C_CLIENT_SOCKET_CLOSE 0x00496369)
-set(C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX 0x004969EE)
-set(C_CLIENT_SOCKET_ON_CONNECT 0x00494ED1)
-set(C_CLIENT_SOCKET_CONNECT_LOGIN 0x00494931)
-set(C_CLIENT_SOCKET_CONNECT_CTX 0x00494CA3)
-set(C_CLIENT_SOCKET_CONNECT_ADR 0x00494D2F)
+set(C_CLIENT_SOCKET_INSTANCE_ADDR 0x00B07844) # g_pClientSocketInstance; SBB-singleton store at top of CClientSocket ctor, read by free SendPacket helper
+set(C_CLIENT_SOCKET_CREATE_INSTANCE 0x00946AB6) # TSingleton<CClientSocket>::CreateInstance; Alloc(148=0x94)+ctor (out of v83 0x9F9Exx cluster)
+set(C_CLIENT_SOCKET_SEND_PACKET 0x0048DF93) # symbol + MakeBufferList(79)->innoHash->Flush call-graph
+set(C_CLIENT_SOCKET_FLUSH 0x0048E01B) # symbol + send-buffer ZList walk via cloned send slot dword_B1015C; last call in SendPacket
+set(C_CLIENT_SOCKET_MANIPULATE_PACKET 0x0048E135) # symbol + sole caller of ProcessPacket; recv-stream reassembly + innoHash
+set(C_CLIENT_SOCKET_PROCESS_PACKET 0x0048E209) # symbol + Decode2 + sub-0x10 dispatch (OnMigrateCommand/OnAliveReq/CWvsContext::OnPacket)
+set(C_CLIENT_SOCKET_CLOSE 0x0048DF81) # symbol + ClearSendReceiveCtx + ZSocketBase::CloseSocket([this+8])
+set(C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX 0x0048E5D7) # symbol + double ZList RemoveAll (recv [this+60]/send [this+80])
+set(C_CLIENT_SOCKET_ON_CONNECT 0x0048CB81) # symbol; recv-handshake handler, version byte==8/major==0x4F(79); NO 8-byte client key (see catalog)
+set(C_CLIENT_SOCKET_CONNECT_LOGIN 0x0048C773) # symbol; GetCmdLine(0/1)+random server pick -> Connect(CONNECTCONTEXT); sole caller CWvsApp::ConnectLogin
+set(C_CLIENT_SOCKET_CONNECT_CTX 0x0048C9CA) # symbol; CONNECTCONTEXT wrapper tail-calling Connect(sockaddr_in)
+set(C_CLIENT_SOCKET_CONNECT_ADR 0x0048CA56) # symbol; sole socket(2,1,0) caller; cloned connect slot dword_B1013C(s,addr,16)
 
-set(Z_SOCKET_BASE_CLOSE_SOCKET 0x00494857)
+set(Z_SOCKET_BASE_CLOSE_SOCKET 0x0048C699) # symbol; -1 sentinel + shutdown(s,2)/closesocket pair
 
-set(Z_SOCKET_BUFFER_ALLOC 0x00495FD2)
+set(Z_SOCKET_BUFFER_ALLOC 0x0048DBEA) # symbol; dual ZAllocEx::Alloc(a1, then 28=0x1C header); called by OnConnect with 0x5B4
 
 set(C_CONFIG 0x0049C213)
 set(C_CONFIG_INSTANCE_ADDR 0x00BEBF9C)

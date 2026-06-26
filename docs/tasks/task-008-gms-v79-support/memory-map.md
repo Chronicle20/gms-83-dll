@@ -82,20 +82,20 @@ never copied blind.
 | C_ACTION_MAN_INIT | addr | 0x00406ABD | ☐ |
 | C_ACTION_MAN_SWEEP_CACHE | addr | 0x00411BBB | ☐ |
 | C_ANIMATION_DISPLAYER_CREATE_INSTANCE | addr | 0x009F9DFC | ☐ |
-| C_CLIENT_SOCKET_INSTANCE_ADDR | addr | 0x00BE7914 | ☐ |
-| C_CLIENT_SOCKET_CREATE_INSTANCE | addr | 0x009F9E53 | ☐ |
-| C_CLIENT_SOCKET_SEND_PACKET | addr | 0x0049637B | ☐ |
-| C_CLIENT_SOCKET_FLUSH | addr | 0x00496403 | ☐ |
-| C_CLIENT_SOCKET_MANIPULATE_PACKET | addr | 0x0049651D | ☐ |
-| C_CLIENT_SOCKET_PROCESS_PACKET | addr | 0x004965F1 | ☐ |
-| C_CLIENT_SOCKET_CLOSE | addr | 0x00496369 | ☐ |
-| C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX | addr | 0x004969EE | ☐ |
-| C_CLIENT_SOCKET_ON_CONNECT | addr | 0x00494ED1 | ☐ |
-| C_CLIENT_SOCKET_CONNECT_LOGIN | addr | 0x00494931 | ☐ |
-| C_CLIENT_SOCKET_CONNECT_CTX | addr | 0x00494CA3 | ☐ |
-| C_CLIENT_SOCKET_CONNECT_ADR | addr | 0x00494D2F | ☐ |
-| Z_SOCKET_BASE_CLOSE_SOCKET | addr | 0x00494857 | ☐ |
-| Z_SOCKET_BUFFER_ALLOC | addr | 0x00495FD2 | ☐ |
+| C_CLIENT_SOCKET_INSTANCE_ADDR | addr | 0x00BE7914 | ✔ (v79 0x00B07844; SBB-singleton store in ctor, g_pClientSocketInstance) |
+| C_CLIENT_SOCKET_CREATE_INSTANCE | addr | 0x009F9E53 | ✔ (v79 0x00946AB6; TSingleton::CreateInstance Alloc(0x94)+ctor) |
+| C_CLIENT_SOCKET_SEND_PACKET | addr | 0x0049637B | ✔ (v79 0x0048DF93; symbol+MakeBufferList(79)->innoHash->Flush) |
+| C_CLIENT_SOCKET_FLUSH | addr | 0x00496403 | ✔ (v79 0x0048E01B; symbol+send-ZList via cloned send slot) |
+| C_CLIENT_SOCKET_MANIPULATE_PACKET | addr | 0x0049651D | ✔ (v79 0x0048E135; symbol+sole ProcessPacket caller) |
+| C_CLIENT_SOCKET_PROCESS_PACKET | addr | 0x004965F1 | ✔ (v79 0x0048E209; symbol+Decode2 jump-table) |
+| C_CLIENT_SOCKET_CLOSE | addr | 0x00496369 | ✔ (v79 0x0048DF81; symbol+ClearCtx+CloseSocket) |
+| C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX | addr | 0x004969EE | ✔ (v79 0x0048E5D7; symbol+double ZList RemoveAll) |
+| C_CLIENT_SOCKET_ON_CONNECT | addr | 0x00494ED1 | ✔ (v79 0x0048CB81; symbol; ver byte==8/major==0x4F; NO 8-byte client key) |
+| C_CLIENT_SOCKET_CONNECT_LOGIN | addr | 0x00494931 | ✔ (v79 0x0048C773; symbol; GetCmdLine+server-pick->Connect(CTX)) |
+| C_CLIENT_SOCKET_CONNECT_CTX | addr | 0x00494CA3 | ✔ (v79 0x0048C9CA; symbol; CONNECTCONTEXT wrapper) |
+| C_CLIENT_SOCKET_CONNECT_ADR | addr | 0x00494D2F | ✔ (v79 0x0048CA56; symbol; sole socket(2,1,0) caller) |
+| Z_SOCKET_BASE_CLOSE_SOCKET | addr | 0x00494857 | ✔ (v79 0x0048C699; symbol; shutdown+closesocket pair) |
+| Z_SOCKET_BUFFER_ALLOC | addr | 0x00495FD2 | ✔ (v79 0x0048DBEA; symbol; dual Alloc(a1,28)) |
 | C_CONFIG | addr | 0x0049C213 | ☐ |
 | C_CONFIG_INSTANCE_ADDR | addr | 0x00BEBF9C | ☐ |
 | C_CONFIG_GET_PARTNER_CODE | addr | 0x005F6CFB | ☐ |
