@@ -196,13 +196,6 @@ minimum; expand to per-field where a gate boundary moves.
 | CConfig.h | **0x418 (1048)** | **unchanged** (base GMS branch; `>=111` & `==95` false; no underflow) (task-13) | `_WinMain` @0x93fbd8 `push 418h`→`Alloc(0x418)`, then ctor `??0CConfig@@QAE@XZ` @0x49392c. Our struct is v95-shaped (≥1592) ≥ v79 real 1048 → NO heap overflow; `static_assert(sizeof≥1072)` passes. ⚠ NOTE: v79 real 0x418=1048 is BELOW the header comment's "smallest GMS real size (1072)"; harmless (our struct is oversized, assert is `>=`) but the comment's floor is inaccurate for v79 — flag for a Task-17 doc fix. |
 | ConfigSysOpt.h | **0x30 (48)** | **unchanged** (`>=95` LargeScreen+WindowedMode ABSENT) (task-13) | **v79 binary anchor (slab copy):** `CConfig::ApplySysOpt` @0x4960f9 copies the passed `CONFIG_SYSOPT*` into `this->m_sysOpt` via `496108 push 0Ch` / `49610a lea edi,[ebx+64h]` / `49610d pop ecx` / `49610e rep movsd` → 0xC dwords = **0x30 bytes**, so `sizeof(CONFIG_SYSOPT)=0x30` and `m_sysOpt`@CConfig+0x64. (Earlier 12-int field-count agreed but was circular; this `rep movsd` immediate is the concrete anchor.) A present `>=95` `bSysOpt_LargeScreen`/`bSysOpt_WindowedMode` pair would make ApplySysOpt copy 0xE dwords (0x38) — it copies 0xC → pair absent. Windowed-mode CROSS-CHECK (`C_CONFIG_SYS_OPT_WINDOWED_MODE`=0xB11548, Task 8): 0xB11548 is a **standalone global** (xrefs: `CWvsApp::SetUp` @0x9432bd, `CreateMainWindow` @0x9441b6, `InitializeGr2D` @0x944cf1) — NOT a CONFIG_SYSOPT member (CConfig is heap-alloc'd at 0x418, cannot contain a fixed 0xB11548 address). Consistent with the `>=95` gate correctly excluding `bSysOpt_WindowedMode` from v79's CONFIG_SYSOPT. |
 | COutPacket.h | **0x10 (16)** | **unchanged** (`>=111` dummy1 ABSENT) (task-13) | ctor `??0COutPacket@@QAE@J@Z` @0x67ad6b + `Init` @0x67ae68: m_bLoopback@0, m_aSendBuff(ZArray)@4 (dtor `add ecx,4; ZArray::RemoveAll` @0x9eacac), m_uOffset@8 (`and [esi+8],0`), m_bIsEncryptedByShanda@0xC (`and [esi+0Ch],0`) → highest member @0xC, sizeof 0x10. No +0x10 v111 dummy. `static_assert(sizeof≥0x10)` holds. |
-| CFadeWnd.h | ☐ | ☐ | |
-| CCtrlButton.h | ☐ | ☐ | |
-| CCtrlCheckBox.h | ☐ | ☐ | |
-| CWnd.h | ☐ | ☐ | |
-| CUIWnd.h | ☐ | ☐ | |
-| CUITitle.h | ☐ | ☐ | |
-| CUILoginStart.h | ☐ | ☐ | |
 | SecondaryStat.h | ☐ | ☐ | |
 | PartyData.h | ☐ | ☐ | |
 | PartyMember.h | ☐ | ☐ | |
