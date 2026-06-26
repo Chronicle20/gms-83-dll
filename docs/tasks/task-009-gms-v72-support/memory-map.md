@@ -197,36 +197,36 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 94 | `C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT` | `0x0099D1D0` | `0x0099D1D0` | ☐ | |
 | 95 | `C_SYSTEM_INFO_GET_MACHINE_ID` | `0x0099D0D0` | `0x0099D0D0` | ☐ | |
 | 96 | `C_UI_TITLE_INSTANCE_ADDR` | `0x00B0D738` | `0x00B0D738` | ☐ | |
-| 97 | `G_DW_TARGET_OS` | `0x00B0239C` | `0x00B0239C` | ☐ | |
-| 98 | `C_WVS_APP` | `0x00942D3B` | `0x00942D3B` | ☐ | |
-| 99 | `C_WVS_APP_INSTANCE_ADDR` | `0x00B07A68` | `0x00B07A68` | ☐ | |
-| 100 | `C_WVS_APP_IS_MSG_PROC` | `0x00946430` | `0x00946430` | ☐ | |
-| 101 | `C_WVS_APP_INITIALIZE_AUTH` | `0x00000000` | `0x00000000` | ☐ | |
-| 102 | `C_WVS_APP_INITIALIZE_PCOM` | `0x0094409B` | `0x0094409B` | ☐ | |
-| 103 | `C_WVS_APP_CREATE_MAIN_WINDOW` | `0x009440BB` | `0x009440BB` | ☐ | |
-| 104 | `C_WVS_APP_CONNECT_LOGIN` | `0x0094424B` | `0x0094424B` | ☐ | |
-| 105 | `C_WVS_APP_INITIALIZE_RES_MAN` | `0x009443BB` | `0x009443BB` | ☐ | |
-| 106 | `C_WVS_APP_INITIALIZE_GR2D` | `0x00944C91` | `0x00944C91` | ☐ | |
-| 107 | `C_WVS_APP_INITIALIZE_INPUT` | `0x00944F37` | `0x00944F37` | ☐ | |
-| 108 | `C_WVS_APP_INITIALIZE_SOUND` | `0x009452A1` | `0x009452A1` | ☐ | |
-| 109 | `C_WVS_APP_INITIALIZE_GAME_DATA` | `0x00945834` | `0x00945834` | ☐ | |
-| 110 | `C_WVS_APP_CREATE_WND_MANAGER` | `0x00944358` | `0x00944358` | ☐ | |
-| 111 | `C_WVS_APP_GET_CMD_LINE` | `0x0094611A` | `0x0094611A` | ☐ | |
-| 112 | `C_WVS_APP_DIR_BACK_SLASH_TO_SLASH` | `0x00946277` | `0x00946277` | ☐ | |
-| 113 | `C_WVS_APP_DIR_UP_DIR` | `0x009462BD` | `0x009462BD` | ☐ | |
-| 114 | `C_WVS_APP_DIR_SLASH_TO_BACK_SLASH` | `0x0094629A` | `0x0094629A` | ☐ | |
-| 115 | `C_WVS_APP_GET_EXCEPTION_FILE_NAME` | `0x00946481` | `0x00946481` | ☐ | |
-| 116 | `C_WVS_APP_CALL_UPDATE` | `0x009454B5` | `0x009454B5` | ☐ | |
-| 117 | `C_WVS_APP_RUN` | `0x00943611` | `0x00943611` | ☐ | |
-| 118 | `C_WVS_APP_SET_UP` | `0x009430F1` | `0x009430F1` | ☐ | |
+| 97 | `G_DW_TARGET_OS` | `0x00B0239C` | `0x00A9A164` | ✔ | sig-cat: g_dwTargetOS |
+| 98 | `C_WVS_APP` | `0x00942D3B` | `0x008F26C7` | ✔ | sig-cat: CWvsApp::CWvsApp (needs-main-review) |
+| 99 | `C_WVS_APP_INSTANCE_ADDR` | `0x00B07A68` | `0x00A9F658` | ✔ | sig-cat: g_CWvsApp |
+| 100 | `C_WVS_APP_IS_MSG_PROC` | `0x00946430` | `0x008F57AB` | ✔ | sig-cat: CWvsApp::ISMsgProc |
+| 101 | `C_WVS_APP_INITIALIZE_AUTH` | `0x00000000` | `0x00000000` | ✔ | sig-cat: InitializeAuth (sentinel, absent) |
+| 102 | `C_WVS_APP_INITIALIZE_PCOM` | `0x0094409B` | `0x008F3735` | ✔ | sig-cat: CWvsApp::InitializePCOM |
+| 103 | `C_WVS_APP_CREATE_MAIN_WINDOW` | `0x009440BB` | `0x008F3755` | ✔ | sig-cat: CWvsApp::CreateMainWindow |
+| 104 | `C_WVS_APP_CONNECT_LOGIN` | `0x0094424B` | `0x008F38E5` | ✔ | sig-cat: CWvsApp::ConnectLogin |
+| 105 | `C_WVS_APP_INITIALIZE_RES_MAN` | `0x009443BB` | `0x008F3A55` | ✔ | sig-cat: CWvsApp::InitializeResMan |
+| 106 | `C_WVS_APP_INITIALIZE_GR2D` | `0x00944C91` | `0x008F432B` | ✔ | sig-cat: CWvsApp::InitializeGr2D |
+| 107 | `C_WVS_APP_INITIALIZE_INPUT` | `0x00944F37` | `0x008F45D1` | ✔ | sig-cat: CWvsApp::InitializeInput |
+| 108 | `C_WVS_APP_INITIALIZE_SOUND` | `0x009452A1` | `0x008F493B` | ✔ | sig-cat: CWvsApp::InitializeSound |
+| 109 | `C_WVS_APP_INITIALIZE_GAME_DATA` | `0x00945834` | `0x008F4E13` | ✔ | sig-cat: CWvsApp::InitializeGameData |
+| 110 | `C_WVS_APP_CREATE_WND_MANAGER` | `0x00944358` | `0x008F39F2` | ✔ | sig-cat: CWvsApp::CreateWndManager |
+| 111 | `C_WVS_APP_GET_CMD_LINE` | `0x0094611A` | `0x008F5495` | ✔ | sig-cat: CWvsApp::GetCmdLine |
+| 112 | `C_WVS_APP_DIR_BACK_SLASH_TO_SLASH` | `0x00946277` | `0x008F55F2` | ✔ | sig-cat: CWvsApp::Dir_* |
+| 113 | `C_WVS_APP_DIR_UP_DIR` | `0x009462BD` | `0x008F5638` | ✔ | sig-cat: CWvsApp::Dir_* |
+| 114 | `C_WVS_APP_DIR_SLASH_TO_BACK_SLASH` | `0x0094629A` | `0x008F5615` | ✔ | sig-cat: CWvsApp::Dir_* |
+| 115 | `C_WVS_APP_GET_EXCEPTION_FILE_NAME` | `0x00946481` | `0x008F57FC` | ✔ | sig-cat: CWvsApp::GetExceptionFileName |
+| 116 | `C_WVS_APP_CALL_UPDATE` | `0x009454B5` | `0x008F4991` | ✔ | sig-cat: CWvsApp::CallUpdate |
+| 117 | `C_WVS_APP_RUN` | `0x00943611` | `0x008F2F82` | ✔ | sig-cat: CWvsApp::Run (needs-main-review) |
+| 118 | `C_WVS_APP_SET_UP` | `0x009430F1` | `0x008F2A7D` | ✔ | sig-cat: CWvsApp::SetUp (needs-main-review) |
 | 119 | `C_WVS_CONTEXT_INSTANCE_ADDR` | `0x00B07848` | `0x00B07848` | ☐ | |
 | 120 | `C_WVS_CONTEXT_ON_ENTER_GAME` | `0x00950297` | `0x00950297` | ☐ | |
 | 121 | `C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET` | `0x0F` | `0x0F` | ☐ | |
-| 122 | `WIN_MAIN` | `0x0093F9B7` | `0x0093F9B7` | ☐ | |
-| 123 | `WIN_MAIN_AD_BALLOON_CONDITIONAL` | `0xA3D` | `0xA3D` | ☐ | |
-| 124 | `WIN_MAIN_PATCHER_OFFSET` | `0x212` | `0x212` | ☐ | |
-| 125 | `C_WND_MAN_S_UPDATE` | `0x00932EE2` | `0x00932EE2` | ☐ | |
-| 126 | `C_WND_MAN_REDRAW_INVALIDATED_WINDOWS` | `0x00932C66` | `0x00932C66` | ☐ | |
+| 122 | `WIN_MAIN` | `0x0093F9B7` | `0x008EF5AD` | ✔ | sig-cat: WinMain (needs-main-review) |
+| 123 | `WIN_MAIN_AD_BALLOON_CONDITIONAL` | `0xA3D` | `0x959` | ✔ | sig-cat: WinMain offsets (DRIFT) |
+| 124 | `WIN_MAIN_PATCHER_OFFSET` | `0x212` | `0x212` | ✔ | sig-cat: WinMain offsets (re-measured) |
+| 125 | `C_WND_MAN_S_UPDATE` | `0x00932EE2` | `0x008E2D73` | ✔ | sig-cat: CWndMan::s_Update |
+| 126 | `C_WND_MAN_REDRAW_INVALIDATED_WINDOWS` | `0x00932C66` | `0x008E2AF7` | ✔ | sig-cat: CWndMan::RedrawInvalidatedWindows |
 | 127 | `Z_ARRAY_REMOVE_ALL` | `0x004260F4` | `0x004260F4` | ☐ | |
 | 128 | `Z_X_STRING_GET_BUFFER` | `0x00426133` | `0x00426133` | ☐ | |
 | 129 | `Z_X_STRING_TRIM_RIGHT` | `0x0046DB7E` | `0x0046DB7E` | ☐ | |
@@ -240,7 +240,7 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 137 | `DR_CHECK` | `0x00000000` | `0x00000000` | ☐ | |
 | 138 | `DR_INIT` | `0x00000000` | `0x00000000` | ☐ | |
 | 139 | `CE_TRACER_RUN` | `0x00000000` | `0x00000000` | ☐ | |
-| 140 | `SEND_HS_LOG` | `0x0093F8E0` | `0x0093F8E0` | ☐ | |
+| 140 | `SEND_HS_LOG` | `0x0093F8E0` | `0x00000000` | ✔ | sig-cat: SendHSLog (NEW v72 SENTINEL — absent; FLAG) |
 | 141 | `C_MOB_C_MOB` | `0x00630C2C` | `0x00630C2C` | ☐ | |
 | 142 | `C_SECURITY_CLIENT_ON_PACKET_RET_STUB` | `0x00000000` | `0x00000000` | ☐ | |
 | 143 | `C_SECURITY_CLIENT_ON_PACKET_CHECK` | `0x00000000` | `0x00000000` | ☐ | |
