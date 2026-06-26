@@ -33,8 +33,15 @@ struct ClientFileStream {
     char pad[0x3C]; // [+0x04] conservative; covers the [+0x34] flag write
 };
 
-using FileStreamOpenFn = int(__thiscall*)(void* self, const char* name, unsigned access, unsigned share, int a3,
-                                          unsigned disp, int a5, int a6);
+// CFileStream::Open's positional args map onto the CreateFileA call inside it
+// (verified from the v84.1 0x49A615 disasm): the 2nd..7th stack args become, in
+// order, dwCreationDisposition, dwFlagsAndAttributes, dwShareMode, dwDesiredAccess,
+// lpSecurityAttributes, hTemplateFile -- NOT the access/share-first order CreateFileA
+// itself takes. Passing them in CreateFileA order puts GENERIC_READ into the
+// disposition slot, which CreateFileA rejects with ERROR_INVALID_PARAMETER (87).
+using FileStreamOpenFn = int(__thiscall*)(void* self, const char* name, unsigned disposition,
+                                          unsigned flagsAndAttributes, unsigned shareMode, unsigned desiredAccess,
+                                          void* securityAttributes, void* templateFile);
 using FileStreamLenFn = unsigned(__thiscall*)(void* self);
 using FileStreamReadFn = int(__thiscall*)(void* self, void* dst, unsigned len);
 using FileStreamCloseFn = void(__thiscall*)(void* self);
@@ -255,8 +262,10 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
                 fileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
             *reinterpret_cast<unsigned*>(reinterpret_cast<char*>(&fs) + 0x34) |= 1u;
 #else
-            // Open(name, GENERIC_READ=0x80000000, share=128, 1, disp=0, 0, 0)
-            reinterpret_cast<FileStreamOpenFn>(C_FILE_STREAM_OPEN)(&fs, fileName, 0x80000000u, 128, 1, 0, 0, 0);
+            // Open the existing report read-only, matching the inline CreateFileA above.
+            // Arg order is disposition/flags/share/access per the FileStreamOpenFn note.
+            reinterpret_cast<FileStreamOpenFn>(C_FILE_STREAM_OPEN)(&fs, fileName, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                                                                   FILE_SHARE_READ, GENERIC_READ, nullptr, nullptr);
 #endif
             unsigned len = reinterpret_cast<FileStreamLenFn>(C_FILE_STREAM_GET_LENGTH)(&fs);
 
