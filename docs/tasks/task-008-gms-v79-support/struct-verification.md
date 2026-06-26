@@ -52,6 +52,16 @@ on the excluded side. Determine whether v79 genuinely lacks the field.
 |---|---|---|---|---|
 | `common/CUIToolTip.h:92` | `>= 83 \|\| JMS` | excluded | Does v79 `CUIToolTip` carry `m_pLayerAdditional` (this+0x14, after `m_pLayer` this+0x10)? v84 confirmed it present 83→111. | Lower floor to `>= 79` (keep JMS), re-validate all versions |
 
+**Task-12 verdict (Cat B): `unchanged` — v79 LACKS `m_pLayerAdditional`; the `>=83` exclusion of v79 is CORRECT.**
+Deciding v79 disasm (`??0CUIToolTip@@QAE@XZ` @0x842317): `mov [esi+10h], edi` (`m_pLayer`=0) is immediately
+followed by `lea eax, [esi+20h]` → `eh vector constructor` of `m_aLineInfo[32]`. So `m_aLineInfo` starts at
+**this+0x20**, leaving exactly 0x14/0x18/0x1C for `m_nLastX`/`m_nLastY`/`m_nLineNo` and **no `m_pLayerAdditional`**
+(its presence would push `m_aLineInfo` to 0x24). v79 `CUIToolTip` sizeof = **0x514**, byte-identical to the v83
+typed struct (`m_pLayer`@0x10, `m_nLastX`@0x14, `m_aLineInfo`@0x20, `m_bIngoreWeddingInfo`@0x510). No floor change.
+NOTE/CONCERN (out of v79 scope): the v83 IDB type ALSO shows `m_nLastX`@0x14 (no additional layer, sizeof 0x514),
+which is in tension with the gate comment "v84 confirmed present 83→111" — the `>=83` floor itself may warrant a
+separate re-check at the v83/v84 boundary, but that does not affect the v79 verdict (v79 is excluded either way).
+
 ## Category C — `>= 84` gates (v79 EXCLUDED, sides with v83)
 
 v79 takes the same excluded side as v83. Confirm the gated field is genuinely
@@ -59,11 +69,26 @@ absent in v79 (very likely, since v83 also lacks it — but verify, don't assume
 
 | Site | Gate | Field/region | Confirm absent in v79 |
 |---|---|---|---|
-| `common/CMob.h:229` | `>= 84` | v84+ CMob field | ☐ |
-| `common/CMob.h:233` | `>= 84 \|\| JMS` | v84+ CMob field | ☐ |
-| `common/CMapLoadable.h:154` | `>= 84 \|\| JMS` | v84+ field | ☐ |
-| `common/CUIToolTip.h:125` | `>= 84 \|\| JMS` | v84+ field | ☐ |
-| `common/CUIToolTip.h:152` | `>= 84 \|\| JMS` | v84+ field | ☐ |
+| `common/CMob.h:229` | `>= 84` | `m_aMultiTargetForBall` | ☑ ABSENT |
+| `common/CMob.h:233` | `>= 84 \|\| JMS` | `m_aRandTimeforAreaAttack`,`m_delaySkill` | ☑ ABSENT |
+| `common/CMapLoadable.h:154` | `>= 84 \|\| JMS` | `m_lVisibleByQuest` | ☑ ABSENT |
+| `common/CUIToolTip.h:125` | `>= 84 \|\| JMS` | `m_pFontGen_Unknown` | ☑ ABSENT |
+| `common/CUIToolTip.h:152` | `>= 84 \|\| JMS` | `m_pCanvasEquip_Durability` | ☑ ABSENT |
+
+**Task-12 verdict (Cat C): all five `>=84` fields `unchanged` — genuinely ABSENT in v79; exclusions CORRECT.**
+Deciding v79 disasm per field:
+- `CMob.h:229/:233` (`m_aMultiTargetForBall`, `m_aRandTimeforAreaAttack`, `m_delaySkill`): v79 `CMob::CMob` @0x630C2C
+  highest member write is `mov [esi+514h], edi` = `m_bWaitingToBeSetTossed` (the **last** member; sizeof=0x518 ends
+  at 0x518). The v83 typed `CMob` shows `m_bDoomReserved`@0x528 directly after `m_bWaitingToBeSetTossed`@0x524 with
+  **no** `>=84` array members between them; v79 has neither those nor the doom region → the three `>=84` fields are
+  absent (they would sit between `m_bWaitingToBeSetTossed` and the doom region, which is empty in v79).
+- `CUIToolTip.h:125` (`m_pFontGen_Unknown`): v79 ctor zero-inits the font block 0x424→**0x470** (20 fonts, last =
+  `m_pFontGen_Blue`@0x470) then `lea eax, [esi+474h]` builds `m_pCanvasEquip_ReqItem`@0x474 — no font at the >=84 slot.
+- `CUIToolTip.h:152` (`m_pCanvasEquip_Durability`): v79 ctor writes `m_pNumberGrowthDisable`@0x50C then
+  `m_bIngoreWeddingInfo`@0x510 directly (sizeof 0x514); the 0x10-byte `[2][2]` durability array is absent.
+- `CMapLoadable.h:154` (`m_lVisibleByQuest`): `CMapLoadable::SetObjectState` @0x612abe does `add ecx, 0A0h` →
+  `m_mNamedObj` ZMap @**0xA0**, directly after `m_lpRefInfo`@0x8C (ZList 0x14). A present `m_lVisibleByQuest`
+  (ZList 0x14) would put `m_mNamedObj` at 0xB4. Matches the v83 typed struct (`m_mNamedObj`@0xA0).
 
 ## Category D — `< 95` / `< 84` inverse gates (v79 INCLUDED on base branch)
 
@@ -73,6 +98,46 @@ layout matches the v83 layout the branch was written for.
 | Site | Gate | v79 lands | Confirm |
 |---|---|---|---|
 | `common/CMob.h:110` | `< 95` | included (base) | v79 CMob base layout == v83 base layout (size + the doom-field region) |
+
+**Task-12 verdict (Cat D): NEEDS-CHANGE — v79 CMob base ≠ v83 base. `<95` gate self is fine, but the header
+overshoots v79 by 0x30, and the doom region is ABSENT in v79.**
+
+- **sizeof:** v79 `sizeof(CMob)` = **0x518 (1304)** — authoritative from the allocator `?CreateMob@@` @0x630BF0:
+  `push 518h` → `ZAllocEx::Alloc(0x518)`. v83 `sizeof(CMob)` = **0x548 (1352)** (`?CreateMob@@` @0x66219D `push 548h`,
+  and the v83 typed `CMob` reports size 1352). **v79 is 0x30 smaller than v83.**
+- **CMob.h:110 (`unknown1` ZList, `<95`):** TRUE for both v79 and v83 → both include the field. That specific gate is
+  correct for v79. But the *overall* base layout differs (below), so the header still needs a v79 branch.
+- **Where the 0x30 lives (two parts):**
+  1. **~0x10 inside `MobStat`** (sub-struct, separately gated by `MobStat.h`): v79 ctor writes `[esi+3A0h],0FFh`
+     where v83 writes `[esi+3B0h],0FFh` (the `m_nTeamForMCarnival`/`m_rgHorz` region) — a clean 0x10 shift that
+     originates in `m_stat` (`MobStat` @0x1A0 in both). Flag for the `MobStat.h` row (Cat E).
+  2. **0x20 doom/reserved tail region — ABSENT in v79** (see doom verdict below).
+- **Re-anchor (Step 5):** the v79↔v83 0x10 tail delta is independently confirmed by THREE landmarks across two
+  different functions: (a) `m_mDelayedHPIndicator` ZMap v79@0x4D4 / v83@0x4E4; (b) `m_nHPpercentage`=100 default
+  written by the ctor at v79 `[esi+510h]` / v83 `[esi+520h]`; (c) `m_bWaitingToBeSetTossed` cleared by
+  `CMob::SetTemporaryStat` at v79 `and [esi+514h],0` (@0x63EAC4) / v83 `and [esi+524h],0` (@0x66FB3F).
+
+### Doom-field verdict (doom-fix `dllmain.cpp:25`, `< 84` form) — NEEDS-CHANGE
+
+**`m_bDoomReserved` does NOT exist in v79.** It is appended in v83+, not present in v79.
+
+- v83 typed `CMob` (authoritative): `m_nHPpercentage`@0x520, `m_bWaitingToBeSetTossed`@0x524,
+  **`m_bDoomReserved`@0x528**, `m_bDoomReservedSN`@0x52C (u8), `m_lpStatChangeReserved`@0x530 (ZList, ends 0x544).
+  v83 ctor @0x6621D9 writes 0x524=0 then SKIPS 0x528 (writes 0x52C byte=0, 0x530 ZList) — i.e. v83 genuinely
+  leaves `m_bDoomReserved` uninitialized → this is the real bug the doom-fix patches **on v83**.
+- v79: `m_bWaitingToBeSetTossed`@**0x514** is the **last** member; `sizeof=0x518` ends one dword later. Mapping the
+  v83 doom offset (0x528) down by the verified 0x10 tail delta gives **0x518 = exactly past the end** → the field,
+  its SN byte, and `m_lpStatChangeReserved` are all **absent** in v79. Corroboration: the v79 ctor contains **no**
+  trailing ZList-object init (no `m_lpStatChangeReserved`) and **no** tail byte-write (no SN) beyond the
+  `m_mDelayedHPIndicator` ZMap @0x4D4 — unlike v83 which inits a ZList at 0x530.
+- **Consequence:** the doom-fix gate `< 84` is TRUE for v79, so the hook executes `pThis->m_bDoomReserved = 0` — but
+  v79's real `CMob` (game-allocated 0x518) has no such field. With the current header (which declares the doom region
+  unconditionally) the write lands past the real object → **out-of-bounds / heap corruption on v79**. The fix is
+  correct for v83 (field present-but-uninit) but **must be re-gated to exclude v79** (e.g. `== 83`), and `CMob.h`
+  must give v79 a branch that omits `m_bDoomReserved`/`m_bDoomReservedSN`/`m_lpStatChangeReserved` (Task 17).
+- **Corrects the Task-8 carry-forward:** Task 8 observed the right ctor facts (Alloc 0x518, highest write 0x514, no
+  doom-zero block) but interpreted them as "field present-but-uninitialized." The v83 typed-struct comparison shows
+  the field is **absent** in v79. Observable ctor behavior is identical; the distinction is decisive for the fix.
 
 ## Category E — upper-bound gates (v79 → base branch; spot-check size)
 
@@ -114,9 +179,9 @@ minimum; expand to per-field where a gate boundary moves.
 |---|---|---|---|
 | CWvsApp.h | 0x60 (96) | **v79-branch-added** (Cat A, World A) @ :97 — `79` added to the `0x60` branch | task-008: ctor `??0CWvsApp@@QAE@PBD@Z` @0x942D3B writes the exact v83/84 base layout (vtable@0; @8,@0xC,@0x10,@0x14,@0x18,@0x1C; ZXString@0x20; ints @0x24..0x38) — NO below-floor surprise member; CWvsApp.h has no `<84`/`==83` member gate so v79 ≡ v83 by construction. Header computes 0x60 for v79; clang-cl static_assert(sizeof==0x60) **PASSED**. |
 | CFuncKeyMappedMan.h | 0x388 (904) | **v79-member-shift CONFIRMED — DEFER to struct audit (Task 12/16)** (Cat A→B). No v79 assert written (a 0x388 assert FAILS to compile). | task-008 re-measure (2 independent anchors): TSingleton `CreateInstance` @0x946AFB `push 388h`→`Alloc(0x388=904)`; ctor `??0CFuncKeyMappedMan@@QAE@XZ` @0x569DE5 field-init extent = vtable@0 + memcpy 0x1BD@+4 + memcpy 0x1BD@+0x1C1 (arrays end @0x37E) + dwords zeroed @+0x380/+0x384 → ends 0x388. Header computes 0x3C8 (968): clang-cl scratch probe `assert_size(...,0x388)` for v79 FAILED with `expression evaluates to '968 == 904'` — proving a 0x40 below-floor MEMBER shift (the two `m_aQuickslotKeyMapped[8]` int arrays, 0x40 bytes, absent in v79), which a size-assert cannot express. NOTE: v79 cmake map `C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE=0x009F9E98` is STALE (points to `sub_753F6A`, an unwind funclet) — flag for Task 7. |
-| CUIToolTip.h | ☐ | ☐ (Cat B/C) | |
-| CMob.h | ☐ | ☐ (Cat C/D + doom-field) | |
-| CMapLoadable.h | ☐ | ☐ (Cat C) | |
+| CUIToolTip.h | 0x514 (1300) | **unchanged** (Cat B `m_pLayerAdditional` absent; Cat C `m_pFontGen_Unknown` + `m_pCanvasEquip_Durability` absent) | ctor `??0CUIToolTip@@QAE@XZ` @0x842317: `m_pLayer`@0x10 then `m_aLineInfo[32]`@0x20 (no additional layer); fonts 0x424→0x470 then `m_pCanvasEquip_ReqItem`@0x474 (no `m_pFontGen_Unknown`); `m_pNumberGrowthDisable`@0x50C → `m_bIngoreWeddingInfo`@0x510 (no durability), sizeof 0x514 == v83. |
+| CMob.h | **0x518 (1304)** | **NEEDS-CHANGE — v79 base ≠ v83 (0x548)** (Cat C `>=84` fields absent ✓; Cat D doom region **absent**) | `?CreateMob@@` @0x630BF0 `push 518h`→`Alloc(0x518)`. ctor @0x630C2C highest member write `mov [esi+514h],edi` = `m_bWaitingToBeSetTossed` (last member); NO doom-zero tail, NO trailing ZList init. v83 typed CMob (0x548) has `m_bDoomReserved`@0x528/SN@0x52C/`m_lpStatChangeReserved`@0x530 — **all absent in v79** (would start at 0x518=past end). 0x30 delta = ~0x10 in `MobStat` + 0x20 doom tail. doom-fix `<84` write would corrupt v79 → re-gate + header v79 branch in Task 17. |
+| CMapLoadable.h | (base, no v79≠v83 delta found) | **unchanged** (Cat C `m_lVisibleByQuest` absent) | `?SetObjectState@CMapLoadable@@` @0x612aa4: `add ecx, 0A0h` → `m_mNamedObj` ZMap @0xA0 directly after `m_lpRefInfo`@0x8C; `m_lVisibleByQuest` (ZList) absent (else `m_mNamedObj` would be @0xB4). Matches v83 typed struct. |
 | CLogin.h | ☐ | ☐ (`==83` @ :235) | |
 | CWvsContext.h | ☐ | ☐ (`>83` clientkey @ :98) | |
 | CClientSocket.h | ☐ | ☐ | |
