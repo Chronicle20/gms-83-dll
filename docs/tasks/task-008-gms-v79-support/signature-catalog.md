@@ -381,3 +381,45 @@ Baseline IDB saved clean before any renaming or annotation.
 - Cross-version stability: SBB-singleton store + Alloc(0x94) idiom stable; located via the ctor, not address arithmetic.
 - v79 addresses: C_CLIENT_SOCKET_INSTANCE_ADDR 0x00B07844 (renamed g_pClientSocketInstance in IDB); C_CLIENT_SOCKET_CREATE_INSTANCE 0x00946AB6
 - Notes: CreateInstance moved OUT of the v83 0x9F9Exx singleton cluster into the 0x946Axx static-init region (same region as the other manager CreateInstances) — found by call-graph (sole ctor caller), NOT proximity. v83 seed INSTANCE_ADDR (0xBE7914) and CREATE_INSTANCE (0x9F9E53) are unrelated VAs.
+
+## COutPacket encode cluster (Task 5)
+
+### COutPacket::COutPacket (ctor)   (memory-map key: C_OUT_PACKET)
+- Primary anchor: IDB symbol `??0COutPacket@@QAE@J@Z`.
+- Detail: EH-prolog ctor that zeroes the buffer member (`*((DWORD*)this+1) = 0`), calls the ZArray<uchar>::_Alloc helper with initial capacity 256 (`sub_48E8CB(256, &v4)`), then calls `COutPacket::Init(a2)` (?Init@COutPacket@@QAEXJ@Z @ 0x67AE46). The 256-byte initial allocation feeding an Init(seq) call is the structural fingerprint.
+- Fallback anchor: constant + call-graph — the 0x100 alloc immediate (constant) and the COutPacket::Init callee (call-graph). Two different kinds besides the symbol.
+- Cross-version stability: member+4=0 / _Alloc(256) / Init shape stable v79→v84; layout (buf at +4, len at +8) shared with the encoders' grow helper.
+- v79 address: 0x0067AD6B (size span to ~0x67AE.. ; entry at 0x67AD6B)
+- Notes: HIGH-VALUE (needs-main-review). Spot-check (independent kind): the 256 immediate to _Alloc plus the Init tail-call, read independent of the mangled name.
+
+### COutPacket::Encode1 / Encode2 / Encode4   (memory-map keys: C_OUT_PACKET_ENCODE_1 / C_OUT_PACKET_ENCODE_2 / C_OUT_PACKET_ENCODE_4)
+- Primary anchor: IDB symbols `?Encode1@COutPacket@@QAEXE@Z`, `?Encode2@COutPacket@@QAEXG@Z`, `?Encode4@COutPacket@@QAEXK@Z`.
+- Detail: three tiny (0x1E/0x21/0x1F byte) functions, each pushes its byte-width to the shared `COutPacket::_EnsureCapacity` (?_EnsureCapacity@COutPacket@@AAEXI@Z @ 0x4062E5) then stores. **WIDTH DISCRIMINANT (do not swap):** Encode1 = `push 1` + `mov [eax+ecx], dl` + `inc dword [esi+8]`; Encode2 = `push 2` + `mov [eax+ecx], dx` + `add dword [esi+8], 2`; Encode4 = `push 4` + `mov [eax+ecx], edx` + `add dword [esi+8], 4`. The push immediate matches the store width.
+- Fallback anchor: call-graph — `xrefs_to _EnsureCapacity` returns EXACTLY the five sibling encoders (Encode1/2/4 + EncodeStr + EncodeBuffer) and nothing else; the grow→store→advance shape with width immediate is the second (constant) kind. Two structural kinds besides the symbol.
+- Cross-version stability: store-width idiom and shared _EnsureCapacity callee stable v79→v84.
+- v79 addresses: Encode1 0x004062C7, Encode2 0x0042539C, Encode4 0x00406324
+- Notes: HIGH-VALUE (needs-main-review). Encode2 lives in a distant region (0x4253xx) vs Encode1/Encode4 adjacent at 0x4063xx — confirm by store width, never by adjacency. Spot-check (independent kind): width store byte read from each body, independent of symbol.
+
+### COutPacket::EncodeStr   (memory-map key: C_OUT_PACKET_ENCODE_STR)
+- Primary anchor: IDB symbol `?EncodeStr@COutPacket@@QAEXV?$ZXString@D@@@Z`.
+- Detail: reads the ZXString length (`mov eax,[eax-4]` when ptr non-null, else 0), grows by `len + 2` via _EnsureCapacity, copies through `CIOBufferManipulator::EncodeStr(ZXString, buf)` (?EncodeStr@CIOBufferManipulator@@... @ 0x469544) after a ZXString::operator= into a temp, advances len by the returned count, and runs the ZXString dtor in an EH unwind slot.
+- Fallback anchor: call-graph (shared _EnsureCapacity + CIOBufferManipulator::EncodeStr callee) + structure (the `[eax-4]` length read + `+2` grow). Two structural kinds besides the symbol.
+- Cross-version stability: ZXString length-prefix + CIOBufferManipulator::EncodeStr shape stable v79→v84.
+- v79 address: 0x004694DE (size 0x66)
+- Notes: HIGH-VALUE (needs-main-review).
+
+### COutPacket::EncodeBuffer   (memory-map key: C_OUT_PACKET_ENCODE_BUFFER)
+- Primary anchor: IDB symbol `?EncodeBuffer@COutPacket@@QAEXPBXI@Z` (void* PBX form, not the byte-pointer PBE form).
+- Detail: takes (Src, Size); grows the buffer by Size via _EnsureCapacity(Size), `memcpy(buf + len, Src, Size)`, then `len += Size`; `retn 8`. The grow→memcpy→advance triple with a caller-supplied length is the fingerprint.
+- Fallback anchor: call-graph (shared _EnsureCapacity) + import (_memcpy). Two structural kinds besides the symbol.
+- Cross-version stability: grow/memcpy/advance shape stable v79→v84.
+- v79 address: 0x00466AE9 (size 0x2A)
+- Notes: HIGH-VALUE (needs-main-review).
+
+### COutPacket::MakeBufferList   (memory-map key: C_OUT_PACKET_MAKE_BUFFER_LIST)
+- Primary anchor: IDB symbol `?MakeBufferList@COutPacket@@QAE?AV?$ZRef@VZSocketBuffer@@@@HW4SocketSendFlag@@@Z` (retained in v79; NOT stripped as in v84).
+- Detail: builds the encrypted ZSocketBuffer chunk list. Distinctive constant: MTU chunking at **1460 / 0x5B4** (`v16=1460; if(len<0x5B4) v16=len`) driving repeated `ZSocketBuffer::Alloc(v16)`; the in-place COutPacket shuffle uses `71 - __ROR1__(...)` and `^0x13` over the payload. Sole MakeBufferList call inside the resolved `CClientSocket::SendPacket` (0x48DF93), invoked as `MakeBufferList(this+80, 79, this+132, 1, m_seqXor)` between the ZSynchronizedHelper ctor and CIGCipher::innoHash / CClientSocket::Flush.
+- Fallback anchor: call-graph (parent = SendPacket; callee = resolved `ZSocketBuffer::Alloc` 0x48DBEA / Z_SOCKET_BUFFER_ALLOC) + constant (1460/0x5B4 chunk size + 71/0x13 shuffle). Two structural kinds besides the symbol.
+- Cross-version stability: 1460-byte chunking + 71/0x13 shuffle + ZSocketBuffer::Alloc loop stable v79→v84.
+- v79 address: 0x0067AEC4
+- Notes: HIGH-VALUE (needs-main-review). Spot-check (independent kind): the 1460/0x5B4 chunk constant and the 71-ROR/^0x13 shuffle loop, read independent of both the symbol and the SendPacket call edge.

@@ -87,13 +87,13 @@ set(C_MONSTER_BOOK_MAN_CREATE_INSTANCE 0x009F9B73)
 set(C_MONSTER_BOOK_MAN_INSTANCE_ADDR 0x00BED610)
 set(C_MONSTER_BOOK_MAN_LOAD_BOOK 0x0068487C)
 
-set(C_OUT_PACKET 0x006EC9CE)
-set(C_OUT_PACKET_ENCODE_1 0x00406549)
-set(C_OUT_PACKET_ENCODE_2 0x00427F74)
-set(C_OUT_PACKET_ENCODE_4 0x004065A6)
-set(C_OUT_PACKET_ENCODE_STR 0x0046F3CF)
-set(C_OUT_PACKET_ENCODE_BUFFER 0x0046C00C)
-set(C_OUT_PACKET_MAKE_BUFFER_LIST 0x006ECB27)
+set(C_OUT_PACKET 0x0067AD6B) # symbol ??0COutPacket@@QAE@J@Z; _Alloc(256)+Init structure
+set(C_OUT_PACKET_ENCODE_1 0x004062C7) # symbol Encode1; push 1 + mov [eax+ecx],dl + inc; shared _EnsureCapacity
+set(C_OUT_PACKET_ENCODE_2 0x0042539C) # symbol Encode2; push 2 + mov [eax+ecx],dx + add 2; shared _EnsureCapacity
+set(C_OUT_PACKET_ENCODE_4 0x00406324) # symbol Encode4; push 4 + mov [eax+ecx],edx + add 4; shared _EnsureCapacity
+set(C_OUT_PACKET_ENCODE_STR 0x004694DE) # symbol EncodeStr; ZXString len([eax-4])+2 + CIOBufferManipulator::EncodeStr
+set(C_OUT_PACKET_ENCODE_BUFFER 0x00466AE9) # symbol EncodeBuffer; _EnsureCapacity(Size)+memcpy+len+=Size; retn 8
+set(C_OUT_PACKET_MAKE_BUFFER_LIST 0x0067AEC4) # symbol; sole call in CClientSocket::SendPacket + 1460/0x5B4 chunk const
 
 set(C_IG_CIPHER_INNO_HASH 0x00A4A838)
 

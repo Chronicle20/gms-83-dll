@@ -137,13 +137,13 @@ never copied blind.
 | C_MONSTER_BOOK_MAN_CREATE_INSTANCE | addr | 0x009F9B73 | ☐ |
 | C_MONSTER_BOOK_MAN_INSTANCE_ADDR | addr | 0x00BED610 | ☐ |
 | C_MONSTER_BOOK_MAN_LOAD_BOOK | addr | 0x0068487C | ☐ |
-| C_OUT_PACKET | addr | 0x006EC9CE | ☐ |
-| C_OUT_PACKET_ENCODE_1 | addr | 0x00406549 | ☐ |
-| C_OUT_PACKET_ENCODE_2 | addr | 0x00427F74 | ☐ |
-| C_OUT_PACKET_ENCODE_4 | addr | 0x004065A6 | ☐ |
-| C_OUT_PACKET_ENCODE_STR | addr | 0x0046F3CF | ☐ |
-| C_OUT_PACKET_ENCODE_BUFFER | addr | 0x0046C00C | ☐ |
-| C_OUT_PACKET_MAKE_BUFFER_LIST | addr | 0x006ECB27 | ☐ |
+| C_OUT_PACKET | addr | 0x006EC9CE | ✔ (v79 0x0067AD6B; symbol+_Alloc(256)+Init) |
+| C_OUT_PACKET_ENCODE_1 | addr | 0x00406549 | ✔ (v79 0x004062C7; push1+store dl+inc; shared _EnsureCapacity) |
+| C_OUT_PACKET_ENCODE_2 | addr | 0x00427F74 | ✔ (v79 0x0042539C; push2+store dx+add2; shared _EnsureCapacity) |
+| C_OUT_PACKET_ENCODE_4 | addr | 0x004065A6 | ✔ (v79 0x00406324; push4+store edx+add4; shared _EnsureCapacity) |
+| C_OUT_PACKET_ENCODE_STR | addr | 0x0046F3CF | ✔ (v79 0x004694DE; ZXString len+2+CIOBufferManipulator::EncodeStr) |
+| C_OUT_PACKET_ENCODE_BUFFER | addr | 0x0046C00C | ✔ (v79 0x00466AE9; _EnsureCapacity+memcpy+len+=Size) |
+| C_OUT_PACKET_MAKE_BUFFER_LIST | addr | 0x006ECB27 | ✔ (v79 0x0067AEC4; symbol+sole SendPacket call+1460/0x5B4 chunk) |
 | C_IG_CIPHER_INNO_HASH | addr | 0x00A4A838 | ☐ |
 | Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR | addr | 0x00403166 | ☐ |
 | Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR | addr | 0x0040318B | ☐ |
