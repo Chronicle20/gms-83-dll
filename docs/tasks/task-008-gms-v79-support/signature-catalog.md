@@ -470,7 +470,7 @@ Baseline IDB saved clean before any renaming or annotation.
 - Primary anchor: vtable slot — vtable[0] of CLogo primary vtable at 0xA307BC (confirmed via `get_int`).
 - Detail: 1500 ms logo timer body: checks `[esi+0x1EC]` (or similar timer field), triggers the stage transition by calling `LogoEnd` when elapsed. **DIVERGES from C_LOGIN_UPDATE in v79** — they are two separate functions.
 - Fallback anchor: call-graph (body calls C_LOGO_LOGO_END / 0x005FFA4C after timer check) + constant (1500 ms threshold immediate).
-- Cross-version stability: Timer-threshold + LogoEnd call stable v79→v83. In v83 this was a shared address with CLogin::Update — that coincidence is gone in v79. Treat as independent.
+- Cross-version stability: Timer-threshold + LogoEnd call stable v79→v83. In v83 this was a shared address with CLogin::Update — that coincidence is gone in v79. Treat as independent. **v83 slot-order check (read 2026-06-26, v83 MapleStory_dump.exe port 13340):** CLogo primary vtable off_AF7C80 slot0 (get_int) = 0x0062F2B6 = `?Update@CLogo@@UAEXXZ` (symbol-confirmed). v79 0xA307BC slot0 = 0x005FFE54. Slot 0 = Update in both → slot order matches v83: no drift.
 - v79 address: 0x005FFE54 (labeled CLogo__Update in IDB; required `define_func` before rename would accept it)
 - Notes: IDA had this as `loc_5FFE54` (not recognised as a function head). Used `define_func` on [0x5FFE54, 0x5FFE54+length] to promote it, then rename succeeded.
 
@@ -478,7 +478,7 @@ Baseline IDB saved clean before any renaming or annotation.
 - Primary anchor: vtable slot — IUIMsgHandler vtable at 0xA30770, slot 2 (= `[this+4]` in CLogo object, offset 8 into the IUIMsgHandler vtable block).
 - Detail: first comparison is `cmp [esp+arg_0], 202h` (WM_LBUTTONUP = 0x202). On match, applies `add ecx, 0FFFFFFFCh` (thiscall `this` adjustment for IUIMsgHandler) then calls `CLogo::InitNXLogo`. The 0x202 immediate + thiscall-adjust + InitNXLogo call is the structural fingerprint.
 - Fallback anchor: call-graph (callee = C_LOGO_INIT_NX_LOGO / 0x005FFA96) + constant (0x202 WM_LBUTTONUP).
-- Cross-version stability: WM_LBUTTONUP constant + InitNXLogo call-path stable v79→v83→v84. IUIMsgHandler vtable slot order (OnKey/OnSetFocus/OnMouseButton) confirmed from v84 catalog.
+- Cross-version stability: WM_LBUTTONUP constant + InitNXLogo call-path stable v79→v83. **v83 slot-order check (read 2026-06-26, v83 port 13340):** CLogo IUIMsgHandler vtable off_AF7C34 slot2 (get_int) = 0x0062F2A1; v79 0xA30770 slot2 = 0x005FFE3F. Slot 2 = OnMouseButton in both → slot order matches v83: no drift.
 - v79 address: 0x005FFE3F (labeled CLogo__OnMouseButton in IDB)
 - Notes: IUIMsgHandler vtable is at `[this+4]` in CLogo (the second vtable pointer). Slot layout: [A30770]=OnKey, [A30774]=OnSetFocus, [A30778]=OnMouseButton.
 
@@ -486,7 +486,7 @@ Baseline IDB saved clean before any renaming or annotation.
 - Primary anchor: vtable slot — IUIMsgHandler vtable at 0xA30770, slot 1 (address A30774).
 - Detail: trivial stub: `push 1; pop eax; retn 4` — always returns 1 (true). Three-instruction body is unambiguous.
 - Fallback anchor: function size (3 instructions, ~4 bytes) + return-1 pattern. Both independent of the vtable read.
-- Cross-version stability: always-true stub shape stable v79→v83→v84. Matches v84 catalog description exactly.
+- Cross-version stability: always-true stub shape stable v79→v83. **v83 slot-order check (read 2026-06-26, v83 port 13340):** CLogo IUIMsgHandler vtable off_AF7C34 slot1 (get_int) = 0x0062ED20; v79 0xA30770 slot1 = 0x005FF902. Slot 1 = OnSetFocus in both → slot order matches v83: no drift.
 - v79 address: 0x005FF902 (labeled CLogo__OnSetFocus_IUI in IDB)
 - Notes: An earlier session incorrectly assigned 0x0092F599 (the CWnd override version). Correct address is the IUIMsgHandler vtable version at 0x005FF902. Always read the IUIMsgHandler vtable directly — the CWnd vtable has a different OnSetFocus that does real work.
 
@@ -494,7 +494,7 @@ Baseline IDB saved clean before any renaming or annotation.
 - Primary anchor: vtable slot — IUIMsgHandler vtable at 0xA30770, slot 0 (address A30770 itself).
 - Detail: checks wParam against three key codes in sequence: 13 (VK_RETURN), 27 (VK_ESCAPE), 32 (VK_SPACE). Any match triggers `add ecx, 0FFFFFFFCh` (thiscall adjust) + `CLogo::InitNXLogo`. The three-key-constant cluster is the structural fingerprint.
 - Fallback anchor: call-graph (callee = C_LOGO_INIT_NX_LOGO / 0x005FFA96) + constants (13/27/32 key-code immediates).
-- Cross-version stability: key-code triple (13/27/32) + InitNXLogo dispatch stable v79→v83→v84.
+- Cross-version stability: key-code triple (13/27/32) + InitNXLogo dispatch stable v79→v83. **v83 slot-order check (read 2026-06-26, v83 port 13340):** CLogo IUIMsgHandler vtable off_AF7C34 slot0 (get_int) = 0x0062F27A; v79 0xA30770 slot0 = 0x005FFE18. Slot 0 = OnKey in both → slot order matches v83: no drift.
 - v79 address: 0x005FFE18 (labeled CLogo__OnKey in IDB; defined via define_func before rename)
 - Notes: Both OnKey and OnMouseButton call InitNXLogo after a thiscall this-adjustment. If either is found, the other is derivable from the same vtable block.
 
@@ -508,17 +508,18 @@ Baseline IDB saved clean before any renaming or annotation.
 
 ### CLogo::ForcedEnd   (memory-map key: C_LOGO_FORCED_END)
 - Primary anchor: vtable slot — CLogo primary vtable at 0xA307BC, slot 2 (address A307C4, read via `get_int`).
-- Detail: stops background music (likely `BGMMan::Stop` call) before returning. SET_STAGE calls `[eax+8]` (vtable slot 2) on the current stage at 0x6F1B14 when tearing it down. The BGM-stop + vtable-slot-2 position is the structural fingerprint.
-- Fallback anchor: call-graph (SET_STAGE parent — `xrefs_to` confirms 0x006F1B14 dispatches this slot) + vtable position (primary vtable slot 2 = ForcedEnd in all v79/v83/v84 stage classes).
-- Cross-version stability: vtable slot 2 = ForcedEnd convention stable v79→v83→v84; BGM-stop pattern stable.
+- Detail: body is `push 3E8h` (1000) + `CSoundMan::PlayBGM(...)` on the CSoundMan singleton (dword_B0BEC8) then a `nullsub` tail — it (re)issues the logo BGM via the 0x3E8 idiom, NOT a Stop call (earlier "stops BGM" wording was imprecise). SET_STAGE calls `[eax+8]` (vtable slot 2) on the stage at 0x6F1B14. The PlayBGM(0x3E8)-on-singleton + vtable-slot-2 position is the structural fingerprint.
+- Fallback anchor: call-graph (SET_STAGE parent — `xrefs_to` confirms 0x006F1B14 dispatches this slot) + vtable position (primary vtable slot 2 = ForcedEnd in v79/v83 CLogo).
+- Cross-version stability: vtable slot 2 = ForcedEnd convention stable v79→v83; PlayBGM(0x3E8)-on-CSoundMan-singleton body stable. **v83 slot-order check (read 2026-06-26, v83 port 13340):** CLogo primary vtable off_AF7C80 slot2 (get_int) = 0x0062EE8C; its body is the identical `push 3E8h` + `CSoundMan::PlayBGM` idiom (dword_BEBF94 singleton) — same virtual as v79 0x005FFA2A. v79 0xA307C4 slot2 = 0x005FFA2A. Slot 2 = ForcedEnd in both → slot order matches v83: no drift. (NOTE: the memory-map column-3 v83 SEED 0x0062EEF8 was imprecise — the real v83 slot-2 function is 0x0062EE8C; v79 value 0x005FFA2A is unaffected and confirmed.)
 - v79 address: 0x005FFA2A (labeled CLogo__ForcedEnd in IDB)
-- Notes: vtable slot order: [A307BC]=Update, [A307C0]=Init, [A307C4]=ForcedEnd. Identical slot ordering confirmed against CLogin primary vtable structure.
+- Notes: vtable slot order: [A307BC]=Update, [A307C0]=Init, [A307C4]=ForcedEnd — confirmed by direct v79 get_int and matched against the v83 CLogo primary vtable off_AF7C80 (same 3-slot order).
 
 ### CLogo::Init   (memory-map key: C_LOGO_INIT)
 - Primary anchor: vtable slot — CLogo primary vtable at 0xA307BC, slot 1 (address A307C0).
-- Detail: SET_STAGE calls `[eax+4]` (vtable slot 1) on the new stage at 0x6F1C2C to initialise it after install. Body sets up logo resources / timer state.
-- Fallback anchor: call-graph (SET_STAGE parent at 0x006F1C2C dispatches this slot) + vtable position (slot 1 = Init convention).
-- Cross-version stability: vtable slot 1 = Init convention stable v79→v83→v84.
+- Detail (own body, EH-prolog): calls a sub-init helper (sub_5FFF34), then `CInputSystem::ShowCursor(0)` (hides the cursor for the logo stage), then reads `CWvsApp::GetCmdLine(3)`; if that cmdline arg is non-empty AND `g_CWvsApp[+0x28]!=0` it tail-calls `CLogo::LogoEnd` (the skip-logo shortcut). The ShowCursor(0) + GetCmdLine(3) + conditional-LogoEnd shape is the body-level fingerprint, independent of the vtable slot.
+- Detail (dispatch anchor): SET_STAGE calls `[eax+4]` (vtable slot 1) on the new stage at 0x6F1C2C to initialise it after install.
+- Fallback anchor: call-graph (SET_STAGE parent at 0x006F1C2C dispatches this slot; callees CInputSystem::ShowCursor + CWvsApp::GetCmdLine) + vtable position (slot 1 = Init convention).
+- Cross-version stability: vtable slot 1 = Init convention stable v79→v83. **v83 slot-order check (read 2026-06-26, v83 port 13340):** CLogo primary vtable off_AF7C80 slot1 (get_int) = 0x0062EDDA (matches the historical v83 seed); v79 0xA307C0 slot1 = 0x005FF9BC. Slot 1 = Init in both → slot order matches v83: no drift.
 - v79 address: 0x005FF9BC (labeled CLogo__Init in IDB)
 - Notes: Slot 1 dispatch in SET_STAGE is at 0x6F1C2C (`call dword ptr [eax+4]`). Confirmed by tracing SET_STAGE body.
 
@@ -557,10 +558,10 @@ Baseline IDB saved clean before any renaming or annotation.
 ### CStage::OnMouseEnter   (memory-map key: C_STAGE_ON_MOUSE_ENTER)
 - Primary anchor: IDB symbol `?OnMouseEnter@CStage@@UAEXH@Z` (retained in v79 DEVM build).
 - Detail: virtual function taking a single `int` (the hit region); called from the input dispatch when the cursor enters a stage region. The mangled name encodes `__thiscall`, one `int` arg, `void` return.
-- Fallback anchor: vtable slot (CStage vtable; OnMouseEnter slot index confirmed from v84 catalog) + call-graph (input dispatcher callee).
-- Cross-version stability: symbol retained v79→v84; vtable slot position stable.
+- Fallback anchor (DIRECT v79 vtable read, 2026-06-26, v79 port 13339): CStage::OnMouseEnter (0x0092F3F8) is inherited unchanged by CLogin (CLogin does not override it), so it appears in CLogin's secondary CWnd/IUIMsgHandler vtable. `get_int` at 0x00A2FA20 = 0x0092F3F8 — that is slot 6 (offset +0x18) of the secondary vtable beginning at 0x00A2FA08, which matches the IDB symbol address exactly. This is a genuine v79 structural anchor independent of the symbol. (CLogo's own vtable block 0xA307xx does NOT reference 0x0092F3F8 because CLogo overrides OnMouseEnter — so use a non-overriding CStage subclass like CLogin as the witness; the reviewer's hypothesised slot 0xA30814 is in CLogo's block and lands on an RTTI header 0x014F37BB, not a function pointer.)
+- Cross-version stability: symbol retained v79→v84; the OnMouseEnter slot lives in the CWnd/IUIMsgHandler secondary vtable of CStage subclasses. Not asserting v83/v84 slot indices here without a read.
 - v79 address: 0x0092F3F8
-- Notes: Symbol made this trivial. For versions without the symbol, locate via the input dispatch path (the region-hit dispatcher that calls CStage virtual functions in sequence).
+- Notes: Symbol made the primary anchor trivial; the second anchor is the direct CLogin secondary-vtable slot read above (0x00A2FA20 = 0x0092F3F8), NOT a cross-version assumption. For versions without the symbol, locate via a CStage subclass's secondary vtable (the slot whose value is shared by many subclasses = the inherited CStage::OnMouseEnter) or via the input dispatch path.
 
 ### CStage::OnPacket   (memory-map key: C_STAGE_ON_PACKET)
 - Primary anchor: IDB symbol `?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z` (retained in v79 DEVM build).
