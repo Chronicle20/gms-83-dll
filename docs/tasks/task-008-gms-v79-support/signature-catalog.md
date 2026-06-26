@@ -613,11 +613,34 @@ Baseline IDB saved clean before any renaming or annotation.
   - CMacroSysMan: 0x00946C88 (unnamed) / 0x00B0C118 / 80
 - Notes: ActionMan key naming — `C_ACTION_MAN_CREATE_INSTANCE_ADDR` is the CreateInstance **function** (0x946A09); `C_ACTION_MAN_INSTANCE_ADDR` is the **global** (0xB07804). Same convention as v83.
 
-### CFuncKeyMappedMan ctor + default-keymap blobs (keys: C_FUNC_KEY_MAPPED_MAN / _VFTABLE / _INSTANCE_ADDR / DEFAULT_FKM_INSTANCE_ADDR / DEFAULT_QKM_INSTANCE_ADDR)
-- Primary anchor: IDB symbol ??0CFuncKeyMappedMan@@QAE@XZ (0x569DE5).
-- Detail: SBB-stores singleton dword_B0D2A8, installs vtable off_A2EB38, then `memcpy(this+4, unk_ABF99C, 0x1BD)` (m_aFuncKeyMapped) and `memcpy(this+449, unk_ABF99C, 0x1BD)` (m_aFuncKeyMapped_Old) — both from the **same** 445-byte FKM default blob unk_ABF99C (= DEFAULT_FKM). Then it only **zeroes** this+896/this+900 (no quickslot-default memcpy). `CFuncKeyMappedMan::DefaultFuncKeyMap` (0x56A1C9) re-memcpy's the same unk_ABF99C — confirms DEFAULT_FKM.
-- Cross-version drift vs v83: v83's ctor (0x58DD0D) memcpy'd a SEPARATE 32-byte quickslot default (dword_BD8D8C = DEFAULT_QKM) into this+224/this+232. **v79 has no such memcpy** — the FKM object is 904 bytes (896+8 zeroed tail), too small to embed a 32-byte quickslot array; quickslot lives entirely in the separate CQuickslotKeyMappedMan. The v83 32-byte QKM default-key sequence (0x2A,0x52,0x47,0x49,0x1D,0x53,0x4F,0x51) has **no byte-match anywhere in v79** (dword- or byte-form). → DEFAULT_QKM_INSTANCE_ADDR carried as 0x0 SENTINEL, flagged. The key_mapped_hooks.cpp quickslot memcpy must tolerate 0 / be struct-gated for v79.
-- v79 addresses: ctor 0x00569DE5; vftable 0x00A2EB38; instance 0x00B0D2A8; DEFAULT_FKM 0x00ABF99C; DEFAULT_QKM **0x0 (absent)**.
+### CFuncKeyMappedMan::CFuncKeyMappedMan (ctor)   (memory-map key: C_FUNC_KEY_MAPPED_MAN)
+- Primary anchor: IDB symbol `??0CFuncKeyMappedMan@@QAE@XZ` (0x569DE5).
+- Detail: SBB-stores singleton dword_B0D2A8, installs vtable off_A2EB38, then `memcpy(this+4, unk_ABF99C, 0x1BD)` (m_aFuncKeyMapped) and `memcpy(this+449, unk_ABF99C, 0x1BD)` (m_aFuncKeyMapped_Old), then zeroes this+896/this+900.
+- Fallback anchor: call-graph — the sole callee of the CFuncKeyMappedMan CreateInstance (0x946AFB); the dual-memcpy-from-unk_ABF99C + the off_A2EB38 vtable store is the structural fingerprint (kind 3 + constant, independent of the symbol).
+- Cross-version stability: SBB-singleton + vtable-install + default-keymap-memcpy idiom stable v79→v84; address differs (v83 ctor 0x58DD0D).
+- v79 address: 0x00569DE5.
+
+### CFuncKeyMappedMan vftable   (memory-map key: C_FUNC_KEY_MAPPED_MAN_VFTABLE)
+- Primary anchor: writer — off_A2EB38 is the value installed at `*this` (first dword) by the CFuncKeyMappedMan ctor (0x569DE5) and matches the Task-2/Task-3 class-anchor finding.
+- Fallback anchor: cross-confirmed by Task 2 Step 5 (carry-forward) where the CFuncKeyMappedMan vtable was located independently for the size-gate measurement.
+- v79 address: 0x00A2EB38 (off_A2EB38).
+
+### CFuncKeyMappedMan singleton   (memory-map key: C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR)
+- Primary anchor: writer — the SBB-singleton store at the top of the ctor (0x569DE5) writes dword_B0D2A8.
+- Fallback anchor: reader — the CFuncKeyMappedMan CreateInstance (0x946AFB) reads dword_B0D2A8 as the null-check; CFuncKeyMappedMan::SaveFuncKeyMap (0x569FE4) also references it. .data range check (0xB0D2A8 ∈ v79 .data 0xABD000–0xB18000).
+- v79 address: 0x00B0D2A8.
+
+### DefaultFuncKeyMap blob   (memory-map key: DEFAULT_FKM_INSTANCE_ADDR)
+- Primary anchor: the 445-byte (0x1BD) default-func-key-map data blob unk_ABF99C, used as the memcpy SOURCE in the ctor (into this+4 and this+449).
+- Fallback anchor: re-referenced (xrefs_to confirm exactly two referrers) by `CFuncKeyMappedMan::DefaultFuncKeyMap` (0x56A1C9), whose entire body is `memcpy(this+4, unk_ABF99C, 0x1BD)` — a second independent function pointing at the same blob.
+- Cross-version stability: a default-keymap data blob exists in v79/v83/v84; address differs (v83 0xBD8BCC). The key_mapped_hooks.cpp edit memcpy's from this into m_aFuncKeyMapped / m_aFuncKeyMapped_Old.
+- v79 address: 0x00ABF99C (DefaultFKMInstanceAddr).
+
+### DefaultQuickslotKeyMap blob — ABSENT in v79 (memory-map key: DEFAULT_QKM_INSTANCE_ADDR) [FLAG]
+- Primary anchor: confirmed-absent (SP-5 backward direction). v83's FKM ctor (0x58DD0D) memcpy'd a SEPARATE 32-byte quickslot-default blob (dword_BD8D8C) into this+224/this+232; **the v79 FKM ctor has no such memcpy** — it only zeroes this+896/this+900 (the 904-byte object is too small to embed a 32-byte quickslot array; quickslot lives in the separate CQuickslotKeyMappedMan, whose ctor 0x602158 also just zeroes).
+- Fallback anchor: byte search — the v83 32-byte QKM default-key sequence (0x2A,0x52,0x47,0x49,0x1D,0x53,0x4F,0x51) has **no match anywhere in v79** (find_bytes, dword- or byte-form); there is no referenced quickslot-default data global in v79.
+- Cross-version stability: present v83→v84, ABSENT v79 → new backward sentinel. The key_mapped_hooks.cpp quickslot memcpy must tolerate 0 / be struct-gated for v79.
+- v79 address: 0x00000000 (sentinel, flagged for gate/edit owner).
 
 ### CInputSystem message-pump methods (keys: C_INPUT_SYSTEM_UPDATE_DEVICE / _GET_IS_MESSAGE / _GENERATE_AUTO_KEY_DOWN)
 - Primary anchor: call-graph from **CWvsApp::Run** (0x943611). All three are called from Run's message dispatch (v83 chunk sub_9F5FD9), in three distinguishable branches keyed on the wait-result of `MsgWaitForMultipleObjects`-style `dword_B0FFDC(...)`:
@@ -632,21 +655,73 @@ Baseline IDB saved clean before any renaming or annotation.
 - Notes: these 3 were unnamed in v83 too (manual-RE seeds) — anchor on Run-branch position + body shape, never address.
 
 ### CMacroSysMan::CreateInstance (key: C_MACRO_SYS_MAN_CREATE_INSTANCE)
-- Primary anchor: usage cross-check. v79 instance dword_B0C118 (read by sub_946C88) is read by the SAME functions as v83's CMacroSysMan instance 0xBEC1F4 — `CUserLocal::UseFuncKeyMapped` and `CAvatar::NotifyAvatarModified` (and CUserLocal::Update). The TSingleton CreateInstance idiom (Alloc(80)+ctor sub_6CBBFC, vtable off_A31638) called from InitializeGameData's tail confirms it.
+- Primary anchor: usage cross-check. v79 instance dword_B0C118 (read by sub_946C88) is read by the SAME functions as v83's CMacroSysMan instance 0xBEC1F4 — `CUserLocal::UseFuncKeyMapped` and `CAvatar::NotifyAvatarModified` (and CUserLocal::Update).
+- Fallback anchor: structure/call-graph — sub_946C88 is the TSingleton CreateInstance idiom (read-global → Alloc(80) → ctor sub_6CBBFC installing vtable off_A31638) and is called from `CWvsApp::InitializeGameData`'s tail (the `return sub_946C88();` at 0x945A28). Two structural kinds independent of any symbol.
 - Cross-version drift: class GREW v79→v83 backward? — v79 allocs 80 (0x50, 4 vtables) vs v83 48 (0x30, 2 vtables). Do NOT match Macro by size; match by the UseFuncKeyMapped/NotifyAvatarModified instance-usage anchor.
 - v79 address: 0x00946C88 (CreateInstance_TSingleton_CMacroSysMan); instance 0x00B0C118; ctor 0x6CBBFC (CMacroSysMan_ctor).
 
 ### CSecurityClient::OnPacket (key: C_SECURITY_CLIENT_ON_PACKET) [needs-main-review]
 - Primary anchor: call-graph — reached as `CClientSocket::ProcessPacket` (0x48E209) **case 0x14** dispatch (`sub_994995(pkt)`).
-- Detail: body is `result = CInPacket::Decode1(a1); if(result==4) return OnCheckClientIntegrityRequest(a1); return result;` — exact match to v83 OnPacket (0xA4BF03, also size 0x1f, Decode1==4 → OnCheckClientIntegrityRequest). The callee sub_9949B4 = OnCheckClientIntegrityRequest. It also sits in the CSecurityClient code region (0x994xxx, near ctor/InitModule/StartModule).
+- Fallback anchor: body structure (independent of the call edge) — `result = CInPacket::Decode1(a1); if(result==4) return OnCheckClientIntegrityRequest(a1); return result;` (size 0x1f); the Decode1==4 → OnCheckClientIntegrityRequest (sub_9949B4) shape exactly matches v83 OnPacket. Region check: sits in the CSecurityClient code block (0x994xxx, adjacent to ctor/InitModule/StartModule).
+- Detail: exact match to v83 OnPacket (0xA4BF03, also size 0x1f, Decode1==4 → OnCheckClientIntegrityRequest).
 - Cross-version drift: v83 placed OnPacket at 0xA4BF03 (IGCipher region); v79 at 0x994995 (CSecurityClient region). Anchor on the ProcessPacket-case-0x14 edge + the Decode1==4 body, not address.
 - v79 address: 0x00994995 (OnPacket_CSecurityClient). Spot-check (needs-main-review): the security instance dword_B0C308 is also consumed by CSecurityClient::Update (sub_9948EE) in CWvsApp::Run's auto-key branch — independent corroboration of the security cluster.
 
 ### CRadioManager — ABSENT in v79 (keys: C_RADIO_MANAGER_CREATE_INSTANCE / _INSTANCE_ADDR) [FLAG]
-- Verdict: **no separate CRadioManager singleton exists in v79.** Evidence (SP-5 backward direction):
-  1. The static-init singleton cluster (0x9466CD–0x946C88) contains every manager EXCEPT radio (v83's cluster had `sub_9FA078` for radio); v79 has no 11th CreateInstance allocating the radio size.
-  2. `CConfig::ApplySysOpt` (0x4960F9) reads CSoundMan/CInputSystem/CWvsContext but **no** radio global — in v83 it read radio instance 0xBEC3B4 at two sites.
-  3. `CWvsContext::Update` (0x94F766) drives the scheduled-message ("radio") feature off **CMapleTVMan** (dword_B0D458: sub_607BC5/sub_607BBE/[+964]) — in v83 that same feature read radio 0xBEC3B4. The role is folded into CMapleTVMan in v79.
-  4. No "Radio" string literal in v79 (find_regex). (Note: RTTI-string byte search is useless here — v79 class names come from a symbol/PDB source, not RTTI type descriptors; even "FuncKeyMappedMan" find_bytes returns 0.)
-- **Radio quirk determination (the v84-flagged trap):** v83's map seed `C_RADIO_MANAGER_INSTANCE_ADDR = 0xBF0B00` is **WRONG** — confirmed by v83 disasm: `sub_9FA078` does `Alloc(dword_BF0B00, 0x2C)`, so 0xBF0B00 is the `dword_BF0B00` ZAllocEx **allocator-selector** (1st Alloc arg), while the real v83 instance global is **dword_BEC3B4** (the `mov [g],eax`-equivalent SBB store in ctor sub_72FC30). In v79 the manager is absent entirely → both keys carried 0x00000000 (flagged), the common/CRadioManager.cpp edit must tolerate 0.
-- v79 addresses: 0x00000000 / 0x00000000 (sentinel).
+- Primary anchor: confirmed-absent (SP-5 backward direction). The static-init singleton cluster (0x9466CD–0x946C88) contains every manager EXCEPT radio (v83's cluster had `sub_9FA078` for radio); v79 has no 11th CreateInstance allocating the radio size, and no "Radio" string literal exists (find_regex). (Note: RTTI-string byte search is useless here — v79 class names come from a symbol/PDB source, not RTTI type descriptors; even "FuncKeyMappedMan" find_bytes returns 0.)
+- Fallback anchor: usage displacement — `CConfig::ApplySysOpt` (0x4960F9) reads CSoundMan/CInputSystem/CWvsContext but **no** radio global (v83's ApplySysOpt read radio instance 0xBEC3B4 at two sites); and `CWvsContext::Update` (0x94F766) drives the scheduled-message ("radio") feature off **CMapleTVMan** (dword_B0D458: sub_607BC5/sub_607BBE/[+964]) — the role v83 served from radio 0xBEC3B4. The feature is folded into CMapleTVMan in v79.
+- Cross-version stability: present v83→v84, ABSENT v79 → new backward sentinel; the common/CRadioManager.cpp edit must tolerate 0.
+- v79 address: 0x00000000 / 0x00000000 (sentinel, flagged for gate/edit owner).
+- Notes — **Radio quirk determination (the v84-flagged trap):** v83's map seed `C_RADIO_MANAGER_INSTANCE_ADDR = 0xBF0B00` is **WRONG** — confirmed by v83 disasm: `sub_9FA078` does `Alloc(dword_BF0B00, 0x2C)`, so 0xBF0B00 is the `dword_BF0B00` ZAllocEx **allocator-selector** (1st Alloc arg), while the real v83 instance global is **dword_BEC3B4** (the SBB store in ctor sub_72FC30). In v79 the manager is absent entirely.
+
+## Task-7 review — manager method keys: second structural anchors (direct v79 probes)
+
+> The 9 manager method keys originally rested on the surviving mangled symbol (kind 1)
+> alone. Each now carries a SECOND structural anchor read directly from the v79 IDB:
+> the caller address (call-graph) AND a distinctive body constant/string. All probes
+> performed on v79 (port 13339, active-flag confirmed). None of the 9 is inlined/absent.
+
+### CActionMan::Init   (memory-map key: C_ACTION_MAN_INIT)
+- Primary anchor: IDB symbol `?Init@CActionMan@@QAEXXZ`.
+- Fallback anchor: call-graph — sole caller is `CWvsApp::SetUp` at **0x943396**. Body constant: starts with `CActionMan::GetCharacterImgEntry(this, 2000)` then iterates a fixed 143-entry action table (`while v3 < 143`, special-cases index 40 and range 101..108) writing the action-table globals dword_B0C4F8 / unk_B0C4FC. The 2000 img-entry id + the 143-entry build loop + the B0C4F8 table are the structural fingerprint.
+- v79 address: 0x0040681C.
+
+### CActionMan::SweepCache   (memory-map key: C_ACTION_MAN_SWEEP_CACHE)
+- Primary anchor: IDB symbol `?SweepCache@CActionMan@@QAEXXZ`.
+- Fallback anchor: call-graph — sole caller is `CWvsApp::CallUpdate` at **0x945812** (per-frame). Body constant: a phase state-machine keyed on the global `dword_B07800` cycling 0→1→2→3→4→5→0, each phase walking a ZList<ZRef> at a this+offset and dropping entries idle ≥ **300000 ms**, gated by a **60000 ms** outer throttle (`dword_B100FC()` timeGetTime). The B07800 phase counter + 300000/60000 thresholds are the fingerprint.
+- v79 address: 0x0040FEEA.
+
+### CMapleTVMan::Init   (memory-map key: C_MAPLE_TV_MAN_INIT)
+- Primary anchor: IDB symbol `?Init@CMapleTVMan@@QAEXXZ`.
+- Fallback anchor: call-graph — sole caller is `CWvsApp::SetUp` at **0x9433A7**. Body constant: 5× `ZXString::ReleaseBuffer(&byte_B0C24C)`, `ZThread::BeginThread`, `Alloc(56)` (sub_605614), and `StringPool::GetInstance(_, 3919)` (the MapleTV WZ resource id). The StringPool id **3919** + the byte_B0C24C string-buffer cluster + BeginThread are the fingerprint.
+- v79 address: 0x006074C7.
+
+### CMonsterBookMan::LoadBook   (memory-map key: C_MONSTER_BOOK_MAN_LOAD_BOOK)
+- Primary anchor: IDB symbol `?LoadBook@CMonsterBookMan@@QAEHXZ`.
+- Fallback anchor: call-graph (both directions). Caller: `CWvsApp::SetUp` at **0x9433F9**. Callee triple (body): `return LoadCard(this) && LoadStringA(this) && LoadBookIcon(this);` — the three private CMonsterBookMan loaders (0x651C49 / 0x6522C6 / 0x652BFA) short-circuited in one expression are a unique fingerprint.
+- v79 address: 0x00651C1F.
+
+### CQuestMan::LoadDemand   (memory-map key: C_QUEST_MAN_LOAD_DEMAND)
+- Primary anchor: IDB symbol `?LoadDemand@CQuestMan@@QAEHXZ`.
+- Fallback anchor: call-graph + WZ-path constant. Caller: `CWvsApp::SetUp` at **0x9433B3**. Body: opens a WZ property via `get_int32(off_AC2FF8)` (the QuestInfo path global), enumerates demand props, uses StringPool id 3199, and **tail-calls `CQuestMan::LoadQuestInfo` (0x6AD76C)**. The off_AC2FF8 path global + the LoadQuestInfo tail-call distinguish it from the sibling Load* methods.
+- v79 address: 0x006A8CD6.
+
+### CQuestMan::LoadPartyQuestInfo   (memory-map key: C_QUEST_MAN_LOAD_PARTY_QUEST_INFO)
+- Primary anchor: IDB symbol `?LoadPartyQuestInfo@CQuestMan@@QAEXXZ`.
+- Fallback anchor: call-graph + WZ-key strings. Caller: `CWvsApp::SetUp` at **0x9433E2**. Body: opens WZ via `get_int32(off_AC31D8)` and reads the property keys **"rank"** (aRank_0 @0xAC31CC), **"ranks"** (aRanks @0xAC31C0), **"mark"** (aMark @0xAC31B4), inserting party-quest entries via sub_6AE7C9. The rank/ranks/mark key strings are unique to this method.
+- v79 address: 0x006AE1F4.
+
+### CQuestMan::LoadExclusive   (memory-map key: C_QUEST_MAN_LOAD_EXCLUSIVE)
+- Primary anchor: IDB symbol `?LoadExclusive@CQuestMan@@QAEXXZ`.
+- Fallback anchor: call-graph + WZ-path constant + structure. Caller: `CWvsApp::SetUp` at **0x9433ED**. Body: opens WZ via `get_int32(off_AC3264)` and runs a **nested double IEnumVARIANT** enumeration (exclusive-quest groups) building a `ZArray<unsigned short>` with an O(n²) cross-dedup loop (sub_6B0D99). The off_AC3264 path + nested-enum dedup structure distinguish it from LoadDemand/LoadPartyQuestInfo.
+- v79 address: 0x006AF68D.
+
+### CInputSystem::Init   (memory-map key: C_INPUT_SYSTEM_INIT)
+- Primary anchor: IDB symbol `?Init@CInputSystem@@QAEXPAUHWND__@@PAPAX@Z`.
+- Fallback anchor: call-graph + import + constant. Caller: `CWvsApp::InitializeInput` at **0x944F93**. Body: `DirectInput8Create(...&riidltf...)` (DirectInput device init), a 3-iteration device-create loop, `StringPool::GetInstance(_, 959)`, and sets the default cursor position `this[590]=400 / this[591]=300` before `SetCursorState(0)`. The DirectInput8Create import + the 400/300 default-pos constants are the fingerprint.
+- v79 address: 0x005757D4.
+
+### CInputSystem::ShowCursor   (memory-map key: C_INPUT_SYSTEM_SHOW_CURSOR)
+- Primary anchor: IDB symbol `?ShowCursor@CInputSystem@@QAEXH@Z`.
+- Fallback anchor: call-graph + body constant. Callers include `CWndMan::s_Update` at **0x932F48** (cursor-idle-hide path) and CWndMan::ProcessMouse (0x93221A) / CLogo::Init. Body: reads the cursor object `this[606]`, calls its vtable+224 with the show/hide selector **`a2 ? -1 : 0xFFFFFF`**, error-routes to `CWnd::CoverBackgrnd`. The `-1 / 0xFFFFFF` cursor-show/hide ternary is the fingerprint.
+- v79 address: 0x00575C4D.
