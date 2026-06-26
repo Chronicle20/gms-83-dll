@@ -45,6 +45,7 @@ jobs:
     strategy:
       matrix:
         config:
+          - { region: GMS, major: 79,  minor: 1 }
           - { region: GMS, major: 83,  minor: 1 }
           - { region: GMS, major: 84,  minor: 1 }
           - { region: GMS, major: 87,  minor: 1 }
