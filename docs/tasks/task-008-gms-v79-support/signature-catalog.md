@@ -578,3 +578,75 @@ Baseline IDB saved clean before any renaming or annotation.
 - Cross-version stability: SBB-singleton store + CWnd-derived ctor + ForcedEnd-destroy pattern stable; address WILL differ (v83 seed 0x00BEDA60 is invalid for v79).
 - v79 address: 0x00B0D738 (labeled UITitleInstanceAddr in IDB)
 - Notes: Found via `py_eval` scanning all global stores from functions in the CLogin/CLogo code range (0x5C0000–0x600000) that target the v79 .data window (0xB00000–0xB18000). The SBB idiom is `mov eax, this; sbb eax, eax; and eax, ecx; mov [global], eax` — it stores `this` if non-null, else 0. Recognise this pattern in future ports.
+
+---
+
+## Task 7 — Manager-singleton cluster (~37 keys)
+
+> **Key structural fact (v79).** All TSingleton<T>::CreateInstance functions moved
+> into the static-init region **0x9466CD–0x946C88** (out of v83's 0x9F9xxx cluster),
+> using the single-arg `ZAllocEx<ZAllocAnonSelector>::Alloc(size)` form. There are
+> exactly **10 named** TSingleton CreateInstances + **1 unnamed** (CMacroSysMan,
+> sub_946C88). Each CreateInstance trivially reveals its `*_INSTANCE_ADDR` global
+> (the `result = dword_Bxxxxx; if(!dword_Bxxxxx){...}` read) and its class size
+> (the Alloc immediate) — decompile the CreateInstance and read both. The cluster is
+> driven from **CWvsApp::SetUp** (0x9430F1, R11 walk) for most managers and from
+> **CWvsApp::InitializeGameData** (0x945834) for the game-data managers + CMacroSysMan
+> (its tail call). The v79 IDB retains mangled symbols for the manager classes and
+> their methods, so the method keys (Init/SweepCache/LoadBook/LoadDemand/…) are
+> direct IDB-symbol lookups; only CMacroSysMan, CSecurityClient::OnPacket and the 3
+> CInputSystem message-pump methods were unnamed and needed structural anchors.
+
+### TSingleton<T>::CreateInstance + instance globals (the CREATE_INSTANCE / INSTANCE_ADDR pairs)
+- Primary anchor: each CreateInstance is a tiny (0x42–0x45) fn `result=dword_G; if(!dword_G){v=Alloc(N); if(v)return Ctor(v); else return 0;} return result;` — decompile it; `dword_G` is the INSTANCE_ADDR, `N` the class size, `Ctor` the class ctor.
+- Fallback anchor: the CreateInstance is the sole caller of the class ctor (call-graph), and the cluster is contiguous in 0x9466CD–0x946C88.
+- v79 addresses (CreateInstance fn / instance global / Alloc size):
+  - CActionMan: 0x00946A09 / 0x00B07804 / 672
+  - CAnimationDisplayer: 0x00946A5F / 0x00B0BE9C / 424
+  - CInputSystem: 0x009466CD / 0x00B0C29C / 2512
+  - CQuestMan: 0x00946725 / 0x00B0D318 / 648
+  - CMonsterBookMan: 0x009467D6 / 0x00B0D314 / 164
+  - CFuncKeyMappedMan: 0x00946AFB / 0x00B0D2A8 / 904
+  - CQuickslotKeyMappedMan: 0x00946B51 / 0x00B0C114 / 48
+  - CSecurityClient: 0x00946BA5 / 0x00B0C308 / 316
+  - CMapleTVMan: 0x00946BEA / 0x00B0D458 / 992
+  - CMacroSysMan: 0x00946C88 (unnamed) / 0x00B0C118 / 80
+- Notes: ActionMan key naming — `C_ACTION_MAN_CREATE_INSTANCE_ADDR` is the CreateInstance **function** (0x946A09); `C_ACTION_MAN_INSTANCE_ADDR` is the **global** (0xB07804). Same convention as v83.
+
+### CFuncKeyMappedMan ctor + default-keymap blobs (keys: C_FUNC_KEY_MAPPED_MAN / _VFTABLE / _INSTANCE_ADDR / DEFAULT_FKM_INSTANCE_ADDR / DEFAULT_QKM_INSTANCE_ADDR)
+- Primary anchor: IDB symbol ??0CFuncKeyMappedMan@@QAE@XZ (0x569DE5).
+- Detail: SBB-stores singleton dword_B0D2A8, installs vtable off_A2EB38, then `memcpy(this+4, unk_ABF99C, 0x1BD)` (m_aFuncKeyMapped) and `memcpy(this+449, unk_ABF99C, 0x1BD)` (m_aFuncKeyMapped_Old) — both from the **same** 445-byte FKM default blob unk_ABF99C (= DEFAULT_FKM). Then it only **zeroes** this+896/this+900 (no quickslot-default memcpy). `CFuncKeyMappedMan::DefaultFuncKeyMap` (0x56A1C9) re-memcpy's the same unk_ABF99C — confirms DEFAULT_FKM.
+- Cross-version drift vs v83: v83's ctor (0x58DD0D) memcpy'd a SEPARATE 32-byte quickslot default (dword_BD8D8C = DEFAULT_QKM) into this+224/this+232. **v79 has no such memcpy** — the FKM object is 904 bytes (896+8 zeroed tail), too small to embed a 32-byte quickslot array; quickslot lives entirely in the separate CQuickslotKeyMappedMan. The v83 32-byte QKM default-key sequence (0x2A,0x52,0x47,0x49,0x1D,0x53,0x4F,0x51) has **no byte-match anywhere in v79** (dword- or byte-form). → DEFAULT_QKM_INSTANCE_ADDR carried as 0x0 SENTINEL, flagged. The key_mapped_hooks.cpp quickslot memcpy must tolerate 0 / be struct-gated for v79.
+- v79 addresses: ctor 0x00569DE5; vftable 0x00A2EB38; instance 0x00B0D2A8; DEFAULT_FKM 0x00ABF99C; DEFAULT_QKM **0x0 (absent)**.
+
+### CInputSystem message-pump methods (keys: C_INPUT_SYSTEM_UPDATE_DEVICE / _GET_IS_MESSAGE / _GENERATE_AUTO_KEY_DOWN)
+- Primary anchor: call-graph from **CWvsApp::Run** (0x943611). All three are called from Run's message dispatch (v83 chunk sub_9F5FD9), in three distinguishable branches keyed on the wait-result of `MsgWaitForMultipleObjects`-style `dword_B0FFDC(...)`:
+  - `if (type<=2)`: `UpdateDevice(inst,type)` then `while(GetIsMessage(inst,&msg)) ISMsgProc(...)`.
+  - `else (auto-key)`: `if(GenerateAutoKeyDown(inst,&msg)) ISMsgProc(...); CSecurityClient::Update(inst2)`.
+- Fallback anchor: exact body structure (independent of the unnamed symbols):
+  - UpdateDevice (0x575BFE, size 0x1d): `if(!a1) UpdateKeyboard(1); else if(a1==1) UpdateMouse;`.
+  - GetIsMessage (0x575C1B, size 0x32): `if(!this[625])return 0; copy 3 dwords from this[626]; helper(this[626]); return 1;`.
+  - GenerateAutoKeyDown (0x576BE7): `gate this[2]/[8]/[586]; *a2=256; a2[2]=…|GetSpecialKeyFlag(this); return 1;`.
+  Sizes/bodies match v83 (UpdateDevice 0x59A2E9, GetIsMessage sub_59A306, GenerateAutoKeyDown sub_59B2D2) exactly.
+- v79 addresses: 0x00575BFE / 0x00575C1B / 0x00576BE7. (Init 0x005757D4, ShowCursor 0x00575C4D are IDB symbols.)
+- Notes: these 3 were unnamed in v83 too (manual-RE seeds) — anchor on Run-branch position + body shape, never address.
+
+### CMacroSysMan::CreateInstance (key: C_MACRO_SYS_MAN_CREATE_INSTANCE)
+- Primary anchor: usage cross-check. v79 instance dword_B0C118 (read by sub_946C88) is read by the SAME functions as v83's CMacroSysMan instance 0xBEC1F4 — `CUserLocal::UseFuncKeyMapped` and `CAvatar::NotifyAvatarModified` (and CUserLocal::Update). The TSingleton CreateInstance idiom (Alloc(80)+ctor sub_6CBBFC, vtable off_A31638) called from InitializeGameData's tail confirms it.
+- Cross-version drift: class GREW v79→v83 backward? — v79 allocs 80 (0x50, 4 vtables) vs v83 48 (0x30, 2 vtables). Do NOT match Macro by size; match by the UseFuncKeyMapped/NotifyAvatarModified instance-usage anchor.
+- v79 address: 0x00946C88 (CreateInstance_TSingleton_CMacroSysMan); instance 0x00B0C118; ctor 0x6CBBFC (CMacroSysMan_ctor).
+
+### CSecurityClient::OnPacket (key: C_SECURITY_CLIENT_ON_PACKET) [needs-main-review]
+- Primary anchor: call-graph — reached as `CClientSocket::ProcessPacket` (0x48E209) **case 0x14** dispatch (`sub_994995(pkt)`).
+- Detail: body is `result = CInPacket::Decode1(a1); if(result==4) return OnCheckClientIntegrityRequest(a1); return result;` — exact match to v83 OnPacket (0xA4BF03, also size 0x1f, Decode1==4 → OnCheckClientIntegrityRequest). The callee sub_9949B4 = OnCheckClientIntegrityRequest. It also sits in the CSecurityClient code region (0x994xxx, near ctor/InitModule/StartModule).
+- Cross-version drift: v83 placed OnPacket at 0xA4BF03 (IGCipher region); v79 at 0x994995 (CSecurityClient region). Anchor on the ProcessPacket-case-0x14 edge + the Decode1==4 body, not address.
+- v79 address: 0x00994995 (OnPacket_CSecurityClient). Spot-check (needs-main-review): the security instance dword_B0C308 is also consumed by CSecurityClient::Update (sub_9948EE) in CWvsApp::Run's auto-key branch — independent corroboration of the security cluster.
+
+### CRadioManager — ABSENT in v79 (keys: C_RADIO_MANAGER_CREATE_INSTANCE / _INSTANCE_ADDR) [FLAG]
+- Verdict: **no separate CRadioManager singleton exists in v79.** Evidence (SP-5 backward direction):
+  1. The static-init singleton cluster (0x9466CD–0x946C88) contains every manager EXCEPT radio (v83's cluster had `sub_9FA078` for radio); v79 has no 11th CreateInstance allocating the radio size.
+  2. `CConfig::ApplySysOpt` (0x4960F9) reads CSoundMan/CInputSystem/CWvsContext but **no** radio global — in v83 it read radio instance 0xBEC3B4 at two sites.
+  3. `CWvsContext::Update` (0x94F766) drives the scheduled-message ("radio") feature off **CMapleTVMan** (dword_B0D458: sub_607BC5/sub_607BBE/[+964]) — in v83 that same feature read radio 0xBEC3B4. The role is folded into CMapleTVMan in v79.
+  4. No "Radio" string literal in v79 (find_regex). (Note: RTTI-string byte search is useless here — v79 class names come from a symbol/PDB source, not RTTI type descriptors; even "FuncKeyMappedMan" find_bytes returns 0.)
+- **Radio quirk determination (the v84-flagged trap):** v83's map seed `C_RADIO_MANAGER_INSTANCE_ADDR = 0xBF0B00` is **WRONG** — confirmed by v83 disasm: `sub_9FA078` does `Alloc(dword_BF0B00, 0x2C)`, so 0xBF0B00 is the `dword_BF0B00` ZAllocEx **allocator-selector** (1st Alloc arg), while the real v83 instance global is **dword_BEC3B4** (the `mov [g],eax`-equivalent SBB store in ctor sub_72FC30). In v79 the manager is absent entirely → both keys carried 0x00000000 (flagged), the common/CRadioManager.cpp edit must tolerate 0.
+- v79 addresses: 0x00000000 / 0x00000000 (sentinel).

@@ -12,12 +12,12 @@ set(CLIENT_START_ERROR 0x19)
 
 set(GET_SE_PRIVILEGE 0x0044E824)
 
-set(C_ACTION_MAN_CREATE_INSTANCE_ADDR 0x009F9DA6)
-set(C_ACTION_MAN_INSTANCE_ADDR 0x00BE78D4)
-set(C_ACTION_MAN_INIT 0x00406ABD)
-set(C_ACTION_MAN_SWEEP_CACHE 0x00411BBB)
+set(C_ACTION_MAN_CREATE_INSTANCE_ADDR 0x00946A09) # TSingleton<CActionMan>::CreateInstance; Alloc(672)+ctor; instance global 0xB07804
+set(C_ACTION_MAN_INSTANCE_ADDR 0x00B07804) # ActionManInstanceAddr; the mov [g],eax store in CreateInstance
+set(C_ACTION_MAN_INIT 0x0040681C) # symbol ?Init@CActionMan@@QAEXXZ
+set(C_ACTION_MAN_SWEEP_CACHE 0x0040FEEA) # symbol ?SweepCache@CActionMan@@QAEXXZ
 
-set(C_ANIMATION_DISPLAYER_CREATE_INSTANCE 0x009F9DFC)
+set(C_ANIMATION_DISPLAYER_CREATE_INSTANCE 0x00946A5F) # TSingleton<CAnimationDisplayer>::CreateInstance; Alloc(424)+ctor; instance 0xB0BE9C
 
 set(C_CLIENT_SOCKET_INSTANCE_ADDR 0x00B07844) # g_pClientSocketInstance; SBB-singleton store at top of CClientSocket ctor, read by free SendPacket helper
 set(C_CLIENT_SOCKET_CREATE_INSTANCE 0x00946AB6) # TSingleton<CClientSocket>::CreateInstance; Alloc(148=0x94)+ctor (out of v83 0x9F9Exx cluster)
@@ -43,22 +43,22 @@ set(C_CONFIG_APPLY_SYS_OPT 0x0049EA33)
 set(C_CONFIG_CHECK_EXEC_PATH_REG 0x0049CCF3)
 set(C_CONFIG_SYS_OPT_WINDOWED_MODE 0x00BF1AC8)
 
-set(C_FUNC_KEY_MAPPED_MAN 0x0058DD0D)
-set(C_FUNC_KEY_MAPPED_MAN_VFTABLE 0x00AF5650)
-set(C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR 0x00BED5A0)
-set(C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE 0x009F9E98)
+set(C_FUNC_KEY_MAPPED_MAN 0x00569DE5) # symbol ??0CFuncKeyMappedMan@@QAE@XZ (ctor); installs vtable 0xA2EB38, instance 0xB0D2A8
+set(C_FUNC_KEY_MAPPED_MAN_VFTABLE 0x00A2EB38) # off_A2EB38; installed at *this in the ctor
+set(C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR 0x00B0D2A8) # dword_B0D2A8; SBB-singleton store in ctor + read by CreateInstance
+set(C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE 0x00946AFB) # TSingleton<CFuncKeyMappedMan>::CreateInstance; Alloc(904)+ctor
 
-set(DEFAULT_FKM_INSTANCE_ADDR 0x00BD8BCC)
-set(DEFAULT_QKM_INSTANCE_ADDR 0x00BD8D8C)
+set(DEFAULT_FKM_INSTANCE_ADDR 0x00ABF99C) # DefaultFKMInstanceAddr (unk_ABF99C); 445-byte FKM default blob, memcpy src in ctor + DefaultFuncKeyMap
+set(DEFAULT_QKM_INSTANCE_ADDR 0x00000000) # ABSENT in v79: FKM ctor zeroes the quickslot region (no QKM-default memcpy); v83 32-byte blob has no v79 byte-match. FLAG gate/edit owner (key_mapped_hooks quickslot memcpy must tolerate 0)
 
-set(C_INPUT_SYSTEM 0x009F821F)
-set(C_INPUT_SYSTEM_CREATE_INSTANCE 0x009F9A6A)
-set(C_INPUT_SYSTEM_INSTANCE_ADDR 0x00BEC33C)
-set(C_INPUT_SYSTEM_INIT 0x00599EBF)
-set(C_INPUT_SYSTEM_UPDATE_DEVICE 0x0059A2E9)
-set(C_INPUT_SYSTEM_GET_IS_MESSAGE 0x0059A306)
-set(C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN 0x0059B2D2)
-set(C_INPUT_SYSTEM_SHOW_CURSOR 0x59A338)
+set(C_INPUT_SYSTEM 0x00945204) # symbol ??0CInputSystem@@QAE@XZ (ctor); CreateInstance allocs 2512, instance 0xB0C29C
+set(C_INPUT_SYSTEM_CREATE_INSTANCE 0x009466CD) # TSingleton<CInputSystem>::CreateInstance; Alloc(2512)+ctor
+set(C_INPUT_SYSTEM_INSTANCE_ADDR 0x00B0C29C) # InputSystemInstanceAddr (dword_B0C29C); read by ApplySysOpt + CWvsApp::Run input pump
+set(C_INPUT_SYSTEM_INIT 0x005757D4) # symbol ?Init@CInputSystem@@QAEXPAUHWND__@@PAPAX@Z
+set(C_INPUT_SYSTEM_UPDATE_DEVICE 0x00575BFE) # UpdateDevice_CInputSystem; if(!a1)UpdateKeyboard else if(a1==1)UpdateMouse; called from Run (msgtype<=2 branch)
+set(C_INPUT_SYSTEM_GET_IS_MESSAGE 0x00575C1B) # GetIsMessage_CInputSystem; this[625] gate, copies 3 dwords; Run inner drain loop w/ ISMsgProc
+set(C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN 0x00576BE7) # GenerateAutoKeyDown_CInputSystem; *a2=256 + GetSpecialKeyFlag; Run else-branch before CSecurityClient::Update
+set(C_INPUT_SYSTEM_SHOW_CURSOR 0x00575C4D) # symbol ?ShowCursor@CInputSystem@@QAEXH@Z
 
 set(C_LOGIN_UPDATE 0x005CA348) # vtable[0] of CLogin primary vtable (0xA2F9EC); body uses [esi+0x15C], CWnd::InvalidateRect — diverges from C_LOGO_UPDATE in v79 (shared 0x5F4C16 in v83)
 set(C_LOGIN_SEND_CHECK_PASSWORD_PACKET 0x005CBF50) # IDB symbol ??
@@ -75,17 +75,17 @@ set(C_LOGO_FORCED_END 0x005FFA2A) # vtable[2] of CLogo primary vtable (A307C4); 
 set(C_LOGO_INIT 0x005FF9BC) # vtable[1] of CLogo primary vtable (A307C0); called by SET_STAGE at 6f1c2c via [vtable+4]
 set(C_LOGO_INIT_NX_LOGO 0x005FFA96) # StringPool::GetBSTR(0x568) NX-logo resource + init-once guard on [this+0x28]
 
-set(C_MACRO_SYS_MAN_CREATE_INSTANCE 0x009F9EEE)
+set(C_MACRO_SYS_MAN_CREATE_INSTANCE 0x00946C88) # CreateInstance_TSingleton_CMacroSysMan; Alloc(80)+ctor 0x6CBBFC; instance 0xB0C118 (matches v83 macro-instance usage by UseFuncKeyMapped+NotifyAvatarModified); called from InitializeGameData tail
 
 set(C_BATTLE_RECORD_MAN_CREATE_INSTANCE 0x00000000)
 
-set(C_MAPLE_TV_MAN_CREATE_INSTANCE 0x009F9F87)
-set(C_MAPLE_TV_MAN_INSTANCE_ADDR 0x00BED76C)
-set(C_MAPLE_TV_MAN_INIT 0x00636F4E)
+set(C_MAPLE_TV_MAN_CREATE_INSTANCE 0x00946BEA) # TSingleton<CMapleTVMan>::CreateInstance; Alloc(992)+ctor 0x6072B1; instance 0xB0D458
+set(C_MAPLE_TV_MAN_INSTANCE_ADDR 0x00B0D458) # MapleTVManInstanceAddr (dword_B0D458); also drives the scheduled-message path in CWvsContext::Update (v83's radio role)
+set(C_MAPLE_TV_MAN_INIT 0x006074C7) # symbol ?Init@CMapleTVMan@@QAEXXZ
 
-set(C_MONSTER_BOOK_MAN_CREATE_INSTANCE 0x009F9B73)
-set(C_MONSTER_BOOK_MAN_INSTANCE_ADDR 0x00BED610)
-set(C_MONSTER_BOOK_MAN_LOAD_BOOK 0x0068487C)
+set(C_MONSTER_BOOK_MAN_CREATE_INSTANCE 0x009467D6) # TSingleton<CMonsterBookMan>::CreateInstance; Alloc(164)+ctor 0x94681B; instance 0xB0D314
+set(C_MONSTER_BOOK_MAN_INSTANCE_ADDR 0x00B0D314) # MonsterBookManInstanceAddr (dword_B0D314)
+set(C_MONSTER_BOOK_MAN_LOAD_BOOK 0x00651C1F) # symbol ?LoadBook@CMonsterBookMan@@QAEHXZ
 
 set(C_OUT_PACKET 0x0067AD6B) # symbol ??0COutPacket@@QAE@J@Z; _Alloc(256)+Init structure
 set(C_OUT_PACKET_ENCODE_1 0x004062C7) # symbol Encode1; push 1 + mov [eax+ecx],dl + inc; shared _EnsureCapacity
@@ -100,20 +100,20 @@ set(C_IG_CIPHER_INNO_HASH 0x00A4A838)
 set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR 0x00403166)
 set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR 0x0040318B)
 
-set(C_QUEST_MAN_CREATE_INSTANCE 0x009F9AC2)
-set(C_QUEST_MAN_INSTANCE_ADDR 0x00BED614)
-set(C_QUEST_MAN_LOAD_DEMAND 0x0071D8DF)
-set(C_QUEST_MAN_LOAD_PARTY_QUEST_INFO 0x00723341)
-set(C_QUEST_MAN_LOAD_EXCLUSIVE 0x007247A1)
+set(C_QUEST_MAN_CREATE_INSTANCE 0x00946725) # TSingleton<CQuestMan>::CreateInstance; Alloc(648)+ctor 0x6A86CD; instance 0xB0D318
+set(C_QUEST_MAN_INSTANCE_ADDR 0x00B0D318) # QuestManInstanceAddr (dword_B0D318)
+set(C_QUEST_MAN_LOAD_DEMAND 0x006A8CD6) # symbol ?LoadDemand@CQuestMan@@QAEHXZ
+set(C_QUEST_MAN_LOAD_PARTY_QUEST_INFO 0x006AE1F4) # symbol ?LoadPartyQuestInfo@CQuestMan@@QAEXXZ
+set(C_QUEST_MAN_LOAD_EXCLUSIVE 0x006AF68D) # symbol ?LoadExclusive@CQuestMan@@QAEXXZ
 
-set(C_QUICKSLOT_KEY_MAPPED_MAN 0x009FA0CB)
+set(C_QUICKSLOT_KEY_MAPPED_MAN 0x00946B51) # TSingleton<CQuickslotKeyMappedMan>::CreateInstance; Alloc(48)+ctor 0x602158; instance 0xB0C114
 
-set(C_RADIO_MANAGER_CREATE_INSTANCE 0x009FA078)
-set(C_RADIO_MANAGER_INSTANCE_ADDR 0x00BF0B00)
+set(C_RADIO_MANAGER_CREATE_INSTANCE 0x00000000) # ABSENT in v79: no CRadioManager singleton (not in the 0x946xxx cluster); the scheduled-message/radio role is folded into CMapleTVMan in v79. FLAG gate/edit owner (common/CRadioManager.cpp must tolerate 0)
+set(C_RADIO_MANAGER_INSTANCE_ADDR 0x00000000) # ABSENT in v79 (see above). v83 seed 0xBF0B00 was ALWAYS WRONG: it is the dword_BF0B00 ZAllocEx allocator-selector (1st Alloc arg), not the instance; the real v83 instance was 0xBEC3B4. v79 has no separate radio instance.
 
-set(C_SECURITY_CLIENT_CREATE_INSTANCE 0x009F9F42)
-set(C_SECURITY_CLIENT_INSTANCE_ADDR 0x00BEC3A8)
-set(C_SECURITY_CLIENT_ON_PACKET 0x00A4BF03)
+set(C_SECURITY_CLIENT_CREATE_INSTANCE 0x00946BA5) # TSingleton<CSecurityClient>::CreateInstance; Alloc(316)+ctor 0x994493; instance 0xB0C308
+set(C_SECURITY_CLIENT_INSTANCE_ADDR 0x00B0C308) # SecurityClientInstanceAddr (dword_B0C308)
+set(C_SECURITY_CLIENT_ON_PACKET 0x00994995) # OnPacket_CSecurityClient; Decode1==4 -> OnCheckClientIntegrityRequest; reached from CClientSocket::ProcessPacket case 0x14. needs-main-review (security_hooks boundary)
 
 set(STAGE_INSTANCE_ADDR 0x00B0DADC) # dword_B0DADC; zeroed then written by SET_STAGE (6f1aec); read by CWvsApp::CallUpdate (945501)
 set(SET_STAGE 0x006F1AC0) # IDB comment; clears STAGE_INSTANCE_ADDR, calls old_stage->vtable[2]=ForcedEnd, stores new stage, calls new_stage->vtable[1]=Init

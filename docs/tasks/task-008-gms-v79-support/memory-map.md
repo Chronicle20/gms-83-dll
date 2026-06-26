@@ -77,11 +77,11 @@ never copied blind.
 | PLAYER_LOGGED_IN | opcode | 0x14 | ☐ |
 | CLIENT_START_ERROR | opcode | 0x19 | ☐ |
 | GET_SE_PRIVILEGE | addr | 0x0044E824 | ☐ |
-| C_ACTION_MAN_CREATE_INSTANCE_ADDR | addr | 0x009F9DA6 | ☐ |
-| C_ACTION_MAN_INSTANCE_ADDR | addr | 0x00BE78D4 | ☐ |
-| C_ACTION_MAN_INIT | addr | 0x00406ABD | ☐ |
-| C_ACTION_MAN_SWEEP_CACHE | addr | 0x00411BBB | ☐ |
-| C_ANIMATION_DISPLAYER_CREATE_INSTANCE | addr | 0x009F9DFC | ☐ |
+| C_ACTION_MAN_CREATE_INSTANCE_ADDR | addr | 0x009F9DA6 | ✔ (v79 0x00946A09; TSingleton<CActionMan>::CreateInstance, Alloc(672)+ctor) |
+| C_ACTION_MAN_INSTANCE_ADDR | addr | 0x00BE78D4 | ✔ (v79 0x00B07804; instance global stored in CreateInstance) |
+| C_ACTION_MAN_INIT | addr | 0x00406ABD | ✔ (v79 0x0040681C; symbol ?Init@CActionMan@@) |
+| C_ACTION_MAN_SWEEP_CACHE | addr | 0x00411BBB | ✔ (v79 0x0040FEEA; symbol ?SweepCache@CActionMan@@) |
+| C_ANIMATION_DISPLAYER_CREATE_INSTANCE | addr | 0x009F9DFC | ✔ (v79 0x00946A5F; TSingleton<CAnimationDisplayer>::CreateInstance, Alloc(424); instance 0xB0BE9C) |
 | C_CLIENT_SOCKET_INSTANCE_ADDR | addr | 0x00BE7914 | ✔ (v79 0x00B07844; SBB-singleton store in ctor, g_pClientSocketInstance) |
 | C_CLIENT_SOCKET_CREATE_INSTANCE | addr | 0x009F9E53 | ✔ (v79 0x00946AB6; TSingleton::CreateInstance Alloc(0x94)+ctor) |
 | C_CLIENT_SOCKET_SEND_PACKET | addr | 0x0049637B | ✔ (v79 0x0048DF93; symbol+MakeBufferList(79)->innoHash->Flush) |
@@ -102,20 +102,20 @@ never copied blind.
 | C_CONFIG_APPLY_SYS_OPT | addr | 0x0049EA33 | ☐ |
 | C_CONFIG_CHECK_EXEC_PATH_REG | addr | 0x0049CCF3 | ☐ |
 | C_CONFIG_SYS_OPT_WINDOWED_MODE | addr | 0x00BF1AC8 | ☐ |
-| C_FUNC_KEY_MAPPED_MAN | addr | 0x0058DD0D | ☐ |
-| C_FUNC_KEY_MAPPED_MAN_VFTABLE | addr | 0x00AF5650 | ☐ |
-| C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR | addr | 0x00BED5A0 | ☐ |
-| C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE | addr | 0x009F9E98 | ☐ |
-| DEFAULT_FKM_INSTANCE_ADDR | addr | 0x00BD8BCC | ☐ |
-| DEFAULT_QKM_INSTANCE_ADDR | addr | 0x00BD8D8C | ☐ |
-| C_INPUT_SYSTEM | addr | 0x009F821F | ☐ |
-| C_INPUT_SYSTEM_CREATE_INSTANCE | addr | 0x009F9A6A | ☐ |
-| C_INPUT_SYSTEM_INSTANCE_ADDR | addr | 0x00BEC33C | ☐ |
-| C_INPUT_SYSTEM_INIT | addr | 0x00599EBF | ☐ |
-| C_INPUT_SYSTEM_UPDATE_DEVICE | addr | 0x0059A2E9 | ☐ |
-| C_INPUT_SYSTEM_GET_IS_MESSAGE | addr | 0x0059A306 | ☐ |
-| C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN | addr | 0x0059B2D2 | ☐ |
-| C_INPUT_SYSTEM_SHOW_CURSOR | addr | 0x59A338 | ☐ |
+| C_FUNC_KEY_MAPPED_MAN | addr | 0x0058DD0D | ✔ (v79 0x00569DE5; symbol ??0CFuncKeyMappedMan@@ ctor; installs vtable 0xA2EB38, instance 0xB0D2A8) |
+| C_FUNC_KEY_MAPPED_MAN_VFTABLE | addr | 0x00AF5650 | ✔ (v79 0x00A2EB38; off_A2EB38 installed at *this in ctor) |
+| C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR | addr | 0x00BED5A0 | ✔ (v79 0x00B0D2A8; SBB-singleton store in ctor + read by CreateInstance) |
+| C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE | addr | 0x009F9E98 | ✔ (v79 0x00946AFB; TSingleton<CFuncKeyMappedMan>::CreateInstance, Alloc(904)+ctor) |
+| DEFAULT_FKM_INSTANCE_ADDR | addr | 0x00BD8BCC | ✔ (v79 0x00ABF99C; unk_ABF99C 445-byte FKM default blob, memcpy src in ctor + DefaultFuncKeyMap) |
+| DEFAULT_QKM_INSTANCE_ADDR | addr | 0x00BD8D8C | ✔ ABSENT v79 → 0x0 SENTINEL (FKM ctor zeroes quickslot region; no QKM-default memcpy; v83 32-byte blob has no v79 byte-match — FLAG gate/edit owner) |
+| C_INPUT_SYSTEM | addr | 0x009F821F | ✔ (v79 0x00945204; symbol ??0CInputSystem@@ ctor; CreateInstance Alloc(2512), instance 0xB0C29C) |
+| C_INPUT_SYSTEM_CREATE_INSTANCE | addr | 0x009F9A6A | ✔ (v79 0x009466CD; TSingleton<CInputSystem>::CreateInstance, Alloc(2512)+ctor) |
+| C_INPUT_SYSTEM_INSTANCE_ADDR | addr | 0x00BEC33C | ✔ (v79 0x00B0C29C; read by ApplySysOpt + CWvsApp::Run input pump) |
+| C_INPUT_SYSTEM_INIT | addr | 0x00599EBF | ✔ (v79 0x005757D4; symbol ?Init@CInputSystem@@) |
+| C_INPUT_SYSTEM_UPDATE_DEVICE | addr | 0x0059A2E9 | ✔ (v79 0x00575BFE; UpdateKeyboard/UpdateMouse dispatch; Run msgtype<=2 branch — exact v83-body match) |
+| C_INPUT_SYSTEM_GET_IS_MESSAGE | addr | 0x0059A306 | ✔ (v79 0x00575C1B; this[625] gate+copy 3 dwords; Run inner drain loop — exact v83-body match) |
+| C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN | addr | 0x0059B2D2 | ✔ (v79 0x00576BE7; *a2=256+GetSpecialKeyFlag; Run else-branch before CSecurityClient::Update — exact v83-body match) |
+| C_INPUT_SYSTEM_SHOW_CURSOR | addr | 0x59A338 | ✔ (v79 0x00575C4D; symbol ?ShowCursor@CInputSystem@@) |
 | C_LOGIN_UPDATE | addr | 0x005F4C16 | ✔ (v79 0x005CA348; vtable[0] CLogin primary vtable 0xA2F9EC; body: [esi+0x15C]+CWnd::InvalidateRect; DIVERGES from C_LOGO_UPDATE in v79) |
 | C_LOGIN_SEND_CHECK_PASSWORD_PACKET | addr | 0x005F6952 | ✔ (v79 0x005CBF50; IDB symbol) |
 | C_LOGO | addr | 0x0062ECE2 | ✔ (v79 0x005FF8C4; IDB symbol ??0CLogo@@QAE@XZ; Alloc(0x258)+ctor in LogoEnd) |
@@ -129,14 +129,14 @@ never copied blind.
 | C_LOGO_FORCED_END | addr | 0x0062EEF8 | ✔ (v79 0x005FFA2A; vtable[2] CLogo primary 0xA307C4; SET_STAGE calls [vtable+8] at 6f1b14; body: CSoundMan::PlayBGM(0x3E8); v83 primary vtable off_AF7C80 slot2=0x62EE8C, same PlayBGM(0x3E8) idiom (historical seed 0x62EEF8 imprecise) — slot order matches v79: no drift) |
 | C_LOGO_INIT | addr | 0x0062EDDA | ✔ (v79 0x005FF9BC; vtable[1] CLogo primary 0xA307C0; SET_STAGE calls [vtable+4] at 6f1c2c; v83 primary vtable off_AF7C80 slot1=0x62EDDA — slot order matches v79: no drift) |
 | C_LOGO_INIT_NX_LOGO | addr | 0x0062F396 | ✔ (v79 0x005FFA96; StringPool::GetBSTR(0x568) NX-logo path; init-once guard [this+0x28]) |
-| C_MACRO_SYS_MAN_CREATE_INSTANCE | addr | 0x009F9EEE | ☐ |
+| C_MACRO_SYS_MAN_CREATE_INSTANCE | addr | 0x009F9EEE | ✔ (v79 0x00946C88; CreateInstance_TSingleton_CMacroSysMan, Alloc(80)+ctor 0x6CBBFC; instance 0xB0C118 matches v83 macro-instance usage by UseFuncKeyMapped+NotifyAvatarModified; from InitializeGameData tail) |
 | C_BATTLE_RECORD_MAN_CREATE_INSTANCE | sentinel | 0x00000000 | ☐ |
-| C_MAPLE_TV_MAN_CREATE_INSTANCE | addr | 0x009F9F87 | ☐ |
-| C_MAPLE_TV_MAN_INSTANCE_ADDR | addr | 0x00BED76C | ☐ |
-| C_MAPLE_TV_MAN_INIT | addr | 0x00636F4E | ☐ |
-| C_MONSTER_BOOK_MAN_CREATE_INSTANCE | addr | 0x009F9B73 | ☐ |
-| C_MONSTER_BOOK_MAN_INSTANCE_ADDR | addr | 0x00BED610 | ☐ |
-| C_MONSTER_BOOK_MAN_LOAD_BOOK | addr | 0x0068487C | ☐ |
+| C_MAPLE_TV_MAN_CREATE_INSTANCE | addr | 0x009F9F87 | ✔ (v79 0x00946BEA; TSingleton<CMapleTVMan>::CreateInstance, Alloc(992)+ctor 0x6072B1; instance 0xB0D458) |
+| C_MAPLE_TV_MAN_INSTANCE_ADDR | addr | 0x00BED76C | ✔ (v79 0x00B0D458; also drives CWvsContext::Update scheduled-message path — v83's radio role) |
+| C_MAPLE_TV_MAN_INIT | addr | 0x00636F4E | ✔ (v79 0x006074C7; symbol ?Init@CMapleTVMan@@) |
+| C_MONSTER_BOOK_MAN_CREATE_INSTANCE | addr | 0x009F9B73 | ✔ (v79 0x009467D6; TSingleton<CMonsterBookMan>::CreateInstance, Alloc(164)+ctor 0x94681B; instance 0xB0D314) |
+| C_MONSTER_BOOK_MAN_INSTANCE_ADDR | addr | 0x00BED610 | ✔ (v79 0x00B0D314; instance global) |
+| C_MONSTER_BOOK_MAN_LOAD_BOOK | addr | 0x0068487C | ✔ (v79 0x00651C1F; symbol ?LoadBook@CMonsterBookMan@@) |
 | C_OUT_PACKET | addr | 0x006EC9CE | ✔ (v79 0x0067AD6B; symbol+_Alloc(256)+Init) |
 | C_OUT_PACKET_ENCODE_1 | addr | 0x00406549 | ✔ (v79 0x004062C7; push1+store dl+inc; shared _EnsureCapacity) |
 | C_OUT_PACKET_ENCODE_2 | addr | 0x00427F74 | ✔ (v79 0x0042539C; push2+store dx+add2; shared _EnsureCapacity) |
@@ -147,17 +147,17 @@ never copied blind.
 | C_IG_CIPHER_INNO_HASH | addr | 0x00A4A838 | ☐ |
 | Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR | addr | 0x00403166 | ☐ |
 | Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR | addr | 0x0040318B | ☐ |
-| C_QUEST_MAN_CREATE_INSTANCE | addr | 0x009F9AC2 | ☐ |
-| C_QUEST_MAN_INSTANCE_ADDR | addr | 0x00BED614 | ☐ |
-| C_QUEST_MAN_LOAD_DEMAND | addr | 0x0071D8DF | ☐ |
-| C_QUEST_MAN_LOAD_PARTY_QUEST_INFO | addr | 0x00723341 | ☐ |
-| C_QUEST_MAN_LOAD_EXCLUSIVE | addr | 0x007247A1 | ☐ |
-| C_QUICKSLOT_KEY_MAPPED_MAN | addr | 0x009FA0CB | ☐ |
-| C_RADIO_MANAGER_CREATE_INSTANCE | addr | 0x009FA078 | ☐ |
-| C_RADIO_MANAGER_INSTANCE_ADDR | addr | 0x00BF0B00 | ☐ (v84 found v83's value pointed at the allocator selector, not the instance — verify the real v79 instance global) |
-| C_SECURITY_CLIENT_CREATE_INSTANCE | addr | 0x009F9F42 | ☐ |
-| C_SECURITY_CLIENT_INSTANCE_ADDR | addr | 0x00BEC3A8 | ☐ |
-| C_SECURITY_CLIENT_ON_PACKET | addr | 0x00A4BF03 | ☐ |
+| C_QUEST_MAN_CREATE_INSTANCE | addr | 0x009F9AC2 | ✔ (v79 0x00946725; TSingleton<CQuestMan>::CreateInstance, Alloc(648)+ctor 0x6A86CD; instance 0xB0D318) |
+| C_QUEST_MAN_INSTANCE_ADDR | addr | 0x00BED614 | ✔ (v79 0x00B0D318; instance global) |
+| C_QUEST_MAN_LOAD_DEMAND | addr | 0x0071D8DF | ✔ (v79 0x006A8CD6; symbol ?LoadDemand@CQuestMan@@) |
+| C_QUEST_MAN_LOAD_PARTY_QUEST_INFO | addr | 0x00723341 | ✔ (v79 0x006AE1F4; symbol ?LoadPartyQuestInfo@CQuestMan@@) |
+| C_QUEST_MAN_LOAD_EXCLUSIVE | addr | 0x007247A1 | ✔ (v79 0x006AF68D; symbol ?LoadExclusive@CQuestMan@@) |
+| C_QUICKSLOT_KEY_MAPPED_MAN | addr | 0x009FA0CB | ✔ (v79 0x00946B51; TSingleton<CQuickslotKeyMappedMan>::CreateInstance, Alloc(48)+ctor 0x602158; instance 0xB0C114) |
+| C_RADIO_MANAGER_CREATE_INSTANCE | addr | 0x009FA078 | ✔ ABSENT v79 → 0x0 SENTINEL (no CRadioManager singleton in the cluster; schedule role folded into CMapleTVMan; FLAG gate/edit owner) |
+| C_RADIO_MANAGER_INSTANCE_ADDR | addr | 0x00BF0B00 | ✔ ABSENT v79 → 0x0 SENTINEL. v83 seed 0xBF0B00 was ALWAYS WRONG: it is the dword_BF0B00 allocator-selector (1st Alloc arg); real v83 instance was 0xBEC3B4. v79 has no separate radio instance |
+| C_SECURITY_CLIENT_CREATE_INSTANCE | addr | 0x009F9F42 | ✔ (v79 0x00946BA5; TSingleton<CSecurityClient>::CreateInstance, Alloc(316)+ctor 0x994493; instance 0xB0C308) |
+| C_SECURITY_CLIENT_INSTANCE_ADDR | addr | 0x00BEC3A8 | ✔ (v79 0x00B0C308; instance global) |
+| C_SECURITY_CLIENT_ON_PACKET | addr | 0x00A4BF03 | ✔ (v79 0x00994995; Decode1==4 -> OnCheckClientIntegrityRequest; reached from ProcessPacket case 0x14; needs-main-review) |
 | STAGE_INSTANCE_ADDR | addr | 0x00BEDED4 | ✔ (v79 0x00B0DADC; written by SET_STAGE at 6f1aec; xrefs_to confirmed) |
 | SET_STAGE | addr | 0x00777347 | ✔ (v79 0x006F1AC0; IDB symbol SetStage; stores to B0DADC+vtable dispatch) |
 | GR_INSTANCE_ADDR | addr | 0x00BF14EC | ✔ (v79 0x00B10F74; stored by sub_947BB8 in InitializeGr2D at 944cca; mov ebx,dword_B10F74+vtable dispatch) |
