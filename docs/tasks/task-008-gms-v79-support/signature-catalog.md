@@ -870,3 +870,60 @@ Baseline IDB saved clean before any renaming or annotation.
 - Cross-version stability: SetStage-trio + GetCharacterData branch shape stable v83→v84→v79; the singleton VA and CWvsContext member offsets are per-version (v83 0x2EDx → v84 0x35xx → v79 0x34xx) — locate via SetStage's trio, not the raw address. The singleton has no TSingleton<CWvsContext> CreateInstance symbol in v79 (plain global, renamed g_pWvsContext in the IDB).
 - v79 addresses: C_WVS_CONTEXT_INSTANCE_ADDR 0x00B07848; C_WVS_CONTEXT_ON_ENTER_GAME 0x00950297 (size 0x1F1).
 - **OFFSET (C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET):** the first body instruction after the EH-prolog + register-save block (`push ecx/push esi/mov esi,ecx/push edi`) — in v79 that is `lea ecx,[esi+3424h]` @0x9502A6 (the first this+0x34xx member-ctor). Delta 0x9502A6−0x950297 = **0x0F** — DIFFERS from v83 0x10 (whose +0x10 is `push 1` = `6A 01`; v79 omits the `push 1` setup, matching v84's 0x0F). Not consumed by an active edit (carried for sibling-map parity).
+
+---
+
+## Task 10 — protocol constants + exception-dispatch + CFileStream + sentinels
+
+> Last cluster. v79's `CWvsApp::Run` (0x943611) and `CClientSocket::OnConnect`
+> (0x48cb81) are BOTH non-virtualized/clean (unlike v83, where Run + OnConnect were
+> VM/CFG-obfuscated). This is the key v79-vs-v83 delta: it makes the exception-dispatch
+> builder/raiser AND the CFileStream report-read helpers cleanly recoverable in v79
+> where v83 had to gate them off.
+
+### Protocol constants (keys: VERSION_HEADER / PLAYER_LOGGED_IN / CLIENT_START_ERROR)
+- Primary anchor: immediates inside CClientSocket::OnConnect (0x48cb81), the Task 4 socket path.
+- Detail: VERSION_HEADER is the version-header byte compared `if (v17 != 8)` @0x48ce12 (fall-through throws CTerminateException 0x22000007). PLAYER_LOGGED_IN is the `COutPacket::COutPacket(_,20)` opcode @0x48d01c in the logged-in (non-bLogin, `[this+9]==0`) branch (then Encode4(charId)+Encode1+Encode1). CLIENT_START_ERROR is the `COutPacket::COutPacket(_,25)` opcode @0x48cfbf in the bLogin branch (then Encode2(len)+EncodeBuffer(report)).
+- Cross-version stability: VERSION_HEADER=8 stable v79→v84 (NOT the same as the major-version byte, which is 0x4F=79 here). Opcodes 0x14/0x19 stable v79→v84 — no drift (cross-checked against atlas-ms send-opcode usage). Read each from OnConnect, never inherit.
+- v79 values: VERSION_HEADER 8 · PLAYER_LOGGED_IN 0x14 · CLIENT_START_ERROR 0x19 (all = v83 seed, confirmed).
+
+### Exception type-info globals (keys: C_TI_DISCONNECT/TERMINATE/PATCH_EXCEPTION, C_TI_ZEXCEPTION)
+- Primary anchor: IDB RTTI symbol (`__TI3?AVCDisconnectException@@` etc., kind 1).
+- Detail / second anchor: each is the `_ThrowInfo` operand at its `_CxxThrowException` site inside CWvsApp::Run's exception-dispatch block (0x943c2f–0x943ccf): CPatch @0x943c6c (after CPatchException_Build + qmemcpy 1288, code ==0x20000000); CDisconnect @0x943c95 (0x21000000–0x21000006); CTerminate @0x943cbe (0x22000000–0x2200000B); ZException @0x943ccf (default). Same four also appear at the OnConnect handshake throw sites (0x48cbe6/0x48ce2c/0x48ce67/0x48cd4a).
+- Cross-version stability: mangled RTTI names identical v79→v111; the dispatch ranges match v83/v84/v87 (Terminate upper bound 0x2200000B observed at the v79 Run site). The TI VAs are per-version (v83 0xB48858/0xB44760/0xB52FC8/0xB44EE0 → v79 0xA40868/0xA3CC38/0xA4AAD8/0xA3D3B8) — locate by symbol, not the v83 address.
+- v79 addresses: C_TI_DISCONNECT 0x00A40868 · C_TI_TERMINATE 0x00A3CC38 · C_TI_PATCH 0x00A4AAD8 · C_TI_ZEXCEPTION 0x00A3D3B8.
+
+### CPatchException builder (key: C_PATCH_EXCEPTION_BUILDER) — renamed CPatchException_Build
+- Primary anchor: call-graph — sole call at the CPatch throw site in Run (`sub_50A81B(*((_DWORD*)v13+16))` @0x943c48) and in OnConnect (`sub_50A81B(v50)` @0x48ce48), each followed by qmemcpy 1288 + `_CxxThrowException(_, &__TI3?AVCPatchException@@)`.
+- Detail / second anchor: structural — KIND 1 `__thiscall` ctor `(char* this, __int16 version)`; writes `*this=0x20000000`, `memset(this+4,0,0x504)`, `*(this+4)=79` (the major-version DRIFT: v83 wrote 83, v95 wrote 95), `*((WORD*)this+3)=version`, fills two strings (cwd `\` + GetExceptionFileName), returns `this`.
+- Cross-version stability: KIND 1 thiscall-ctor form matches v83/v87/v95/v111/JMS (v84 was the lone free-function form). The major-version immediate is per-build — read it.
+- v79 address: 0x0050A81B (size 0xA0; renamed CPatchException_Build in IDB).
+
+### COM HRESULT raiser (key: C_COM_RAISE_ERROR_EX)
+- Primary anchor: IDB symbol `?_com_issue_error@@YGXJ@Z` (the canonical 1-arg HRESULT raiser, = `_com_raise_error(hr,0)`).
+- Detail: Run's ONE discrete com-raise call is the 2-arg `?_com_raise_error@@YGXJPAUIErrorInfo@@@Z` @0x9a84bc on `m_hrComErrorCode` (`_com_raise_error(v16,0)` @0x943854). The FAILED-render path in Run is the `if(!dword_B10F74){ hr=-2147467261; ... }` block @0x943936 but the raise is emitted inside the COM wrapper, NOT as a discrete Run call. So the 1-arg `_com_issue_error` @0x004031B5 is recorded as the structural/semantic FAILED-render analog (same limitation as v83/v95/JMS; only v87/v111 have a verbatim render call site).
+- Cross-version stability: the binary's canonical 1-arg `_com_issue_error` is the cross-version-stable record for this key; per-version VA (v83 0xA5FDE4 → v79 0x004031B5 — large drift, the v79 copy sits low in .text).
+- v79 address: 0x004031B5 (size 0x5C).
+
+### CFileStream report-read relay (keys: C_FILE_STREAM_*) — FR-8a decision: RESOLVED=1
+- Decision: **RECOVERABLE in v79 → C_FILE_STREAM_RESOLVED 1, C_FILE_STREAM_OPEN_INLINE 0.** Rationale: v79 OnConnect (0x48cb81) decompiles cleanly, exposing the stock CLIENT_START_ERROR report-read chain in the bLogin branch (0x48cee4–0x48cf95). This is the v79-vs-v83 delta — v83 gated the relay off ("OnConnect CFG-obfuscated, helpers unrecoverable"); v79 (like v84) has an un-obfuscated OnConnect.
+- Anchors: the report-read sequence installs the CFileStream vtable `off_A2CA2C` into the stack object v31 (`v31[0]=&off_A2CA2C` @0x48cf0a), then Open(name,3,128,1,0x80000000,0,0) → GetLength → (ZArray alloc + Read) → Close, exactly the FileStreamOpenFn(disposition,flags,share,access) arg order documented in bypass/socket_hooks.cpp from the v84 0x49A615 disasm.
+  - CFileStream_Open (sub_48D31C, 0x0048D31C): out-of-line; first calls Close to reset, then CreateFileA via cloned slot dword_B0FE44, stores handle at this[4], ORs open-flag into this[13]. → OPEN_INLINE 0 (a standalone Open exists; CreateFileA is NOT inlined into OnConnect).
+  - CFileStream_GetLength (sub_48D4A5, 0x0048D4A5): thiscall wrapper dispatching the object vtable slot at +60.
+  - CFileStream_Read (sub_48D5D0, 0x0048D5D0): (this,dst,len) memcpy from the mapped view, or ReadFile via cloned slot dword_B0FE48 on the unmapped path.
+  - CFileStream_Close (sub_48D2BE, 0x0048D2BE): CloseHandle via cloned slot dword_B0FD80, sets handle this[4]=-1 (also the dtor body).
+  - CFileStream_vftable (off_A2CA2C, 0x00A2CA2C): the CFileStream object vtable (mirrors the source ClientFileStream.vftable@[0]).
+- Cross-version stability: relay shape matches v84; recoverability depends on OnConnect being un-obfuscated (true v79/v84, false v83). The cloned WS2/Win32 slots (CreateFileA dword_B0FE44, ReadFile dword_B0FE48, CloseHandle dword_B0FD80) are the v79 anti-tamper idiom — anchor on the in-OnConnect call sequence, not the slots.
+- v79 addresses: OPEN 0x0048D31C · GET_LENGTH 0x0048D4A5 · READ 0x0048D5D0 · CLOSE 0x0048D2BE · VFTABLE 0x00A2CA2C. All renamed in IDB (CFileStream_*).
+
+### RESET_LSP — PRESENT (corrects stale v83 "does not exist" comment)
+- Primary anchor: IDB symbol `ResetLSP` (pre-named) + structural: reads `SYSTEM\...\WinSock2\...\Protocol_Catalog9\Catalog_Entries\000000000001` (RegOpenKeyExA/RegQueryValueExA), strstr for `wpclsp.dll`, and on match runs `<sysdir>\netsh.exe winsock reset` via CreateProcessA + WaitForSingleObject.
+- Fallback anchor: call-graph — sole xref is CWvsApp::CWvsApp ctor (??0CWvsApp@@QAE@PBD@Z @0x942D3B) at 0x943066 (tail, OS major>=6 && !WoW64).
+- Cross-version stability: PRESENT v79/v84 (v84 @0x4505C5); the v83 cmake "# does not exist" comment was stale (v84 port already flagged it). The repo's ResetLSP() derefs `*(void**)RESET_LSP`; the key value is the function entry per GMS convention.
+- v79 address: 0x0044A9B1.
+
+### Sentinels — SP-5 determinations
+- C_BATTLE_RECORD_MAN_CREATE_INSTANCE: ABSENT. CBattleRecordMan is a GMS v95+ feature; v79 has no CBattleRecordMan function symbol or string (list_globals/find_regex empty). Carry 0x00000000.
+- DR_CHECK / DR_INIT: ABSENT. DR/anti-debug subsystem not present in v79 — Task 2 R11 established SetUp (0x9430F1) has no DR_init step (anti-tamper is only CSecurityClient + Global\meteora + ehsvc + IAT-clone); no NtGetContextThread import (the DR_check anchor). Carry 0x00000000.
+- CE_TRACER_RUN: ABSENT. CeTracer (AhnLab eTracer, `?Run@CeTracer@@`) is a GMS v95+ feature; v79 has no CeTracer/eTracer symbol or string. Carry 0x00000000.
+- JMS-only (C_SECURITY_CLIENT_ON_PACKET_RET_STUB / _CHECK / _CHECK_OFFSET / C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET / WIN_MAIN_LAUNCHER_STUB): ABSENT in GMS v79 BY DESIGN. Positive case re-confirmed real in JMS185 (port 13342): the integrity-check fn @0xB3B5F7 is a CSecurityClient method `(this, u16, COutPacket*)`; the StartUpDlgClass launcher window proc @0x7F3CE0 (size 0x165) exists. These are JMS-build in-place byte-patch points; GMS bypasses CSecurityClient::OnPacket via the MapleHook on C_SECURITY_CLIENT_ON_PACKET (v79 0x994995), forces windowed via C_CONFIG_SYS_OPT_WINDOWED_MODE (v79 0xB11548), and NOPs the patcher via WIN_MAIN+WIN_MAIN_PATCHER_OFFSET — all selected by BUILD_REGION==GMS, JMS branch never compiled. Carry 0x00000000.

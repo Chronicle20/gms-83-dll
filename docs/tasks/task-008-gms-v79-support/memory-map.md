@@ -73,9 +73,9 @@ never copied blind.
 
 | Key | Class | v83 value | Status |
 |---|---|---|---|
-| VERSION_HEADER | constant | 8 | ☐ |
-| PLAYER_LOGGED_IN | opcode | 0x14 | ☐ |
-| CLIENT_START_ERROR | opcode | 0x19 | ☐ |
+| VERSION_HEADER | constant | 8 | ✔ (v79 8; OnConnect `if(v17!=8)`@0x48ce12 -> CTerminate 0x22000007; Task 4 path) |
+| PLAYER_LOGGED_IN | opcode | 0x14 | ✔ (v79 0x14; COutPacket(20)@0x48d01c logged-in OnConnect branch) |
+| CLIENT_START_ERROR | opcode | 0x19 | ✔ (v79 0x19; COutPacket(25)@0x48cfbf bLogin OnConnect branch) |
 | GET_SE_PRIVILEGE | addr | 0x0044E824 | ✔ (v79 0x0044A48E; named GetSEPrivilege; OpenProcessToken+LookupPrivilegeValueA(SeDebugPrivilege)) |
 | C_ACTION_MAN_CREATE_INSTANCE_ADDR | addr | 0x009F9DA6 | ✔ (v79 0x00946A09; TSingleton<CActionMan>::CreateInstance, Alloc(672)+ctor) |
 | C_ACTION_MAN_INSTANCE_ADDR | addr | 0x00BE78D4 | ✔ (v79 0x00B07804; instance global stored in CreateInstance) |
@@ -130,7 +130,7 @@ never copied blind.
 | C_LOGO_INIT | addr | 0x0062EDDA | ✔ (v79 0x005FF9BC; vtable[1] CLogo primary 0xA307C0; SET_STAGE calls [vtable+4] at 6f1c2c; v83 primary vtable off_AF7C80 slot1=0x62EDDA — slot order matches v79: no drift) |
 | C_LOGO_INIT_NX_LOGO | addr | 0x0062F396 | ✔ (v79 0x005FFA96; StringPool::GetBSTR(0x568) NX-logo path; init-once guard [this+0x28]) |
 | C_MACRO_SYS_MAN_CREATE_INSTANCE | addr | 0x009F9EEE | ✔ (v79 0x00946C88; CreateInstance_TSingleton_CMacroSysMan, Alloc(80)+ctor 0x6CBBFC; instance 0xB0C118 matches v83 macro-instance usage by UseFuncKeyMapped+NotifyAvatarModified; from InitializeGameData tail) |
-| C_BATTLE_RECORD_MAN_CREATE_INSTANCE | sentinel | 0x00000000 | ☐ |
+| C_BATTLE_RECORD_MAN_CREATE_INSTANCE | sentinel | 0x00000000 | ✔ ABSENT v79 (CBattleRecordMan is v95+; no symbol/string in v79; SP-5 confirmed) |
 | C_MAPLE_TV_MAN_CREATE_INSTANCE | addr | 0x009F9F87 | ✔ (v79 0x00946BEA; TSingleton<CMapleTVMan>::CreateInstance, Alloc(992)+ctor 0x6072B1; instance 0xB0D458) |
 | C_MAPLE_TV_MAN_INSTANCE_ADDR | addr | 0x00BED76C | ✔ (v79 0x00B0D458; also drives CWvsContext::Update scheduled-message path — v83's radio role) |
 | C_MAPLE_TV_MAN_INIT | addr | 0x00636F4E | ✔ (v79 0x006074C7; symbol ?Init@CMapleTVMan@@) |
@@ -161,7 +161,7 @@ never copied blind.
 | STAGE_INSTANCE_ADDR | addr | 0x00BEDED4 | ✔ (v79 0x00B0DADC; written by SET_STAGE at 6f1aec; xrefs_to confirmed) |
 | SET_STAGE | addr | 0x00777347 | ✔ (v79 0x006F1AC0; IDB symbol SetStage; stores to B0DADC+vtable dispatch) |
 | GR_INSTANCE_ADDR | addr | 0x00BF14EC | ✔ (v79 0x00B10F74; stored by sub_947BB8 in InitializeGr2D at 944cca; mov ebx,dword_B10F74+vtable dispatch) |
-| RESET_LSP | addr/sentinel | 0x0044ED47 | ☐ (resolve present/absent in v79; stale v83 comment) |
+| RESET_LSP | addr/sentinel | 0x0044ED47 | ✔ PRESENT v79 0x0044A9B1 (ResetLSP; WinSock2 Protocol_Catalog9 reg + "wpclsp.dll" + "netsh winsock reset"; sole xref CWvsApp ctor @0x943066; stale "does not exist" comment corrected) |
 | C_STAGE_ON_MOUSE_ENTER | addr | 0x00775FC7 | ✔ (v79 0x0092F3F8; IDB symbol ?OnMouseEnter@CStage@@UAEXH@Z; direct v79 read: CLogin secondary vtable 0xA2FA08 slot 6 (0xA2FA20)=0x0092F3F8 — inherited, CLogin does not override) |
 | C_STAGE_ON_PACKET | addr | 0x00775FE6 | ✔ (v79 0x006F079F; IDB symbol ?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z; CLogo [this+8] vtable 0xA3076C slot0=0x006F079F) |
 | C_SYSTEM_INFO | addr | 0x00A54B90 | ✔ (v79 0x0099CDB0; ctor renamed ??0CSystemInfo@@; vtable off_A396E4; stack-ctor in SendCheckPasswordPacket) |
@@ -209,29 +209,29 @@ never copied blind.
 | C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET | offset | 0xA4 | ✔ (measured v79 0x9D; level-gate jnb(73 34)@51B3B5; DIFFERS from v83 0xA4, same instr) |
 | C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST | addr | 0x00A12522 | ✔ (v79 0x0095DD85; symbol ?SendMigrateToITCRequest@CWvsContext@@; "Guest ID Users" str + opcode 0x99; needs-main-review. OPCODE DRIFT 0x9C→0x99) |
 | C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET | offset | 0xE9 | ✔ (measured v79 0xE9; ITC-gate jz(74 26)@95DE6E; coincides with v83) |
-| DR_CHECK | sentinel | 0x00000000 | ☐ (confirm absent) |
-| DR_INIT | sentinel | 0x00000000 | ☐ (confirm absent) |
-| CE_TRACER_RUN | sentinel | 0x00000000 | ☐ (confirm absent) |
+| DR_CHECK | sentinel | 0x00000000 | ✔ ABSENT v79 (DR/anti-debug subsystem absent; Task 2 R11 SetUp has no DR_init; no NtGetContextThread import; SP-5 confirmed) |
+| DR_INIT | sentinel | 0x00000000 | ✔ ABSENT v79 (DR subsystem absent; Task 2 R11; SP-5 confirmed) |
+| CE_TRACER_RUN | sentinel | 0x00000000 | ✔ ABSENT v79 (CeTracer is v95+; no CeTracer/eTracer symbol/string; SP-5 confirmed) |
 | SEND_HS_LOG | addr | 0x009F191B | ✔ (v79 0x0093F8E0; %s\HShield) |
 | C_MOB_C_MOB | addr | 0x006621D9 | ✔ (v79 0x00630C2C; symbol ??0CMob@@QAE@PAVCMobTemplate@@@Z; sole caller CreateMob/Alloc(1304); CLife base+3 vtables+m_pTemplate@0x188+MobStat::SetFrom+SP957/IWzCanvas. needs-main-review. m_bDoomReserved UNINITIALIZED → doom-fix(<84) needs-fix side) |
-| C_SECURITY_CLIENT_ON_PACKET_RET_STUB | JMS sentinel | 0x00000000 | ☐ |
-| C_SECURITY_CLIENT_ON_PACKET_CHECK | JMS sentinel | 0x00000000 | ☐ |
-| C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET | JMS sentinel | 0x00000000 | ☐ |
-| C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET | JMS sentinel | 0x00000000 | ☐ |
-| WIN_MAIN_LAUNCHER_STUB | JMS sentinel | 0x00000000 | ☐ |
-| C_TI_DISCONNECT_EXCEPTION | addr | 0x00B48858 | ☐ |
-| C_TI_TERMINATE_EXCEPTION | addr | 0x00B44760 | ☐ |
-| C_TI_PATCH_EXCEPTION | addr | 0x00B52FC8 | ☐ |
-| C_TI_ZEXCEPTION | addr | 0x00B44EE0 | ☐ |
-| C_PATCH_EXCEPTION_BUILDER | addr | 0x0051E834 | ☐ |
-| C_COM_RAISE_ERROR_EX | addr | 0x00A5FDE4 | ☐ |
-| C_FILE_STREAM_RESOLVED | gate | 0 | ☐ (decide v79 relay disposition) |
-| C_FILE_STREAM_OPEN_INLINE | gate | 0 | ☐ |
-| C_FILE_STREAM_OPEN | addr | 0x0 | ☐ |
-| C_FILE_STREAM_GET_LENGTH | addr | 0x0 | ☐ |
-| C_FILE_STREAM_READ | addr | 0x0 | ☐ |
-| C_FILE_STREAM_CLOSE | addr | 0x0 | ☐ |
-| C_FILE_STREAM_VFTABLE | addr | 0x0 | ☐ |
+| C_SECURITY_CLIENT_ON_PACKET_RET_STUB | JMS sentinel | 0x00000000 | ✔ JMS only (JMS185 @0xB3B96B; GMS hooks via C_SECURITY_CLIENT_ON_PACKET; absent GMS v79 by design) |
+| C_SECURITY_CLIENT_ON_PACKET_CHECK | JMS sentinel | 0x00000000 | ✔ JMS only (JMS185 @0xB3B5F7 confirmed real; absent GMS v79 by design) |
+| C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET | JMS sentinel | 0x00000000 | ✔ JMS only (JMS185 CHECK+0x19; absent GMS v79 by design) |
+| C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET | JMS sentinel | 0x00000000 | ✔ JMS only (JMS185 offset 0x94; GMS uses C_CONFIG_SYS_OPT_WINDOWED_MODE; absent GMS v79 by design) |
+| WIN_MAIN_LAUNCHER_STUB | JMS sentinel | 0x00000000 | ✔ JMS only (JMS185 StartUpDlgClass @0x7F3CE0 confirmed real; absent GMS v79 by design) |
+| C_TI_DISCONNECT_EXCEPTION | addr | 0x00B48858 | ✔ (v79 0x00A40868; __TI3?AVCDisconnectException@@ symbol + Run throw @0x943c95) |
+| C_TI_TERMINATE_EXCEPTION | addr | 0x00B44760 | ✔ (v79 0x00A3CC38; __TI3?AVCTerminateException@@ symbol + Run throw @0x943cbe) |
+| C_TI_PATCH_EXCEPTION | addr | 0x00B52FC8 | ✔ (v79 0x00A4AAD8; __TI3?AVCPatchException@@ symbol + Run throw @0x943c6c) |
+| C_TI_ZEXCEPTION | addr | 0x00B44EE0 | ✔ (v79 0x00A3D3B8; __TI1?AVZException@@ symbol + Run default throw @0x943ccf) |
+| C_PATCH_EXCEPTION_BUILDER | addr | 0x0051E834 | ✔ (v79 0x0050A81B; CPatchException_Build; *this=0x20000000+major 79+memset 0x504; called @0x943c48 before CPatch throw) |
+| C_COM_RAISE_ERROR_EX | addr | 0x00A5FDE4 | ✔ (v79 0x004031B5; ?_com_issue_error@@YGXJ@Z 1-arg raiser; Run discrete call is 2-arg _com_raise_error @0x9a84bc) |
+| C_FILE_STREAM_RESOLVED | gate | 0 | ✔ (v79 1 — RECOVERABLE; clean OnConnect, unlike v83) |
+| C_FILE_STREAM_OPEN_INLINE | gate | 0 | ✔ (v79 0 — out-of-line Open exists) |
+| C_FILE_STREAM_OPEN | addr | 0x0 | ✔ (v79 0x0048D31C; CFileStream_Open; OnConnect sub_48D31C(name,3,128,1,0x80000000,0,0)) |
+| C_FILE_STREAM_GET_LENGTH | addr | 0x0 | ✔ (v79 0x0048D4A5; CFileStream_GetLength; vtable[+60] dispatch) |
+| C_FILE_STREAM_READ | addr | 0x0 | ✔ (v79 0x0048D5D0; CFileStream_Read(this,dst,len)) |
+| C_FILE_STREAM_CLOSE | addr | 0x0 | ✔ (v79 0x0048D2BE; CFileStream_Close; CloseHandle+handle=-1) |
+| C_FILE_STREAM_VFTABLE | addr | 0x0 | ✔ (v79 0x00A2CA2C; CFileStream_vftable; installed at v31[0] in OnConnect) |
 
 > **Completeness is CI-enforced.** Whatever the exact templated-key count parsed
 > from `include/memory_map.h.in`, the key-completeness check fails the build if any

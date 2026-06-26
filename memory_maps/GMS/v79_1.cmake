@@ -5,10 +5,10 @@
 # ✔ with a signature-catalog entry. There is no labeled IDB below v79 to
 # triangulate against — confirm every value by signature, never by proximity.
 
-set(VERSION_HEADER 8)
+set(VERSION_HEADER 8) # confirmed v79 in OnConnect (0x48cb81): `if (v17 != 8)` @0x48ce12 -> CTerminateException 0x22000007 (Task 4 socket path)
 
-set(PLAYER_LOGGED_IN 0x14)
-set(CLIENT_START_ERROR 0x19)
+set(PLAYER_LOGGED_IN 0x14) # confirmed v79: COutPacket(20) @0x48d01c, logged-in (non-bLogin) OnConnect branch
+set(CLIENT_START_ERROR 0x19) # confirmed v79: COutPacket(25) @0x48cfbf, bLogin OnConnect branch (CFileStream report relay)
 
 set(GET_SE_PRIVILEGE 0x0044A48E) # GetSEPrivilege (named); OpenProcessToken+LookupPrivilegeValueA("SeDebugPrivilege")+AdjustTokenPrivileges
 
@@ -77,7 +77,7 @@ set(C_LOGO_INIT_NX_LOGO 0x005FFA96) # StringPool::GetBSTR(0x568) NX-logo resourc
 
 set(C_MACRO_SYS_MAN_CREATE_INSTANCE 0x00946C88) # CreateInstance_TSingleton_CMacroSysMan; Alloc(80)+ctor 0x6CBBFC; instance 0xB0C118 (matches v83 macro-instance usage by UseFuncKeyMapped+NotifyAvatarModified); called from InitializeGameData tail
 
-set(C_BATTLE_RECORD_MAN_CREATE_INSTANCE 0x00000000)
+set(C_BATTLE_RECORD_MAN_CREATE_INSTANCE 0x00000000) # absent in v79: CBattleRecordMan is a v95+ feature; no CBattleRecordMan symbol or string in v79. Confirmed absent
 
 set(C_MAPLE_TV_MAN_CREATE_INSTANCE 0x00946BEA) # TSingleton<CMapleTVMan>::CreateInstance; Alloc(992)+ctor 0x6072B1; instance 0xB0D458
 set(C_MAPLE_TV_MAN_INSTANCE_ADDR 0x00B0D458) # MapleTVManInstanceAddr (dword_B0D458); also drives the scheduled-message path in CWvsContext::Update (v83's radio role)
@@ -120,7 +120,7 @@ set(SET_STAGE 0x006F1AC0) # IDB comment; clears STAGE_INSTANCE_ADDR, calls old_s
 
 set(GR_INSTANCE_ADDR 0x00B10F74) # dword_B10F74; stored by sub_947BB8 in CWvsApp::InitializeGr2D (944cca); read as IWzGr2D* at 944d5a
 
-set(RESET_LSP 0x0044ED47) # does not exist
+set(RESET_LSP 0x0044A9B1) # ResetLSP — PRESENT in v79 (stale v83 "does not exist" comment corrected). WinSock2 Protocol_Catalog9 reg read + "wpclsp.dll" check + "netsh winsock reset" via CreateProcessA; sole xref = CWvsApp ctor @0x943066
 
 set(C_STAGE_ON_MOUSE_ENTER 0x0092F3F8) # IDB symbol ?OnMouseEnter@CStage@@UAEXH@Z; in CLogo IUIMsgHandler vtable (A30770) slot 41
 set(C_STAGE_ON_PACKET 0x006F079F) # IDB symbol ?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z; dispatched from ProcessPacket(48e275) via [stage+8 vtable][0]
@@ -182,31 +182,34 @@ set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET 0x9D) # measured v79: level-gate jn
 set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x0095DD85) # symbol ?SendMigrateToITCRequest@CWvsContext@@QAEXXZ; "Guest ID Users" string + COutPacket(0x99)+SendPacket
 set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9) # measured v79: ITC-gate jz(74 26)@0x95DE6E (get_field+0x124>>4&1); delta from base 0x95DD85 (coincides with v83 0xE9)
 
-set(DR_CHECK 0x00000000) # does not exist
-set(DR_INIT 0x00000000) # DR anti-debug subsystem absent in v83 (cf. DR_CHECK); nothing to call
-set(CE_TRACER_RUN 0x00000000) # does not exist
+set(DR_CHECK 0x00000000) # absent in v79: DR/anti-debug subsystem not present (Task 2 R11: SetUp has no DR_init step; no NtGetContextThread import). Confirmed absent
+set(DR_INIT 0x00000000) # absent in v79: DR subsystem absent (Task 2 R11: SetUp anti-tamper is only CSecurityClient+meteora+ehsvc+IAT-clone, no DR_init). Confirmed absent
+set(CE_TRACER_RUN 0x00000000) # absent in v79: CeTracer (AhnLab eTracer) is a v95+ feature; no CeTracer/eTracer symbol or string in v79. Confirmed absent
 set(SEND_HS_LOG 0x0093F8E0)
 
 set(C_MOB_C_MOB 0x00630C2C) # symbol ??0CMob@@QAE@PAVCMobTemplate@@@Z (sole caller CreateMob 0x630BF0, ZAllocEx::Alloc(1304) non-zeroing); CLife base + 3 vtables (off_A30C48/A30C24/A30C20) + m_pTemplate@this+0x188 + _ZtlSecureTear chain + MobStat::SetFrom + StringPool(957)/IWzCanvas tail. needs-main-review. m_bDoomReserved LEFT UNINITIALIZED (ctor's highest member write = this+325/0x514; doom field past it near struct end) -> v79 on doom-fix (<84) needs-fix side
 
-set(C_SECURITY_CLIENT_ON_PACKET_RET_STUB 0x00000000) # JMS only
-set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only
-set(C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET 0x00000000) # JMS only
-set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x00000000) # JMS only
-set(WIN_MAIN_LAUNCHER_STUB 0x00000000) # JMS only
+set(C_SECURITY_CLIENT_ON_PACKET_RET_STUB 0x00000000) # JMS only — JMS185 in-place RET stub (positive @0xB3B96B); GMS hooks CSecurityClient::OnPacket via C_SECURITY_CLIENT_ON_PACKET (0x994995). Absent in GMS v79 by design
+set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only — JMS185 integrity-check fn @0xB3B5F7 (confirmed real: CSecurityClient method (this,u16,COutPacket*)); no GMS counterpart. Absent in GMS v79 by design
+set(C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET 0x00000000) # JMS only — JMS185 CHECK+0x19 jz patch offset; no GMS counterpart. Absent in GMS v79 by design
+set(C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET 0x00000000) # JMS only — JMS185 windowed-mode in-place patch offset (0x94); GMS forces windowed via C_CONFIG_SYS_OPT_WINDOWED_MODE (0xB11548). Absent in GMS v79 by design
+set(WIN_MAIN_LAUNCHER_STUB 0x00000000) # JMS only — JMS185 StartUpDlgClass window proc @0x7F3CE0 (confirmed real); GMS disables patcher via WIN_MAIN_PATCHER_OFFSET NOP. Absent in GMS v79 by design
 
 # --- Faithful client exception dispatch (docs/tasks/exception-dispatch-cleanup) ---
-set(C_TI_DISCONNECT_EXCEPTION 0x00B48858) # __TI3?AVCDisconnectException@@
-set(C_TI_TERMINATE_EXCEPTION  0x00B44760) # __TI3?AVCTerminateException@@
-set(C_TI_PATCH_EXCEPTION       0x00B52FC8) # __TI3?AVCPatchException@@
-set(C_TI_ZEXCEPTION            0x00B44EE0) # __TI1?AVZException@@
-set(C_PATCH_EXCEPTION_BUILDER  0x0051E834) # builds CPatchException obj from version (Run dispatch sub_51E834)
-set(C_COM_RAISE_ERROR_EX       0x00A5FDE4) # _com_issue_error(hr)=_com_raise_error(hr,0); v83 1-arg HRESULT raiser (render FAILED analog)
+# v79 __TI globals confirmed by IDB RTTI symbol + the CWvsApp::Run (0x943611) throw sites.
+set(C_TI_DISCONNECT_EXCEPTION 0x00A40868) # __TI3?AVCDisconnectException@@; _CxxThrowException @0x943c95 (0x21000000-0x21000006)
+set(C_TI_TERMINATE_EXCEPTION  0x00A3CC38) # __TI3?AVCTerminateException@@; _CxxThrowException @0x943cbe (0x22000000-0x2200000B)
+set(C_TI_PATCH_EXCEPTION       0x00A4AAD8) # __TI3?AVCPatchException@@; _CxxThrowException @0x943c6c (==0x20000000)
+set(C_TI_ZEXCEPTION            0x00A3D3B8) # __TI1?AVZException@@; default _CxxThrowException @0x943ccf
+set(C_PATCH_EXCEPTION_BUILDER  0x0050A81B) # CPatchException_Build (KIND 1 thiscall ctor); *this=0x20000000, *(this+4)=79 (major DRIFT vs v83 83), memset 0x504; called @0x943c48 before qmemcpy 1288 + CPatch throw
+set(C_COM_RAISE_ERROR_EX       0x004031B5) # ?_com_issue_error@@YGXJ@Z (1-arg HRESULT raiser); Run's discrete com call is the 2-arg _com_raise_error(hr,0) @0x9a84bc, this 1-arg form is the structural/semantic FAILED-render analog (same as v83/v95)
 
-set(C_FILE_STREAM_RESOLVED     0)          # relay gated off: OnConnect CFG-obfuscated, helpers unrecoverable
-set(C_FILE_STREAM_OPEN_INLINE  0)
-set(C_FILE_STREAM_OPEN         0x0)
-set(C_FILE_STREAM_GET_LENGTH   0x0)
-set(C_FILE_STREAM_READ         0x0)
-set(C_FILE_STREAM_CLOSE        0x0)
-set(C_FILE_STREAM_VFTABLE      0x0)
+# v79 CFileStream relay RECOVERABLE: OnConnect (0x48cb81) is CLEAN (not CFG-obfuscated like v83),
+# so the CLIENT_START_ERROR report-read helpers resolve as real addresses (decision FR-8a).
+set(C_FILE_STREAM_RESOLVED     1)          # recoverable in v79 (clean OnConnect); relay enabled
+set(C_FILE_STREAM_OPEN_INLINE  0)          # out-of-line Open exists (CFileStream_Open below); CreateFileA NOT inlined into OnConnect
+set(C_FILE_STREAM_OPEN         0x0048D31C) # CFileStream_Open; OnConnect call sub_48D31C(name,3,128,1,0x80000000,0,0) = OPEN_EXISTING/FILE_ATTRIBUTE_NORMAL/share=1/GENERIC_READ; CreateFileA via cloned slot dword_B0FE44
+set(C_FILE_STREAM_GET_LENGTH   0x0048D4A5) # CFileStream_GetLength; thiscall wrapper dispatching vtable[+60]
+set(C_FILE_STREAM_READ         0x0048D5D0) # CFileStream_Read(this,dst,len); memcpy/ReadFile(cloned slot dword_B0FE48)
+set(C_FILE_STREAM_CLOSE        0x0048D2BE) # CFileStream_Close; CloseHandle(cloned slot dword_B0FD80) + handle=-1
+set(C_FILE_STREAM_VFTABLE      0x00A2CA2C) # CFileStream_vftable (off_A2CA2C); installed at v31[0] in OnConnect report-read path
