@@ -113,7 +113,7 @@ minimum; expand to per-field where a gate boundary moves.
 | Header | v79 size | Gate verdict | Deciding v79 evidence |
 |---|---|---|---|
 | CWvsApp.h | ☐ | ☐ (Cat A — add v79 branch @ :97) | |
-| CFuncKeyMappedMan.h | ☐ | ☐ (Cat A — add v79 branch @ :38) | |
+| CFuncKeyMappedMan.h | 904 (0x388) | ◐ (Cat A — size measured; v79 likely joins 83/84/87 branch @ :38) | Task 2 anchor: CreateInstance (0x946AFB) `Alloc(904)`; ctor (0x569DE5) field-init extent vtable@0 + 2×0x1BD arrays (@+4,@+449) + dwords @+896/+900 → 904. vtable off_A2EB38 (0xA2EB38), singleton dword_B0D2A8. Full key set = Task 7. |
 | CUIToolTip.h | ☐ | ☐ (Cat B/C) | |
 | CMob.h | ☐ | ☐ (Cat C/D + doom-field) | |
 | CMapLoadable.h | ☐ | ☐ (Cat C) | |

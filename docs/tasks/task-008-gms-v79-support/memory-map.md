@@ -169,36 +169,36 @@ never copied blind.
 | C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT | addr | 0x00A54FB0 | ☐ |
 | C_SYSTEM_INFO_GET_MACHINE_ID | addr | 0x00A54EB0 | ☐ |
 | C_UI_TITLE_INSTANCE_ADDR | addr | 0x00BEDA60 | ☐ |
-| G_DW_TARGET_OS | addr | 0x00BE2EBC | ☐ |
-| C_WVS_APP | addr | 0x009F4FDA | ☐ |
-| C_WVS_APP_INSTANCE_ADDR | addr | 0x00BE7B38 | ☐ |
-| C_WVS_APP_IS_MSG_PROC | addr | 0x009F97BC | ☐ |
-| C_WVS_APP_INITIALIZE_AUTH | addr | 0x009F7097 | ☐ |
-| C_WVS_APP_INITIALIZE_PCOM | addr | 0x009F6D77 | ☐ |
-| C_WVS_APP_CREATE_MAIN_WINDOW | addr | 0x009F6D97 | ☐ |
-| C_WVS_APP_CONNECT_LOGIN | addr | 0x009F6F27 | ☐ |
-| C_WVS_APP_INITIALIZE_RES_MAN | addr | 0x009F7159 | ☐ |
-| C_WVS_APP_INITIALIZE_GR2D | addr | 0x009F7A3B | ☐ |
-| C_WVS_APP_INITIALIZE_INPUT | addr | 0x009F7CE1 | ☐ |
-| C_WVS_APP_INITIALIZE_SOUND | addr | 0x009F82BC | ☐ |
-| C_WVS_APP_INITIALIZE_GAME_DATA | addr | 0x009F8B61 | ☐ |
-| C_WVS_APP_CREATE_WND_MANAGER | addr | 0x009F7034 | ☐ |
-| C_WVS_APP_GET_CMD_LINE | addr | 0x009F94A1 | ☐ |
-| C_WVS_APP_DIR_BACK_SLASH_TO_SLASH | addr | 0x009F95FE | ☐ |
-| C_WVS_APP_DIR_UP_DIR | addr | 0x009F9644 | ☐ |
-| C_WVS_APP_DIR_SLASH_TO_BACK_SLASH | addr | 0x009F9621 | ☐ |
-| C_WVS_APP_GET_EXCEPTION_FILE_NAME | addr | 0x009F9808 | ☐ |
-| C_WVS_APP_CALL_UPDATE | addr | 0x009F84D0 | ☐ |
-| C_WVS_APP_RUN | addr | 0x009F5C50 | ☐ |
-| C_WVS_APP_SET_UP | addr | 0x009F5239 | ☐ (DR_init wiring concern noted in [[project_v84_movement_anticheat_freeze]] — verify SetUp's init sequence for v79) |
+| G_DW_TARGET_OS | addr | 0x00BE2EBC | ✔ (v79 0x00B0239C; g_dwTargetOS=1996 writer in ctor) |
+| C_WVS_APP | addr | 0x009F4FDA | ✔ (v79 0x00942D3B; symbol+WebStart/IsWow64Process) |
+| C_WVS_APP_INSTANCE_ADDR | addr | 0x00BE7B38 | ✔ (v79 0x00B07A68; g_CWvsApp singleton store) |
+| C_WVS_APP_IS_MSG_PROC | addr | 0x009F97BC | ✔ (v79 0x00946430; msg 0x100/0x1FF-0x20A dispatch) |
+| C_WVS_APP_INITIALIZE_AUTH | addr | 0x009F7097 | ✔ SENTINEL (v79 0x0: NMCO auth absent — FLAG gate owner) |
+| C_WVS_APP_INITIALIZE_PCOM | addr | 0x009F6D77 | ✔ (v79 0x0094409B) |
+| C_WVS_APP_CREATE_MAIN_WINDOW | addr | 0x009F6D97 | ✔ (v79 0x009440BB) |
+| C_WVS_APP_CONNECT_LOGIN | addr | 0x009F6F27 | ✔ (v79 0x0094424B) |
+| C_WVS_APP_INITIALIZE_RES_MAN | addr | 0x009F7159 | ✔ (v79 0x009443BB) |
+| C_WVS_APP_INITIALIZE_GR2D | addr | 0x009F7A3B | ✔ (v79 0x00944C91) |
+| C_WVS_APP_INITIALIZE_INPUT | addr | 0x009F7CE1 | ✔ (v79 0x00944F37) |
+| C_WVS_APP_INITIALIZE_SOUND | addr | 0x009F82BC | ✔ (v79 0x009452A1) |
+| C_WVS_APP_INITIALIZE_GAME_DATA | addr | 0x009F8B61 | ✔ (v79 0x00945834) |
+| C_WVS_APP_CREATE_WND_MANAGER | addr | 0x009F7034 | ✔ (v79 0x00944358) |
+| C_WVS_APP_GET_CMD_LINE | addr | 0x009F94A1 | ✔ (v79 0x0094611A) |
+| C_WVS_APP_DIR_BACK_SLASH_TO_SLASH | addr | 0x009F95FE | ✔ (v79 0x00946277) |
+| C_WVS_APP_DIR_UP_DIR | addr | 0x009F9644 | ✔ (v79 0x009462BD) |
+| C_WVS_APP_DIR_SLASH_TO_BACK_SLASH | addr | 0x009F9621 | ✔ (v79 0x0094629A) |
+| C_WVS_APP_GET_EXCEPTION_FILE_NAME | addr | 0x009F9808 | ✔ (v79 0x00946481) |
+| C_WVS_APP_CALL_UPDATE | addr | 0x009F84D0 | ✔ (v79 0x009454B5) |
+| C_WVS_APP_RUN | addr | 0x009F5C50 | ✔ (v79 0x00943611; symbol+exception-TI quad) |
+| C_WVS_APP_SET_UP | addr | 0x009F5239 | ✔ (v79 0x009430F1; NO DR_init present — R11 confirmed) |
 | C_WVS_CONTEXT_INSTANCE_ADDR | addr | 0x00BE7918 | ☐ |
 | C_WVS_CONTEXT_ON_ENTER_GAME | addr | 0x00A03935 | ☐ |
 | C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET | offset | 0x10 | ☐ (re-measure) |
-| WIN_MAIN | addr | 0x009F19F2 | ☐ |
-| WIN_MAIN_AD_BALLOON_CONDITIONAL | offset | 0xA3D | ☐ (re-measure) |
-| WIN_MAIN_PATCHER_OFFSET | offset | 0x212 | ☐ (re-measure) |
-| C_WND_MAN_S_UPDATE | addr | 0x009E47C3 | ☐ |
-| C_WND_MAN_REDRAW_INVALIDATED_WINDOWS | addr | 0x009E4547 | ☐ |
+| WIN_MAIN | addr | 0x009F19F2 | ✔ (v79 0x0093F9B7; title-string+start call-graph) |
+| WIN_MAIN_AD_BALLOON_CONDITIONAL | offset | 0xA3D | ✔ (re-measured v79 0xA3D; jz@0x9403F4) |
+| WIN_MAIN_PATCHER_OFFSET | offset | 0x212 | ✔ (re-measured v79 0x212; call ShowStartUpWndModal@0x93FBC9) |
+| C_WND_MAN_S_UPDATE | addr | 0x009E47C3 | ✔ (v79 0x00932EE2) |
+| C_WND_MAN_REDRAW_INVALIDATED_WINDOWS | addr | 0x009E4547 | ✔ (v79 0x00932C66) |
 | Z_ARRAY_REMOVE_ALL | addr | 0x00428CF1 | ☐ |
 | Z_X_STRING_GET_BUFFER | addr | 0x00414617 | ☐ |
 | Z_X_STRING_TRIM_RIGHT | addr | 0x00474414 | ☐ |
@@ -212,7 +212,7 @@ never copied blind.
 | DR_CHECK | sentinel | 0x00000000 | ☐ (confirm absent) |
 | DR_INIT | sentinel | 0x00000000 | ☐ (confirm absent) |
 | CE_TRACER_RUN | sentinel | 0x00000000 | ☐ (confirm absent) |
-| SEND_HS_LOG | addr | 0x009F191B | ☐ |
+| SEND_HS_LOG | addr | 0x009F191B | ✔ (v79 0x0093F8E0; %s\HShield) |
 | C_MOB_C_MOB | addr | 0x006621D9 | ☐ |
 | C_SECURITY_CLIENT_ON_PACKET_RET_STUB | JMS sentinel | 0x00000000 | ☐ |
 | C_SECURITY_CLIENT_ON_PACKET_CHECK | JMS sentinel | 0x00000000 | ☐ |
