@@ -406,7 +406,7 @@ Baseline IDB saved clean before any renaming or annotation.
 - Fallback anchor: call-graph (shared _EnsureCapacity + CIOBufferManipulator::EncodeStr callee) + structure (the `[eax-4]` length read + `+2` grow). Two structural kinds besides the symbol.
 - Cross-version stability: ZXString length-prefix + CIOBufferManipulator::EncodeStr shape stable v79→v84.
 - v79 address: 0x004694DE (size 0x66)
-- Notes: HIGH-VALUE (needs-main-review).
+- Notes: HIGH-VALUE (needs-main-review). Spot-check (independent kind): the 0x4694DE body reads the ZXString length via `mov eax,[eax-4]` (with the null→`xor eax,eax` branch) and grows by `add eax,2` before _EnsureCapacity, then dispatches to CIOBufferManipulator::EncodeStr (0x469544) — the length-prefix-minus-4 + (len+2) idiom, observed independent of the mangled name; the address also appears in the exact `xrefs_to _EnsureCapacity` 5-sibling set.
 
 ### COutPacket::EncodeBuffer   (memory-map key: C_OUT_PACKET_ENCODE_BUFFER)
 - Primary anchor: IDB symbol `?EncodeBuffer@COutPacket@@QAEXPBXI@Z` (void* PBX form, not the byte-pointer PBE form).
@@ -414,7 +414,7 @@ Baseline IDB saved clean before any renaming or annotation.
 - Fallback anchor: call-graph (shared _EnsureCapacity) + import (_memcpy). Two structural kinds besides the symbol.
 - Cross-version stability: grow/memcpy/advance shape stable v79→v84.
 - v79 address: 0x00466AE9 (size 0x2A)
-- Notes: HIGH-VALUE (needs-main-review).
+- Notes: HIGH-VALUE (needs-main-review). Spot-check (independent kind): the 0x466AE9 body takes a caller-supplied Size, calls `_EnsureCapacity(Size)` then the `_memcpy` import (0x9A8AF0) into `buf+len`, advances `len += Size`, and ends with `retn 8` (two stack args) — the memcpy-grow triple + 8-byte arg frame, observed independent of the mangled name; the address also appears in the exact `xrefs_to _EnsureCapacity` 5-sibling set.
 
 ### COutPacket::MakeBufferList   (memory-map key: C_OUT_PACKET_MAKE_BUFFER_LIST)
 - Primary anchor: IDB symbol `?MakeBufferList@COutPacket@@QAE?AV?$ZRef@VZSocketBuffer@@@@HW4SocketSendFlag@@@Z` (retained in v79; NOT stripped as in v84).
