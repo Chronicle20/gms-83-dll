@@ -345,9 +345,9 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_WVS_CONTEXT_INSTANCE_ADDR` | `0x00A9F438` | `0x00A9F438` | ☐ | — |
-| `C_WVS_CONTEXT_ON_ENTER_GAME` | `0x008FF597` | `0x008FF597` | ☐ | — |
-| `C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET` | `0x0F` | `0x0F` | ☐ | — |
+| `C_WVS_CONTEXT_INSTANCE_ADDR` | `0x00A9F438` | `0x00974EF8` | ✔ | catalog Cluster 6 (DIVERGENCE: not socket+4) |
+| `C_WVS_CONTEXT_ON_ENTER_GAME` | `0x008FF597` | `0x0082DD91` | ✔ | catalog Cluster 6 |
+| `C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET` | `0x0F` | `0x0F` | ✔ | catalog Cluster 6 (measured) |
 
 ### WinMain
 
@@ -377,12 +377,12 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_FIELD_SEND_JOIN_PARTY_MSG` | `0x00514462` | `0x00514462` | ☐ | — |
-| `C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET` | `0x60` | `0x60` | ☐ | — |
-| `C_FIELD_SEND_CREATE_NEW_PARTY_MSG` | `0x005142B0` | `0x005142B0` | ☐ | — |
-| `C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET` | `0x9E` | `0x9E` | ☐ | — |
-| `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST` | `0x0090C9BD` | `0x0090C9BD` | ☐ | — |
-| `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET` | `0xE9` | `0xE9` | ☐ | — |
+| `C_FIELD_SEND_JOIN_PARTY_MSG` | `0x00514462` | `0x004E8B29` | ✔ | catalog Cluster 6 (opcode 0x7A→0x70) |
+| `C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET` | `0x60` | `0x5A` | ✔ | catalog Cluster 6 (measured) |
+| `C_FIELD_SEND_CREATE_NEW_PARTY_MSG` | `0x005142B0` | `0x004E898B` | ✔ | catalog Cluster 6 (opcode 0x7A→0x70) |
+| `C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET` | `0x9E` | `0x8B` | ✔ | catalog Cluster 6 (measured) |
+| `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST` | `0x0090C9BD` | `0x00839B94` | ✔ | catalog Cluster 6 (opcode 0x9A→0x87) |
+| `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET` | `0xE9` | `0xE2` | ✔ | catalog Cluster 6 (measured) |
 
 ### DR / CeTracer / HShield sentinels
 
