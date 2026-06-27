@@ -97,12 +97,12 @@ to per-field where a gate boundary moves.
 
 | Header | v72 size | v72 vs v79 | Gate verdict | Deciding v72 evidence |
 |---|---|---|---|---|
-| CWvsApp.h | ☐ | ☐ | ☐ (expect: add 72 to 0x60 branch) | |
-| CFuncKeyMappedMan.h | ☐ | ☐ | ☐ (expect: add 72 size-assert; confirm quickslot still absent) | |
+| CWvsApp.h | 0x60 | == v79 (both 0x60) | branch-added (72 → 0x60 branch :97) | WinMain stack-ctor @0x8EF809 → this=ebp-0xF4; highest field @+0x5C (m_ahInput[2]), next local @+0x6C → 0x60; ctor @0x8F26C7 field-init through +0x38 matches v79 |
+| CFuncKeyMappedMan.h | 0x388 | == v79 (both 0x388) | branch-added (72 → ==79 0x388 branch :50) | task-2: CreateInstance Alloc(0x388) + ctor extent; member gate :18 (>=83\|\|JMS) excludes v72 → quickslot pair absent → header computes 0x388 |
 | CUIToolTip.h | ☐ | ☐ | ☐ | |
 | CMob.h | ☐ | ☐ | ☐ (confirm v72 doom tail absent + base size) | |
 | CMapLoadable.h | ☐ | ☐ | ☐ | |
-| CLogin.h | ☐ | ☐ | ☐ (confirm unk3[5] absent for v72) | |
+| CLogin.h | n/a (member gate, no assert_size) | v72 has 1 ZList block; v79/v83 have 2 | unchanged (==83 correctly excludes v72; no edit) | v72 ctor @0x5AECED builds ONE ZList (off_9D317C @this+0x174 = m_lNewEquip) then m_aCmd[5] @+0x1C8. v79 @0x5C94AD/0x5C94C3 and v83 @0x5F3D32/0x5F3D42 build TWO ZLists (unk3@+0x1A0 v83, m_lNewEquip). v72 lacks the unk3 ZList → member absent |
 | CWvsContext.h | ☐ | ☐ | ☐ (m_aClientKey absent; SecondaryStat embed size) | |
 | CClientSocket.h | ☐ | ☐ | ☐ | |
 | CLogo.h | ☐ | ☐ | ☐ | |
@@ -149,4 +149,54 @@ v72 reduces further than v79:
 `cmake -DREGION=GMS -DMAJOR=72 -DMINOR=1 -P cmake/CheckMemoryMapKeys.cmake` → `OK`;
 preprocess (`gcc -E`, `{72,79,83}`) confirming each split field's present/absent at each
 version.
+
+## Task 3 (Category A) amendment record — early gate restoration
+
+Live gate sites re-grepped (`grep -rn "BUILD_MAJOR_VERSION ==" common/*.h`): `CWvsApp.h:97`,
+`CFuncKeyMappedMan.h:50`, `CLogin.h:235` (the three Category-A sites, line numbers unchanged
+from plan time). Other `== N` hits — `CConfig.h:84` (==95), `CLogo.h:93` (==95),
+`SecondaryStat.h:405/419` (==87||JMS) — are upper-version member gates false for v72 that
+resolve onto the base branch (Category C, Tasks 13–15), not amended here.
+
+**Edits applied** (house `#if/#elif/#endif` form, one-line `// v72 size verified task-009` comment each):
+- `common/CWvsApp.h:97` — added `BUILD_MAJOR_VERSION == 72` to the `0x60` branch → `(72 || 79 || 83 || 84)`.
+- `common/CFuncKeyMappedMan.h:50` — `== 79` → `(72 || 79)`, asserting `0x388`. Stale `:16` comment refreshed ("excludes v79 AND v72").
+- `common/CLogin.h:235` — **no edit** (==83 gate correctly excludes v72; `unk3[5]` absent in v72).
+
+### FR-13 truth table — `gcc -E` selected `assert_size`, all versions (verbatim)
+
+| Version | CWvsApp.h | Changed? | CFuncKeyMappedMan.h | Changed? | CLogin.h unk3[5] | Changed? |
+|---|---|---|---|---|---|---|
+| GMS 72 | 0x60 | **NEW (was none)** | 0x388 | **NEW (was none)** | absent | unchanged |
+| GMS 79 | 0x60 | unchanged | 0x388 | unchanged | absent | unchanged |
+| GMS 83 | 0x60 | unchanged | 0x3C8 | unchanged | **present** | unchanged |
+| GMS 84 | 0x60 | unchanged | 0x3C8 | unchanged | absent | unchanged |
+| GMS 87 | 0x6C | unchanged | 0x3C8 | unchanged | absent | unchanged |
+| GMS 95 | 0x8C | unchanged | 0x3CC | unchanged | absent | unchanged |
+| GMS 111 | 0x8C | unchanged | 0x3D0 | unchanged | absent | unchanged |
+| JMS 185 | 0x64 | unchanged | 0x400 | unchanged | absent | unchanged |
+
+Adding `72` to each branch is disjoint (no other supported GMS version equals 72), so no
+other version's selected branch changes. v72 moves from "no branch selected (silent guard
+loss)" to a defined, measured assert.
+
+### Empirical verification (exactly what was run)
+
+- `gcc -E -DREGION_GMS -DBUILD_MAJOR_VERSION={72,79} -DBUILD_MINOR_VERSION=1 -I common -I include` on each amended header: v72 → CWvsApp `static_assert(sizeof(CWvsApp) == 0x60)`, CFuncKeyMappedMan `== 0x388`; v79 identical (unchanged). Full matrix above.
+- `scripts/wsl-build.sh GMS 72 1` → `>> OK` (EXIT=0) — v72 compiles **and links**, so the now-selected asserts (0x60 / 0x388) fire and hold against the real header layout.
+- `scripts/wsl-build.sh GMS 79 1` → `>> OK` (EXIT=0) — neighbor, no regression.
+
+**Finding:** v72 was **not** genuinely blocked from compiling before — the gates had no
+`#else`, so v72 silently selected no `assert_size` (the size guard was absent, not failing).
+The amendment restores the guard. Verified by the build firing the assert post-edit.
+
+### Concern flagged for the gate owner (CLogin)
+
+The v79 `CLogin::CLogin` (0x5C94AD / 0x5C94C3) builds **two** consecutive ZList blocks at
+`this+0x178` and `this+0x18C` — the same two-ZList shape as v83 (`unk3`@+0x1A0 + m_lNewEquip).
+This suggests v79 **also possesses** the member that `CLogin.h:235` gates to `==83` only.
+`CLogin.h` has no `assert_size`, so this would not break the v79 build — it would silently
+shift offsets after `m_lNewEquip`. Out of scope for this Category-A v72 task (v72 verdict is
+unaffected: v72 genuinely has only one ZList → `unk3[5]` absent → exclusion correct), but the
+v79 `==83` exclusion may be a task-008 error worth re-checking.
 </content>
