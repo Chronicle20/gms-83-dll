@@ -501,3 +501,40 @@ OFFSET-FIDELITY (model-only) issues; none is load-bearing for a live v61 hook, a
 3. **CMob/CLife:** CLife is only −0x4 (not −0x10); CMob.h itself diverges by −0xC own (contradicts the
    Task 15 "CMob own == v72" claim). Three v72-only 4-byte members (1 CLife base + 2 CMob-own) are
    byte-located but not name-pinned. Latent + no assert.
+
+## Task 15c (SecondaryStat full rebuild) — RESOLVES the −0x140; supersedes Task 15/15b row
+
+Read-only `disasm`; no struct types; lanes re-confirmed per switch (v61=13344, v72=13343). Full
+reconstruction in **`v61_secondarystat_layout.md`** (this folder). Method: diff the three
+enumerators `Reset` (v61 @0x662704 / v72 @0x6ca91a — explicit `lea [esi+OFF]` offset source),
+`DecodeForLocal` (v61 @0x663665 — proves the 59 masks are the complete per-bit stat set), and the
+flag-mask table whose ADDRESS encodes the atlas wire-bit (low table `unk_977BD8`↓ = bits 0–49;
+extension table `unk_977C98`↓ = bits 50–58).
+
+**Overturns Task 15/15b.** v61 and v72 carry the **identical 59 masked stats (atlas bits 0–58) in
+identical order** + a trailing two-state array (identical table-jump fingerprint block-for-block).
+The struct is **byte-identical v61↔v72 from 0x0 through 0x78C** (bits 0–39). The −0x140 is
+**concentrated in 4 late sites**, NOT missing whole stats and NOT interspersed:
+
+| site | stat (atlas bit) | v61 | v72 | v72-extra |
+|---|---|---|---|---|
+| A | SpiritJavelin / ShadowClaw (40) @0x78C | 3 tears (0x24) | 6 tears (0x48) | **+0x24** (mSpiritJavelin_ +2; tears not individually named) |
+| B | Infinity (41) @0x7B0/0x7D4 | 4 tears (0x30) | 10 tears (0x78) | **+0x48** (6 tears not individually named) |
+| C | GhostMorph / Ghost (49) trailing | 0x24 @0x934 | 0xDC @0x9A0 | **+0xB8** trailing pre-array block (not individually named) |
+| D | two-state array | 6 × 4B = 0x18 @0x958 | 7 × 8B = 0x38 @0xA7C | **+0x20** (one extra entry — likely Undead; entry width 4B→8B) |
+
+Σ = 0x144 (4-byte v72-side array reconciliation; exact v61 = **0x970**, array @0x958, 6×4-byte
+entries, ends 0x970 — disasm-exact). Names: atlas bits 0–49 **anchored** (mask arithmetic +
+atlas-canonical); bits 50–58 **high-confidence inferred** (extension-table order). The individual
+v72-extra tears in sites A/B/C are localized by offset+byte-count and anchored to a named neighbour
+but NOT individually named (reached via per-stat setter helpers, not direct `lea`); the v61 map
+itself is complete and exact at 0x970.
+
+**Task-17 gate (SecondaryStat.h, `< 72` arm → sizeof 0x970):** the header is unfaithful to v61 AND
+v72 (15b), so a member-trim is not derivable from it. The split is **member-level only at sites
+A/B/C/D**; bits 0–39 (0x0–0x78C) are shared with v72 and MUST NOT be gated. Preferred: a GMS
+`BUILD_MAJOR_VERSION < 72` arm modelling SecondaryStat from `v61_secondarystat_layout.md` (59
+groups at the listed offsets + a 6×4-byte two-state array) → `sizeof == 0x970`. Acceptable
+fallback: leave model v95-shaped (LATENT — 15b proved no v61 hook reads CWvsContext past
+m_secondaryStat; no `static_assert`), documenting the 4 sites. Either way, gate ONLY the 4 late
+sites, never the 0x0–0x78C prefix.
