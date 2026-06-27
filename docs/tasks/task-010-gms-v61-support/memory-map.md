@@ -46,17 +46,17 @@ in during execution.
 ## Subsystem checklist (mirror of PRD §5 — tick as resolved)
 
 - [x] CWvsApp lifecycle (`C_WVS_APP_*`) — incl. `C_WVS_APP_SET_UP` init sequence (Task 2; NO DR_init, NO InitializeAuth)
-- [ ] CClientSocket / ZSocket send/flush/process/connect
-- [ ] COutPacket encode primitives
-- [ ] CLogin / CLogo / CStage / CUITitle login+stage flow
-- [ ] CConfig windowed-mode / sys-opt
-- [ ] CInputSystem / CFuncKeyMappedMan / quickslot
-- [ ] Manager singletons (`*_CREATE_INSTANCE` / `*_INSTANCE_ADDR`)
+- [x] CClientSocket / ZSocket send/flush/process/connect (Tasks 4–5; CloseSocket inlined sentinel; CFileStream relay RECOVERABLE)
+- [x] COutPacket encode primitives (Task 5; all 7 methods; MakeBufferList relocated by call-graph)
+- [x] CLogin / CLogo / CStage / CUITitle login+stage flow (Task 6; GetRTTI/IsKindOf inline drift captured)
+- [x] CConfig windowed-mode / sys-opt (Task 8; g_CConfig_SysOpt_WindowedMode standalone global)
+- [x] CInputSystem / CFuncKeyMappedMan / quickslot (Task 7; InputSystem instance CORRECTED from stale v72 seed; DEFAULT_QKM absent)
+- [x] Manager singletons (`*_CREATE_INSTANCE` / `*_INSTANCE_ADDR`) (Task 7; MacroSysMan + RadioManager absent in v61; BattleRecordMan absent)
 - [x] WinMain entry + offsets (Task 2; ad balloon + patcher both PRESENT in v61 — offsets re-measured 0x714 / 0x19A)
-- [ ] Party / migrate message senders (+ call-site offsets)
-- [ ] Misc utils (`ZArray::RemoveAll`, `ZXString` trim/get-buffer, fatal section, `CSystemInfo`, `CIGCipher`)
-- [ ] Exception-dispatch keys (`C_TI_*EXCEPTION`, `C_PATCH_EXCEPTION_BUILDER`, `C_COM_RAISE_ERROR_EX`, `C_FILE_STREAM_*`)
-- [ ] Sentinels confirmed (GMS-absent / JMS-only / new v61-absent)
+- [x] Party / migrate message senders (+ call-site offsets) (Task 9; opcode drift 0x7A→0x70 / 0x9A→0x87; WvsContext layout divergence from socket+4)
+- [x] Misc utils (`ZArray::RemoveAll`, `ZXString` trim/get-buffer, fatal section, `CSystemInfo`, `CIGCipher`) (Task 8)
+- [x] Exception-dispatch keys (`C_TI_*EXCEPTION`, `C_PATCH_EXCEPTION_BUILDER`, `C_COM_RAISE_ERROR_EX`, `C_FILE_STREAM_*`) (Task 10; double throw-site anchor each)
+- [x] Sentinels confirmed (GMS-absent / JMS-only / new v61-absent) (Tasks 2/8/10; 13 confirmed-zero keys)
 
 ## Completeness gate
 
@@ -72,7 +72,7 @@ grep -oE '@[A-Z0-9_]+@' include/memory_map.h.in | sort -u | wc -l   # expect 160
 
 ## 159-Key Tracking Table
 
-Legend: `☐ todo · ◐ located+labeled · ✔ written+catalogued`
+Legend: `☐ todo · ◐ located+labeled · ✔ written+catalogued` (includes confirmed-zero sentinels — see key notes for absent/JMS-only rationale)
 
 All v61 values are seeded from v72 (UNVERIFIED). Status `☐` until relocated against the v61 binary.
 
