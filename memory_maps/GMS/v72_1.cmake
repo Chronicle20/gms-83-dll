@@ -123,7 +123,7 @@ set(GR_INSTANCE_ADDR 0x00AA85FC) # GrInstanceAddr (dword_AA85FC); output-arg sto
 
 set(RESET_LSP 0x0044A9B1) # ResetLSP — PRESENT in v79 (stale v83 "does not exist" comment corrected). WinSock2 Protocol_Catalog9 reg read + "wpclsp.dll" check + "netsh winsock reset" via CreateProcessA; sole xref = CWvsApp ctor @0x943066
 
-set(C_STAGE_ON_MOUSE_ENTER 0x008DF289) # IDB symbol ?OnMouseEnter@CStage@@UAEXH@Z
+set(C_STAGE_ON_MOUSE_ENTER 0x008DF289) # IDB symbol ?OnMouseEnter@CStage@@UAEXH@Z; body = SetCursorState(0) on CInputSystem singleton (dword_AA3E84) guarded by [+0x9B4]; inherited-CStage witness = CLogin IUIMsgHandler secondary vtable (off_9D3120) slot 32 (0x9D31A0)
 set(C_STAGE_ON_PACKET 0x006C0C61) # IDB symbol ?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z; also = CLogo OnPacket vtable (off_9D3B44) slot 0
 
 set(C_SYSTEM_INFO 0x0099CDB0) # ctor (renamed ??0CSystemInfo@@QAE@XZ); installs vtable off_A396E4; stack-constructed in CLogin::SendCheckPasswordPacket (sub_99CDB0/sub_99CDE0 ctor/dtor pair)

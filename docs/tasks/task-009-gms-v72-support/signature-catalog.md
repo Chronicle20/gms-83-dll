@@ -350,14 +350,14 @@ _(entries: instance addr, CreateInstance, SendPacket, Flush, OnConnect, Process,
 
 ### CLogo::GetRTTI   (key: C_LOGO_GET_RTTI)
 - v72 address: 0x00421565  |  v79 (task-008): 0x0042196A
-- Heuristic: IDB symbol `?GetRTTI@CLogo@@UBEPBVCRTTI@@XZ`; one-liner returning the CLogo CRTTI descriptor.
+- Heuristic: IDB symbol `?GetRTTI@CLogo@@UBEPBVCRTTI@@XZ`; structural anchor — two-instruction body `mov eax, offset dword_AA4D2C; retn` returning the CLogo RTTI descriptor dword_AA4D2C (the same descriptor IsKindOf walks).
 - Drift v79→v72: relocated; **mangling drift** — v72 uses `CRTTI` + `UBE` (const-this), v79 used `CRuntimeClass` + `UAE`. Same role.
 - Label applied: yes (symbol).
 
 ### CLogo::IsKindOf   (key: C_LOGO_IS_KIND_OF)
-- v72 address: 0x0042156B (= GetRTTI+6)  |  v79 (task-008): 0x00421970
-- Heuristic: IDB symbol `?IsKindOf@CLogo@@UBEHPBVCRTTI@@@Z`; tight pair immediately after GetRTTI.
-- Drift v79→v72: relocated; same `CRTTI`/`UBE` mangling drift as GetRTTI. The +6 adjacency to GetRTTI held.
+- v72 address: 0x0042156B  |  v79 (task-008): 0x00421970
+- Heuristic: IDB symbol `?IsKindOf@CLogo@@UBEHPBVCRTTI@@@Z`; structural anchor — body loads `offset dword_AA4D2C` (**the SAME CLogo RTTI descriptor GetRTTI 0x421565 returns**) then walks the base-class chain: `cmp eax,[esp+arg_0]` against the queried descriptor → `mov eax,[eax]` follows the base link → loop, returning `1` on match else `0` (`retn 4`). The shared dword_AA4D2C descriptor + chain-walk shape cross-confirm the GetRTTI/IsKindOf pair, independent of the symbol and of address proximity.
+- Drift v79→v72: relocated; same `CRTTI`/`UBE` mangling drift as GetRTTI. Descriptor-chain-walk body + shared dword_AA4D2C held.
 - Label applied: yes (symbol).
 
 ### CLogo::Update   (key: C_LOGO_UPDATE)
@@ -428,8 +428,9 @@ _(entries: instance addr, CreateInstance, SendPacket, Flush, OnConnect, Process,
 
 ### CStage::OnMouseEnter   (key: C_STAGE_ON_MOUSE_ENTER)
 - v72 address: 0x008DF289  |  v79 (task-008): 0x0092F3F8
-- Heuristic: IDB symbol `?OnMouseEnter@CStage@@UAEXH@Z` (thiscall, one int, void).
-- Drift v79→v72: relocated; symbol retained.
+- Heuristic: IDB symbol `?OnMouseEnter@CStage@@UAEXH@Z` (thiscall, one int, void); **structural second anchor** — body loads the CInputSystem singleton `dword_AA3E84`, guards `arg_0 != 0 && [singleton+0x9B4] != 0`, then dispatches `CInputSystem::SetCursorState(0)` (0x55D3C3) and `retn 4`. The SetCursorState-on-singleton-with-+0x9B4-guard shape is the fingerprint, independent of the symbol.
+- Vtable cross-ref (third anchor): inherited CStage virtual — appears in CLogin's IUIMsgHandler secondary vtable `off_9D3120` slot 32 (0x9D31A0, get_bytes = 0x008DF289). Use a NON-overriding CStage subclass (CLogin) as the witness: CLogo OVERRIDES OnMouseEnter so its own vtable block doesn't reference 0x8DF289 (same subtlety task-008 flagged in v79).
+- Drift v79→v72: relocated; symbol + SetCursorState-dispatch body both held. The witness slot is CLogin secondary-vtable slot 32 in v72 (v79 used the same CLogin-secondary-vtable method; the seed's "CLogo IUIMsgHandler slot 41" was the imprecise CLogo-block guess task-008 superseded).
 - Label applied: yes (symbol).
 
 ### CStage::OnPacket   (key: C_STAGE_ON_PACKET)
