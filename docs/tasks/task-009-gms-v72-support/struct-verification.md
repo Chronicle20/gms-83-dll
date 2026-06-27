@@ -99,20 +99,20 @@ to per-field where a gate boundary moves.
 |---|---|---|---|---|
 | CWvsApp.h | 0x60 | == v79 (both 0x60) | branch-added (72 → 0x60 branch :97) | WinMain stack-ctor @0x8EF809 → this=ebp-0xF4; highest field @+0x5C (m_ahInput[2]), next local @+0x6C → 0x60; ctor @0x8F26C7 field-init through +0x38 matches v79 |
 | CFuncKeyMappedMan.h | 0x388 | == v79 (both 0x388) | branch-added (72 → ==79 0x388 branch :50) | task-2: CreateInstance Alloc(0x388) + ctor extent; member gate :18 (>=83\|\|JMS) excludes v72 → quickslot pair absent → header computes 0x388 |
-| CUIToolTip.h | reduced (m_aLineInfo@0x20) | == v79 (ctor byte-identical) | two-way-confirmed-shares-v79 (gate :92 correct) | v72 ctor 0x7F9C33 vs v79 0x842317: both `mov [esi+10h]`=m_pLayer then eh-vector-ctor m_aLineInfo[32]@esi+0x20 (elem 0x20), then identical post-array writes @0x424+. No m_pLayerAdditional (would push array to 0x24). Plan-table "v79 0x514==v83" was a planning error: v79 also lacks it. |
+| CUIToolTip.h | **0x50C** (full) | == v79 (ctor byte-identical) | two-way-confirmed-shares-v79 (gate :92 correct) + all upper gates absent | v72 ctor 0x7F9C33 vs v79 0x842317: both `mov [esi+10h]`=m_pLayer then eh-vector-ctor m_aLineInfo[32]@esi+0x20 (elem 0x20 → CLineInfo lacks `>=95` m_bUseDotImage), then identical post-array writes @0x424+. No m_pLayerAdditional (`>=83`, would push array to 0x24); no m_aOptionLineInfo (`>=95\|\|JMS`); no Gen_Unknown(`>=84`)/H_White(`>=87`)/Stan_Prp(`>=87`)/Stan_Dsc..Skill_Dsc(`>=95`); no Durability(`>=84`). **Full size from CCtrlButton embed: alloc 0x59C − m_uiToolTip@0x8C − m_bSelfDisable(4) = 0x50C** (Task 14); == v79 (byte-identical ctor). ⚠ Header field-list bottom-up computes 0x514 — an 8-byte / 2-field overcount in the shared `<87` font/canvas region (no assert_size; shared v72==v79; not gate-relevant — flag for header owner). Plan-table "v79 0x514==v83" was a planning error: v83 has m_pLayerAdditional (0x518) while v72/v79 = 0x50C. |
 | CMob.h | 0x4C0 | **DIVERGES**: v72 0x4C0 vs v79 0x518 (−0x58) | **split-three-way** (size diverges; doom-tail field itself absent in both) | CreateMob 0x611C9F `push 4C0h`; ctor 0x611CDB highest write `[esi+4B8h]`. v79 CreateMob 0x630BF0 `push 518h`. Doom tail (would start ~0x528) ABSENT in both. No assert_size → divergence is SILENT; v72 needs distinct member gates (front −0x28, MobStat −0x1C, tail) in Task 14/16. |
 | CMapLoadable.h | ☐ | ☐ | ☐ | |
 | CLogin.h | 0x23C (572) | v72 0x23C < v79 0x258 < v83 0x2C8; v72 has 1 ZList block, v79/v83 have 2 | unchanged (==83 correctly excludes v72; no edit) | Size: LogoEnd `Alloc(0x23C)` → CLogin::CLogin 0x5AECED → set_stage (sig-cat:389). Member: v72 ctor builds ONE ZList (off_9D317C @this+0x174 = m_lNewEquip) then m_aCmd[5] @+0x1C8. v79 @0x5C94AD/0x5C94C3 and v83 @0x5F3D32/0x5F3D42 build TWO ZLists (unk3@+0x1A0 v83). v72 lacks the unk3 ZList → member absent |
 | CWvsContext.h | ≥0x3520 (lower bound) | == v79 base shape (no client key) | base/excluded — `>83` m_aClientKey[8] **ABSENT**; all `>=87`/`>=95` upper fields absent; 52-slot equip arrays (`>=87` #else) | m_aClientKey: OnConnect 0x48528f PLAYER_LOGGED_IN send = Encode4/Encode1/Encode1, **NO EncodeBuffer(key,8)** (Task 4/sig-cat §8-byte-client-key). Size: high-offset field accesses — WinMain `[g_pWvsContext+3510h]`, ApplySysOpt writes [+0x3504]/[+0x3508], SetUp 0x8f2c99 reads [+0x351C] → sizeof≥0x3520. m_dwCharacterId @+0x20A0 base-consistent (SecondaryStat embed not shifted). No assert_size; exact alloc not gate-relevant (singleton creator not pinned in budget) |
 | CClientSocket.h | 0x94 (148) | == v79 (both 0x94) | base/excluded — `>=111` dummy1 ABSENT | TSingleton<CClientSocket>::CreateInstance 0x8f621f → `push 94h`/ZAllocEx::Alloc → ctor 0x484c95. v72<111 → no +0x14 dummy1. JMS dummy1 N/A (REGION_GMS) |
-| CLogo.h | ☐ | ☐ | ☐ | |
-| CFadeWnd.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 (see CWnd.h row) → no re-derivation forced; CFadeWnd ctor 0x4FFD72 adds own fields @0xA4+ |
-| CCtrlButton.h | ☐ | ☐ | ☐ | |
-| CCtrlCheckBox.h | ☐ | ☐ | ☐ | |
-| CWnd.h | tail→0x70 (≡ v79) | == v79 (ctor + base helper byte-identical) | **two-way-confirmed-shares-v79** — CASCADE NOT TRIGGERED | v72 ctor 0x4D9043 + base helper sub_8DD47E vs v79 ctor 0x4E168D + sub_92D5ED: identical field set. Both base helpers jump m_pLayer@0x18→m_nBackgrndX@0x38 (anim layers @0x1C/0x20 ABSENT in both); both ctors write [esi+64h]/[esi+68h]/[esi+70h]; identical ZArray<IWzCanvas>@0x60 unwind. Note: ctor writes reach 0x70 in BOTH (full sizeof≈0x74, not the comment's 0x64) — equal in v72 & v79, so gate verdict unaffected. |
-| CUIWnd.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 → no re-derivation forced |
-| CUITitle.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 → no re-derivation forced |
-| CUILoginStart.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 → no re-derivation forced |
+| CLogo.h | 0x38 | == v83/84/87 (all 0x38) | base/excluded — `>=95` LayerBackground/VideoMode/videoState, `>=95\|\|JMS` NXFadeOut, `>=111` dummy1 ABSENT; assert `>=0x38` holds | Two anchors: CWvsApp::SetUp 0x8f2f2f `push 38h`→Alloc→CLogo::CLogo 0x5e11f9; ctor highest field write `[esi+34h]` (m_bNXFadeIn) → 0x38. (Task 14) |
+| CFadeWnd.h | ≈0xC4 (CDialog→CWnd base) | == v79 (CWnd shares) | base/excluded — `>=87\|\|JMS` m_nLevel/m_nJobCode/m_nExpQuestID ABSENT; CWnd cascade NOT triggered | INDEP v72 anchor: ctor 0x4FFD72 calls CWnd::CWnd then writes own fields @0xA4/0xB0/0xBC(=-1)/0xC0 → highest 0xC0 (m_dwFriendID) → 0xC4. `>=87` block absent (writes jump straight to m_dwSN/m_dwFriendID). REGION_GMS m_bUserAlarm present (GMS). (Task 14) |
+| CCtrlButton.h | 0x59C | == v79 base shape | base/excluded — `>=95` m_sToolTipFromData ABSENT | Two anchors: CUIFadeYesNo::OnCreate 0x500921 `push 59Ch`→Alloc→CCtrlButton::CCtrlButton 0x422954; ctor embeds m_uiToolTip(CUIToolTip)@+0x8C, dtor funclets show only m_sToolTipTitle@0x84 + m_sToolTipDesc@0x88 ZXStrings (no m_sToolTipFromData) then m_bSelfDisable@0x598 → 0x59C. (Task 14) |
+| CCtrlCheckBox.h | CCtrlWnd base + 0xB ints/ptrs (exact size not pinned — stripped) | base/excluded (arithmetic) | base/excluded — `>=95` m_nTextOffsetX/m_nTextOffsetY ABSENT (v72<95) | Ctor stripped (no `??0CCtrlCheckBox@@` symbol in v72 IDB). Verdict by version arithmetic: `>=95` gate FALSE for v72 → 2 text-offset ints absent. Shares CCtrlWnd base with CCtrlButton (anchored 0x59C). No assert_size → exact size lower-bound acceptable. (Task 14, DONE_WITH_CONCERNS) |
+| CWnd.h | 0x64 (base subobject; ≡ v79) | == v79 (ctor + base helper byte-identical) | **two-way-confirmed-shares-v79** — CASCADE NOT TRIGGERED | v72 ctor 0x4D9043 + base helper sub_8DD47E vs v79 ctor 0x4E168D + sub_92D5ED: identical field set. Base helpers jump m_pLayer@0x18→m_nBackgrndX@0x38 (anim layers @0x1C/0x20 ABSENT both, `>=83\|\|JMS`); `>=87\|\|JMS` SECPOINT == `#else` 2 ints (same 8 bytes); `>=95` m_origin + UIOrigin enum absent. **Task 14 resolves the 0x64-vs-0x74 nit: CUIWnd's first own member m_pBtClose lands at +0x64 (ctor sub_83C0EC), proving the CWnd base subobject = 0x64; the ctor's 0x68/0x70 writes are inside CWnd's m_pBackgrnd/ZArray region, not extra members. == v79.** |
+| CUIWnd.h | ≈0x5A4 (CWnd base) | == v79 (CWnd shares) | base/excluded — `>=95` m_nSmallScreenX/Y/m_nLargeScreenX/Y/m_bIsLargeMode ABSENT; cascade NOT triggered | INDEP v72 anchor: ctor sub_83C0EC calls CWnd base helper sub_8DD47E, m_pBtClose ZRef@0x64, embeds m_uiToolTip(CUIToolTip 0x50C)@0x6C→ends 0x578, then 7 dense ctor-arg fields 0x57C–0x594 + [0x59C]/[0x5A0]=0 → ~0x5A4. NO `>=95` +0x14 gap (fields packed). (Task 14) |
+| CUITitle.h | ≈0x5E4 (base = **CDialog**) | == v79 (CWnd shares) | base/excluded — base-class swap `>=95\|\|JMS`→CFadeWnd is FALSE (v72 base = CDialog); `>=95\|\|JMS` m_rcRMA + JMS m_unk ABSENT; cascade NOT triggered | INDEP v72 anchor: ctor sub_5D3BFB (singleton UITitleInstanceAddr@0xAA5114) calls **CWnd::CWnd** (CDialog inlined; NOT CFadeWnd) → confirms `#else` CDialog base. m_pCanvasRMA[2]@0x80 immediately followed by button ZRefs @0x88 — NO 16-byte m_rcRMA gap (`>=95\|\|JMS` absent). m_uiToolTipTitle(CUIToolTip 0x50C)@0xD8 → ≈0x5E4. (Task 14) |
+| CUILoginStart.h | CDialog base (exact size not pinned — stripped) | == v79 (CWnd shares, arithmetic) | base/excluded — `>=95\|\|JMS` m_pFont + m_pCanvasChannelName ABSENT (v72<95); REGION_GMS 5-element m_aBtParam/m_apButton arrays (v72=GMS); cascade NOT triggered | Ctor stripped (no symbol; CDialog inlined so no CDialog::CDialog xref). Verdict by version arithmetic + cascade: `>=95\|\|JMS` gate FALSE → font/canvas pair absent; REGION_GMS → 5-element arrays. CDialog-derived sibling of CUITitle (anchored). No assert_size → lower-bound acceptable. (Task 14, DONE_WITH_CONCERNS) |
 | CConfig.h | real 0x3FC (1020); our struct v95-shaped (≥1592) | v72 real 1020 < v83 1072 < our floor | base/excluded — `>=111` m_v111Pad ABSENT, `==95` assert branch false → base `>=1072` assert | WinMain `push 3FCh` @0x8ef7ce → ZAllocEx::Alloc → CConfig::CConfig 0x48c0d3. Our oversize struct (≥1592) >> real 1020 → no heap overflow; compile-time assert `>=1072` holds. (CConfig instance 0xAA3AC0 + 0x3FC = end 0xAA3EBC) |
 | ConfigSysOpt.h | base (ends at bSysOpt_Minimap_Normal) | == v83 base | base/excluded — `>=95` bSysOpt_LargeScreen + bSysOpt_WindowedMode ABSENT | v72 windowed-mode is a **standalone global** g_CConfig_SysOpt_WindowedMode @0xAA87AC (SetUp 0x8f2c49 sets =0x10; readers CreateMainWindow/InitializeGr2D — sig-cat:490), OUTSIDE the CConfig instance (0xAA87AC > instance end 0xAA3EBC) → NOT a CONFIG_SYSOPT field. `>=95` gate correctly excludes it from v72's embedded CONFIG_SYSOPT |
 | COutPacket.h | 0x10 (base) | == v83/v79 (both 0x10) | base/excluded — `>=111` dummy1 ABSENT | ctor 0x656fa1: `and [esi+4],0` + ZArray _Alloc(0x100) on [esi+4]=m_aSendBuff, then Init(seq) (m_uOffset@8 / m_bIsEncryptedByShanda@0xC / m_bLoopback@0); unwind funclet RemoveAll on [esi+4]. Single ZArray member, no +0x10 field → 0x10. static_assert `>=0x10` holds |
@@ -382,3 +382,95 @@ No edits in this evidence task, so no truth-table changes. All gate verdicts are
 branch, field absent" — identical disposition to v79 for every one of the 7 headers; v79/v83/v84/
 v87/v95/v111/JMS185 selections are unaffected. CWvsApp's `72`-in-`0x60`-branch and CLogin's
 `==83` exclusion were already settled in Task 3 (truth table there).
+
+## Task 14 (UI/control family) audit record — 9 headers; CWnd cascade confirmed not triggered
+
+Read-only `disasm` only; no struct types applied (R10). Lane: v72 = port 13343
+`GMS_v72.1_U_DEVM.exe` (active confirmed via `list_instances`; md5 05a62ca7…, base 0x400000,
+confirmed via `survey_binary`). Full mangled symbols present (except CCtrlCheckBox/CUILoginStart,
+stripped to `sub_`). No source edits (evidence task). **Result: all 9 headers take the
+base/excluded branch; every `>=87`/`>=95`/`>=111` gated field ABSENT in v72; CWnd cascade NOT
+triggered → the 5 CWnd-derived classes INHERIT v79's verdict (no three-way re-split).**
+
+### Step 1 — `BUILD_MAJOR_VERSION` gates per header, v72 truth value
+All thresholds below are **FALSE for v72** (v72 < 83/84/87/95/111; not JMS) → base/`#else` branch:
+
+| Header:line | Gate | v72 truth | Gated field(s) | v72 verdict |
+|---|---|---|---|---|
+| CWnd.h:4 | `>=95\|\|JMS` | FALSE | UIOrigin enum (no size) | n/a |
+| CWnd.h:25 | `>=83\|\|JMS` | FALSE | m_pAnimationLayer + m_pOverlabLayer | absent (Task 12) |
+| CWnd.h:35 | `>=87\|\|JMS` | FALSE | SECPOINT m_ptCursorRel (`#else` = 2 ints, same 8 B) | base 2-int form |
+| CWnd.h:44 | `>=95` | FALSE | UIOrigin m_origin | absent |
+| CUIWnd.h:11 | `>=95` | FALSE | m_nSmallScreenX/Y, m_nLargeScreenX/Y, m_bIsLargeMode | absent |
+| CUITitle.h:3 | `>=95\|\|JMS` | FALSE | base class CFadeWnd (`#else` = CDialog) | base = CDialog |
+| CUITitle.h:12 | `>=95\|\|JMS` | FALSE | tagRECT m_rcRMA | absent |
+| CUITitle.h:22 | `REGION_JMS` | FALSE | ZRef m_unk (extra button) | absent |
+| CUILoginStart.h:8 | `>=95\|\|JMS` | FALSE | m_pFont + m_pCanvasChannelName | absent |
+| CUILoginStart.h:12 | `REGION_GMS` | **TRUE** | m_aBtParam[5]/m_apButton[5] (vs `#else` [8]) | 5-element (GMS) |
+| CFadeWnd.h:18 | `REGION_GMS` | **TRUE** | m_bUserAlarm | present (GMS) |
+| CFadeWnd.h:24 | `>=87\|\|JMS` | FALSE | m_nLevel, m_nJobCode, m_nExpQuestID | absent |
+| CCtrlButton.h:32 | `>=95` | FALSE | ZXString m_sToolTipFromData | absent |
+| CCtrlCheckBox.h:16 | `>=95` | FALSE | m_nTextOffsetX, m_nTextOffsetY | absent |
+| CLogo.h:5/16/30 | `>=95` | FALSE | VIDEO_STATE enum, m_pLayerBackground, m_bVideoMode, m_videoState | absent |
+| CLogo.h:27 | `>=95\|\|JMS` | FALSE | m_bNXFadeOut | absent |
+| CLogo.h:34 | `>=111` | FALSE | dummy1 | absent |
+| CUIToolTip.h:82 | `>=95` | FALSE | CLineInfo::m_bUseDotImage (elem 0x24→0x20) | absent (Task 12) |
+| CUIToolTip.h:92 | `>=83\|\|JMS` | FALSE | m_pLayerAdditional | absent (Task 12) |
+| CUIToolTip.h:100 | `>=95\|\|JMS` | FALSE | m_nOptionLineNo + m_aOptionLineInfo[32] | absent |
+| CUIToolTip.h:125/128/131/134 | `>=84`/`>=87`/`>=95` | FALSE | Gen_Unknown / H_White / Stan_Prp / Stan_Dsc..Skill_Dsc | absent |
+| CUIToolTip.h:152 | `>=84\|\|JMS` | FALSE | m_pCanvasEquip_Durability[2][2] | absent |
+
+### Step 2 — CWnd cascade verdict (linked, not five independent)
+v72 `sizeof(CWnd)` base subobject = **0x64** == v79 (anim layers `>=83` absent in both;
+Task 12). Cascade NOT triggered → CDialog/CUIWnd/CFadeWnd/CUITitle/CUILoginStart **inherit v79's
+verdict**, NOT re-split. Per D5 each derived class was still confirmed against an independent v72
+anchor (Step 3). The Task 12 "0x64-vs-0x74 nit" is resolved in v72's favour of **0x64**: CUIWnd's
+first own member (m_pBtClose, ctor sub_83C0EC) lands at this+0x64, so the CWnd base subobject is
+exactly 0x64; the CWnd ctor's 0x68/0x70 writes are inside CWnd's own m_pBackgrnd/ZArray region.
+
+### Step 3 — per-header v72 size + anchor (all 9)
+1. **CWnd 0x64** — ctor 0x4D9043 + helper sub_8DD47E ≡ v79 (Task 12); base-subobject extent
+   re-confirmed via CUIWnd m_pBtClose@0x64 (Task 14).
+2. **CUIToolTip 0x50C** — embedded in CCtrlButton @0x8C; CCtrlButton alloc 0x59C − 0x8C −
+   m_bSelfDisable(4) = 0x50C. == v79 (byte-identical ctor, Task 12). Header bottom-up 0x514 is an
+   8-byte/2-field overcount in the shared `<87` font/canvas region (flag; no assert_size).
+3. **CLogo 0x38** — two anchors: SetUp 0x8f2f2f `push 38h`→Alloc; ctor 0x5e11f9 highest write
+   `[esi+34h]`. assert `>=0x38` holds. == v83/84/87.
+4. **CCtrlButton 0x59C** — CUIFadeYesNo::OnCreate 0x500921 `push 59Ch`; ctor 0x422954 embeds
+   m_uiToolTip@0x8C; dtor funclets show only 2 trailing ZXStrings (no m_sToolTipFromData).
+5. **CCtrlCheckBox** — ctor stripped (no symbol); `>=95` text-offset pair absent by arithmetic;
+   CCtrlWnd base shared with CCtrlButton. No assert_size → lower-bound. (concern)
+6. **CDialog ≥0x7C** — ctor 0x4a5d59 calls CWnd::CWnd then own field `[esi+78h]`.
+7. **CUIWnd ≈0x5A4** — ctor sub_83C0EC; m_pBtClose@0x64, m_uiToolTip(0x50C)@0x6C→0x578, dense
+   arg-fields 0x57C–0x594, no `>=95` +0x14 gap.
+8. **CFadeWnd ≈0xC4** — ctor 0x4FFD72 calls CWnd::CWnd then writes through `[esi+0C0h]`
+   (m_dwFriendID); `>=87` level/job/exp block absent (writes skip to m_dwSN/m_dwFriendID).
+9. **CUITitle ≈0x5E4** — ctor sub_5D3BFB (singleton UITitleInstanceAddr@0xAA5114) calls
+   **CWnd::CWnd** ⇒ base = CDialog (NOT CFadeWnd; `>=95||JMS` base-swap excluded); m_pCanvasRMA[2]@0x80
+   → buttons @0x88 with no m_rcRMA gap; m_uiToolTipTitle(0x50C)@0xD8.
+10. **CUILoginStart** — ctor stripped (no symbol; CDialog inlined → no CDialog::CDialog xref);
+    `>=95||JMS` font/canvas pair absent by arithmetic; REGION_GMS 5-element arrays; CDialog-derived
+    sibling of CUITitle. No assert_size → lower-bound. (concern)
+
+### Step 4 — boundary re-anchors (two independent v72 paths)
+- **CLogo 0x38:** SetUp `push 38h` (alloc immediate) AND ctor highest write `[esi+34h]`.
+- **CUIToolTip 0x50C:** CCtrlButton embed math (alloc 0x59C, m_uiToolTip@0x8C) AND Task 12's
+  byte-identical-to-v79 ctor (m_aLineInfo elem 0x20, no m_pLayerAdditional).
+- **CCtrlButton 0x59C:** alloc immediate `push 59Ch` AND m_uiToolTip embed offset + trailing
+  m_bSelfDisable, which sum back to 0x59C.
+
+### Cross-version safety (FR-13)
+No edits in this evidence task → no truth-table changes. All 9 verdicts are "base/excluded branch,
+gated fields absent" — identical disposition to v79; v79/v83/v84/v87/v95/v111/JMS185 selections
+unaffected. CWnd cascade confirmed NOT triggered (Task 12 + Task 14 independent anchors), so no
+three-way split is needed for any of the 5 derived classes.
+
+### Concerns (DONE_WITH_CONCERNS)
+1. **CUIToolTip header overcounts the shared `<87` branch by 8 bytes** (header 0x514 vs binary
+   0x50C). Two unattributed 4-byte fields in the font/canvas region. Shared v72==v79 (byte-identical
+   ctor), no assert_size, not gate-relevant — flag for the CUIToolTip.h owner; pinning the exact 2
+   fields is beyond the read-only budget.
+2. **CCtrlCheckBox & CUILoginStart ctors are stripped** (no mangled symbol in the v72 IDB) →
+   their exact sizeof anchors are version-arithmetic/cascade-based, not dedicated-ctor disasm. Gate
+   verdicts are firm (`>=95`-family FALSE for v72); neither header has an assert_size, so a
+   lower-bound is acceptable per the task brief.
