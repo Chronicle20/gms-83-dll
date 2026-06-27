@@ -102,9 +102,9 @@ to per-field where a gate boundary moves.
 | CUIToolTip.h | reduced (m_aLineInfo@0x20) | == v79 (ctor byte-identical) | two-way-confirmed-shares-v79 (gate :92 correct) | v72 ctor 0x7F9C33 vs v79 0x842317: both `mov [esi+10h]`=m_pLayer then eh-vector-ctor m_aLineInfo[32]@esi+0x20 (elem 0x20), then identical post-array writes @0x424+. No m_pLayerAdditional (would push array to 0x24). Plan-table "v79 0x514==v83" was a planning error: v79 also lacks it. |
 | CMob.h | 0x4C0 | **DIVERGES**: v72 0x4C0 vs v79 0x518 (−0x58) | **split-three-way** (size diverges; doom-tail field itself absent in both) | CreateMob 0x611C9F `push 4C0h`; ctor 0x611CDB highest write `[esi+4B8h]`. v79 CreateMob 0x630BF0 `push 518h`. Doom tail (would start ~0x528) ABSENT in both. No assert_size → divergence is SILENT; v72 needs distinct member gates (front −0x28, MobStat −0x1C, tail) in Task 14/16. |
 | CMapLoadable.h | ☐ | ☐ | ☐ | |
-| CLogin.h | n/a (member gate, no assert_size) | v72 has 1 ZList block; v79/v83 have 2 | unchanged (==83 correctly excludes v72; no edit) | v72 ctor @0x5AECED builds ONE ZList (off_9D317C @this+0x174 = m_lNewEquip) then m_aCmd[5] @+0x1C8. v79 @0x5C94AD/0x5C94C3 and v83 @0x5F3D32/0x5F3D42 build TWO ZLists (unk3@+0x1A0 v83, m_lNewEquip). v72 lacks the unk3 ZList → member absent |
-| CWvsContext.h | ☐ | ☐ | ☐ (m_aClientKey absent; SecondaryStat embed size) | |
-| CClientSocket.h | ☐ | ☐ | ☐ | |
+| CLogin.h | 0x23C (572) | v72 0x23C < v79 0x258 < v83 0x2C8; v72 has 1 ZList block, v79/v83 have 2 | unchanged (==83 correctly excludes v72; no edit) | Size: LogoEnd `Alloc(0x23C)` → CLogin::CLogin 0x5AECED → set_stage (sig-cat:389). Member: v72 ctor builds ONE ZList (off_9D317C @this+0x174 = m_lNewEquip) then m_aCmd[5] @+0x1C8. v79 @0x5C94AD/0x5C94C3 and v83 @0x5F3D32/0x5F3D42 build TWO ZLists (unk3@+0x1A0 v83). v72 lacks the unk3 ZList → member absent |
+| CWvsContext.h | ≥0x3520 (lower bound) | == v79 base shape (no client key) | base/excluded — `>83` m_aClientKey[8] **ABSENT**; all `>=87`/`>=95` upper fields absent; 52-slot equip arrays (`>=87` #else) | m_aClientKey: OnConnect 0x48528f PLAYER_LOGGED_IN send = Encode4/Encode1/Encode1, **NO EncodeBuffer(key,8)** (Task 4/sig-cat §8-byte-client-key). Size: high-offset field accesses — WinMain `[g_pWvsContext+3510h]`, ApplySysOpt writes [+0x3504]/[+0x3508], SetUp 0x8f2c99 reads [+0x351C] → sizeof≥0x3520. m_dwCharacterId @+0x20A0 base-consistent (SecondaryStat embed not shifted). No assert_size; exact alloc not gate-relevant (singleton creator not pinned in budget) |
+| CClientSocket.h | 0x94 (148) | == v79 (both 0x94) | base/excluded — `>=111` dummy1 ABSENT | TSingleton<CClientSocket>::CreateInstance 0x8f621f → `push 94h`/ZAllocEx::Alloc → ctor 0x484c95. v72<111 → no +0x14 dummy1. JMS dummy1 N/A (REGION_GMS) |
 | CLogo.h | ☐ | ☐ | ☐ | |
 | CFadeWnd.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 (see CWnd.h row) → no re-derivation forced; CFadeWnd ctor 0x4FFD72 adds own fields @0xA4+ |
 | CCtrlButton.h | ☐ | ☐ | ☐ | |
@@ -113,9 +113,9 @@ to per-field where a gate boundary moves.
 | CUIWnd.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 → no re-derivation forced |
 | CUITitle.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 → no re-derivation forced |
 | CUILoginStart.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 → no re-derivation forced |
-| CConfig.h | ☐ | ☐ | ☐ | |
-| ConfigSysOpt.h | ☐ | ☐ | ☐ | |
-| COutPacket.h | ☐ | ☐ | ☐ | |
+| CConfig.h | real 0x3FC (1020); our struct v95-shaped (≥1592) | v72 real 1020 < v83 1072 < our floor | base/excluded — `>=111` m_v111Pad ABSENT, `==95` assert branch false → base `>=1072` assert | WinMain `push 3FCh` @0x8ef7ce → ZAllocEx::Alloc → CConfig::CConfig 0x48c0d3. Our oversize struct (≥1592) >> real 1020 → no heap overflow; compile-time assert `>=1072` holds. (CConfig instance 0xAA3AC0 + 0x3FC = end 0xAA3EBC) |
+| ConfigSysOpt.h | base (ends at bSysOpt_Minimap_Normal) | == v83 base | base/excluded — `>=95` bSysOpt_LargeScreen + bSysOpt_WindowedMode ABSENT | v72 windowed-mode is a **standalone global** g_CConfig_SysOpt_WindowedMode @0xAA87AC (SetUp 0x8f2c49 sets =0x10; readers CreateMainWindow/InitializeGr2D — sig-cat:490), OUTSIDE the CConfig instance (0xAA87AC > instance end 0xAA3EBC) → NOT a CONFIG_SYSOPT field. `>=95` gate correctly excludes it from v72's embedded CONFIG_SYSOPT |
+| COutPacket.h | 0x10 (base) | == v83/v79 (both 0x10) | base/excluded — `>=111` dummy1 ABSENT | ctor 0x656fa1: `and [esi+4],0` + ZArray _Alloc(0x100) on [esi+4]=m_aSendBuff, then Init(seq) (m_uOffset@8 / m_bIsEncryptedByShanda@0xC / m_bLoopback@0); unwind funclet RemoveAll on [esi+4]. Single ZArray member, no +0x10 field → 0x10. static_assert `>=0x10` holds |
 | SecondaryStat.h | ☐ | ☐ | ☐ | |
 | PartyData.h | ☐ | ☐ | ☐ (packed) | |
 | PartyMember.h | ☐ | ☐ | ☐ (packed) | |
@@ -286,4 +286,99 @@ existing `#else`, leaving the v79 branch byte-identical in effect (Task 17). Bec
 header has an `assert_size`, the split is about removing the extra v72-absent members (and adding
 a v72 size guard), NOT about the doom-tail/Weakness field gates at :239/:128 themselves (those
 stay `#else` for v72, shared-absent with v79).
-</content>
+
+## Task 13 (Category C + special cases) audit record — core/net layout headers (7)
+
+Read-only `disasm` only; no struct types applied (R10). Lane: v72 = port 13343
+`GMS_v72.1_U_DEVM.exe` (active confirmed via `list_instances`; md5 05a62ca7…, base 0x400000
+confirmed via `survey_binary`). The v72 IDB retains full mangled symbols. **All 7 headers
+have a recorded v72 size + per-gate verdict + disasm anchor (D5).** No source edits (evidence
+task). Result: **all gated fields ABSENT in v72 → every header takes the base/excluded
+branch** (v72 < 87/95/111, and `==83`/`>83` false). No size diverges in a gate-breaking way
+(none of these 7 has a member-shifting `assert_size` mismatch).
+
+### Step 1 — `BUILD_MAJOR_VERSION` gates per header, v72 truth value
+
+Every threshold below is **FALSE for v72** (v72 < every constant; `==`/`>` all false) → v72
+selects the base/`#else` branch in each case:
+
+| Header:line | Gate | v72 truth | Gated field(s) | v72 verdict |
+|---|---|---|---|---|
+| CWvsApp.h:14 | `>= 95` | FALSE | OS-version block (m_nOSVersion…m_b64BitInfo) | absent |
+| CWvsApp.h:43 | `>= 87` | FALSE | m_tNextSecurityCheck | absent |
+| CWvsApp.h:46 | `>= 95` | FALSE | m_bEnabledDX9 | absent |
+| CWvsApp.h:49 | `>= 87` | FALSE | m_pBackupBuffer + m_dwBackupBufferSize | absent |
+| CWvsApp.h:53 | `>= 95` | FALSE | m_dwClearStackLog + m_bWindowActive | absent |
+| CWvsContext.h:46 | `>= 95` | FALSE | m_bFirstUserLoad | absent |
+| CWvsContext.h:56 | `>= 87` | FALSE | m_bPetHelpPopUpShown | absent |
+| CWvsContext.h:98 | `> 83` | FALSE | **m_aClientKey[8]** (special) | **absent (confirmed)** |
+| CWvsContext.h:101 | `>= 87` | FALSE | m_bTesterAccount | absent |
+| CWvsContext.h:148 | `>= 87` | FALSE | m_aRealEquip[60]×2 | absent → `#else` 52-slot |
+| CWvsContext.h:160/172/181/232/237/… | `>= 95` | FALSE | Dragon/Mechanic equip, item-option rests, ItemMsg etc | absent |
+| CClientSocket.h:22 | `>= 111` | FALSE | int dummy1 | absent |
+| CLogin.h:235 | `== 83` | FALSE | unk3[5] | absent (Task 3) |
+| COutPacket.h:9 | `>= 111` | FALSE | int dummy1 | absent |
+| CConfig.h:52 | `>= 111` | FALSE | m_v111Pad | absent |
+| CConfig.h:80/82 | `>= 111` / `== 95` | FALSE | (assert-branch selectors) | base `>=1072` assert |
+| ConfigSysOpt.h:15 | `>= 95` | FALSE | bSysOpt_LargeScreen + bSysOpt_WindowedMode | absent |
+
+### Step 2 — CWvsContext m_aClientKey (`>83`, special) — ABSENT, confirmed
+v72 `CClientSocket::OnConnect` (0x48528f) post-handshake PLAYER_LOGGED_IN send is exactly
+`COutPacket(0x14); Encode4(charId=*(g_pWvsContext+0x20A0)); Encode1(TSecType bit
+*(g_pWvsContext+0x203C)&0x80); Encode1(0); SendPacket` — **no `EncodeBuffer(m_aClientKey,8)`
+anywhere** (verified against the v72 binary, not a server round-trip; Task 4 / sig-cat §8-byte
+client-key). v72 has neither the v84+ 16-byte machineId nor any 8-byte client key. The `>83`
+gate correctly excludes v72; `bypass/socket_hooks.cpp` (`>83`) is correct for v72.
+**SecondaryStat embed observation:** the post-key field `m_dwCharacterId` lands at
+`g_pWvsContext+0x20A0` — i.e. the layout *before* it (BasicStat + the embedded SecondaryStat
+base, v79/v83 = 0xB88) is consistent with the base shape; nothing shifts it. (Task 15
+finalizes SecondaryStat.)
+**Total size:** no `assert_size` on CWvsContext.h. Lower bound `sizeof(CWvsContext) ≥ 0x3520`
+from three independent high-offset accesses — WinMain `[g_pWvsContext+0x3510]`, ApplySysOpt
+writes `[+0x3504]`/`[+0x3508]`, CWvsApp::SetUp 0x8f2c99 reads `[+0x351C]`. The exact alloc
+immediate was not pinned in budget (the CWvsContext singleton creator is not reachable by the
+`?CreateInstance@?$TSingleton@VCWvsContext@@…` symbol and `search_text` timed out repeatedly on
+this IDB); it is **not gate-relevant** — every CWvsContext gate verdict rests on the OnConnect
+finding + version arithmetic, not the total size.
+
+### Step 3 — CLogin `==83` unk3[5] — ABSENT (verdict `unchanged`)
+Confirmed Task 3: v72 ctor 0x5AECED builds ONE ZList (m_lNewEquip @this+0x174); v79/v83 build
+two (the extra `unk3` ZList). Independent size anchor: the CLogin allocation in LogoEnd is
+`Alloc(0x23C)` → CLogin::CLogin → set_stage (sig-cat:389) → **sizeof(CLogin) v72 = 0x23C
+(572)**, vs v79 0x258 (600) and v83 0x2C8 (712). The `==83` gate correctly excludes v72 — no
+edit. (CLogin.h carries no `assert_size`.)
+
+### Step 4 — CWvsApp / CClientSocket / COutPacket / CConfig / ConfigSysOpt
+- **CWvsApp 0x60** (Task 3): WinMain stack-ctor; ctor 0x8f26c7 installs vtable off_9DB2E0, fields
+  through +0x38, sizeof 0x60. All `>=87`/`>=95` blocks absent (v72<87). Branch-added in Task 3.
+- **CClientSocket 0x94 (148):** CreateInstance 0x8f621f `push 94h`/Alloc → ctor 0x484c95. `>=111`
+  dummy1 absent. == v79.
+- **COutPacket 0x10 (base):** ctor 0x656fa1 — single ZArray member m_aSendBuff @+4 (`_Alloc(0x100)`),
+  Init writes m_uOffset@8 / m_bIsEncryptedByShanda@0xC; unwind funclet RemoveAll on [esi+4]. No
+  +0x10 field → `>=111` dummy1 absent. `static_assert >=0x10` holds.
+- **CConfig real 0x3FC (1020):** WinMain `push 3FCh` @0x8ef7ce → Alloc → CConfig::CConfig 0x48c0d3.
+  `>=111` m_v111Pad and `==95` assert-branch both excluded → v72 takes base `>=1072` assert. Our
+  GMS struct is v95-shaped (≥1592) and never read/memcpy'd, so it safely covers the real 1020 (no
+  heap overflow). Note v72's real size (1020) is *smaller* than the conservative `>=1072` floor and
+  smaller than v83 (1072) — harmless because the floor is a `>=` on our oversize struct.
+- **ConfigSysOpt base:** `>=95` LargeScreen+WindowedMode absent. **Windowed-mode cross-check
+  (Task 8 C_CONFIG_SYS_OPT_WINDOWED_MODE = 0xAA87AC):** in v72 the windowed flag is a STANDALONE
+  global (SetUp 0x8f2c49 `mov g_CConfig_SysOpt_WindowedMode, 10h`; readers CreateMainWindow /
+  InitializeGr2D), sitting at 0xAA87AC — **outside** the CConfig instance (0xAA3AC0 + real 0x3FC =
+  end 0xAA3EBC < 0xAA87AC). So `bSysOpt_WindowedMode` is genuinely NOT a field of the embedded
+  CONFIG_SYSOPT in v72; the `>=95` gate is correct.
+
+### Step 5 — boundary re-anchors (independent second probe)
+- **CConfig 0x3FC:** anchor 1 = WinMain alloc immediate (`push 3FCh`); anchor 2 = ctor 0x48c0d3
+  `memset(this+0x234, 0, 0x1BD)` reaches 0x234+0x1BD = 0x3F1 < 0x3FC (in-bounds, consistent with
+  sig-cat:463). Two independent paths agree the object is 0x3FC.
+- **CClientSocket 0x94:** anchor 1 = CreateInstance `push 94h`/Alloc; anchor 2 = ctor 0x484c95 is
+  the placement ctor over that block (sole Alloc(0x94) → ctor pair in the cluster).
+- **CLogin 0x23C:** anchor 1 = LogoEnd `Alloc(0x23C)`; anchor 2 = the alloc+ctor+set_stage triple
+  is the sole such caller of CLogin::CLogin (sig-cat:389).
+
+### Cross-version safety (FR-13)
+No edits in this evidence task, so no truth-table changes. All gate verdicts are "base/excluded
+branch, field absent" — identical disposition to v79 for every one of the 7 headers; v79/v83/v84/
+v87/v95/v111/JMS185 selections are unaffected. CWvsApp's `72`-in-`0x60`-branch and CLogin's
+`==83` exclusion were already settled in Task 3 (truth table there).
