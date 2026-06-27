@@ -538,3 +538,44 @@ groups at the listed offsets + a 6×4-byte two-state array) → `sizeof == 0x970
 fallback: leave model v95-shaped (LATENT — 15b proved no v61 hook reads CWvsContext past
 m_secondaryStat; no `static_assert`), documenting the 4 sites. Either way, gate ONLY the 4 late
 sites, never the 0x0–0x78C prefix.
+
+## FINAL Task-17 Mob/stat dispositions (AUTHORITATIVE — supersedes all Task 15 / 15b / 15c summaries above)
+
+The three audit passes (Task 15 → 15b → 15c) progressively corrected each other. The summaries
+below are the verified final conclusions. Use THESE numbers exclusively; ignore any conflicting
+intermediate text in the sections above.
+
+- **MobStat.h — SPLIT.** v61 sizeof = 0x1B8 (v72 0x1D8, −0x20). v61 lacks **MobStat.h lines
+  111–118** (8 ints: the rRiseByToss_..rMCounter_ group), nFs lands at v61 +0x198 (v72 +0x1B8).
+  Task 17: gate lines 111–118 behind a GMS `< 72` arm. (NOTE: this SUPERSEDES the stale Task-15
+  "lines 117–124" candidate — 111–118 is correct.)
+
+- **CLife.h — SPLIT (25th header, currently UNGATED).** v61 CLife base is −0x4 vs v72. Task 17
+  must add a v61 `< 72` member gate to CLife.h for that 0x4. (Forced consequence — like
+  app_hooks.cpp in Task 3.)
+
+- **CMob.h — SPLIT (own divergence −0xC).** v61 sizeof = 0x490 (v72 0x4C0, −0x30). Decomposition:
+  CLife base −0x4 + CMob-own-pre-MobStat −0x4 + MobStat embed −0x20 + CMob-own-post-MobStat −0x8.
+  So CMob.h DOES have an own-member divergence of −0xC (−0x4 pre + −0x8 post). Task 17: gate the
+  CMob-own pre/post members behind `< 72`. (SUPERSEDES the stale Task-15 "CMob own == v72, no own
+  gate" claim — CMob DOES need an own gate.)
+
+- **SecondaryStat.h — SPLIT.** v61 sizeof = 0x970 (v72 base-branch 0xAB0, −0x140). v61 and v72
+  carry the IDENTICAL 59 atlas stat slots; the −0x140 is concentrated in 4 named LATE sites (see
+  `v61_secondarystat_layout.md` for the full offset table): SpiritJavelin (bit40, +0x24), Infinity
+  (bit41, +0x48), GhostMorph (bit49 trailing, +0xB8), two-state array (v61 6×4 vs v72 7×8, +0x20).
+  Task 17: gate those 4 sites' v72-extra footprint behind `< 72` so v61 sizeof == 0x970. (SUPERSEDES
+  the stale Task-15 "members UNRESOLVED" note — now reconstructed.)
+
+- **CMapLoadable.h — unchanged.** v61 = 0xEC; all `>=95`/`>=84` fields absent → v61 takes base
+  branch, no gate.
+
+- **Edit-impact:** ALL FOUR splits are LATENT for v61 (no v61 edit reads the shifted fields:
+  doom-fix CMob hook is gated `==83`/no-op for v61; bypass/socket_hooks.cpp CWvsContext reads are
+  all fields BEFORE m_secondaryStat) and NONE of these headers has a static_assert → the gates are
+  for model fidelity, NON-BREAKING.
+
+- **Known v72-side footnote (does NOT affect v61):** the 4 SecondaryStat site deltas sum to 0x144
+  vs the true 0x140 — one v72-side footprint (likely the two-state array 7×8) is overstated by 4
+  bytes in the per-site accounting. v61 sizeof = 0x970 is independently confirmed (array 6×4 @0x958
+  ending 0x970). This is a v72-modeling footnote only; it does NOT change any v61 gate.
