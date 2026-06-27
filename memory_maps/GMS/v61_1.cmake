@@ -89,13 +89,13 @@ set(C_MONSTER_BOOK_MAN_CREATE_INSTANCE 0x008F5F3F) # symbol ?CreateInstance@?$TS
 set(C_MONSTER_BOOK_MAN_INSTANCE_ADDR 0x00AA4D24) # MonsterBookManInstanceAddr; singleton dword read at top of CreateInstance. RELOCATED (was v79 0xB0D314)
 set(C_MONSTER_BOOK_MAN_LOAD_BOOK 0x0062F410) # symbol ?LoadBook@CMonsterBookMan@@QAEHXZ; called from SetUp @0x8f2d85 (failure -> CTerminateException). RELOCATED (was v79 0x651C1F)
 
-set(C_OUT_PACKET 0x00656FA1) # symbol ??0COutPacket@@QAE@J@Z; _Alloc(256/push 100h)+Init(0x65707C) structure. DRIFT v79 0x67AD6B (helper sub_486FE4)
-set(C_OUT_PACKET_ENCODE_1 0x004062C7) # symbol Encode1; push 1 + mov [eax+ecx],dl + inc; shared _EnsureCapacity 0x4062E5. DIRECT (== v79)
-set(C_OUT_PACKET_ENCODE_2 0x00424F84) # symbol Encode2; push 2 + mov [eax+ecx],dx + add 2; shared _EnsureCapacity 0x4062E5. DRIFT v79 0x42539C
-set(C_OUT_PACKET_ENCODE_4 0x00406324) # symbol Encode4; push 4 + mov [eax+ecx],edx + add 4; shared _EnsureCapacity 0x4062E5. DIRECT (== v79)
-set(C_OUT_PACKET_ENCODE_STR 0x00468295) # symbol EncodeStr; ZXString len([eax-4])+2 + CIOBufferManipulator::EncodeStr. DRIFT v79 0x4694DE
-set(C_OUT_PACKET_ENCODE_BUFFER 0x00465CB2) # symbol EncodeBuffer; _EnsureCapacity(Size)+memcpy+len+=Size; retn 8. DRIFT v79 0x466AE9
-set(C_OUT_PACKET_MAKE_BUFFER_LIST 0x006570FA) # symbol; sole MakeBufferList callee in CClientSocket::SendPacket(0x4866AC) + 1460/0x5B4 chunk + ^0x13 shuffle (CFG-obfuscated). DRIFT v79 0x67AEC4
+set(C_OUT_PACKET 0x005FFC4F) # needs-main-review; symbol ??0COutPacket@@QAE@J@Z (v61 size 0x49); push 100h 256-alloc (helper sub_474B76) + `and [esi+4],0` zero-member + Init tail-call sub_5FFC98 + RemoveAll unwind. DRIFT v72 0x656FA1 (relocated; ctor +3 bytes vs v72 0x46, Init lost symbol)
+set(C_OUT_PACKET_ENCODE_1 0x00456CF5) # needs-main-review; symbol Encode1 (0x1e); push 1 + mov [eax+ecx],dl + inc [esi+8] (_BYTE); shared _EnsureCapacity 0x456D13 (5-sibling fan-in). DRIFT v72 0x4062C7 (relocated)
+set(C_OUT_PACKET_ENCODE_2 0x0045C250) # needs-main-review; symbol Encode2 (0x21); push 2 + mov [eax+ecx],dx + add [esi+8],2 (_WORD); shared _EnsureCapacity 0x456D13. DRIFT v72 0x424F84 (relocated)
+set(C_OUT_PACKET_ENCODE_4 0x00456D52) # needs-main-review; symbol Encode4 (0x1f); push 4 + mov [eax+ecx],edx + add [esi+8],4 (_DWORD); shared _EnsureCapacity 0x456D13. DRIFT v72 0x406324 (relocated)
+set(C_OUT_PACKET_ENCODE_STR 0x00458C91) # needs-main-review; symbol EncodeStr (0x66); ZXString len([eax-4])+2 grow + CIOBufferManipulator::EncodeStr(0x458CF7); in 5-sibling fan-in. DRIFT v72 0x468295 (relocated)
+set(C_OUT_PACKET_ENCODE_BUFFER 0x00456FBA) # needs-main-review; symbol EncodeBuffer (0x2a); _EnsureCapacity(Size)+memcpy(0x876550)+add [esi+8],edi; retn 8; in 5-sibling fan-in. DRIFT v72 0x465CB2 (relocated)
+set(C_OUT_PACKET_MAKE_BUFFER_LIST 0x005FFCE0) # needs-main-review; sole MakeBufferList callee of CClientSocket::SendPacket(0x474125) + 1460/0x5B4 MTU chunk + ^0x13 shuffle (ROR1(v^0x13,3)) + ZSocketBuffer::Alloc; size 0x342 == v72/v83. Was unnamed sub_5FFCE0, renamed. DRIFT v72 0x6570FA (relocated)
 
 set(C_IG_CIPHER_INNO_HASH 0x00940D7E) # symbol ?innoHash@CIGCipher@@; no-key seed 0xC65053F2 + bShuffle loop (sub_940DB9); called from SendPacket between MakeBufferList+Flush. DRIFT v79 0x993442; seed 0xC65053F2 (v79 0xC6EF3720)
 

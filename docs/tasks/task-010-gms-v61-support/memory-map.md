@@ -216,13 +216,13 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_OUT_PACKET` | `0x00656FA1` | `0x00656FA1` | ☐ | — |
-| `C_OUT_PACKET_ENCODE_1` | `0x004062C7` | `0x004062C7` | ☐ | — |
-| `C_OUT_PACKET_ENCODE_2` | `0x00424F84` | `0x00424F84` | ☐ | — |
-| `C_OUT_PACKET_ENCODE_4` | `0x00406324` | `0x00406324` | ☐ | — |
-| `C_OUT_PACKET_ENCODE_STR` | `0x00468295` | `0x00468295` | ☐ | — |
-| `C_OUT_PACKET_ENCODE_BUFFER` | `0x00465CB2` | `0x00465CB2` | ☐ | — |
-| `C_OUT_PACKET_MAKE_BUFFER_LIST` | `0x006570FA` | `0x006570FA` | ☐ | — |
+| `C_OUT_PACKET` | `0x00656FA1` | `0x005FFC4F` | ✔ | catalog: COutPacket ctor (HV) |
+| `C_OUT_PACKET_ENCODE_1` | `0x004062C7` | `0x00456CF5` | ✔ | catalog: Encode1 (HV) |
+| `C_OUT_PACKET_ENCODE_2` | `0x00424F84` | `0x0045C250` | ✔ | catalog: Encode2 (HV) |
+| `C_OUT_PACKET_ENCODE_4` | `0x00406324` | `0x00456D52` | ✔ | catalog: Encode4 (HV) |
+| `C_OUT_PACKET_ENCODE_STR` | `0x00468295` | `0x00458C91` | ✔ | catalog: EncodeStr (HV) |
+| `C_OUT_PACKET_ENCODE_BUFFER` | `0x00465CB2` | `0x00456FBA` | ✔ | catalog: EncodeBuffer (HV) |
+| `C_OUT_PACKET_MAKE_BUFFER_LIST` | `0x006570FA` | `0x005FFCE0` | ✔ | catalog: MakeBufferList (HV) |
 
 ### CIGCipher
 

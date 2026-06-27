@@ -293,6 +293,66 @@ Confirmed via `mcp__ida-pro__survey_binary` on port 13344 (2026-06-27).
 - Drift v72→v61: direct (ZList-reset helper relocated sub_48716C→sub_474CFE).
 - Label applied: yes (symbol)
 
+### COutPacket encode cluster (Task 5)
+
+> **Key finding:** the v61 IDB retains the full mangled C++ symbols for 6 of the 7 COutPacket
+> methods (ctor, Encode1/2/4, EncodeStr, EncodeBuffer) — same as v72/v79/v83 — so each carries
+> its surviving IDB symbol as the primary anchor plus TWO structural anchors per the high-value
+> rule. **MakeBufferList was the lone exception: unnamed (`sub_5FFCE0`) in v61** — re-identified
+> structurally + by the SendPacket call edge, then renamed. All 7 are high-value / `needs-main-review`.
+> The shared `COutPacket::_EnsureCapacity` callee is at **0x456D13** in v61 and its xref fan-in is
+> EXACTLY the 5 grow-siblings {Encode1, Encode2, Encode4, EncodeStr, EncodeBuffer} and nothing else —
+> a single call-graph anchor that corroborates all five at once.
+>
+> **v61 sizes vs v72/v83 (chain corroboration):** Encode1 0x1e, Encode2 0x21, Encode4 0x1f,
+> EncodeStr 0x66, EncodeBuffer 0x2a, MakeBufferList 0x342 — all BYTE-IDENTICAL across v61/v72/v83.
+> Only the ctor drifted: v61 0x49 vs v72/v83 0x46 (+3 bytes; different inlined alloc helper).
+> v72→v83 chain confirmed in task-009 and re-confirmed here at v83 (port 13340): all 7 v83 cmake
+> addresses resolve to the correctly-named COutPacket symbols with the sizes above.
+
+### COutPacket::COutPacket (ctor)   (key: C_OUT_PACKET)   [HIGH-VALUE / needs-main-review]
+- v61 address: 0x005FFC4F (size 0x49)
+- v72 address (task-009): 0x00656FA1  |  v83 (cmake): 0x006EC9CE
+- Heuristic: IDB symbol `??0COutPacket@@QAE@J@Z`; structural anchors — (1) `and dword [esi+4],0` (zero buf member) + `push 100h` (256-cap _Alloc via helper sub_474B76 with `lea ecx,[esi+4]`); (2) tail `call sub_5FFC98` = Init(seq). EH-prolog ctor; unwind funclet tail-calls `ZArray<uchar>::RemoveAll` (0x4748E3).
+- Drift v72→v61: relocated; ctor +3 bytes (0x49 vs 0x46). **Alloc helper drifted sub_486FE4→sub_474B76; Init lost its symbol** (v72 had `?Init@COutPacket` 0x65707C; v61 = unnamed sub_5FFC98). The 256-alloc→Init shape held.
+- Chain trace (high-value): v72 0x656FA1 → v83 0x6EC9CE (`??0COutPacket@@QAE@J@Z`, size 0x46 — re-confirmed). v61 same fingerprint.
+- Label applied: yes (symbol present).
+
+### COutPacket::Encode1 / Encode2 / Encode4   (keys: C_OUT_PACKET_ENCODE_1 / _ENCODE_2 / _ENCODE_4)   [HIGH-VALUE / needs-main-review]
+- v61 addresses: Encode1 0x00456CF5 (0x1e), Encode2 0x0045C250 (0x21), Encode4 0x00456D52 (0x1f)
+- v72 addresses (task-009): 0x004062C7 / 0x00424F84 / 0x00406324  |  v83 (cmake): 0x00406549 / 0x00427F74 / 0x004065A6
+- Heuristic: IDB symbols `?Encode1@COutPacket@@QAEXE@Z` / `?Encode2@…@QAEXG@Z` / `?Encode4@…@QAEXK@Z`; structural anchors — (1) **WIDTH DISCRIMINANT, verified not transposed:** Encode1 = `push 1`+`mov [eax+ecx],dl`+`inc dword [esi+8]` (arg _BYTE); Encode2 = `push 2`+`mov [eax+ecx],dx`+`add dword [esi+8],2` (arg _WORD); Encode4 = `push 4`+`mov [eax+ecx],edx`+`add dword [esi+8],4` (arg _DWORD). Push-immediate matches store-width matches advance. (2) call-graph — all three call shared `_EnsureCapacity` (0x456D13) whose xref fan-in is EXACTLY the 5 grow-siblings {Encode1,Encode2,Encode4,EncodeBuffer,EncodeStr}.
+- Drift v72→v61: all three **relocated** (Encode1/4 adjacent at 0x456Cxx–0x456Dxx; Encode2 distant at 0x45C250). Confirm by store width, never by adjacency. Shared _EnsureCapacity callee held. Sizes byte-identical to v72/v83.
+- Chain trace (high-value): v72 → v83 (0x406549/0x427F74/0x4065A6, same symbols + sizes 0x1e/0x21/0x1f — re-confirmed). v61 same width-discriminant.
+- Label applied: yes (symbols present).
+- Notes: spot-check — the per-width store pattern + the 5-sibling fan-in identify each independently of the symbol.
+
+### COutPacket::EncodeStr   (key: C_OUT_PACKET_ENCODE_STR)   [HIGH-VALUE / needs-main-review]
+- v61 address: 0x00458C91 (size 0x66)
+- v72 address (task-009): 0x00468295  |  v83 (cmake): 0x0046F3CF
+- Heuristic: IDB symbol `?EncodeStr@COutPacket@@QAEXV?$ZXString@D@@@Z`; structural anchors — (1) ZXString length read `mov eax,[eax-4]` (null→`xor eax,eax`) then `add eax,2` grow before `_EnsureCapacity` (0x456D13); (2) dispatches to `CIOBufferManipulator::EncodeStr` (0x458CF7) after a `ZXString::operator=` temp, `add [esi+8],eax`, ZXString dtor in the EH unwind funclet. Also in the 5-sibling _EnsureCapacity fan-in.
+- Drift v72→v61: relocated; `[eax-4]`/`+2` idiom + CIOBufferManipulator::EncodeStr callee held; size 0x66 byte-identical.
+- Chain trace (high-value): v72 0x468295 → v83 0x46F3CF (same symbol, size 0x66 — re-confirmed).
+- Label applied: yes (symbol present).
+- Notes: spot-check — the `[eax-4]`/`+2` grow + CIOBufferManipulator::EncodeStr dispatch, independent of the symbol.
+
+### COutPacket::EncodeBuffer   (key: C_OUT_PACKET_ENCODE_BUFFER)   [HIGH-VALUE / needs-main-review]
+- v61 address: 0x00456FBA (size 0x2a)
+- v72 address (task-009): 0x00465CB2  |  v83 (cmake): 0x0046C00C
+- Heuristic: IDB symbol `?EncodeBuffer@COutPacket@@QAEXPBXI@Z` (void* PBX form); structural anchors — (1) takes (Src,Size), `_EnsureCapacity(Size)` (0x456D13) then `_memcpy(buf+len, Src, Size)` (import 0x876550) + `add [esi+8],edi` advance + `retn 8` (two stack args); (2) member of the 5-sibling _EnsureCapacity fan-in.
+- Drift v72→v61: relocated; memcpy-grow + retn 8 shape + fan-in held; size 0x2a byte-identical.
+- Chain trace (high-value): v72 0x465CB2 → v83 0x46C00C (same symbol, size 0x2a — re-confirmed).
+- Label applied: yes (symbol present).
+
+### COutPacket::MakeBufferList   (key: C_OUT_PACKET_MAKE_BUFFER_LIST)   [HIGH-VALUE / needs-main-review]
+- v61 address: 0x005FFCE0 (size 0x342; **was unnamed sub_5FFCE0**, renamed `?MakeBufferList@COutPacket@@QAE?AV?$ZRef@VZSocketBuffer@@@@HW4SocketSendFlag@@@Z`)
+- v72 address (task-009): 0x006570FA  |  v83 (cmake): 0x006ECB27
+- Heuristic: structural anchors — (1) call-graph: it is the **sole MakeBufferList callee of CClientSocket::SendPacket** (0x474125; both xrefs to sub_5FFCE0 originate there, `more:false`); (2) constants: `v16 = 1460; if (len < 0x5B4u) v16 = len` MTU chunk + the `^0x13` payload shuffle (`*v14 = __ROR1__(v13 ^ 0x13, 3)`) + ZSocketBuffer::Alloc(0x473D71). Size 0x342 identical to v72/v83.
+- Drift v72→v61: relocated; **lost its IDB symbol** (v72/v83 retained a MakeBufferList symbol; v61 had `sub_5FFCE0`). Re-identified by the SendPacket call edge + the 1460/0x5B4 chunk + ^0x13 shuffle, then renamed to the v72-form canonical symbol for grep alignment. Note: v72 and v83 carry **different** MakeBufferList mangled signatures (v72 `QAE?AV?$ZRef@…@HW4SocketSendFlag@@@Z` vs v83 `QBEXAAV?$ZList@…@GPAKHK@Z`); applied the v72 form (closest anchor + task-009 lineage).
+- Chain trace (high-value): v72 0x6570FA → v83 0x6ECB27 (`?MakeBufferList@COutPacket@@…`, size 0x342 — re-confirmed). v61 same role + constants.
+- Label applied: yes (renamed sub_5FFCE0 → canonical symbol).
+- Notes: spot-check — the 1460/0x5B4 MTU chunk + ^0x13 shuffle + SendPacket call edge identify it independent of any symbol (there was none to trust).
+
 ### Cluster 3 — CConfig / windowed-mode (Task 6)*
 
 *(pending)*
