@@ -165,13 +165,13 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 62 | `C_MONSTER_BOOK_MAN_CREATE_INSTANCE` | `0x009467D6` | `0x009467D6` | ☐ | |
 | 63 | `C_MONSTER_BOOK_MAN_INSTANCE_ADDR` | `0x00B0D314` | `0x00B0D314` | ☐ | |
 | 64 | `C_MONSTER_BOOK_MAN_LOAD_BOOK` | `0x00651C1F` | `0x00651C1F` | ☐ | |
-| 65 | `C_OUT_PACKET` | `0x0067AD6B` | `0x0067AD6B` | ☐ | |
-| 66 | `C_OUT_PACKET_ENCODE_1` | `0x004062C7` | `0x004062C7` | ☐ | |
-| 67 | `C_OUT_PACKET_ENCODE_2` | `0x0042539C` | `0x0042539C` | ☐ | |
-| 68 | `C_OUT_PACKET_ENCODE_4` | `0x00406324` | `0x00406324` | ☐ | |
-| 69 | `C_OUT_PACKET_ENCODE_STR` | `0x004694DE` | `0x004694DE` | ☐ | |
-| 70 | `C_OUT_PACKET_ENCODE_BUFFER` | `0x00466AE9` | `0x00466AE9` | ☐ | |
-| 71 | `C_OUT_PACKET_MAKE_BUFFER_LIST` | `0x0067AEC4` | `0x0067AEC4` | ☐ | |
+| 65 | `C_OUT_PACKET` | `0x0067AD6B` | `0x00656FA1` | ✔ | sig-cat: COutPacket::COutPacket (needs-main-review) |
+| 66 | `C_OUT_PACKET_ENCODE_1` | `0x004062C7` | `0x004062C7` | ✔ | sig-cat: COutPacket::Encode1/2/4 (needs-main-review) |
+| 67 | `C_OUT_PACKET_ENCODE_2` | `0x0042539C` | `0x00424F84` | ✔ | sig-cat: COutPacket::Encode1/2/4 (needs-main-review) |
+| 68 | `C_OUT_PACKET_ENCODE_4` | `0x00406324` | `0x00406324` | ✔ | sig-cat: COutPacket::Encode1/2/4 (needs-main-review) |
+| 69 | `C_OUT_PACKET_ENCODE_STR` | `0x004694DE` | `0x00468295` | ✔ | sig-cat: COutPacket::EncodeStr (needs-main-review) |
+| 70 | `C_OUT_PACKET_ENCODE_BUFFER` | `0x00466AE9` | `0x00465CB2` | ✔ | sig-cat: COutPacket::EncodeBuffer (needs-main-review) |
+| 71 | `C_OUT_PACKET_MAKE_BUFFER_LIST` | `0x0067AEC4` | `0x006570FA` | ✔ | sig-cat: COutPacket::MakeBufferList (needs-main-review) |
 | 72 | `C_IG_CIPHER_INNO_HASH` | `0x00993442` | `0x00993442` | ☐ | |
 | 73 | `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR` | `0x00402AB8` | `0x00402AB8` | ☐ | |
 | 74 | `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR` | `0x00402ADD` | `0x00402ADD` | ☐ | |

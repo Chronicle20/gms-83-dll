@@ -88,13 +88,13 @@ set(C_MONSTER_BOOK_MAN_CREATE_INSTANCE 0x009467D6) # TSingleton<CMonsterBookMan>
 set(C_MONSTER_BOOK_MAN_INSTANCE_ADDR 0x00B0D314) # MonsterBookManInstanceAddr (dword_B0D314)
 set(C_MONSTER_BOOK_MAN_LOAD_BOOK 0x00651C1F) # symbol ?LoadBook@CMonsterBookMan@@QAEHXZ
 
-set(C_OUT_PACKET 0x0067AD6B) # symbol ??0COutPacket@@QAE@J@Z; _Alloc(256)+Init structure
-set(C_OUT_PACKET_ENCODE_1 0x004062C7) # symbol Encode1; push 1 + mov [eax+ecx],dl + inc; shared _EnsureCapacity
-set(C_OUT_PACKET_ENCODE_2 0x0042539C) # symbol Encode2; push 2 + mov [eax+ecx],dx + add 2; shared _EnsureCapacity
-set(C_OUT_PACKET_ENCODE_4 0x00406324) # symbol Encode4; push 4 + mov [eax+ecx],edx + add 4; shared _EnsureCapacity
-set(C_OUT_PACKET_ENCODE_STR 0x004694DE) # symbol EncodeStr; ZXString len([eax-4])+2 + CIOBufferManipulator::EncodeStr
-set(C_OUT_PACKET_ENCODE_BUFFER 0x00466AE9) # symbol EncodeBuffer; _EnsureCapacity(Size)+memcpy+len+=Size; retn 8
-set(C_OUT_PACKET_MAKE_BUFFER_LIST 0x0067AEC4) # symbol; sole call in CClientSocket::SendPacket + 1460/0x5B4 chunk const
+set(C_OUT_PACKET 0x00656FA1) # symbol ??0COutPacket@@QAE@J@Z; _Alloc(256/push 100h)+Init(0x65707C) structure. DRIFT v79 0x67AD6B (helper sub_486FE4)
+set(C_OUT_PACKET_ENCODE_1 0x004062C7) # symbol Encode1; push 1 + mov [eax+ecx],dl + inc; shared _EnsureCapacity 0x4062E5. DIRECT (== v79)
+set(C_OUT_PACKET_ENCODE_2 0x00424F84) # symbol Encode2; push 2 + mov [eax+ecx],dx + add 2; shared _EnsureCapacity 0x4062E5. DRIFT v79 0x42539C
+set(C_OUT_PACKET_ENCODE_4 0x00406324) # symbol Encode4; push 4 + mov [eax+ecx],edx + add 4; shared _EnsureCapacity 0x4062E5. DIRECT (== v79)
+set(C_OUT_PACKET_ENCODE_STR 0x00468295) # symbol EncodeStr; ZXString len([eax-4])+2 + CIOBufferManipulator::EncodeStr. DRIFT v79 0x4694DE
+set(C_OUT_PACKET_ENCODE_BUFFER 0x00465CB2) # symbol EncodeBuffer; _EnsureCapacity(Size)+memcpy+len+=Size; retn 8. DRIFT v79 0x466AE9
+set(C_OUT_PACKET_MAKE_BUFFER_LIST 0x006570FA) # symbol; sole MakeBufferList callee in CClientSocket::SendPacket(0x4866AC) + 1460/0x5B4 chunk + ^0x13 shuffle (CFG-obfuscated). DRIFT v79 0x67AEC4
 
 set(C_IG_CIPHER_INNO_HASH 0x00993442) # symbol ?innoHash@CIGCipher@@; seed -967814158 (0xC6EF3720) + bShuffle loop (sub_99347D); called from SendPacket between MakeBufferList+Flush
 

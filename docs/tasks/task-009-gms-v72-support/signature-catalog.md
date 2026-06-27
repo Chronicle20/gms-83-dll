@@ -269,8 +269,53 @@ _(entries: instance addr, CreateInstance, SendPacket, Flush, OnConnect, Process,
 - Drift v79→v72: direct.
 - Label applied: yes (symbol)
 
-### COutPacket
-_(entries: ctor/Init, Encode1/2/4/buffer, …)_
+### COutPacket encode cluster (Task 5)
+
+> All 7 keys located by surviving IDB mangled symbol (kind 1) + an independent structural
+> anchor (kinds 2–4), with the v79→v83 chain confirmed (each fn present at the v79 task-008
+> address AND the v83 cmake address with matching name+size). All HIGH-VALUE / needs-main-review.
+> Function sizes are identical v83↔v72 (ctor 0x46, Encode1 0x1e, Encode2 0x21, Encode4 0x1f,
+> EncodeStr 0x66, EncodeBuffer 0x2a, MakeBufferList 0x342) — strong corroboration the chain holds.
+
+### COutPacket::COutPacket (ctor)   (key: C_OUT_PACKET)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x00656FA1 (size 0x46)
+- v79 address (task-008): 0x0067AD6B  |  v83 (cmake): 0x006EC9CE (size 0x46)
+- Heuristic: IDB symbol `??0COutPacket@@QAE@J@Z`; structural anchors — (1) `and dword [esi+4],0` (zero buf member) + `push 100h` (256-cap _Alloc via helper sub_486FE4 with `lea ecx,[esi+4]`); (2) tail `call ?Init@COutPacket@@QAEXJ@Z` (0x65707C). The 256-alloc→Init(seq) shape is the fingerprint. EH-prolog ctor; unwind funclet tail-calls ZArray<uchar>::RemoveAll.
+- Drift v79→v72: relocated (0x67AD6B→0x656FA1); the _Alloc helper drifted to sub_486FE4 (v79 sub_48E8CB). Init callee + 0x100 immediate held. Chain confirmed v79+v83.
+- Label applied: yes (symbol already present, verified verbatim).
+- Notes: spot-check independent of symbol — the `push 100h`→helper + Init tail (size 0x46 identical to v83) located the same fn.
+
+### COutPacket::Encode1 / Encode2 / Encode4   (keys: C_OUT_PACKET_ENCODE_1 / _ENCODE_2 / _ENCODE_4)   [HIGH-VALUE / needs-main-review]
+- v72 addresses: Encode1 0x004062C7 (0x1e), Encode2 0x00424F84 (0x21), Encode4 0x00406324 (0x1f)
+- v79 addresses (task-008): Encode1 0x004062C7, Encode2 0x0042539C, Encode4 0x00406324  |  v83 (cmake): 0x00406549 / 0x00427F74 / 0x004065A6
+- Heuristic: IDB symbols `?Encode1@COutPacket@@QAEXE@Z` / `?Encode2@…@QAEXG@Z` / `?Encode4@…@QAEXK@Z`; structural anchors — (1) **WIDTH DISCRIMINANT, verified not transposed:** Encode1 = `push 1`+`mov [eax+ecx],dl`+`inc dword [esi+8]` (arg _BYTE); Encode2 = `push 2`+`mov [eax+ecx],dx`+`add dword [esi+8],2` (arg _WORD); Encode4 = `push 4`+`mov [eax+ecx],edx`+`add dword [esi+8],4` (arg _DWORD). Push-immediate matches store-width matches advance. (2) call-graph — `xrefs_to _EnsureCapacity` (0x4062E5) returns EXACTLY the 5 siblings {Encode1,Encode2,Encode4,EncodeBuffer,EncodeStr} and nothing else.
+- Drift v79→v72: Encode1 & Encode4 DIRECT (== v79 addr, both adjacent at 0x4063xx). Encode2 relocated 0x42539C→0x424F84 (still in the distant 0x42xxxx region — confirm by store width, never by adjacency). Shared _EnsureCapacity callee held. Chain confirmed v79+v83.
+- Label applied: yes (symbols already present).
+- Notes: spot-check — width store byte read from each body (dl/dx/edx) independent of the mangled name; the trio is the 5-sibling _EnsureCapacity fan-in.
+
+### COutPacket::EncodeStr   (key: C_OUT_PACKET_ENCODE_STR)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x00468295 (size 0x66)
+- v79 address (task-008): 0x004694DE  |  v83 (cmake): 0x0046F3CF (size 0x66)
+- Heuristic: IDB symbol `?EncodeStr@COutPacket@@QAEXV?$ZXString@D@@@Z`; structural anchors — (1) ZXString length read `mov eax,[eax-4]` (null→`xor eax,eax`) then `add eax,2` grow before `_EnsureCapacity`; (2) dispatches to `CIOBufferManipulator::EncodeStr` (0x4682FB) after a ZXString::operator= temp, `add [esi+8],eax`, ZXString dtor in EH unwind slot. Also in the 5-sibling _EnsureCapacity fan-in.
+- Drift v79→v72: relocated 0x4694DE→0x468295; length-prefix-minus-4 + (len+2) idiom + CIOBufferManipulator::EncodeStr callee held. Chain confirmed v79+v83.
+- Label applied: yes (symbol already present).
+- Notes: spot-check — the `[eax-4]`/`+2` grow + CIOBufferManipulator::EncodeStr dispatch, independent of the symbol.
+
+### COutPacket::EncodeBuffer   (key: C_OUT_PACKET_ENCODE_BUFFER)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x00465CB2 (size 0x2a)
+- v79 address (task-008): 0x00466AE9  |  v83 (cmake): 0x0046C00C (size 0x2a)
+- Heuristic: IDB symbol `?EncodeBuffer@COutPacket@@QAEXPBXI@Z` (void* PBX form); structural anchors — (1) takes (Src,Size), `_EnsureCapacity(Size)` then `_memcpy(buf+len, Src, Size)` (import 0x952B80) + `add [esi+8],edi` advance + `retn 8` (two stack args); (2) member of the 5-sibling _EnsureCapacity fan-in.
+- Drift v79→v72: relocated 0x466AE9→0x465CB2; grow→memcpy→advance triple + 8-byte frame held. Chain confirmed v79+v83.
+- Label applied: yes (symbol already present).
+- Notes: spot-check — the memcpy-grow triple + retn 8, independent of the symbol.
+
+### COutPacket::MakeBufferList   (key: C_OUT_PACKET_MAKE_BUFFER_LIST)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x006570FA (size 0x342)
+- v79 address (task-008): 0x0067AEC4  |  v83 (cmake): 0x006ECB27 (size 0x342)
+- Heuristic: IDB symbol `?MakeBufferList@COutPacket@@QAE?AV?$ZRef@VZSocketBuffer@@@@HW4SocketSendFlag@@@Z`; structural anchors — (1) call-graph: it is the **sole MakeBufferList callee of CClientSocket::SendPacket** (0x4866AC → {MakeBufferList 0x6570FA, innoHash 0x940D7E, Flush 0x486734}); (2) constant: `mov edi,5B4h` MTU chunk (`v=1460; if(len<0x5B4) v=len`) @0x6572F0 + the `^0x13` payload shuffle (`xor dl,13h` @0x657242).
+- Drift v79→v72: relocated 0x67AEC4→0x6570FA. **The v72 body is control-flow-obfuscated** (opaque-predicate `xchg ebp,ebp`/`jo/jno` jump maze, scattered `ror/rol/add dl/not dl/xor dl,13h`) vs the cleaner v79 body — the 0x5B4 chunk constant and ^0x13 shuffle survive the obfuscation. The per-version shuffle byte is `add dl,48h` (72) here (v79 used 71/0x47). v83 carries a DIFFERENT mangled signature (`…@QBEXAAV?$ZList…@GPAKHK@Z`) — same name/role/size 0x342 (v79-retained `ZRef/SocketSendFlag` form ≠ v83 form; chain held by name+role+size, not signature string).
+- Label applied: yes (symbol already present).
+- Notes: spot-check — the 1460/0x5B4 chunk constant + ^0x13 shuffle, read independent of both the symbol and the SendPacket call edge.
 
 ### Login / Stage / Logo / Title
 _(entries: CLogin, CStage, CLogo, CUITitle, CUILoginStart, …)_
