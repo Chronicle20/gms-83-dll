@@ -104,7 +104,7 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 1 | `VERSION_HEADER` | `8` | `8` | ☐ | |
 | 2 | `PLAYER_LOGGED_IN` | `0x14` | `0x14` | ☐ | |
 | 3 | `CLIENT_START_ERROR` | `0x19` | `0x19` | ☐ | |
-| 4 | `GET_SE_PRIVILEGE` | `0x0044A48E` | `0x0044A48E` | ☐ | |
+| 4 | `GET_SE_PRIVILEGE` | `0x0044A48E` | `0x0044989E` | ✔ | sig-cat: GetSEPrivilege |
 | 5 | `C_ACTION_MAN_CREATE_INSTANCE_ADDR` | `0x00946A09` | `0x008F6172` | ✔ | sig-cat: TSingleton<CActionMan>::CreateInstance |
 | 6 | `C_ACTION_MAN_INSTANCE_ADDR` | `0x00B07804` | `0x00A9F3F4` | ✔ | sig-cat: ActionManInstanceAddr |
 | 7 | `C_ACTION_MAN_INIT` | `0x0040681C` | `0x0040681C` | ✔ | sig-cat: CActionMan::Init (DIRECT) |
@@ -124,12 +124,12 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 21 | `C_CLIENT_SOCKET_CONNECT_ADR` | `0x0048CA56` | `0x00485188` | ✔ | sig-cat: CClientSocket::Connect(sockaddr_in) |
 | 22 | `Z_SOCKET_BASE_CLOSE_SOCKET` | `0x0048C699` | `0x00000000` | ✔ | sig-cat: ZSocketBase::CloseSocket (INLINED — NEW v72 SENTINEL; FLAG) |
 | 23 | `Z_SOCKET_BUFFER_ALLOC` | `0x0048DBEA` | `0x004862F8` | ✔ | sig-cat: ZSocketBuffer::Alloc |
-| 24 | `C_CONFIG` | `0x0049392C` | `0x0049392C` | ☐ | |
-| 25 | `C_CONFIG_INSTANCE_ADDR` | `0x00B0BED0` | `0x00B0BED0` | ☐ | |
-| 26 | `C_CONFIG_GET_PARTNER_CODE` | `0x005CC09D` | `0x005CC09D` | ☐ | |
-| 27 | `C_CONFIG_APPLY_SYS_OPT` | `0x004960F9` | `0x004960F9` | ☐ | |
-| 28 | `C_CONFIG_CHECK_EXEC_PATH_REG` | `0x0049440C` | `0x0049440C` | ☐ | |
-| 29 | `C_CONFIG_SYS_OPT_WINDOWED_MODE` | `0x00B11548` | `0x00B11548` | ☐ | |
+| 24 | `C_CONFIG` | `0x0049392C` | `0x0048C0D3` | ✔ | sig-cat: CConfig::CConfig |
+| 25 | `C_CONFIG_INSTANCE_ADDR` | `0x00B0BED0` | `0x00AA3AC0` | ✔ | sig-cat: CConfig::CConfig (g_CConfig_pInstance) |
+| 26 | `C_CONFIG_GET_PARTNER_CODE` | `0x005CC09D` | `0x005B12BD` | ✔ | sig-cat: CConfig::GetPartnerCode |
+| 27 | `C_CONFIG_APPLY_SYS_OPT` | `0x004960F9` | `0x0048E7EC` | ✔ | sig-cat: CConfig::ApplySysOpt |
+| 28 | `C_CONFIG_CHECK_EXEC_PATH_REG` | `0x0049440C` | `0x0048CBAE` | ✔ | sig-cat: CConfig::CheckExecPathReg |
+| 29 | `C_CONFIG_SYS_OPT_WINDOWED_MODE` | `0x00B11548` | `0x00AA87AC` | ✔ | sig-cat: CConfig sys-opt windowed-mode flag |
 | 30 | `C_FUNC_KEY_MAPPED_MAN` | `0x00569DE5` | `0x005512EC` | ✔ | sig-cat: CFuncKeyMappedMan::CFuncKeyMappedMan (ctor) |
 | 31 | `C_FUNC_KEY_MAPPED_MAN_VFTABLE` | `0x00A2EB38` | `0x009D22D8` | ✔ | sig-cat: CFuncKeyMappedMan_vftable |
 | 32 | `C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR` | `0x00B0D2A8` | `0x00AA4CB8` | ✔ | sig-cat: FuncKeyMappedManInstanceAddr |
@@ -172,9 +172,9 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 69 | `C_OUT_PACKET_ENCODE_STR` | `0x004694DE` | `0x00468295` | ✔ | sig-cat: COutPacket::EncodeStr (needs-main-review) |
 | 70 | `C_OUT_PACKET_ENCODE_BUFFER` | `0x00466AE9` | `0x00465CB2` | ✔ | sig-cat: COutPacket::EncodeBuffer (needs-main-review) |
 | 71 | `C_OUT_PACKET_MAKE_BUFFER_LIST` | `0x0067AEC4` | `0x006570FA` | ✔ | sig-cat: COutPacket::MakeBufferList (needs-main-review) |
-| 72 | `C_IG_CIPHER_INNO_HASH` | `0x00993442` | `0x00993442` | ☐ | |
-| 73 | `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR` | `0x00402AB8` | `0x00402AB8` | ☐ | |
-| 74 | `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR` | `0x00402ADD` | `0x00402ADD` | ☐ | |
+| 72 | `C_IG_CIPHER_INNO_HASH` | `0x00993442` | `0x00940D7E` | ✔ | sig-cat: CIGCipher::innoHash |
+| 73 | `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR` | `0x00402AB8` | `0x00402AB8` | ✔ | sig-cat: ZSynchronizedHelper<ZFatalSection> ctor (v72==v79 VA, v72 globals) |
+| 74 | `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR` | `0x00402ADD` | `0x00402ADD` | ✔ | sig-cat: ZSynchronizedHelper<ZFatalSection> dtor (body-confirmed; aliased under ZAllocEx::Alloc) |
 | 75 | `C_QUEST_MAN_CREATE_INSTANCE` | `0x00946725` | `0x008F5E99` | ✔ | sig-cat: TSingleton<CQuestMan>::CreateInstance |
 | 76 | `C_QUEST_MAN_INSTANCE_ADDR` | `0x00B0D318` | `0x00AA4D28` | ✔ | sig-cat: QuestManInstanceAddr |
 | 77 | `C_QUEST_MAN_LOAD_DEMAND` | `0x006A8CD6` | `0x00683A9D` | ✔ | sig-cat: CQuestMan::LoadDemand |
@@ -192,10 +192,10 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 89 | `RESET_LSP` | `0x0044A9B1` | `0x0044A9B1` | ☐ | |
 | 90 | `C_STAGE_ON_MOUSE_ENTER` | `0x0092F3F8` | `0x008DF289` | ✔ | sig-cat: CStage::OnMouseEnter |
 | 91 | `C_STAGE_ON_PACKET` | `0x006F079F` | `0x006C0C61` | ✔ | sig-cat: CStage::OnPacket |
-| 92 | `C_SYSTEM_INFO` | `0x0099CDB0` | `0x0099CDB0` | ☐ | |
-| 93 | `C_SYSTEM_INFO_INIT` | `0x0099CDF0` | `0x0099CDF0` | ☐ | |
-| 94 | `C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT` | `0x0099D1D0` | `0x0099D1D0` | ☐ | |
-| 95 | `C_SYSTEM_INFO_GET_MACHINE_ID` | `0x0099D0D0` | `0x0099D0D0` | ☐ | |
+| 92 | `C_SYSTEM_INFO` | `0x0099CDB0` | `0x0094A6C0` | ✔ | sig-cat: CSystemInfo ctor |
+| 93 | `C_SYSTEM_INFO_INIT` | `0x0099CDF0` | `0x0094A700` | ✔ | sig-cat: CSystemInfo::Init |
+| 94 | `C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT` | `0x0099D1D0` | `0x0094AAE0` | ✔ | sig-cat: CSystemInfo::GetGameRoomClient |
+| 95 | `C_SYSTEM_INFO_GET_MACHINE_ID` | `0x0099D0D0` | `0x0094A9E0` | ✔ | sig-cat: CSystemInfo::GetMachineId |
 | 96 | `C_UI_TITLE_INSTANCE_ADDR` | `0x00B0D738` | `0x00AA5114` | ✔ | sig-cat: CUITitle singleton |
 | 97 | `G_DW_TARGET_OS` | `0x00B0239C` | `0x00A9A164` | ✔ | sig-cat: g_dwTargetOS |
 | 98 | `C_WVS_APP` | `0x00942D3B` | `0x008F26C7` | ✔ | sig-cat: CWvsApp::CWvsApp (needs-main-review) |
@@ -227,10 +227,10 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 124 | `WIN_MAIN_PATCHER_OFFSET` | `0x212` | `0x212` | ✔ | sig-cat: WinMain offsets (re-measured) |
 | 125 | `C_WND_MAN_S_UPDATE` | `0x00932EE2` | `0x008E2D73` | ✔ | sig-cat: CWndMan::s_Update |
 | 126 | `C_WND_MAN_REDRAW_INVALIDATED_WINDOWS` | `0x00932C66` | `0x008E2AF7` | ✔ | sig-cat: CWndMan::RedrawInvalidatedWindows |
-| 127 | `Z_ARRAY_REMOVE_ALL` | `0x004260F4` | `0x004260F4` | ☐ | |
-| 128 | `Z_X_STRING_GET_BUFFER` | `0x00426133` | `0x00426133` | ☐ | |
-| 129 | `Z_X_STRING_TRIM_RIGHT` | `0x0046DB7E` | `0x0046DB7E` | ☐ | |
-| 130 | `Z_X_STRING_TRIM_LEFT` | `0x0046DC33` | `0x0046DC33` | ☐ | |
+| 127 | `Z_ARRAY_REMOVE_ALL` | `0x004260F4` | `0x00425CEC` | ✔ | sig-cat: ZArray<uchar>::RemoveAll |
+| 128 | `Z_X_STRING_GET_BUFFER` | `0x00426133` | `0x00425D2B` | ✔ | sig-cat: ZXString<char>::_Cat (needs-main-review) |
+| 129 | `Z_X_STRING_TRIM_RIGHT` | `0x0046DB7E` | `0x0046C9B4` | ✔ | sig-cat: ZXString<char>::TrimRight |
+| 130 | `Z_X_STRING_TRIM_LEFT` | `0x0046DC33` | `0x0046CA69` | ✔ | sig-cat: ZXString<char>::TrimLeft |
 | 131 | `C_FIELD_SEND_JOIN_PARTY_MSG` | `0x0051B4C9` | `0x0051B4C9` | ☐ | |
 | 132 | `C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET` | `0x5E` | `0x5E` | ☐ | |
 | 133 | `C_FIELD_SEND_CREATE_NEW_PARTY_MSG` | `0x0051B318` | `0x0051B318` | ☐ | |
@@ -241,7 +241,7 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 138 | `DR_INIT` | `0x00000000` | `0x00000000` | ☐ | |
 | 139 | `CE_TRACER_RUN` | `0x00000000` | `0x00000000` | ☐ | |
 | 140 | `SEND_HS_LOG` | `0x0093F8E0` | `0x00000000` | ✔ | sig-cat: SendHSLog (NEW v72 SENTINEL — absent; FLAG) |
-| 141 | `C_MOB_C_MOB` | `0x00630C2C` | `0x00630C2C` | ☐ | |
+| 141 | `C_MOB_C_MOB` | `0x00630C2C` | `0x00611CDB` | ✔ | sig-cat: CMob::CMob (needs-main-review; doom tail ABSENT in v72, alloc 0x4C0) |
 | 142 | `C_SECURITY_CLIENT_ON_PACKET_RET_STUB` | `0x00000000` | `0x00000000` | ☐ | |
 | 143 | `C_SECURITY_CLIENT_ON_PACKET_CHECK` | `0x00000000` | `0x00000000` | ☐ | |
 | 144 | `C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET` | `0x00000000` | `0x00000000` | ☐ | |

@@ -446,7 +446,62 @@ _(entries: instance addr, CreateInstance, SendPacket, Flush, OnConnect, Process,
 - Label applied: yes (renamed `UITitleInstanceAddr`).
 
 ### Config / Input / FuncKeyMappedMan
-_(entries: CConfig ctor + ApplySysOpt, CInputSystem, CFuncKeyMappedMan CreateInstance + ctor)_
+
+> Task 8 Config cluster (CInputSystem/CFuncKeyMappedMan resolved in Task 7 above).
+> v72 retains the full mangled C++ symbols for every CConfig member — IDB symbol is the
+> fast primary anchor; each entry pairs it with a SECOND structural anchor. The CConfig
+> singleton + windowed-mode globals were renamed (g_CConfig_pInstance / g_CConfig_SysOpt_WindowedMode).
+
+#### GetSEPrivilege   (key: GET_SE_PRIVILEGE)
+- Primary anchor: import call — only fn calling OpenProcessToken -> LookupPrivilegeValueA("SeDebugPrivilege") -> AdjustTokenPrivileges (+ GetCurrentProcess/CloseHandle).
+- Fallback anchor: IDB name `GetSEPrivilege` (named); called from CWvsApp::SetUp early (srand->GetSEPrivilege).
+- Drift v79->v72: relocated 0x44A48E -> 0x44989E (by string+import, not carry). SeDebugPrivilege string @0xA5A564.
+- v72 address: 0x0044989E.
+
+#### CConfig::CConfig (ctor)   (keys: C_CONFIG / C_CONFIG_INSTANCE_ADDR)
+- Primary anchor: IDB symbol `??0CConfig@@QAE@XZ` (nullary).
+- Detail: SBB-singleton store `g_CConfig_pInstance = (this+4!=0)?this:0` @0xAA3AC0; installs vtable off_9D09B8; 31/100/24 fuse (this+0x98 block: +8=0x1F, +0x10=0x64, +0x14=0x18, vtable off_9D09BC); StringPool::GetString(2530=0x9E2); RegOpenKeyExA(HKLM=0x80000002 via dword_AA77B8) into this+0x9C area; memset(this+0x234, 0, 0x1BD); LoadGlobal(sub_48C301) + ResetSessionInfo(sub_48EFDE).
+- Fallback anchor: 31/100/24 fuse + SOFTWARE\Wizet StringPool + RegOpenKeyExA(HKLM) + memset(0x1BD) + SBB-singleton idioms.
+- Drift v79->v72: relocated 0x49392C -> 0x48C0D3; g_CConfig_pInstance 0xB0BED0 -> 0xAA3AC0; **StringPool ID 2530 (v79 2532, v83 2547, v84 2548) — DRIFT**; memset target this+0x234 (v79 this+592=0x250) — member layout drift.
+- Label applied: globals renamed g_CConfig_pInstance (function symbol pre-present).
+- v72 addresses: C_CONFIG 0x0048C0D3; C_CONFIG_INSTANCE_ADDR 0x00AA3AC0.
+
+#### CConfig::GetPartnerCode   (key: C_CONFIG_GET_PARTNER_CODE)
+- Primary anchor: IDB symbol `?GetPartnerCode@CConfig@@QAEJXZ`.
+- Detail: sole referencer of literal `uiWndZ0` (aUiwndz0 @0xA5C0D4); CHATLOG_ADD(key) then GetOpt_Int(0,key,0,0x80000000,0x7FFFFFFF).
+- Fallback anchor: uiWndZ0 string xref + the GetOpt_Int(.,.,0,INT_MIN,INT_MAX) shape.
+- Drift v79->v72: relocated 0x5CC09D -> 0x5B12BD; uiWndZ0 + GetOpt(min,max) shape held.
+- v72 address: 0x005B12BD.
+
+#### CConfig::ApplySysOpt   (key: C_CONFIG_APPLY_SYS_OPT)
+- Primary anchor: IDB symbol `?ApplySysOpt@CConfig@@QAEXPAUCONFIG_SYSOPT@@H@Z`.
+- Detail: `rep movsd` this+0x60 (12 dwords=0x30); writes CWvsContext(dword_A9F438) flags @+0x3504/+0x3508 from game-start-mode this+0x88; BGM/SE volumes `100*(x+1)/20` (imul 0x64/idiv 0x14) -> CSoundMan(dword_AA3ABC)::SetBGMVolume(0x48F4D3)/SetSEVolume(0x6BE0AD); writes InputSystemInstanceAddr(0xAA3E84)+0x970.
+- Fallback anchor: SetBGMVolume/SetSEVolume + 100*(x+1)/20 volume math + get_field.
+- Drift v79->v72: relocated 0x4960F9 -> 0x48E7EC; member byte-offsets per-version.
+- v72 address: 0x0048E7EC.
+
+#### CConfig::CheckExecPathReg   (key: C_CONFIG_CHECK_EXEC_PATH_REG)
+- Primary anchor: IDB symbol `?CheckExecPathReg@CConfig@@QAEXV?$ZXString@D@@@Z` + StringPool exec-path pair.
+- Detail: gates on this+0xBC (the reg key handle from ctor); StringPool::GetString(3109=0xC25 ExecPath value, 3110=0xC26 MapleStory.exe); builds `"\\"`(0x5C) separator via operator=+Right(1); compares stored vs running path via strcmp; on mismatch _Cat + GetFileAttributes(dword_AA7554; ==-1 || &0x10) + SetOpt_String writeback.
+- Fallback anchor: this+0xBC reg-handle gate + 0x5C backslash + GetFileAttributes(&0x10).
+- Drift v79->v72: relocated 0x49440C -> 0x48CBAE; **StringPool IDs 3109/3110 (v79 3114/3115, v83 3135/3136, v84 3138/3139) — DRIFT**; reg-handle gate this+0xBC (v79 this[48]=0xC0).
+- v72 address: 0x0048CBAE.
+
+#### CConfig sys-opt windowed-mode flag   (key: C_CONFIG_SYS_OPT_WINDOWED_MODE)
+- Primary anchor: reader code sites — global read by 3 labeled fns: CWvsApp::SetUp (0x8F2C49), CWvsApp::CreateMainWindow (0x8F3850, `flag!=0 ? 0x80000000 : 0x80000` window-style branch + `?8:0` exstyle), CWvsApp::InitializeGr2D (0x8F438B). The two-reader (CreateMainWindow + InitializeGr2D) pattern holds.
+- Fallback anchor: the 0x80000000 (fullscreen) vs 0x80000 (windowed) style immediates fed by this flag in CreateMainWindow.
+- Drift v79->v72: relocated 0xB11548 -> 0xAA87AC; two-reader pattern + style immediates held. (Note v72 CreateMainWindow computes the style via neg/sbb rather than literal 720896.)
+- Label applied: renamed g_CConfig_SysOpt_WindowedMode.
+- v72 address: 0x00AA87AC. FOR TASK 13: windowed-mode global the ConfigSysOpt audit cross-checks.
+
+#### CMob::CMob (ctor)   (key: C_MOB_C_MOB)   [HIGH-VALUE / needs-main-review — doom-fix hook target, feeds Task 15]
+- Primary anchor: IDB symbol `??0CMob@@QAE@PAVCMobTemplate@@@Z`.
+- Detail: placement ctor over a NON-zeroed **1216-byte (0x4C0)** allocation (sole caller CreateMob 0x611C9F -> ZAllocEx<ZAllocAnonSelector>::Alloc(0x4C0), selector unk_AA7CB8). Body: CLife base ctor (sub_5AB61E); installs 3 primary CMob vtables at this+0/+4/+8 (off_9D4010/off_9D3FEC/off_9D3FE8) + several secondary embedded vtables; stores `m_pTemplate = pMobTemplate` at **this+0x160** (v79 this+0x188); 31/100/24 secure-fuse object at this+0x488 (vtable off_9D2F48, +8=0x1F, +0x10=0x64, +0x14=0x18); runs the _ZtlSecureTear chain over the secured stat members; MobStat::SetFrom(this+0x178, m_pTemplate)(0x6D0896); CWvsContext::SetExclRequestSent(0x8900FC); ends with StringPool::GetStringW(958=0x3BE = SP_CANVAS) + PcCreateObject::IWzCanvas into the HP-indicator canvas at this+0x484.
+- Fallback anchor (independent kind, spot-checked): sole caller CreateMob (0x611C9F); the CLife-base + 3-vtable install + m_pTemplate store + _ZtlSecureTear chain + SP-958/IWzCanvas tail — confirmed WITHOUT the symbol.
+- Drift v79->v72: relocated 0x630C2C -> 0x611CDB; **alloc 1216 (0x4C0) — SMALLER than v79's 1304 (0x518)**; m_pTemplate this+0x160 (v79 0x188); **StringPool 958 (v79 957, v83 956, v84 960) — DRIFT**; HP-canvas this+0x484 (v79 0x4D0). vtable globals per-version.
+- **DOOM-FIELD FINDING (Task 15 / doom-fix gate `< 84`):** v72 ctor LEAVES `m_bDoomReserved` UNINITIALIZED **AND the doom tail field DOES NOT EXIST in v72.** Evidence: (1) alloc is non-zeroing ZAllocEx::Alloc(**0x4C0 = 1216**), so the whole object ends at offset 0x4C0; (2) the v84 doom fields sit at this+0x540 (m_bDoomReserved) / this+0x544 (m_bDoomReservedSN) — **past the v72 struct end (0x4C0)**; (3) the ctor's highest member write is ~this+0x4B8 (the secure-fuse object + trailing flags), with NO tail zero-init block reaching any doom offset; (4) v72 is even smaller than v79 (0x4C0 vs 0x518) and lacks both the v84-only fields and the doom field. Verdict: v72 is correctly on the doom-fix needs-fix side (gate `< 84`), same disposition as v79. (Exact pinning of MobStat/CMob sizes is Task 12's read-only struct audit; the verdict rests on the alloc size + v84 contrast + absence of any tail doom write.)
+- Label applied: function symbol pre-present (not renamed).
+- v72 address: 0x00611CDB.
 
 ### Manager singletons (Task 7)
 
@@ -532,7 +587,52 @@ _(WIN_MAIN + SEND_HS_LOG entries are in the "CWvsApp lifecycle" section above.)_
 _(entries: senders + call-site offsets)_
 
 ### Utilities
-_(entries: ZArray::RemoveAll, ZXString trim/get-buffer, fatal section ctor/dtor, CSystemInfo, CIGCipher)_
+
+> Task 8 utilities cluster. v72 retains the mangled symbols; each entry pairs the symbol
+> with a structural anchor.
+
+#### CIGCipher::innoHash   (key: C_IG_CIPHER_INNO_HASH)
+- Primary anchor: IDB symbol `?innoHash@CIGCipher@@SAKPAEHPAK@Z`.
+- Detail: loops `bShuffle(v3, buf[i])` (sub_940DB9) over `len` bytes, returns `*v3`; no-key path (`if(!a3) v3=&var_4`) seeds `var_4 = 0xC65053F2`. Called in CClientSocket::SendPacket between MakeBufferList and Flush.
+- Fallback anchor: the 0xC65053F2 seed + bShuffle loop + the SendPacket call position.
+- Drift v79->v72: relocated 0x993442 -> 0x940D7E; **no-key seed 0xC65053F2 (v79 0xC6EF3720) — DRIFT** (read it, don't carry).
+- v72 address: 0x00940D7E.
+
+#### ZSynchronizedHelper<ZFatalSection> ctor/dtor   (keys: Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR / _DTOR)
+- Primary anchor: CTOR has IDB symbol `??0?$ZSynchronizedHelper@VZFatalSection@@@@QAE@AAVZFatalSection@@@Z`; reached as the SendPacket per-socket lock (CClientSocket::SendPacket calls it on this+124).
+- Detail: CTOR (0x402AB8, size 0x25): acquire-loop `result = off_A60AFC()` (the ZFatalSection acquire thunk); while non-zero, `dword_AA74FC(0)` (Sleep(0)) and retry. DTOR (ctor+0x25 = 0x402ADD): `mov eax,[ecx]; dec dword[eax+4]; jnz; and dword[eax],0; retn` — decrements the recursion count, clears on last release.
+- Fallback anchor: the acquire-loop/Sleep(0) retry (ctor) + the dec-and-clear (dtor); adjacent acquire/release pair.
+- Drift v79->v72: **v72 VAs (0x402AB8 / 0x402ADD) are IDENTICAL to v79** — but confirmed by v72-specific globals (acquire thunk off_A60AFC vs v79 off_AC4ECC; Sleep slot dword_AA74FC vs v79 dword_B0FDE4) + the SendPacket lock-acquire call-edge, NOT by carrying the v79 address. v83/v84 differ (0x403166/0x40318B). The dtor listing is aliased under ZAllocEx::Alloc in this dump (do not trust list_funcs there) — not renamed.
+- v72 addresses: CTOR 0x00402AB8, DTOR 0x00402ADD.
+
+#### CSystemInfo: ctor / Init / GetMachineId / GetGameRoomClient   (keys: C_SYSTEM_INFO / _INIT / _GET_MACHINE_ID / _GET_GAME_ROOM_CLIENT)
+- Primary anchor: IDB symbols (all four retain mangled names: `??0CSystemInfo@@QAE@XZ`, `?Init@CSystemInfo@@QAEXXZ`, `?GetMachineId@CSystemInfo@@QAEPBEXZ`, `?GetGameRoomClient@CSystemInfo@@QAEKXZ`) + string xref (Init).
+- Detail: ctor (0x94A6C0, size 9) installs vtable off_9DC404 (1 instruction). Init (0x94A700, size 0x2C4) = machine-id builder: Netbios (ncb_command 0x37/0x32/0x33 MAC query) + GetVolumeInformationA + RegOpenKeyExA(`SOFTWARE\Microsoft\Windows\CurrentVersion` @0xA9AD80) + `CxSupportId` (@0xA9AD74, RegQueryValueExA 16 bytes) + CoCreateGuid fallback. GetMachineId (0x94A9E0, size 4) returns the cached 16-byte id. GetGameRoomClient (0x94AAE0, size 0x11B4) = the process-table fn.
+- Fallback anchor: ctor = the only construct/Init pair in SendCheckPasswordPacket; Init via CxSupportId + Netbios; GetMachineId via EncodeBuffer(id,16) at the call site.
+- Drift v79->v72: cluster relocated wholesale (v79 0x99CDxx/0x99Dxxx -> v72 0x94A6xx/0x94Axxx); CxSupportId/CurrentVersion/Netbios anchors held.
+- Label applied: all four symbols pre-present (vtable off_9DC404).
+- v72 addresses: C_SYSTEM_INFO 0x0094A6C0; C_SYSTEM_INFO_INIT 0x0094A700; C_SYSTEM_INFO_GET_MACHINE_ID 0x0094A9E0; C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT 0x0094AAE0.
+
+#### ZArray<unsigned char>::RemoveAll   (key: Z_ARRAY_REMOVE_ALL)
+- Primary anchor: IDB symbol `?RemoveAll@?$ZArray@E@@QAEXXZ`.
+- Detail: `if(*this){ ZAllocEx<ZAllocAnonSelector>::Free(*this-4, selector unk_AA7CB8)(0x402B3F); *this=0 }`. Stride-1 (no imul).
+- Fallback anchor: the `*this-4` Free + `*this=0` shape; a thunk j_?RemoveAll@?$ZArray@E@@ (0x486D1E) jumps here (seen in the CConfig ctor unwind).
+- Drift v79->v72: relocated 0x4260F4 -> 0x425CEC. The generic ZArray<T>::RemoveAll variants (struct-audit tools Tasks 12-16) carry `imul stride,count` element-walks — re-derive stride per element type.
+- v72 address: 0x00425CEC.
+
+#### ZXString<char>::GetBuffer (cstr-assign)   (key: Z_X_STRING_GET_BUFFER)   [needs-main-review]
+- Primary anchor: IDB symbol `?_Cat@?$ZXString@D@@IAEAAV1@PBDH@Z` (the in-place assign/append primitive; no dedicated pure-assign GetBuffer(PBD,H) symbol exists in v72, same as v79/v84).
+- Detail: on an empty/zeroed ZXString does `inner GetBuffer(Size,0)(0x414576) + memcpy(Src,Size) + ReleaseBuffer(0x414621)` (== assign); on a non-empty string doubles capacity and appends.
+- Fallback anchor: structure — inner-GetBuffer (0x414576) + memcpy + ReleaseBuffer operating in place on `this`.
+- Drift v79->v72: relocated 0x426133 -> 0x425D2B; inner GetBuffer 0x4147BB -> 0x414576. **needs-main-review**: repo only invokes it on freshly-managed ZXStrings, so it behaves as assign — confirm that invariant or locate a dedicated pure-assign if one is added.
+- v72 address: 0x00425D2B.
+
+#### ZXString<char>::TrimRight / TrimLeft   (keys: Z_X_STRING_TRIM_RIGHT / Z_X_STRING_TRIM_LEFT)
+- Primary anchor: IDB symbols `?TrimRight@?$ZXString@D@@QAEAAV1@PBD@Z` / `?TrimLeft@?$ZXString@D@@QAEAAV1@PBD@Z` + the whitespace literal.
+- Detail: both default `Str` to `" \t\r\n"` (asc_A5AAF0 @0xA5AAF0) when NULL and use strchr to test set-membership, calling inner GetBuffer (0x414576). TrimRight scans backward, NUL-terminates after last non-set char; TrimLeft scans forward then memcpy-shifts the remainder to the front. ADJACENT in the image (TrimRight immediately before TrimLeft).
+- Fallback anchor: the shared " \t\r\n" literal + right-scan vs left-scan+memcpy distinction.
+- Drift v79->v72: relocated TrimRight 0x46DB7E -> 0x46C9B4, TrimLeft 0x46DC33 -> 0x46CA69; whitespace literal asc_ABEDA0 -> asc_A5AAF0. Repo calls them `(this, NULL, s)`.
+- v72 addresses: TrimRight 0x0046C9B4; TrimLeft 0x0046CA69.
 
 ### Exception dispatch
 _(entries: C_TI_*EXCEPTION, C_PATCH_EXCEPTION_BUILDER, C_COM_RAISE_ERROR_EX, C_FILE_STREAM_*)_
