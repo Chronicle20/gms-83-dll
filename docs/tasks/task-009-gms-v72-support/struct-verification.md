@@ -100,8 +100,8 @@ to per-field where a gate boundary moves.
 | CWvsApp.h | 0x60 | == v79 (both 0x60) | branch-added (72 → 0x60 branch :97) | WinMain stack-ctor @0x8EF809 → this=ebp-0xF4; highest field @+0x5C (m_ahInput[2]), next local @+0x6C → 0x60; ctor @0x8F26C7 field-init through +0x38 matches v79 |
 | CFuncKeyMappedMan.h | 0x388 | == v79 (both 0x388) | branch-added (72 → ==79 0x388 branch :50) | task-2: CreateInstance Alloc(0x388) + ctor extent; member gate :18 (>=83\|\|JMS) excludes v72 → quickslot pair absent → header computes 0x388 |
 | CUIToolTip.h | **0x50C** (full) | == v79 (ctor byte-identical) | two-way-confirmed-shares-v79 (gate :92 correct) + all upper gates absent | v72 ctor 0x7F9C33 vs v79 0x842317: both `mov [esi+10h]`=m_pLayer then eh-vector-ctor m_aLineInfo[32]@esi+0x20 (elem 0x20 → CLineInfo lacks `>=95` m_bUseDotImage), then identical post-array writes @0x424+. No m_pLayerAdditional (`>=83`, would push array to 0x24); no m_aOptionLineInfo (`>=95\|\|JMS`); no Gen_Unknown(`>=84`)/H_White(`>=87`)/Stan_Prp(`>=87`)/Stan_Dsc..Skill_Dsc(`>=95`); no Durability(`>=84`). **Full size from CCtrlButton embed: alloc 0x59C − m_uiToolTip@0x8C − m_bSelfDisable(4) = 0x50C** (Task 14); == v79 (byte-identical ctor). ⚠ Header field-list bottom-up computes 0x514 — an 8-byte / 2-field overcount in the shared `<87` font/canvas region (no assert_size; shared v72==v79; not gate-relevant — flag for header owner). Plan-table "v79 0x514==v83" was a planning error: v83 has m_pLayerAdditional (0x518) while v72/v79 = 0x50C. |
-| CMob.h | 0x4C0 | **DIVERGES**: v72 0x4C0 vs v79 0x518 (−0x58) | **split-three-way** (size diverges; doom-tail field itself absent in both) | CreateMob 0x611C9F `push 4C0h`; ctor 0x611CDB highest write `[esi+4B8h]`. v79 CreateMob 0x630BF0 `push 518h`. Doom tail (would start ~0x528) ABSENT in both. No assert_size → divergence is SILENT; v72 needs distinct member gates (front −0x28, MobStat −0x1C, tail) in Task 14/16. |
-| CMapLoadable.h | ☐ | ☐ | ☐ | |
+| CMob.h | 0x4C0 | **DIVERGES**: v72 0x4C0 vs v79 0x518 (−0x58) | **split-three-way** (size diverges; doom-tail field itself absent in both) | CreateMob 0x611C9F `push 4C0h`; ctor 0x611CDB highest write `[esi+4B8h]`. v79 CreateMob 0x630BF0 `push 518h`. Doom tail ABSENT both. **Task 15 PINS the −0x58:** FRONT −0x28 = CLife base −4 (m_nMobChargeCount v72@0x84 vs v79@0x88) + **REGION_GMS block `CMob.h:97–105` (m_bAttackReady…m_effectAttack, 0x24) ABSENT in v72** (v72 1st ZList@0x88 directly after m_nMobChargeCount@0x84; v79 @0xB0 after the 0x24 block); MobStat embed −0x20; TAIL −0x10 (ungated, not byte-pinned). Task-17: gate `:97` block `>=79`; CLife −4 + tail −0x10 not CMob.h-gateable (flag). |
+| CMapLoadable.h | 0x114 (276) | == v79 (both <84/<95; front == v95 dump) | base/excluded — `>=84` m_lVisibleByQuest, `>=95` m_bField/m_lpLayerLetterBox/m_bPlayHoldedBGM+m_tPlayHoldedBGM ABSENT | Front anchor: PrepareNextBGM 0x5F3496 `mov [esi+1Ch]`=m_tNextMusic (CStage base 0x18 == v95 dump). Size = v95 0x148 − m_bField(4) − m_lVisibleByQuest(0x14) − m_lpLayerLetterBox(0x14) − m_bPlayHolded pair(8) = 0x114; corroborated by task-006 v84=0x128 (= 0x114 + m_lVisibleByQuest 0x14). No assert_size; tail not independently anchored (Task 15). |
 | CLogin.h | 0x23C (572) | v72 0x23C < v79 0x258 < v83 0x2C8; v72 has 1 ZList block, v79/v83 have 2 | unchanged (==83 correctly excludes v72; no edit) | Size: LogoEnd `Alloc(0x23C)` → CLogin::CLogin 0x5AECED → set_stage (sig-cat:389). Member: v72 ctor builds ONE ZList (off_9D317C @this+0x174 = m_lNewEquip) then m_aCmd[5] @+0x1C8. v79 @0x5C94AD/0x5C94C3 and v83 @0x5F3D32/0x5F3D42 build TWO ZLists (unk3@+0x1A0 v83). v72 lacks the unk3 ZList → member absent |
 | CWvsContext.h | ≥0x3520 (lower bound) | == v79 base shape (no client key) | base/excluded — `>83` m_aClientKey[8] **ABSENT**; all `>=87`/`>=95` upper fields absent; 52-slot equip arrays (`>=87` #else) | m_aClientKey: OnConnect 0x48528f PLAYER_LOGGED_IN send = Encode4/Encode1/Encode1, **NO EncodeBuffer(key,8)** (Task 4/sig-cat §8-byte-client-key). Size: high-offset field accesses — WinMain `[g_pWvsContext+3510h]`, ApplySysOpt writes [+0x3504]/[+0x3508], SetUp 0x8f2c99 reads [+0x351C] → sizeof≥0x3520. m_dwCharacterId @+0x20A0 base-consistent (SecondaryStat embed not shifted). No assert_size; exact alloc not gate-relevant (singleton creator not pinned in budget) |
 | CClientSocket.h | 0x94 (148) | == v79 (both 0x94) | base/excluded — `>=111` dummy1 ABSENT | TSingleton<CClientSocket>::CreateInstance 0x8f621f → `push 94h`/ZAllocEx::Alloc → ctor 0x484c95. v72<111 → no +0x14 dummy1. JMS dummy1 N/A (REGION_GMS) |
@@ -116,11 +116,11 @@ to per-field where a gate boundary moves.
 | CConfig.h | real 0x3FC (1020); our struct v95-shaped (≥1592) | v72 real 1020 < v83 1072 < our floor | base/excluded — `>=111` m_v111Pad ABSENT, `==95` assert branch false → base `>=1072` assert | WinMain `push 3FCh` @0x8ef7ce → ZAllocEx::Alloc → CConfig::CConfig 0x48c0d3. Our oversize struct (≥1592) >> real 1020 → no heap overflow; compile-time assert `>=1072` holds. (CConfig instance 0xAA3AC0 + 0x3FC = end 0xAA3EBC) |
 | ConfigSysOpt.h | base (ends at bSysOpt_Minimap_Normal) | == v83 base | base/excluded — `>=95` bSysOpt_LargeScreen + bSysOpt_WindowedMode ABSENT | v72 windowed-mode is a **standalone global** g_CConfig_SysOpt_WindowedMode @0xAA87AC (SetUp 0x8f2c49 sets =0x10; readers CreateMainWindow/InitializeGr2D — sig-cat:490), OUTSIDE the CConfig instance (0xAA87AC > instance end 0xAA3EBC) → NOT a CONFIG_SYSOPT field. `>=95` gate correctly excludes it from v72's embedded CONFIG_SYSOPT |
 | COutPacket.h | 0x10 (base) | == v83/v79 (both 0x10) | base/excluded — `>=111` dummy1 ABSENT | ctor 0x656fa1: `and [esi+4],0` + ZArray _Alloc(0x100) on [esi+4]=m_aSendBuff, then Init(seq) (m_uOffset@8 / m_bIsEncryptedByShanda@0xC / m_bLoopback@0); unwind funclet RemoveAll on [esi+4]. Single ZArray member, no +0x10 field → 0x10. static_assert `>=0x10` holds |
-| SecondaryStat.h | ☐ | ☐ | ☐ | |
+| SecondaryStat.h | **0xAB0** (2736) | **DIVERGES**: v72 0xAB0 vs v79/v83 0xB88 (−0xD8) | base/excluded — `>=87` DojangShield/AssistCharge/Enrage, `==87` byte-variants (v72→#else int), `>=84` Flying/Frozen, `>=95` blocks ALL ABSENT; **+ NEW ungated base shrink −0xD8 (~18 SecureTear slots)** | Embedded @CWvsContext+0x212C in BOTH (OnTemporaryStatReset: v72 0x918F3C / v79 0x96AB32 `add edi,212Ch`). aTemporaryStat[7] (last member, 0x1C): [0]/RideVehicle v72@SecondaryStat+0xA94 vs v79@0xB6C; [4]/GuidedBullet v72@0xAA4 vs v79@0xB7C — both Δ=−0xD8. v72 sizeof = 0xA94+0x1C = **0xAB0**; v79 = 0xB6C+0x1C = 0xB88 (independently re-confirms 0xB88). Reset 0x6CA91A confirms field layout matches header (nPAD_ @+0xC). **SIZE-CRITICAL:** shifts m_forcedStat + all CWvsContext members after m_secondaryStat by −0xD8 (pre-stat region @≤0x212C unaffected). Exact 18 missing base stats not pinned (Task 15 concern). |
 | PartyData.h | ☐ | ☐ | ☐ (packed) | |
 | PartyMember.h | ☐ | ☐ | ☐ (packed) | |
 | GuildData.h | ☐ | ☐ | ☐ (packed) | |
-| MobStat.h | tail reduced (lBurnedInfo@0x1C4) | **DIVERGES**: v72 ~0x1D8 vs v79 0x1F8 (−0x1C) | **split-three-way** (size diverges; Weakness field itself absent in both) | Embedded in CMob: v72 @CMob+0x178 (ctor 0x611DA3 `lea eax,[ebx+1C4h]`=lBurnedInfo ZList off_9D4020), v79 @CMob+0x1A0 (ctor 0x630D1E `lea eax,[ebx+1E0h]`=lBurnedInfo). Unwind funclets confirm (v72 `add 1C4h` / v79 `add 1E0h`). Weakness group absent in both; v72 reclaims an additional ~0xC block beyond it → distinct v72 gate in Task 14/16. |
+| MobStat.h | **0x1D8** (472) | **DIVERGES**: v72 0x1D8 vs v79 0x1F8 (−0x20) | **split-three-way** (size diverges; Weakness field itself absent in both) | **Firm anchors:** SetFrom v72 0x6D0896 `push 1D8h` memset (=sizeof); CMob ctor `lea eax,[ebx+1C4h]`=lBurnedInfo@0x1C4 (+0x14=0x1D8). v79 SetFrom 0x702675 `push 1F8h`; lBurnedInfo@0x1E0. **Task 15 PINS the −0x1C (sizeof −0x20):** nFs (long double) v72 `fstp[edi+1B8h]`@0x1B8 vs v79 `fstp[edi+1D0h]`@0x1D0 → status region `[0x94,nFs)` is **0x18 (6 ungated status ints) shorter in v72**; PLUS **`int bDisable` (MobStat.h:152) ABSENT in v72** (v72 copies 1 post-nFs field@0x1C0; v79 copies 2 @0x1D8+0x1DC). +0x4 v79 align-pad → sizeof −0x20. (Task 12 "−0x1C" = lBurnedInfo position delta.) Task-17: gate bDisable + 6 status ints `<79`; 6 ints named-candidate. |
 
 ## Cross-version safety (FR-13)
 
@@ -474,3 +474,55 @@ three-way split is needed for any of the 5 derived classes.
    their exact sizeof anchors are version-arithmetic/cascade-based, not dedicated-ctor disasm. Gate
    verdicts are firm (`>=95`-family FALSE for v72); neither header has an assert_size, so a
    lower-bound is acceptable per the task brief.
+
+## Task 15 (Mob/stat family) audit record — 4 headers; CMob/MobStat split regions PINNED
+
+Lane: v72 = port 13343 `GMS_v72.1_U_DEVM.exe` (active via `list_instances`; `server_health` idb/base 0x400000
+confirmed); v79 = port 13339 `GMS_v79_1_DEVM.exe`. Read-only `disasm`; no struct types (R10). `get_metadata` not
+exposed → `server_health` substituted. No source edits (evidence task). **All 4 headers: v72 size + per-gate verdict
++ disasm anchor.** Full report: `.superpowers/sdd/task-15-report.md`. **Result: 3 sizes diverge from v79/v83 via
+*ungated* member regions (CMob front block, MobStat status ints + bDisable, SecondaryStat ~18 base stats); CMapLoadable
+clean (base/excluded).** Status DONE_WITH_CONCERNS (sizes + gate dispositions firm; some ungated members named-not-byte-pinned).
+
+### 1. CMob.h — sizeof v72 = 0x4C0; −0x58 vs v79 0x518, decomposed (two parallel ctor walks)
+v72 ctor 0x611CDB vs v79 ctor 0x630C2C, aligned by corresponding members (1st ZList m_lAffectedSkillEntry: v72@0x88 /
+v79@0xB0; MobStat embed: v72@0x178 / v79@0x1A0; m_aAction: v72@0x488 / v79@0x4D4; highest write v72 0x4B8 / v79 0x514):
+- **FRONT −0x28** = CLife base **−4** (m_nMobChargeCount v72@0x84 vs v79@0x88) + **`REGION_GMS` block CMob.h:97–105
+  ABSENT in v72 (−0x24)**: in v72 the 1st ZList sits at 0x88 immediately after m_nMobChargeCount@0x84; in v79 the
+  block (6 ints + ATTACKEFFECT 0xC) occupies 0x8C–0xAF and the 1st ZList is at 0xB0. **This is the gateable divergence
+  → Task 17 changes `:97` from `REGION_GMS` to `REGION_GMS && BUILD_MAJOR_VERSION >= 79`.**
+- **MobStat embed −0x20** (§2). **TAIL −0x10** = ungated CMob tail members absent in v72 (not individually pinned —
+  ctor inits via non-sequential SecureTear funclets). doom tail (`:239`) absent both → field gate stays `#else` for v72.
+- **CONCERN:** CLife −4 + tail −0x10 are NOT CMob.h-own members; member-exact v72 CMob is not gate-achievable via
+  CMob.h alone. CMob has no assert_size; doom-fix exclusion already correct → acceptable, but flagged for Task 17.
+
+### 2. MobStat.h — sizeof v72 = 0x1D8 (memset anchor); −0x20 vs v79 0x1F8
+SetFrom v72 0x6D0896 `push 1D8h` / v79 0x702675 `push 1F8h` (both memset the whole struct → firm sizeof). Field-copy
+destinations identical through MobStat+0x84 (nLevel, aDamagedElemAttr[8], nPAD…nSpeed 4-int groups). Divergence:
+- **nFs (long double)** v72@0x1B8 (`fstp[edi+1B8h]`) vs v79@0x1D0 → the memset-0 status region `[0x94, nFs)` is
+  **0x18 (6 ungated status ints) shorter in v72** (exact 6 ints not byte-pinned — region isn't field-copied; candidate).
+- **`int bDisable` (MobStat.h:152) ABSENT in v72 (PINNED):** v72 copies ONE post-nFs field → bInvincible@0x1C0,
+  lBurnedInfo@0x1C4; v79 copies TWO → bInvincible@0x1D8, bDisable@0x1DC, lBurnedInfo@0x1E0.
+- −0x18 (status) + −0x4 (bDisable) = −0x1C at lBurnedInfo; + 0x4 v79 trailing align-pad = −0x20 sizeof. **Task 17:
+  gate bDisable + the 6 status ints with `< 79`.**
+
+### 3. SecondaryStat.h — sizeof v72 = 0xAB0 (INDEPENDENT); −0xD8 vs v79/v83 0xB88 — SIZE-CRITICAL
+Embedded @CWvsContext+0x212C in BOTH (OnTemporaryStatReset v72 0x918F3C / v79 0x96AB32 `add edi,212Ch` → `SecondaryStat::
+Reset(this=edi)`). aTemporaryStat[7] (last member): RideVehicle [0] v72@SecondaryStat+0xA94 / v79@0xB6C; GuidedBullet [4]
+v72@0xAA4 / v79@0xB7C — both Δ=−0xD8. sizeof: v72 0xA94+0x1C=**0xAB0**; v79 0xB6C+0x1C=0xB88 (re-confirms 0xB88). Reset
+0x6CA91A confirms field layout == header (nPAD_ @+0xC). Per-gate: `>=87` DojangShield/AssistCharge/Enrage, `==87`
+byte-variants (→#else int), `>=84` Flying/Frozen, `>=95` blocks — **ALL ABSENT** (v72<87). **CONCERN (size-critical):**
+the −0xD8 (=18 × 0xC SecureTear slots) is an UNGATED base shrink → header over-counts v72 by 0xD8, shifting m_forcedStat
++ all CWvsContext members after m_secondaryStat by −0xD8 (pre-stat region ≤0x212C unaffected; Task 13 front verdicts stand).
+Exact 18 missing base stats not pinned. No assert_size.
+
+### 4. CMapLoadable.h (README-critical) — sizeof v72 = 0x114; base/excluded, clean
+Front == v95 reference: PrepareNextBGM 0x5F3496 `mov [esi+1Ch]`=m_tNextMusic (CStage base 0x18; matches v95 dump → no
+front shrink). 0x148 − m_bField(4,`>=95`) − m_lVisibleByQuest(0x14,`>=84`) − m_lpLayerLetterBox(0x14,`>=95`) − m_bPlayHolded
+pair(8,`>=95`) = **0x114**; corroborated by task-006 v84=0x128 (= 0x114 + m_lVisibleByQuest). All gated fields absent.
+Minor residual: tail not independently disasm-anchored (no assert_size; verdict firm regardless).
+
+### Cross-version safety (FR-13)
+No edits in this evidence task → no truth-table changes. CMob/MobStat split dispositions unchanged from Task 12 (add a
+GMS `< 79` arm ABOVE the `#else`, v79 byte-identical). SecondaryStat/CMapLoadable take the base/excluded branch
+identically to v79 for every gate; v79/v83/v84/v87/v95/v111/JMS185 selections unaffected.
