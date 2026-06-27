@@ -94,7 +94,9 @@ class CMob : CLife {
     };
 
     int m_nMobChargeCount;
-#if (defined(REGION_GMS))
+    // v72: attack-ready/charge block (0x24) absent — v72 first ZList @0x88 directly after
+    // m_nMobChargeCount; v79 has the block @0x8C–0xAF. three-way split, verified task-009
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 79)
     int m_bAttackReady;
     int m_nAngerGaugeCount;
     int m_nUpdateTime;
