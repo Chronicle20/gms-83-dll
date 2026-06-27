@@ -465,3 +465,39 @@ confirmed ABSENT at the anchor: `m_bField` (`>=95`) — the slot @+0x34 is the `
 No source edits in this evidence task. The 3 split rows feed Task 17; CMapLoadable needs no change
 (v72/v79/v83/v84/v87/v95/v111/JMS185 all keep their existing branches). A `< 72` term is disjoint
 from every supported version except v61.
+
+## Task 15b (member-ID resolution) — pin the three flagged splits + edit-impact
+
+Read-only `disasm`; no struct types; no edits. Lanes re-confirmed per switch: v61=13344, v72=13343
+(diff partner). Method: diff the per-field enumerators `MobStat::DecodeTemporary` and
+`SecondaryStat::Reset`, plus the CMob ctor and `SetFrom`, between v61 and v72.
+
+**Active-vs-latent (grep bypass/ doom-fix/ redirect/ + CWvsContext.cpp): ALL THREE splits are LATENT
+for v61.** No v61 edit reads a CMob/MobStat/SecondaryStat/CLife field, nor any CWvsContext field after
+`m_secondaryStat`. `doom-fix` hooks `CMob::CMob` but its only write (`m_bDoomReserved`) is gated
+`==83` → for v61 the hook is a pass-through (no shifted read). All CWvsContext reads in
+`bypass/socket_hooks.cpp` (`m_dwAccountId`/`m_nSubGradeCode`/`m_nWorldID`/`m_nChannelID`/
+`m_dwCharacterId`, header lines 63–104) precede `m_secondaryStat` (line 110). So these are
+OFFSET-FIDELITY (model-only) issues; none is load-bearing for a live v61 hook, and none header has a
+`static_assert`. Gate them for correctness, but priority = fidelity, not crash-avoidance.
+
+| Header | Split | RESOLVED member-IDs (offsets, v61 vs v72) | Task 17 `<72` gate shape | Status |
+|---|---|---|---|---|
+| **MobStat.h** | −0x20 | Enumerators byte-identical through off 0x194 (`nRiseByToss_`, hdr line 110; `SetFrom` nFs v61@0x198 / v72@0x1B8). **v61 lacks hdr lines 111–118** (8 ints @ v72 0x198–0x1B4): `rRiseByToss_`,`tRiseByToss_`,`nPCounter_`,`rPCounter_`,`tPCounter_`,`wPCounter_`,`nMCounter_`,`rMCounter_`. (Corrects Task 15's "lines 117–124" candidate.) | Gate **lines 111–124** behind the `<72` exclusion → nFs@0x198, size 0x1B8. (Lines 119–124 are absent in real v72 too — see flag.) | **RESOLVED** |
+| **CLife.h** (NEW row) | −0x4 | `sizeof(CLife)` = **0x80 (v61) vs 0x84 (v72)** = ONE 4-byte base member v61 lacks (m_nMobChargeCount, first CMob own member, @0x80 vs @0x84). Member name NOT pinned (CLife inlined, no symbol). | CLife.h needs a `<72` gate for one 4-byte member — **name not pinned**; latent + no assert → either focused ctor diff to name it, or leave v72-shaped. | **byte-RESOLVED; name-flagged** |
+| **CMob.h** | −0x30 | Full ctor diff (v61 @0x5C2128 / v72 @0x611cdb) closes EXACTLY: CLife base −0x4 + **CMob-own pre-MobStat −0x4** (m_pTemplate@0x15C/0x160 → MobStat@0x170/0x178; one v72-only int in the m_pTemplateByDoom/m_nMP area) + MobStat −0x20 + **CMob-own post-MobStat −0x8**. | **CORRECTION to Task 15:** CMob's OWN members DO diverge (−0xC), not just CLife. Two undocumented v72-only 4-byte members in CMob-own region (1 pre-, ~1 post-MobStat) + 1 CLife base. Gates are identical v61/v72 so these are ungated/embedded-substruct deltas. | **decomp RESOLVED; names flagged** |
+| **SecondaryStat.h** | −0x140 | `Reset` (v61 @0x662704 / v72 @0x6ca91a, size 0xf61 both) is byte-offset-**IDENTICAL on [0, ~0x790)** (sampled instr 0–90/600/830 — same offset/index). Divergence is **contiguous-late** in [~0x790, trailing array) — NOT interspersed (overturns Task 15). `aTemporaryStat[7]` (final member) @**0x938 (v61)** / @**0xA7C (v72)**, Δ=0x140. | **CANNOT write a member gate from the header** — the header over-models v72 itself by ~0x350 (computes array@~0xDE4 vs real 0xA7C): its field inventory/offsets match NEITHER binary. Member NAMES of the v61-absent late block NOT pinned. | **structure RESOLVED; names BLOCKED — FLAGGED** |
+
+### Flags for the user (Task 15b)
+1. **SecondaryStat (highest risk):** member set still not name-pinned. Root cause now PROVEN: the
+   header is a v95+ over-model unfaithful to v72 (array@~0xDE4 vs real v72 0xA7C). A faithful sub-v83
+   layout must be **rebuilt from the binary** (Reset/DecodeForLocal enumeration), not trimmed from the
+   header; likely needs multi-way (`<72`/`<79`/`<83`) gates + an independent `>= 95` gate for the
+   ungated Aura/Mechanic family. Latent for v61 → safest to defer rather than guess. What IS proven:
+   contiguous-late −0x140, identical through ~0x790, array @0x938 v61 / 0xA7C v72.
+2. **MobStat:** the header over-models v72 by lines 119–124 (`tMCounter_`,`wMCounter_`,`nCounterProb_`,
+   `nBodyPressure_`,`rBodyPressure_`,`tBodyPressure_`) — absent in real v72 (nFs@0x1B8 proven). For full
+   fidelity split: lines 111–118 `>= 72`, lines 119–124 `>= 79`.
+3. **CMob/CLife:** CLife is only −0x4 (not −0x10); CMob.h itself diverges by −0xC own (contradicts the
+   Task 15 "CMob own == v72" claim). Three v72-only 4-byte members (1 CLife base + 2 CMob-own) are
+   byte-located but not name-pinned. Latent + no assert.
