@@ -579,3 +579,95 @@ intermediate text in the sections above.
   vs the true 0x140 — one v72-side footprint (likely the two-state array 7×8) is overstated by 4
   bytes in the per-site accounting. v61 sizeof = 0x970 is independently confirmed (array 6×4 @0x958
   ending 0x970). This is a v72-modeling footnote only; it does NOT change any v61 gate.
+
+## Task 16 (Party/Guild/misc + FINAL 24/24 completeness) — 4 headers
+
+Read-only `disasm` only; no struct types applied (R10/R12). Lane re-confirmed via `list_instances`:
+active = port **13344 `GMS_v61.1_U_DEVM.exe`** (v48@13345 distractor never probed; v72@13343).
+Per **D5** every v61 size is independently measured against a v61 anchor. v61 retains full mangled
+symbols. These are **packet/wire structs** — packed (pack(1)); anchored from `DecodeBuffer(this,N)`
+sizes and field-write offsets, not natural-alignment arithmetic.
+
+### Step 1 — per-gate truth table (v61)
+
+| Header:line | Gate | v61 | Effect on v61 layout |
+|---|---|---|---|
+| **PartyMember.h:9** | **`< 95`** | **T** | `adwFieldID[6]` **PRESENT** (base/included branch — v95+ promoted it to PARTYDATA) |
+| PartyData.h:9 | `>= 95` | F | TOWNPORTAL `m_nSKillID` ABSENT |
+| PartyData.h:16 | `>= 95` | F | PARTYDATA `adwFieldID[6]` ABSENT (stays in PARTYMEMBER for v61) |
+| PartyData.h:20 | `>= 95` | F | PQReward block (`aPQReward[6]`/`aPQRewardType[6]`/`dwPQRewardMobTemplateID`/`bPQReward`) ABSENT |
+| GuildData.h:27 | `>= 95` | F | `nLevel`, `mSkillRecord` (ZMap), `aSkillRecordOnlyID` (ZArray) ABSENT |
+| CFuncKeyMappedMan.h:19 | `>= 83 \|\| JMS` | F | quickslot pair (`m_aQuickslotKeyMapped[8]`×2) ABSENT (Cat-B, Task 12) |
+| CFuncKeyMappedMan.h:25 | `>= 111 \|\| JMS` | F | `dummy1` ABSENT |
+| CFuncKeyMappedMan.h:31 | `>= 95` | F | `m_nNormalAttackCode` ABSENT |
+| CFuncKeyMappedMan.h:52 | `== 61 \|\| == 72 \|\| == 79` | **T** | selected branch → `assert_size 0x388` (Task 3 amended `==61` in) |
+
+### Step 2 — verdict table (4 headers)
+
+| Header | v61 size | Per-gate present/absent (v61) | Deciding v61 anchor | Verdict |
+|---|---|---|---|---|
+| **PartyData.h** | **0x12A** (298) | `>=95` (m_nSKillID / PARTYDATA adwFieldID / PQReward) ALL ABSENT | `PARTYDATA::Decode` @`0x4b5499`: `push 12Ah; push ecx(this); DecodeBuffer(void*,uint)` ⇒ sizeof=**0x12A** (one-shot buffer decode = exact size). Packed arithmetic confirms to the byte: PARTYMEMBER 0xCA + 6×TOWNPORTAL(0x10)=0x60 = 0x12A. If `>=95` present it would be ≥0x186 (+adwFieldID 0x18 +6×m_nSKillID 0x18 +PQReward 0x44). | **unchanged** |
+| **PartyMember.h** | **0xCA** (202, embedded @PARTYDATA+0) | `<95` `adwFieldID[6]` **PRESENT** | Embedded prefix of the `PARTYDATA::Decode` 0x12A: PARTYMEMBER packed = adwCharacterID[6]0x18 + asCharacterName[6][13]0x4E + anJob/anLevel/anChannelID[6]0x18×3 + dwPartyBossCharacterID 4 + **adwFieldID[6]0x18** = 0xCA. Without adwFieldID it would be 0xB2 ⇒ PARTYDATA 0x112 (≠ measured 0x12A) — so the `<95` field IS present. | **unchanged** |
+| **GuildData.h** | **0x2A** (42) | `>=95` (`nLevel`/`mSkillRecord` ZMap/`aSkillRecordOnlyID`) ALL ABSENT | `GUILDDATA::Decode` @`0x4b5604` field-write extent: nGuildID@0, sGuildName@4, asGradeName@8, adwCharacterID@0xC, aMemberData@0x10 (GUILDMEMBER stride `imul edi,25h`=0x25), nMaxMemberNum@0x14, nMarkBg@0x18(w), nMarkBgColor@0x1A(b), **nMark@0x1B(w, odd offset ⇒ packed)**, nMarkColor@0x1D(b), sNotice@0x1E, nPoint@0x22, **nAllianceID@0x26 (last write) ⇒ ends 0x2A**. No ZMap/ZArray (>=95 skill-record) decoded ⇒ `>=95` block absent; struct ends at nAllianceID. | **unchanged** |
+| **CFuncKeyMappedMan.h** | **0x388** (904) | quickslot pair (`>=83`) ABSENT; `dummy1` (`>=111`) ABSENT; `m_nNormalAttackCode` (`>=95`) ABSENT | **TWO independent anchors agree:** (a) `TSingleton::CreateInstance` @`0x826038` `push 388h`→`ZAllocEx::Alloc`→ctor; (b) ctor `??0CFuncKeyMappedMan` @`0x51AA0E` field-init extent: vtable@0, `memcpy(this+4, …, 0x1BD)` m_aFuncKeyMapped[89] (ends 0x1C1), `memcpy(this+0x1C1, …, 0x1BD)` m_aFuncKeyMapped_Old[89] (ends 0x37E), `and [esi+380h],0`/`and [esi+384h],0` pet ints (highest write 0x384) ⇒ **0x388**. Pet ints sit immediately after the two FK arrays (+2 align pad 0x37E→0x380), **no 0x40 quickslot gap** ⇒ quickslot pair absent == v72 exactly. | **confirmed-shares-v72** |
+
+### CFuncKeyMappedMan reconciliation (Task 16 mandate)
+v61 size **0x388 == v72** re-derived here from an anchor independent of the Task 2/3 `CreateInstance`
+trust: the **ctor field-init extent** (highest write `[esi+0x384]` ⇒ 0x388) agrees with the
+`CreateInstance` `Alloc(0x388)`. The three member gates resolve consistently with the Task 3
+size-assert branch (`:52` `==61||==72||==79` → 0x388): `>=83` quickslot pair ABSENT (the −0x40 vs v83
+0x3C8, the defining Cat-B fact, Task 12), `>=111` dummy1 ABSENT, `>=95` m_nNormalAttackCode ABSENT.
+The header computes 0x388 for v61 and the `==61` assert fires & holds (build OK, Task 3). Cat-A row
+(Task 3) + Cat-B verdict (Task 12) + this independent reconciliation all converge: **0x388,
+confirmed-shares-v72.**
+
+### Findings / divergences
+- **No split surfaced.** All 4 headers take the base/v72 branch for v61. PartyData/PartyMember/
+  GuildData: every `>=95` gate FALSE → base; the one `<95` gate (PartyMember adwFieldID) TRUE → field
+  present (base/included). CFuncKeyMappedMan: all upper gates FALSE → 0x388 == v72.
+- **Packing note (version-independent, NOT a v61 split):** PARTYDATA/PARTYMEMBER/GUILDDATA are pack(1)
+  wire structs (proven: GUILDDATA nMark word @odd 0x1B / sNotice ZXString @0x1E; PARTYDATA exact
+  0x12A only under packed arithmetic — natural alignment would give 0x12C). The headers carry **no
+  `#pragma pack` and no `assert_size`**, so a C++ compile models PARTYDATA at 0x12C (a 2-byte
+  over-model vs the real 0x12A) — but this is identical for v72/v79/v83+ (pre-existing,
+  version-independent) and **non-breaking** (no assert, latent — no v61 edit reads these structs).
+  Recorded as a fidelity note, **not** a Task-17 split (it is not a v61-vs-v72 divergence).
+
+### Cross-version safety (FR-13)
+No source edits in this evidence task. The 4 headers' selected branches for
+v72/v79/v83/v84/v87/v95/v111/JMS185 are untouched; v61 joins the base/`#else` branch v72 already
+occupies for every `>=95` gate, takes the included `<95` branch (as do v72/v79/v83/v84), and joins
+the existing `==61||==72||==79` 0x388 assert branch (CFuncKeyMappedMan, added Task 3).
+
+## FINAL 24/24 completeness assertion (Task 16 Step 3 — closes the planned audit)
+
+All **24** planned version-gated `common/*.h` headers now carry a v61 size + verdict + deciding v61
+disasm evidence in this document. **No `☐`/incomplete rows remain.** Count by task:
+
+| Task | Headers | Count |
+|---|---|---|
+| Task 3 (Cat-A early) | CWvsApp, CFuncKeyMappedMan, CLogin | (3 — re-verified in Cat-C tasks) |
+| Task 13 (Cat-C core/net) | CWvsApp, CWvsContext, CClientSocket, CLogin, COutPacket, CConfig, ConfigSysOpt | **7** |
+| Task 14 (Cat-C UI/control) | CWnd, CUIWnd, CUIToolTip, CFadeWnd, CCtrlButton, CCtrlCheckBox, CUITitle, CUILoginStart, CLogo | **9** |
+| Task 15 (Cat-B/C Mob/stat) | CMob, MobStat, SecondaryStat, CMapLoadable | **4** |
+| Task 16 (Party/Guild/misc) | PartyData, PartyMember, GuildData, CFuncKeyMappedMan | **4** |
+| **TOTAL** | | **7 + 9 + 4 + 4 = 24** ✓ |
+
+(CWvsApp/CLogin appear in both Task 3 and Task 13 — counted once under Task 13; CFuncKeyMappedMan
+appears in Task 3 + Task 12 + Task 16 — counted once under Task 16. The deduplicated planned set is
+exactly 24.)
+
+**The five Category-B rows** each carry an explicit v61-vs-v72 comparison (Task 12 table):
+`CWnd` (0x64 == v72), `CMob` (0x490 vs v72 0x4C0, **split**), `MobStat` (0x1B8 vs v72 0x1D8,
+**split**), `CFuncKeyMappedMan` (0x388 == v72, reconciled again Task 16), `CUIToolTip` (0x50C == v72).
+
+**Final disposition tally (24 planned headers):** 19 `unchanged`/`confirmed-shares-v72`/`branch-added`
+(no v61-specific layout divergence), 4 `split` (CMob, MobStat, SecondaryStat — all size-only,
+field-gated members shared-absent with v72 — plus CMapLoadable is unchanged), and the CWvsApp
+`branch-added` (0x58, −0x8 vs v72, the load-bearing below-floor member shift). Splits feed Task 17.
+
+> **25th header (BEYOND the planned 24):** `CLife.h` was discovered in Task 15/15b as a
+> forced-consequence split (v61 CLife base −0x4 vs v72; currently UNGATED / JMS-only) and is tracked
+> for **Task 17** in the authoritative dispositions block above. It is acknowledged here as existing
+> and tracked, but is **outside** the planned-24 audit scope this task completes. The planned audit
+> is **24/24 complete.**
