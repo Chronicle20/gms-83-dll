@@ -157,9 +157,9 @@ set(C_WVS_APP_CALL_UPDATE 0x008F4991) # symbol ?CallUpdate@CWvsApp@@QAEXJ@Z; 30m
 set(C_WVS_APP_RUN 0x008F2F82) # symbol ?Run@CWvsApp@@QAEXPAH@Z; msg-pump; exception-TI quad (Patch/Disconnect/Terminate/ZException) + CallUpdate/Redraw pair. needs-main-review
 set(C_WVS_APP_SET_UP 0x008F2A7D) # symbol ?SetUp@CWvsApp@@QAEXXZ; init driver; Global\meteora+ehsvc+ws2_32 strings; walks Initialize*/Create* cluster; NO DR_init. needs-main-review
 
-set(C_WVS_CONTEXT_INSTANCE_ADDR 0x00B07848) # g_pWvsContext; CWvsContext singleton (g_pClientSocketInstance+4); this-arg to OnEnterGame in SetStage + read by both party senders + ProcessPacket
-set(C_WVS_CONTEXT_ON_ENTER_GAME 0x00950297) # symbol ?OnEnterGame@CWvsContext@@QAEXXZ; sole caller SetStage(6f1ac0) GetCharacterData!=0 branch; runs this+0x34xx member-ctor block
-set(C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET 0x0F) # measured v79: first body instr lea ecx,[esi+3424h] @0x9502A6 after EH-prolog+reg-save; delta from base 0x950297 (v83 0x10 = push 1; v79 omits it like v84)
+set(C_WVS_CONTEXT_INSTANCE_ADDR 0x00A9F438) # g_pWvsContext; CWvsContext singleton = g_pClientSocketInstance(0xA9F434)+4; loaded as this-arg to OnEnterGame in set_stage(0x6c205e) + read by both party senders + migrate. v72 relocated from v79 0xB07848
+set(C_WVS_CONTEXT_ON_ENTER_GAME 0x008FF597) # symbol ?OnEnterGame@CWvsContext@@QAEXXZ; sole caller set_stage(0x6c1fbb)@0x6c2064 GetCharacterData!=0 branch; runs this+0x33xx member-ctor block (v79 +0x34xx; per-version offsets). v72 relocated from v79 0x950297
+set(C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET 0x0F) # measured v72: first body instr lea ecx,[esi+3330h] @0x8FF5A6 after EH-prolog+reg-save; delta from base 0x8FF597 (v72 omits the v83 push 1, like v79; coincides with v79 0x0F, re-measured not copied)
 
 set(WIN_MAIN 0x008EF5AD) # _WinMain@16; symbol + two startup literals (\npkgameuninstnomsg.exe / "MapleStoryGlobal :: ... Internet Explorer") + ctor->SetUp->Run chain; sole caller PE entry start(0x955DA3). needs-main-review
 set(WIN_MAIN_AD_BALLOON_CONDITIONAL 0x959) # measured v72: jz(74 6F)@0x8EFF06 guarding ShowADBalloon block (490/190/60 — DRIFT vs v79 740/300/60) then MapleStoryGlobal push; delta from WinMain base 0x8EF5AD (DRIFT vs v79 0xA3D)
@@ -174,14 +174,14 @@ set(Z_X_STRING_GET_BUFFER 0x00425D2B) # symbol ?_Cat@?$ZXString@D@@ (in-place as
 set(Z_X_STRING_TRIM_RIGHT 0x0046C9B4) # symbol ?TrimRight@?$ZXString@D@@; default " \t\r\n" (asc_A5AAF0) + strchr + inner GetBuffer(0x414576). DRIFT v79 0x46DB7E
 set(Z_X_STRING_TRIM_LEFT 0x0046CA69) # symbol ?TrimLeft@?$ZXString@D@@; same whitespace literal (asc_A5AAF0) + strchr + memcpy-shift remainder to front; adjacent to/right after TrimRight. DRIFT v79 0x46DC33
 
-set(C_FIELD_SEND_JOIN_PARTY_MSG 0x0051B4C9) # symbol ?SendJoinPartyMsg@CField@@QAEXABV?$ZXString@D@@@Z; COutPacket(0x79)+Encode1(4)+EncodeStr(name)+SendPacket; one-arg invitee
-set(C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET 0x5E) # measured v79: level-gate jnb(73 2F)@0x51B527 (cmp al,0Ah); delta from base 0x51B4C9 (v83 0x65 = same jnb instr, shorter v79 preamble)
+set(C_FIELD_SEND_JOIN_PARTY_MSG 0x00514462) # symbol ?SendJoinPartyMsg@CField@@QAEXABV?$ZXString@D@@@Z; COutPacket(0x7A)+Encode1(4=invite)+EncodeStr(name)+SendPacket(0x4866ac); reads g_pWvsContext(0xA9F438); one-arg invitee. OPCODE DRIFT 0x79(v79)->0x7A(v72). v72 relocated from v79 0x51B4C9
+set(C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET 0x60) # measured v72: level-gate jnb(73 2F)@0x5144C2 (cmp al,0Ah); delta from base 0x514462 (DRIFT vs v79 0x5E; same jnb instr, longer v72 preamble)
 
-set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG 0x0051B318) # symbol ?SendCreateNewPartyMsg@CField@@QAEXXZ; COutPacket(0x79)+Encode1(1)+SendPacket; nullary
-set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET 0x9D) # measured v79: level-gate jnb(73 34)@0x51B3B5 (cmp al,0Ah); delta from base 0x51B318 (v83 0xA4 = same jnb instr, shorter v79 preamble)
+set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG 0x005142B0) # symbol ?SendCreateNewPartyMsg@CField@@QAEXXZ (no v72 IDB symbol; labeled this task); COutPacket(0x7A)+Encode1(1=create)+SendPacket(0x4866ac); reads g_pWvsContext(0xA9F438); nullary, no EncodeStr. OPCODE DRIFT 0x79(v79)->0x7A(v72). v72 relocated from v79 0x51B318
+set(C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET 0x9E) # measured v72: level-gate jnb(73 34)@0x51434E (cmp al,0Ah); delta from base 0x5142B0 (DRIFT vs v79 0x9D by +1; same jnb instr)
 
-set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x0095DD85) # symbol ?SendMigrateToITCRequest@CWvsContext@@QAEXXZ; "Guest ID Users" string + COutPacket(0x99)+SendPacket
-set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9) # measured v79: ITC-gate jz(74 26)@0x95DE6E (get_field+0x124>>4&1); delta from base 0x95DD85 (coincides with v83 0xE9)
+set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST 0x0090C9BD) # symbol ?SendMigrateToITCRequest@CWvsContext@@QAEXXZ; "...Guest ID Users." string(0xA9A5C4)@0x90C9E0 + COutPacket(0x9A)+SendPacket(0x4866ac); reads g_pClientSocketInstance(0xA9F434). OPCODE DRIFT 0x99(v79)->0x9A(v72). v72 relocated from v79 0x95DD85
+set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9) # measured v72: ITC-gate jz(74 26)@0x90CAA6 (get_field+0x124>>4&1); delta from base 0x90C9BD (coincides with v79 0xE9; re-measured at byte level, NOT copied)
 
 set(DR_CHECK 0x00000000) # absent in v79: DR/anti-debug subsystem not present (Task 2 R11: SetUp has no DR_init step; no NtGetContextThread import). Confirmed absent
 set(DR_INIT 0x00000000) # absent in v79: DR subsystem absent (Task 2 R11: SetUp anti-tamper is only CSecurityClient+meteora+ehsvc+IAT-clone, no DR_init). Confirmed absent

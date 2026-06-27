@@ -219,9 +219,9 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 116 | `C_WVS_APP_CALL_UPDATE` | `0x009454B5` | `0x008F4991` | ✔ | sig-cat: CWvsApp::CallUpdate |
 | 117 | `C_WVS_APP_RUN` | `0x00943611` | `0x008F2F82` | ✔ | sig-cat: CWvsApp::Run (needs-main-review) |
 | 118 | `C_WVS_APP_SET_UP` | `0x009430F1` | `0x008F2A7D` | ✔ | sig-cat: CWvsApp::SetUp (needs-main-review) |
-| 119 | `C_WVS_CONTEXT_INSTANCE_ADDR` | `0x00B07848` | `0x00B07848` | ☐ | |
-| 120 | `C_WVS_CONTEXT_ON_ENTER_GAME` | `0x00950297` | `0x00950297` | ☐ | |
-| 121 | `C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET` | `0x0F` | `0x0F` | ☐ | |
+| 119 | `C_WVS_CONTEXT_INSTANCE_ADDR` | `0x00B07848` | `0x00A9F438` | ✔ | sig-cat: g_pWvsContext (=socket+4) |
+| 120 | `C_WVS_CONTEXT_ON_ENTER_GAME` | `0x00950297` | `0x008FF597` | ✔ | sig-cat: CWvsContext::OnEnterGame |
+| 121 | `C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET` | `0x0F` | `0x0F` | ✔ | sig-cat: OnEnterGame offset (re-measured) |
 | 122 | `WIN_MAIN` | `0x0093F9B7` | `0x008EF5AD` | ✔ | sig-cat: WinMain (needs-main-review) |
 | 123 | `WIN_MAIN_AD_BALLOON_CONDITIONAL` | `0xA3D` | `0x959` | ✔ | sig-cat: WinMain offsets (DRIFT) |
 | 124 | `WIN_MAIN_PATCHER_OFFSET` | `0x212` | `0x212` | ✔ | sig-cat: WinMain offsets (re-measured) |
@@ -231,12 +231,12 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 128 | `Z_X_STRING_GET_BUFFER` | `0x00426133` | `0x00425D2B` | ✔ | sig-cat: ZXString<char>::_Cat (needs-main-review) |
 | 129 | `Z_X_STRING_TRIM_RIGHT` | `0x0046DB7E` | `0x0046C9B4` | ✔ | sig-cat: ZXString<char>::TrimRight |
 | 130 | `Z_X_STRING_TRIM_LEFT` | `0x0046DC33` | `0x0046CA69` | ✔ | sig-cat: ZXString<char>::TrimLeft |
-| 131 | `C_FIELD_SEND_JOIN_PARTY_MSG` | `0x0051B4C9` | `0x0051B4C9` | ☐ | |
-| 132 | `C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET` | `0x5E` | `0x5E` | ☐ | |
-| 133 | `C_FIELD_SEND_CREATE_NEW_PARTY_MSG` | `0x0051B318` | `0x0051B318` | ☐ | |
-| 134 | `C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET` | `0x9D` | `0x9D` | ☐ | |
-| 135 | `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST` | `0x0095DD85` | `0x0095DD85` | ☐ | |
-| 136 | `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET` | `0xE9` | `0xE9` | ☐ | |
+| 131 | `C_FIELD_SEND_JOIN_PARTY_MSG` | `0x0051B4C9` | `0x00514462` | ✔ | sig-cat: CField::SendJoinPartyMsg (needs-main-review; opcode 0x79→0x7A) |
+| 132 | `C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET` | `0x5E` | `0x60` | ✔ | sig-cat: SendJoinPartyMsg offset (DRIFT) |
+| 133 | `C_FIELD_SEND_CREATE_NEW_PARTY_MSG` | `0x0051B318` | `0x005142B0` | ✔ | sig-cat: CField::SendCreateNewPartyMsg (needs-main-review; opcode 0x79→0x7A) |
+| 134 | `C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET` | `0x9D` | `0x9E` | ✔ | sig-cat: SendCreateNewPartyMsg offset (DRIFT) |
+| 135 | `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST` | `0x0095DD85` | `0x0090C9BD` | ✔ | sig-cat: CWvsContext::SendMigrateToITCRequest (needs-main-review; opcode 0x99→0x9A) |
+| 136 | `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET` | `0xE9` | `0xE9` | ✔ | sig-cat: SendMigrateToITCRequest offset (re-measured) |
 | 137 | `DR_CHECK` | `0x00000000` | `0x00000000` | ☐ | |
 | 138 | `DR_INIT` | `0x00000000` | `0x00000000` | ☐ | |
 | 139 | `CE_TRACER_RUN` | `0x00000000` | `0x00000000` | ☐ | |

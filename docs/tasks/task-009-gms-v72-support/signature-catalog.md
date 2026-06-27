@@ -584,7 +584,52 @@ _(WIN_MAIN + SEND_HS_LOG entries are in the "CWvsApp lifecycle" section above.)_
 - Drift v79→v72: size direct (0x388 = 0x388). vtable/instance addresses relocated (vtable 0x9D22D8 vs v79 0xA2EB38; instance 0xAA4CB8 vs 0xB0D2A8).
 
 ### Party / migrate senders
-_(entries: senders + call-site offsets)_
+
+> **Older-build opcode drift (R8).** All three senders' packet opcodes drifted +1 from v79 in v72:
+> party (join+create) **0x79→0x7A**, migrate **0x99→0x9A**. The opcode immediate was
+> read from v72 disassembly, not assumed. The opcode is still the disambiguator *between* senders
+> only via the sub-opcode (join Encode1(4) vs create Encode1(1)); the base opcode (0x7A) is shared
+> by both party senders. (Note: these client→server opcodes are version-local; atlas-ms gates by
+> its own server-side enum, so no atlas-ms registry directly pins this client send-opcode value —
+> recorded as a pure v72 read.)
+
+### CField::SendJoinPartyMsg   (keys: C_FIELD_SEND_JOIN_PARTY_MSG / _OFFSET)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x00514462   |   v79 address (task-008): 0x0051B4C9
+- Primary anchor: IDB symbol `?SendJoinPartyMsg@CField@@QAEXABV?$ZXString@D@@@Z` (one-arg invitee ZXString).
+- Structural anchor 1 (opcode immediate): `push 7Ah` @0x5145F4 → `COutPacket::COutPacket(0x7A)` (0x656FA1), then `Encode1(4=invite)` (0x4062C7), `EncodeStr(name)` (0x468295), `CClientSocket::SendPacket` (0x4866AC). Sub-opcode 4 + EncodeStr distinguish from CreateNewParty.
+- Structural anchor 2 (call-graph): resolved Task-4/5 encoder+sender chain (COutPacket ctor / Encode1 / EncodeStr / SendPacket all resolved); reads g_pWvsContext (0xA9F438) for GetCharacterData `this`; same job-id `_ZtlSecureFuse<short>` (+0x39/+0x3D vs 0/3E8h) + level `_ZtlSecureFuse<uchar>` (cmp al,0Ah) gates, strcmp-vs-own-name + GetPartyMemberNumber<6 party-full guard. v79→v83 chain held in task-008; same shape in v72.
+- **_OFFSET = 0x60** (SP-2): level-gate `jnb short loc_5144F3` @0x5144C2 (bytes `73 2F`, right after `cmp al,0Ah`); delta from base 0x514462. **DRIFT vs v79 0x5E** (same jnb instr, longer v72 preamble); re-measured at byte level.
+- Drift v79→v72: address relocated; **opcode 0x79→0x7A** (R8); offset 0x5E→0x60. Encoder idiom + gate shape identical.
+- Label applied: yes (symbol already present in v72 IDB).
+
+### CField::SendCreateNewPartyMsg   (keys: C_FIELD_SEND_CREATE_NEW_PARTY_MSG / _OFFSET)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x005142B0   |   v79 address (task-008): 0x0051B318
+- **No v72 IDB symbol** — was `sub_5142B0`; located by call-graph + opcode, then labeled `?SendCreateNewPartyMsg@CField@@QAEXXZ` this task.
+- Structural anchor 1 (opcode immediate): `push 7Ah` @0x514384 → `COutPacket(0x7A)` (0x656FA1), then `Encode1(1=create)` (0x4062C7), `CClientSocket::SendPacket` (0x4866AC). **Nullary, single Encode1(1), no EncodeStr** — distinguishes from SendJoinPartyMsg (4+EncodeStr) and from the adjacent leave-party sender sub_5143C9 (Encode1(2)+Encode1(0)).
+- Structural anchor 2 (call-graph + gates): reads g_pWvsContext (0xA9F438) via GetCharacterData; same job-id `_ZtlSecureFuse<short>` gate + party-exists guard (`cmp [edi+2C98h]`) + level `_ZtlSecureFuse<uchar>` (cmp al,0Ah) gate as v79; resolved encoder+sender chain. v79→v83 chain held in task-008.
+- Disambiguation: three sibling senders share opcode 0x7A — create = Encode1(1) nullary; join (0x514462) = Encode1(4)+EncodeStr; leave (sub_5143C9 @0x5143C9) = Encode1(2)+Encode1(0). Chosen by sub-opcode + arg shape, never by proximity.
+- **_OFFSET = 0x9E** (SP-2): level-gate `jnb short loc_514384` @0x51434E (bytes `73 34`, after `cmp al,0Ah`); delta from base 0x5142B0. **DRIFT vs v79 0x9D (+1)** (same jnb instr); re-measured.
+- Drift v79→v72: address relocated; **opcode 0x79→0x7A** (R8); offset 0x9D→0x9E; symbol absent in v72 (labeled this task).
+- Label applied: yes (rename sub_5142B0 + set_type `void __thiscall CField::SendCreateNewPartyMsg(CField *)`).
+
+### CWvsContext::SendMigrateToITCRequest   (keys: C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST / _OFFSET)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x0090C9BD   |   v79 address (task-008): 0x0095DD85
+- Primary anchor: IDB symbol `?SendMigrateToITCRequest@CWvsContext@@QAEXXZ`.
+- Structural anchor 1 (string xref): "The MapleStory Trading System is not available for the Guest ID Users." (aTheMaplestoryT @0xA9A5C4) pushed @0x90C9E0 into CHATLOG_ADD on the guest-ID early-out.
+- Structural anchor 2 (opcode immediate + call-graph): `push 9Ah` @0x90CACE → `COutPacket(0x9A)` (0x656FA1) → `CClientSocket::SendPacket` (0x4866AC) reading g_pClientSocketInstance (0xA9F434); the ITC-availability gate `get_field()->[+0x124] >> 4 & 1`. v79→v83 chain held in task-008.
+- **_OFFSET = 0xE9** (SP-2): ITC-gate `jz short loc_90CACE` @0x90CAA6 (bytes `74 26`, after `shr eax,4; and eax,1`); delta from base 0x90C9BD. **Coincides with v79 0xE9** but re-measured at byte level, NOT copied.
+- Drift v79→v72: address relocated; **opcode 0x99→0x9A** (R8); offset coincides (0xE9). String + gate + encoder idiom identical.
+- Label applied: yes (symbol already present in v72 IDB).
+
+### CWvsContext singleton / CWvsContext::OnEnterGame   (keys: C_WVS_CONTEXT_INSTANCE_ADDR / C_WVS_CONTEXT_ON_ENTER_GAME / _OFFSET)
+- v72 addresses: INSTANCE_ADDR 0x00A9F438; ON_ENTER_GAME 0x008FF597 (size 0x1F1).   |   v79: 0x00B07848 / 0x00950297.
+- ON_ENTER_GAME primary anchor: IDB symbol `?OnEnterGame@CWvsContext@@QAEXXZ`.
+- Structural anchor 1 (call-graph): **sole caller is set_stage** (`?set_stage@@YAXPAVCStage@@PAX@Z` @0x6C1FBB); at 0x6C205E `mov ecx, g_pWvsContext(0xA9F438); call OnEnterGame` in the GetCharacterData!=0 (`cmp byte [arg_0+3]`) branch — the OnEnterGame/OnLeaveGame trio shape.
+- Structural anchor 2 (member-ctor block): OnEnterGame body runs the CWvsContext sub-object ctors at **this+0x33xx** (lea ecx,[esi+3330h]/+32E8h/… then a TSecType<long>::SetData run) — v79 was this+0x34xx (per-version member offsets, located via the trio not the raw address).
+- INSTANCE_ADDR anchors: (1) loaded as `this` for OnEnterGame in set_stage; also read by both party senders + migrate; (2) **= g_pClientSocketInstance(0xA9F434)+4** — the canonical socket-then-context layout. Renamed g_pWvsContext in the v72 IDB this task (was dword_A9F438).
+- **ON_ENTER_GAME_OFFSET = 0x0F** (SP-2): first body instr `lea ecx,[esi+3330h]` @0x8FF5A6 after `__EH_prolog` + reg-save (push ecx/push esi/mov esi,ecx/push edi); delta from base 0x8FF597. v72 omits the v83 `push 1` (like v79/v84) → coincides with v79 0x0F, re-measured not copied.
+- Drift v79→v72: both addresses relocated (instance 0xA9F438 vs 0xB07848; fn 0x8FF597 vs 0x950297); member block 0x34xx→0x33xx; offset coincides (0x0F). Caller/trio shape stable.
+- Label applied: yes (OnEnterGame symbol present; g_pWvsContext renamed from dword_A9F438).
 
 ### Utilities
 
