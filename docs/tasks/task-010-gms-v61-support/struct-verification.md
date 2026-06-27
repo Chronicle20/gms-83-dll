@@ -671,3 +671,84 @@ field-gated members shared-absent with v72 — plus CMapLoadable is unchanged), 
 > for **Task 17** in the authoritative dispositions block above. It is acknowledged here as existing
 > and tracked, but is **outside** the planned-24 audit scope this task completes. The planned audit
 > is **24/24 complete.**
+
+## Task 17 — applied gate splits + cross-version truth tables (FR-12b/FR-13)
+
+Source edits applied to the 4 Mob/stat splits from the AUTHORITATIVE 542 block. All four are
+LATENT for v61 (re-grepped `bypass/ doom-fix/ redirect/` + the doom-fix `CMob::CMob` hook — its
+only write `m_bDoomReserved` is `==83`-gated → pass-through for v61; NO consumer reads any gated
+member) and none of the 4 headers carries a `static_assert` → NON-BREAKING (model fidelity).
+**No forced consumer gate required.** New `< 72` arms are GMS-guarded and disjoint from every
+supported version except v61. Preprocess-verified for {61,72,79,83(+87,95)} and JMS185; builds
+GMS 61/72/79 all `>> OK`.
+
+Gate idiom: a pure below-floor removal is expressed as `#if !(defined(REGION_GMS) &&
+BUILD_MAJOR_VERSION < 72) … #endif` (present everywhere except v61); an array-dimension split uses
+`#if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72 … #else … #endif` (no ternary, per D8). The
+base/`#else` effect is byte-identical for v72+ in every case (preprocess-confirmed).
+
+### Gate 1 — MobStat.h: gate lines 111–118 (8 ints, rRiseByToss_..rMCounter_) for `< 72`
+v61 MobStat 0x1D8 − 0x20 = **0x1B8**; nFs v61@0x198 / v72@0x1B8. (v72 over-model of lines 119–124
+is a pre-existing v72 footnote, OUT of scope — left untouched so the v72 effect stays byte-identical.)
+
+| Version | `< 72` arm? | Block 111–118 | Effect |
+|---|---|---|---|
+| GMS 61 | **T (new)** | **absent** | MobStat 0x1B8 |
+| GMS 72 | F | present | unchanged (0x1D8) |
+| GMS 79 | F | present | unchanged |
+| GMS 83/84/87/95 | F | present | unchanged |
+| GMS 111 (not loaded; 111≥72) | F | present | unchanged — settleable from build constant |
+| JMS 185 | F (REGION_GMS undef) | present | unchanged |
+
+### Gate 2 — CLife.h: m_pLayerNameTag[2] (v61) vs [3] (v72+) — byte-region split (FLAGGED)
+v61 CLife base 0x84 − 0x4 = **0x80**. The −0x4 member is byte-located at the END of the CLife base
+(CMob first own member m_nMobChargeCount @v61 0x80 / v72 0x84, Task 15b) but NOT symbol-pinned;
+modeled as the trailing m_pLayerNameTag element (the contiguous 4B at the base tail).
+
+| Version | branch | m_pLayerNameTag | Effect |
+|---|---|---|---|
+| GMS 61 | `< 72` (new) | **[2]** | CLife base 0x80 |
+| GMS 72/79/83/84/87/95 | `#else` | [3] | unchanged (0x84) |
+| GMS 111 (not loaded; 111≥72) | `#else` | [3] | unchanged — settleable from build constant |
+| JMS 185 | `#else` | [3] | unchanged |
+
+### Gate 3 — CMob.h: m_pTemplateByDoom (pre, −0x4) + m_rgHorz (post, −0x8) — byte-region split (FLAGGED)
+v61 CMob 0x4C0 − 0x4 (CLife) − 0x4 (pre) − 0x20 (MobStat embed) − 0x8 (post) = **0x490**.
+Task 15b ctor diff: pre-MobStat −0x4 is one v72-only int in the m_pTemplateByDoom/m_nMP region
+(m_pTemplate v61@0x15C/v72@0x160 → MobStat embed v61@0x170/v72@0x178); post-MobStat −0x8 is 8 bytes
+immediately after the embed. Members NOT symbol-pinned; modeled as m_pTemplateByDoom (4B) and
+m_rgHorz (RANGE = 2 ints = 0x8).
+
+| Version | `< 72` arm? | m_pTemplateByDoom | m_rgHorz | Effect |
+|---|---|---|---|---|
+| GMS 61 | **T (new)** | **absent** | **absent** | CMob 0x490 |
+| GMS 72/79/83/84/87/95 | F | present | present | unchanged (v72 0x4C0) |
+| GMS 111 (not loaded; 111≥72) | F | present | present | unchanged — settleable from build constant |
+| JMS 185 | F (REGION_GMS undef) | present | present | unchanged |
+
+### Gate 4 — SecondaryStat.h: aTemporaryStat[6] (v61) vs [7] (v72+) — Site D only; Sites A/B/C FLAGGED (not gated)
+The header is a v95+ over-model unfaithful to BOTH v61 and v72 (Task 15b: it over-models v72 by
+~0x350 with ungated v95-era stats; its field inventory/offsets match neither binary). Therefore a
+member-trim to v61's exact **0x970** is NOT derivable from this header. Of the 4 divergence sites
+(`v61_secondarystat_layout.md`): SITE D (the trailing two-state array, v61 6 entries vs v72 7) is
+the ONLY one cleanly + faithfully expressible as a named member-level split — applied. SITES A
+(SpiritJavelin +0x24), B (Infinity +0x48), C (GhostMorph trailing +0xB8) are v72-extra
+`_ZtlSecureTear` records whose individual names are NOT pinned and whose header offsets do not
+correspond to the real layout → NOT gated (would be guessing). SecondaryStat is LATENT for v61 (no
+v61 edit reads any CWvsContext field at/after m_secondaryStat) and has no static_assert, so the
+residual size mismatch is non-breaking (layout-doc option 2 — acceptable). Reaching exact 0x970
+would require the option-1 full self-contained v61 rebuild (deferred — disproportionate risk for a
+latent/no-assert struct).
+
+| Version | branch | aTemporaryStat | Sites A/B/C | Effect |
+|---|---|---|---|---|
+| GMS 61 | `< 72` (new) | **[6]** | not gated (documented) | array faithful (6×4); total still v95-over-model (NOT 0x970) |
+| GMS 72/79/83/84/87/95 | `#else` | [7] | unchanged | unchanged |
+| GMS 111 (not loaded; 111≥72) | `#else` | [7] | unchanged | unchanged — settleable from build constant |
+| JMS 185 | `#else` | [7] | unchanged | unchanged |
+
+**Cross-version safety (FR-13):** every `< 72` arm is disjoint from all supported versions except
+v61 (v72/79/83/84/87/95/111 all ≥72 → `#else`/base; JMS has REGION_GMS undefined → base). v111 is
+unloaded but trivially settleable from the build constant (111 ≥ 72 → base branch, identical to
+v95). Preprocess (`gcc -E`) confirmed the selected branch for 61/72/79/83/87/95 + JMS185; WSL
+builds GMS 61/72/79 all link `>> OK`.

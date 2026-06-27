@@ -137,11 +137,23 @@ class CMob : CLife {
     unsigned int _ZtlSecureTear_m_dwMobID[2];
     unsigned int _ZtlSecureTear_m_dwMobID_CS;
     CMobTemplate* m_pTemplate;
+    // v61: CMob-own -0x4 pre-MobStat — one v72-only 4-byte member in the m_pTemplateByDoom/m_nMP
+    // region (Task 15b ctor diff: m_pTemplate v61@0x15C/v72@0x160, MobStat embed v61@0x170/v72@0x178).
+    // Member NOT symbol-pinned; modeled as m_pTemplateByDoom (the contiguous 4B slot there). v72+
+    // branch (#else) byte-identical. byte-region split — FLAGGED, verified task-010
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72)
     CMobTemplate* m_pTemplateByDoom;
+#endif
     int _ZtlSecureTear_m_nMP[2];
     unsigned int _ZtlSecureTear_m_nMP_CS;
     MobStat m_stat;
+    // v61: CMob-own -0x8 post-MobStat — 8 bytes v72-only immediately after the MobStat embed
+    // (Task 15b ctor diff). The members are NOT symbol-pinned; modeled as m_rgHorz (RANGE = 2 ints
+    // = 0x8, the contiguous 8B post-embed slot). v72+ branch (#else) byte-identical. byte-region
+    // split — FLAGGED, verified task-010
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72)
     RANGE m_rgHorz;
+#endif
     int m_nTeamForMCarnival;
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int m_nPhase;

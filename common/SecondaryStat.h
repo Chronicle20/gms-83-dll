@@ -864,5 +864,22 @@ struct SecondaryStat {
     int _ZtlSecureTear_lSummonBomb_[2];
     unsigned int _ZtlSecureTear_lSummonBomb__CS;
 #endif
+    // v61: trailing two-state base-stat array is 6 entries, not 7 (SITE D of the v61 -0x140;
+    // disasm-anchored — Reset tail loops edi=0..5, v61_secondarystat_layout.md). This is the one
+    // SecondaryStat divergence cleanly + faithfully expressible as a member-level v61 split.
+    //
+    // FLAGGED (NOT gated): the other three v61-vs-v72 divergence sites — SpiritJavelin (bit40,
+    // +0x24), Infinity (bit41, +0x48) and the GhostMorph trailing block (bit49, +0xB8) — are
+    // v72-extra _ZtlSecureTear records whose individual member names are NOT pinned, AND this
+    // header is a v95+ over-model that is itself unfaithful to v72 (it leaves ungated v95-era
+    // stats, computing the array ~0x350 past real v72). A member-trim to v61's exact 0x970 is
+    // therefore not derivable from this header without a full self-contained v61 rebuild
+    // (v61_secondarystat_layout.md option 1). SecondaryStat is LATENT for v61 (no v61 edit reads
+    // any CWvsContext field at/after m_secondaryStat) and has no static_assert, so the residual
+    // size mismatch is non-breaking. v72+/JMS keep [7] (#else), byte-identical. verified task-010
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72
+    ZRef<TemporaryStatBase<long>> aTemporaryStat[6];
+#else
     ZRef<TemporaryStatBase<long>> aTemporaryStat[7];
+#endif
 };
