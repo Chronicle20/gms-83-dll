@@ -763,9 +763,30 @@ and the `CWvsApp::Run` (0x8f2f82) exception-dispatch block (0x8f32ea-0x8f3377).
 ### Backward-direction cross-check (R5)
 No Task-10 v79 *real-address* key turned out absent in v72: VERSION_HEADER/PLAYER_LOGGED_IN/CLIENT_START_ERROR (constants), the four C_TI_*, the builder, _com_issue_error, the five CFileStream helpers, and RESET_LSP are all PRESENT in v72 (relocated/drifted, not absent). The already-recorded backward sentinels from earlier tasks remain correct: SEND_HS_LOG (Task 2), Z_SOCKET_BASE_CLOSE_SOCKET (Task 4), C_MACRO_SYS_MAN_CREATE_INSTANCE (Task 7) — each carries `# absent in v72`/new-v72-only-sentinel + FLAG. No new Task-10 backward sentinel introduced.
 
-## Cross-version drift summary (fill at end)
+## Cross-version drift summary (v79 → v72, FR-14)
 
-A short table of which heuristic classes survived v79→v72 best, to guide the next (older)
-port: e.g. "string xrefs: N/N held; byte sigs: M/K held; constants: …". This is the durable
-takeaway that makes the v6x port faster.
+Guide for the next backward port (v6x). Counts are across all 159 keys (156 real-address +
+3 constant), excluding the 8 permanent sentinels (already 0 in v79).
+
+| Heuristic class | Held v79→v72 | Drifted / not found | Notes |
+|---|---|---|---|
+| **IDB mangled symbol** | ~50+ checked, all held | 1 absent (SendCreateNewPartyMsg, re-labeled here) | The v72 IDB retains the full mangled C++ symbol set — fastest primary anchor for all CWvsApp/CClientSocket/COutPacket/CLogo/etc. |
+| **String xref — literal in body** | ~30/30 held | 3 feature-absent sentinels | Startup literals (`npkgameuninstnomsg.exe`, `Global\meteora`, `ehsvc.dll`, `wpclsp.dll`/`Protocol_Catalog9`), import-name strings, exception-type names, CxSupportId/Netbios — all stable. |
+| **StringPool numeric ID** | 0/4 direct | 4/4 drifted | CConfig ctor 2532→2530; CheckExecPathReg 3114/3115→3109/3110; CMob::CMob 957→958; CLogo::InitNXLogo 0x568→0x56A. **Re-read every StringPool ID — never carry.** |
+| **Import / API call anchor** | 9/9 | 0 | `socket`/`closesocket`/`getpeername`/`CreateFileA`/`WSAAsyncSelect`/`connect`/`NtGetContextThread` (confirmed absent) import xrefs all stable across the 7-version gap. |
+| **Call-graph (parent/child edge)** | all checked, all held | 0 | WinMain→ctor→SetUp→Run chain, SendPacket→MakeBufferList→innoHash→Flush, ManipulatePacket→ProcessPacket, set_stage→OnEnterGame — all stable. |
+| **Constant / opcode immediate** | most held | 5 drifted | VERSION_HEADER=8, PLAYER_LOGGED_IN=0x14 DIRECT; CLIENT_START_ERROR +1 (0x19→0x1A); party/migrate opcodes +1 (0x79→0x7A, 0x99→0x9A); ad-balloon conditional offset 0xA3D→0x959; ManipulatePacket version XOR −80→−73; CIGCipher no-key seed 0xC6EF3720→0xC65053F2. **Read immediates; never carry numeric constants.** |
+| **TSingleton CreateInstance cluster** | 11/11 classes | 2 feature-absent (CMacroSysMan, CRadioManager) | Wholesale cluster relocation 0x946xxx→0x8F5xxx (≈ −0x5Dxxx); Alloc sizes slightly smaller in v72 (older/reduced members); call-order in SetUp stable. |
+| **Instance global (.data)** | all/all | 0 relocated (~same relative layout) | v72 .data window 0xA9xxxx–0xABxxxx vs v79 0xB07xxx–0xB11xxx (~−0x68000 shift). Relative inter-global spacing stable within clusters. |
+| **Object alloc size** | shapes held | 3 reduced | CFuncKeyMappedMan 0x388 DIRECT; CMob 0x518→0x4C0 (−0x58); CLogin alloc in LogoEnd 0x258→0x23C; CQuestMan 0x288→0x258; TSingleton Alloc sizes generally smaller in older build. |
+| **Vtable slot order** | all checked, all held | 0 | CLogo 4-vtable-pointer shape; CStage/CLogin vtable slot indices; ISMsgProc/CallUpdate dispatch order — all stable v79→v72. |
+| **Byte/structure signature** | not independently validated | n/a | Used only as tiebreaker per D6; considered least stable across the 7-version gap but not probed in isolation. For the next older port (v6x) prefer 2 structural anchors rather than leaning on byte sigs. |
+
+**Top takeaways for the v6x port:**
+1. IDB symbols likely to survive (v72 retained the full set); use symbol as primary + one structural anchor, same as here.
+2. Never carry numeric StringPool IDs, version constants, packet opcodes, or innoHash seeds — all drifted v79→v72.
+3. Import xrefs and call-graph edges are the most stable structural anchors for the v6x hop.
+4. Watch for further inlining: CloseSocket was a standalone fn in v79 but inlined in v72 — expect more functions to be inlined as the build gets older.
+5. TSingleton cluster will relocate again; re-enumerate via SetUp call sites, not by address carry.
+6. New backward sentinels appeared in v72 (CMacroSysMan, Z_SOCKET_BASE_CLOSE_SOCKET, SEND_HS_LOG) — run SP-5 backward-direction check for every v72 real-address key going into v6x.
 </content>
