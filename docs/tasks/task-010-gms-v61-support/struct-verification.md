@@ -82,3 +82,51 @@ additive/disjoint and never touch a `>= 95`/`== 111` selector.
 gates had no `#else`, so v61 silently selected no `assert_size`). The amendment restores the guard.
 The genuinely load-bearing discovery is the CWvsApp **0x58 below-floor member shift** (−2 GMS
 security ints vs v72), which both sizes the object and fixes the offsets our hooks use on v61.
+
+## Task 12 (Category B) audit record — the five `>= 83 || JMS` below-floor gates (confirm-or-split)
+
+Re-grepped live (`grep -rn "BUILD_MAJOR_VERSION >= 83" common/*.h`): exactly the five sites
+`CWnd.h:25`, `CFuncKeyMappedMan.h:19`, `CMob.h:241`, `CUIToolTip.h:92` (parenthesised
+`(>=83)||JMS` form), `MobStat.h:128`. `grep -rn "BUILD_MAJOR_VERSION < 79"` and `< 72` →
+**ZERO** arms ⇒ a v61 split is **two-way → three-way** (add a GMS-guarded `< 72` arm ABOVE the
+unchanged `#else`; Task 17 applies). Lane: v61 = port 13344 `GMS_v61.1_U_DEVM.exe` (active
+confirmed via `list_instances`; v48 distractor = 13345, never probed). Read-only `disasm` only;
+no struct types applied (R10/R12). v61 retains full mangled symbols. v72 reduced sizes
+re-confirmed from task-009 `struct-verification.md`: CWnd 0x64 (base subobj), CMob 0x4C0,
+MobStat 0x1D8, CFuncKeyMappedMan 0x388, CUIToolTip 0x50C.
+
+**Result: 3 confirmed-shares-v72, 2 split. The CWnd cascade is NOT triggered** (v61 CWnd ≡ v72
+⇒ CDialog/CUIWnd/CFadeWnd/CUITitle/CUILoginStart inherit v72's verdict; no re-measurement forced
+in Task 14).
+
+| Header | v61 size | v61 vs v72 | Gated field present? | Gate verdict | Deciding v61 evidence |
+|---|---|---|---|---|---|
+| CWnd.h:25 | **0x64** (base subobject; ctor writes through 0x70) | **== v72** (0x64) | `m_pAnimationLayer`/`m_pOverlabLayer` **ABSENT** | **confirmed-shares-v72** (CASCADE ROOT — not triggered) | 3 landmarks all == v72: (a) ctor `CWnd::CWnd` @0x4BB456 writes `[esi+64h]=[esi+68h]=[esi+70h]=0` + 3 vtables (highest write 0x70); (b) base helper sub_811225 `memset(this+8,0,0xC)` then zeros 0x14,0x18,[**skips 0x1C/0x20**],0x38,0x3C,ZList sentinel@0x48,0x50–0x60, ZArray<IWzCanvas>@0x60 unwind — field-for-field identical to v72 sub_8DD47E, anim layers absent; (c) `CWnd::Destroy` @0x812F29 touches m_pLayer@0x18 / m_lpChildren@0x48 / m_pFocusChild@0x5C (== v72). |
+| CMob.h:241 | **0x490** (1168) | **DIVERGES**: 0x490 vs v72 0x4C0 (**−0x30**); v83 0x548 | doom tail (`m_bDoomReserved`/SN/`m_lpStatChangeReserved`, begins ~0x528 in v83) **ABSENT** | **split** (three-way; size diverges, doom-tail field shared-absent with v72) | `CreateMob` @0x5C20EC `push 490h` → ZAllocEx::Alloc ⇒ sizeof=0x490; ctor `CMob::CMob` @0x5C2128 highest field write `[esi+47Ch]` (+ unwind sub-object @+0x478) — within 0x490. Doom tail past end of 0x490 object ⇒ absent (as v72/v79). MobStat embedded @CMob+0x170 (`lea ebx,[esi+170h]` → `MobStat::SetFrom`; v72 embed @0x178, −0x8). Boundary re-anchor: Alloc(0x490) and ctor highest write 0x47C agree. |
+| MobStat.h:128 | **0x1B8** (440) | **DIVERGES**: 0x1B8 vs v72 0x1D8 (**−0x20**); v79 0x1F8, v83 0x208 | Weakness group (`nWeakness_/rWeakness_/tWeakness_`) **ABSENT** | **split** (three-way; size diverges, Weakness field shared-absent with v72) | `MobStat::SetFrom` @0x6685A7 `push 1B8h` memset (=sizeof); CMob ctor lBurnedInfo ZList @MobStat+0x1A4 (`lea eax,[ebx+1A4h]`, ebx=MobStat base; unwind funclet `add ecx,1A4h`) +0x14 (ZList) = 0x1B8. Two independent anchors agree. v72 lBurnedInfo @MobStat+0x1C4 (+0x14=0x1D8). Weakness (`>=83`) past end of both ⇒ shared-absent. |
+| CFuncKeyMappedMan.h:19 | **0x388** (904) | **== v72** (0x388) | quickslot pair (`m_aQuickslotKeyMapped[8]`×2) **ABSENT** | **confirmed-shares-v72** (Cat-B finalized; Task 3 size-assert branch `==61` consistent) | `TSingleton<CFuncKeyMappedMan>::CreateInstance` @0x826038 `push 388h`→Alloc→ctor 0x51AA0E ⇒ sizeof=0x388. ctor: vtable@0, memcpy m_aFuncKeyMapped[89]@+4 (0x1BD), memcpy m_aFuncKeyMapped_Old[89]@+0x1C1 (0x1BD, ends 0x37E), pet ints `and [esi+380h],0`/`and [esi+384h],0` (highest write 0x384) ⇒ 0x388. Pet ints sit **immediately after** the two FK arrays with **no 0x40 quickslot gap** ⇒ quickslot pair absent (== v72 layout exactly). |
+| CUIToolTip.h:92 | **0x50C** (1292) | **== v72** (0x50C; ctor layer region byte-identical) | `m_pLayerAdditional` **ABSENT** | **confirmed-shares-v72** | ctor `CUIToolTip::CUIToolTip` @0x748FFE: `mov [edi+10h],ebx` (m_pLayer@0x10) then eh-vector-ctor over `[edi+20h]` count 0x20 element 0x20 (m_aLineInfo[32]@0x20), then post-array zeroing from `[edi+424h]`. m_pLayer@0x10 → 0x14/0x18/0x1C (m_nLastX/Y/m_nLineNo) → m_aLineInfo@0x20 with **no slot at 0x14-region for m_pLayerAdditional** (its presence would shift the array to 0x24). Byte-identical to v72 ctor 0x7F9C33 ⇒ == v72 (0x50C); m_pLayerAdditional absent. |
+
+### CWnd cascade decision (R5, design §5.7)
+v61 `sizeof(CWnd)` base subobject = **0x64 == v72** (anim-layer pair `>=83||JMS` absent in both;
+three independent landmarks above). **Cascade NOT triggered** → the five CWnd-derived classes
+(CDialog, CUIWnd, CFadeWnd, CUITitle, CUILoginStart) inherit v72's verdict and are **not** flagged
+for re-derivation in Task 14 (each still independently size-confirmed there per D5). The CWnd.h
+`>=83||JMS` gate already excludes v61 correctly — no split needed.
+
+### Split dispositions (Task 17 applies; D8 — two-way → three-way)
+Both splits diverge by **size**, not by the gated field itself (doom tail / Weakness are
+shared-absent with v72, stay `#else`). Neither CMob.h nor MobStat.h carries an `assert_size`, so
+the split is about modelling v61's smaller true layout (the extra v61-absent members below the
+gated tail) + adding a v61 size guard — NOT about the `:241`/`:128` field gates. Per D8, Task 17
+adds a GMS-guarded `BUILD_MAJOR_VERSION < 72` arm ABOVE the unchanged `#else`, leaving the v72/v79
+branch byte-identical in effect. The exact v61-absent members (the −0x30 CMob front/base+tail and
+the −0x20 MobStat status region) are pinned in the Cat-C/struct tasks (Tasks 14/15), as in
+task-009's CMob/MobStat split records. Drives the doom-fix gate: the `==83` doom write stays
+correctly excluded for v61 (the write would be OOB on a 0x490 object).
+
+### Cross-version safety (FR-13)
+No source edits in this evidence task. The 3 confirmed-shares-v72 gates need no change — v72's
+`#else` already serves v61; v72/v79/v83/v84/v87/v95/v111/JMS185 untouched. The 2 splits, when
+applied in Task 17, add a `< 72` term that no supported version except v61 satisfies (disjoint),
+keeping every other version's selected branch unchanged.
