@@ -110,20 +110,20 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 7 | `C_ACTION_MAN_INIT` | `0x0040681C` | `0x0040681C` | ☐ | |
 | 8 | `C_ACTION_MAN_SWEEP_CACHE` | `0x0040FEEA` | `0x0040FEEA` | ☐ | |
 | 9 | `C_ANIMATION_DISPLAYER_CREATE_INSTANCE` | `0x00946A5F` | `0x00946A5F` | ☐ | |
-| 10 | `C_CLIENT_SOCKET_INSTANCE_ADDR` | `0x00B07844` | `0x00B07844` | ☐ | |
-| 11 | `C_CLIENT_SOCKET_CREATE_INSTANCE` | `0x00946AB6` | `0x00946AB6` | ☐ | |
-| 12 | `C_CLIENT_SOCKET_SEND_PACKET` | `0x0048DF93` | `0x0048DF93` | ☐ | |
-| 13 | `C_CLIENT_SOCKET_FLUSH` | `0x0048E01B` | `0x0048E01B` | ☐ | |
-| 14 | `C_CLIENT_SOCKET_MANIPULATE_PACKET` | `0x0048E135` | `0x0048E135` | ☐ | |
-| 15 | `C_CLIENT_SOCKET_PROCESS_PACKET` | `0x0048E209` | `0x0048E209` | ☐ | |
-| 16 | `C_CLIENT_SOCKET_CLOSE` | `0x0048DF81` | `0x0048DF81` | ☐ | |
-| 17 | `C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX` | `0x0048E5D7` | `0x0048E5D7` | ☐ | |
-| 18 | `C_CLIENT_SOCKET_ON_CONNECT` | `0x0048CB81` | `0x0048CB81` | ☐ | |
-| 19 | `C_CLIENT_SOCKET_CONNECT_LOGIN` | `0x0048C773` | `0x0048C773` | ☐ | |
-| 20 | `C_CLIENT_SOCKET_CONNECT_CTX` | `0x0048C9CA` | `0x0048C9CA` | ☐ | |
-| 21 | `C_CLIENT_SOCKET_CONNECT_ADR` | `0x0048CA56` | `0x0048CA56` | ☐ | |
-| 22 | `Z_SOCKET_BASE_CLOSE_SOCKET` | `0x0048C699` | `0x0048C699` | ☐ | |
-| 23 | `Z_SOCKET_BUFFER_ALLOC` | `0x0048DBEA` | `0x0048DBEA` | ☐ | |
+| 10 | `C_CLIENT_SOCKET_INSTANCE_ADDR` | `0x00B07844` | `0x00A9F434` | ✔ | sig-cat: g_pClientSocketInstance |
+| 11 | `C_CLIENT_SOCKET_CREATE_INSTANCE` | `0x00946AB6` | `0x008F621F` | ✔ | sig-cat: TSingleton<CClientSocket>::CreateInstance |
+| 12 | `C_CLIENT_SOCKET_SEND_PACKET` | `0x0048DF93` | `0x004866AC` | ✔ | sig-cat: CClientSocket::SendPacket (needs-main-review) |
+| 13 | `C_CLIENT_SOCKET_FLUSH` | `0x0048E01B` | `0x00486734` | ✔ | sig-cat: CClientSocket::Flush (needs-main-review) |
+| 14 | `C_CLIENT_SOCKET_MANIPULATE_PACKET` | `0x0048E135` | `0x0048684E` | ✔ | sig-cat: CClientSocket::ManipulatePacket (needs-main-review) |
+| 15 | `C_CLIENT_SOCKET_PROCESS_PACKET` | `0x0048E209` | `0x00486922` | ✔ | sig-cat: CClientSocket::ProcessPacket (needs-main-review) |
+| 16 | `C_CLIENT_SOCKET_CLOSE` | `0x0048DF81` | `0x0048668F` | ✔ | sig-cat: CClientSocket::Close |
+| 17 | `C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX` | `0x0048E5D7` | `0x00486CF0` | ✔ | sig-cat: CClientSocket::ClearSendReceiveCtx |
+| 18 | `C_CLIENT_SOCKET_ON_CONNECT` | `0x0048CB81` | `0x0048528F` | ✔ | sig-cat: CClientSocket::OnConnect (no client key) |
+| 19 | `C_CLIENT_SOCKET_CONNECT_LOGIN` | `0x0048C773` | `0x00484EA5` | ✔ | sig-cat: CClientSocket::ConnectLogin |
+| 20 | `C_CLIENT_SOCKET_CONNECT_CTX` | `0x0048C9CA` | `0x004850FC` | ✔ | sig-cat: CClientSocket::Connect(CONNECTCONTEXT) |
+| 21 | `C_CLIENT_SOCKET_CONNECT_ADR` | `0x0048CA56` | `0x00485188` | ✔ | sig-cat: CClientSocket::Connect(sockaddr_in) |
+| 22 | `Z_SOCKET_BASE_CLOSE_SOCKET` | `0x0048C699` | `0x00000000` | ✔ | sig-cat: ZSocketBase::CloseSocket (INLINED — NEW v72 SENTINEL; FLAG) |
+| 23 | `Z_SOCKET_BUFFER_ALLOC` | `0x0048DBEA` | `0x004862F8` | ✔ | sig-cat: ZSocketBuffer::Alloc |
 | 24 | `C_CONFIG` | `0x0049392C` | `0x0049392C` | ☐ | |
 | 25 | `C_CONFIG_INSTANCE_ADDR` | `0x00B0BED0` | `0x00B0BED0` | ☐ | |
 | 26 | `C_CONFIG_GET_PARTNER_CODE` | `0x005CC09D` | `0x005CC09D` | ☐ | |

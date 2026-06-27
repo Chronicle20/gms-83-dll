@@ -20,22 +20,22 @@ set(C_ACTION_MAN_SWEEP_CACHE 0x0040FEEA) # symbol ?SweepCache@CActionMan@@QAEXXZ
 
 set(C_ANIMATION_DISPLAYER_CREATE_INSTANCE 0x00946A5F) # TSingleton<CAnimationDisplayer>::CreateInstance; Alloc(424)+ctor; instance 0xB0BE9C
 
-set(C_CLIENT_SOCKET_INSTANCE_ADDR 0x00B07844) # g_pClientSocketInstance; SBB-singleton store at top of CClientSocket ctor, read by free SendPacket helper
-set(C_CLIENT_SOCKET_CREATE_INSTANCE 0x00946AB6) # TSingleton<CClientSocket>::CreateInstance; Alloc(148=0x94)+ctor (out of v83 0x9F9Exx cluster)
-set(C_CLIENT_SOCKET_SEND_PACKET 0x0048DF93) # symbol + MakeBufferList(79)->innoHash->Flush call-graph
-set(C_CLIENT_SOCKET_FLUSH 0x0048E01B) # symbol + send-buffer ZList walk via cloned send slot dword_B1015C; last call in SendPacket
-set(C_CLIENT_SOCKET_MANIPULATE_PACKET 0x0048E135) # symbol + sole caller of ProcessPacket; recv-stream reassembly + innoHash
-set(C_CLIENT_SOCKET_PROCESS_PACKET 0x0048E209) # symbol + Decode2 + sub-0x10 dispatch (OnMigrateCommand/OnAliveReq/CWvsContext::OnPacket)
-set(C_CLIENT_SOCKET_CLOSE 0x0048DF81) # symbol + ClearSendReceiveCtx + ZSocketBase::CloseSocket([this+8])
-set(C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX 0x0048E5D7) # symbol + double ZList RemoveAll (recv [this+60]/send [this+80])
-set(C_CLIENT_SOCKET_ON_CONNECT 0x0048CB81) # symbol; recv-handshake handler, version byte==8/major==0x4F(79); NO 8-byte client key (see catalog)
-set(C_CLIENT_SOCKET_CONNECT_LOGIN 0x0048C773) # symbol; GetCmdLine(0/1)+random server pick -> Connect(CONNECTCONTEXT); sole caller CWvsApp::ConnectLogin
-set(C_CLIENT_SOCKET_CONNECT_CTX 0x0048C9CA) # symbol; CONNECTCONTEXT wrapper tail-calling Connect(sockaddr_in)
-set(C_CLIENT_SOCKET_CONNECT_ADR 0x0048CA56) # symbol; sole socket(2,1,0) caller; cloned connect slot dword_B1013C(s,addr,16)
+set(C_CLIENT_SOCKET_INSTANCE_ADDR 0x00A9F434) # g_pClientSocketInstance; SBB-singleton store at top of CClientSocket ctor (0x484c95) + CreateInstance store; read by whole send subsystem (CField/CCashShop senders). DRIFT vs v79 0xB07844 (CWvsContext singleton = +4 = 0xA9F438)
+set(C_CLIENT_SOCKET_CREATE_INSTANCE 0x008F621F) # TSingleton<CClientSocket>::CreateInstance (symbol); Alloc(148=0x94)+ctor(0x484c95)+store g_pClientSocketInstance
+set(C_CLIENT_SOCKET_SEND_PACKET 0x004866AC) # symbol + MakeBufferList(72)->innoHash->Flush call-graph. DRIFT: send-seq immediate 72 (v72 protocol; was 79 in v79)
+set(C_CLIENT_SOCKET_FLUSH 0x00486734) # symbol + send-buffer ZList walk ([this+23]) via cloned send slot dword_AA7874; last call in SendPacket; WSAEWOULDBLOCK(10035) via dword_AA7848->OnError
+set(C_CLIENT_SOCKET_MANIPULATE_PACKET 0x0048684E) # symbol + sole caller of ProcessPacket; recv-stream reassembly + innoHash([this+136]). DRIFT: version/seq XOR check != -73 (~72; was -80=~79 in v79)
+set(C_CLIENT_SOCKET_PROCESS_PACKET 0x00486922) # symbol + Decode2 + sub-0x10 dispatch (0x10 OnMigrateCommand/0x11 OnAliveReq/0x14 CSecurityClient::OnPacket; 0x1A..0x71 CWvsContext::OnPacket(g_pWvsContext=0xA9F438) else CStage vtable+8); sole caller ManipulatePacket
+set(C_CLIENT_SOCKET_CLOSE 0x0048668F) # symbol + ClearSendReceiveCtx + INLINE closesocket([this+8])+set -1 (v72 inlines ZSocketBase::CloseSocket; no shutdown call)
+set(C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX 0x00486CF0) # symbol; clears [this+26]/[this+30] + double ZList reset (recv [this+60]/send [this+80] via sub_48716C); called by ctor/Close/OnConnect
+set(C_CLIENT_SOCKET_ON_CONNECT 0x0048528F) # symbol; recv-handshake handler (getpeername import xref + ZSocketBuffer::Alloc(0x5B4) + cloned recv slot dword_AA787C); version byte==8 / major==0x48(72); NO 8-byte client key (see catalog). DRIFT: major 0x48 (was 0x4F in v79)
+set(C_CLIENT_SOCKET_CONNECT_LOGIN 0x00484EA5) # symbol; GetCmdLine(0/1)+rand server pick -> Connect(CONNECTCONTEXT); sole caller CWvsApp::ConnectLogin(0x8f38e5)
+set(C_CLIENT_SOCKET_CONNECT_CTX 0x004850FC) # symbol; CONNECTCONTEXT wrapper tail-calling Connect(sockaddr_in)(0x485188); callers ConnectLogin + CWvsContext::IssueConnect
+set(C_CLIENT_SOCKET_CONNECT_ADR 0x00485188) # symbol; sole socket(2,1,0) import(0x9cf35c) caller; cloned connect slot dword_AA7854(s,addr,16) + WSAAsyncSelect dword_AA7834
 
-set(Z_SOCKET_BASE_CLOSE_SOCKET 0x0048C699) # symbol; -1 sentinel + shutdown(s,2)/closesocket pair
+set(Z_SOCKET_BASE_CLOSE_SOCKET 0x00000000) # INLINED in v72 (new v72-only sentinel; was real 0x0048C699 in v79). v72 has NO standalone ZSocketBase::CloseSocket: the -1+closesocket teardown is inlined into Close(0x48668f)/Connect(sockaddr_in)(0x485188)/~CClientSocket(0x484e0b); shutdown is not even imported in v72 (no shutdown(s,2) call). closesocket import (0x9cf344) has exactly 4 callers, none standalone; the closesocket thunk (0x952570) has 0 callers. FLAG gate/edit owner: bypass/socket_hooks.cpp:324 m_sock.CloseSocket() must inline the close (closesocket + set -1) for v72, or its Connect-Addr hook must be skipped for v72
 
-set(Z_SOCKET_BUFFER_ALLOC 0x0048DBEA) # symbol; dual ZAllocEx::Alloc(a1, then 28=0x1C header); called by OnConnect with 0x5B4
+set(Z_SOCKET_BUFFER_ALLOC 0x004862F8) # symbol; dual ZAllocEx<ZAllocAnonSelector>::Alloc(a1, then 28=0x1C header)+placement ctor sub_486345; called by OnConnect with 0x5B4
 
 set(C_CONFIG 0x0049392C) # symbol ??0CConfig@@QAE@XZ; SBB-singleton store -> g_CConfig_pInstance + 31/100/24 fuse + StringPool(2532) + RegOpenKeyExA(HKLM) + memset(this+592,0x1BD)
 set(C_CONFIG_INSTANCE_ADDR 0x00B0BED0) # g_CConfig_pInstance; SBB store in ctor, read by SendCheckPasswordPacket -> GetPartnerCode(g_CConfig)

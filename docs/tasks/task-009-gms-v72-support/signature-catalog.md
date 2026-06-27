@@ -144,6 +144,131 @@ _(entries: C_WVS_APP_RUN, _INITIALIZE_*, _SET_UP, window/dir helpers, …)_
 ### CClientSocket / ZSocket
 _(entries: instance addr, CreateInstance, SendPacket, Flush, OnConnect, Process, connect path)_
 
+> **Task 4 key finding:** the v72 IDB retains the **full mangled C++ symbols** for the
+> entire socket cluster (`?SendPacket@CClientSocket@@…`, `?OnConnect@CClientSocket@@…`,
+> etc.) — same as v79 — so each function's primary anchor is its surviving IDB symbol;
+> a second *structural* anchor is recorded per the two-anchor rule. v72 routes
+> send/recv/connect/WSAAsyncSelect through **cloned import slots** (anti-tamper, same idiom
+> as v79/v83): dword_AA7874=send, dword_AA787C=recv, dword_AA7854=connect,
+> dword_AA7834=WSAAsyncSelect, dword_AA7848=WSAGetLastError, dword_AA74FC=Sleep,
+> dword_AA787C(recv). Anchor on the surviving `socket`/`closesocket`/`getpeername` *imports*
+> (0x9cf35c / 0x9cf344 / 0x9cf360), not the cloned slots. **Protocol version drift: v72=72**
+> — SendPacket MakeBufferList immediate 72, OnConnect major-version compare 0x48, the
+> ManipulatePacket version/seq XOR check `!= -73` (~72). **One backward divergence:**
+> ZSocketBase::CloseSocket is *inlined* in v72 (no standalone fn; shutdown not imported).
+
+### g_pClientSocketInstance (key: C_CLIENT_SOCKET_INSTANCE_ADDR)
+- v72 address: 0x00A9F434
+- v79 address (task-008): 0x00B07844
+- Heuristic: writer = CClientSocket ctor (0x484c95) SBB-singleton store `g = (this+4!=0)?this:0` at top; also stored/read by CreateInstance (0x8f621f). Reader set = the whole send subsystem (CField::Send*, CCashShop senders, free SendPacket helpers). Two anchors: ctor writer idiom + the broad reader fan-in.
+- Drift v79→v72: address relocated (.data, down ~0x68000); writer idiom identical. CWvsContext singleton is +4 = 0xA9F438 (cross-check for C_WVS_CONTEXT_INSTANCE_ADDR).
+- Label applied: yes (renamed g_pClientSocketInstance)
+
+### TSingleton<CClientSocket>::CreateInstance (key: C_CLIENT_SOCKET_CREATE_INSTANCE)
+- v72 address: 0x008F621F
+- v79 address (task-008): 0x00946AB6
+- Heuristic: IDB symbol `?CreateInstance@?$TSingleton@VCClientSocket@@@@SAPAVCClientSocket@@XZ`; second anchor = ZAllocEx::Alloc(148=0x94) + ctor(0x484c95) + store to g_pClientSocketInstance (0xA9F434).
+- Drift v79→v72: direct (alloc size 148 identical).
+- Label applied: yes (symbol)
+
+### CClientSocket::SendPacket (key: C_CLIENT_SOCKET_SEND_PACKET)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x004866AC (size 0x88)
+- v79 address (task-008): 0x0048DF93
+- Heuristic: IDB symbol `?SendPacket@CClientSocket@@QAEXABVCOutPacket@@@Z`; two structural anchors — (1) the MakeBufferList(this+80, **72**, this+132, 1, m_seqSnd=[this+33])->CIGCipher::innoHash(this+132,4,0)->CClientSocket::Flush callee triple (Flush is the last call); (2) ZSynchronizedHelper<ZFatalSection> lock-ctor at [this+124] + fd([this+8])/send-disabled([this+20]) gate. v79→v83 chain: same triple in v79 (0x48DF93) + v83.
+- Drift v79→v72: send-seq immediate **72** (was 79 in v79, 83/84 above). Read it, never copy.
+- Label applied: yes (symbol)
+- Spot-check: reached via OnConnect's post-handshake send (0x48570b/0x485776) — independent of the symbol.
+
+### CClientSocket::Flush (key: C_CLIENT_SOCKET_FLUSH)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x00486734 (size 0x11A)
+- v79 address (task-008): 0x0048E01B
+- Heuristic: IDB symbol `?Flush@CClientSocket@@QAEXXZ`; two structural anchors — (1) the send-buffer ZList walk over [this+23] (InterlockedIncrement per node) writing via the cloned send slot dword_AA7874(fd,buf[+16],len[+12],0); (2) it is the tail call inside SendPacket (0x48670d) and the only socket-region fn touching dword_AA7874 + WSAEWOULDBLOCK(10035 via dword_AA7848)->OnError. v79→v83 chain holds.
+- Drift v79→v72: direct (cloned send slot relocated dword_B1015C→dword_AA7874).
+- Label applied: yes (symbol)
+- Spot-check: reached as SendPacket's last call, independent of the symbol.
+
+### CClientSocket::ManipulatePacket (key: C_CLIENT_SOCKET_MANIPULATE_PACKET)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x0048684E (size 0xD4)
+- v79 address (task-008): 0x0048E135
+- Heuristic: IDB symbol `?ManipulatePacket@CClientSocket@@QAEXXZ`; two structural anchors — (1) `while([this+17])` receive reassembly via CInPacket::AppendBuffer, version/seq check `(word[this+57] ^ HIWORD([this+34])) != -73`, on full packet (ret==2) re-seeds m_seqRcv=[this+34]=innoHash(this+136,4,0); (2) **sole caller** of ProcessPacket (0x4868f5). v79→v83 chain holds.
+- Drift v79→v72: version/seq XOR constant **-73** (~72; was -80=~79 in v79).
+- Label applied: yes (symbol)
+- Spot-check: callers are the FD_READ dispatcher + CWvsApp::Run path — corroborate independent of the symbol.
+
+### CClientSocket::ProcessPacket (key: C_CLIENT_SOCKET_PROCESS_PACKET)   [HIGH-VALUE / needs-main-review]
+- v72 address: 0x00486922 (size 0xC0)
+- v79 address (task-008): 0x0048E209
+- Heuristic: IDB symbol `?ProcessPacket@CClientSocket@@IAEXAAVCInPacket@@@Z`; two structural anchors — (1) reads CStage(dword_AA54D4) + CInPacket::Decode2 opcode then the sub-0x10 switch (0x10 OnMigrateCommand, 0x11 OnAliveReq, 0x12 OnAuthenCodeChanged, 0x13 OnAuthenMessage, 0x14 CSecurityClient::OnPacket(dword_AA3EE4), else 0x1A..0x71 CWvsContext::OnPacket(g_pWvsContext=0xA9F438) else CStage vtable+8); (2) **sole caller is ManipulatePacket**, sole non-trivial callee is Decode2. v79→v83 chain holds.
+- Drift v79→v72: CWvsContext opcode range 0x1A..0x71 (was 0x1A..0x75 in v79).
+- Label applied: yes (symbol)
+- Spot-check: sole caller ManipulatePacket confirms independent of the symbol.
+
+### CClientSocket::OnConnect (key: C_CLIENT_SOCKET_ON_CONNECT)
+- v72 address: 0x0048528F (size 0x565)
+- v79 address (task-008): 0x0048CB81
+- Heuristic: IDB symbol `?OnConnect@CClientSocket@@QAEHH@Z` (int arg = bSuccess); two anchors — (1) `getpeername` import (0x9cf360) xref lands here (kind 2); (2) the only fn calling ZSocketBuffer::Alloc(0x5B4) + cloned recv slot dword_AA787C + the version-header(==8 @0x485520)/major(==0x48 @0x485544) guard trio throwing the CTerminate(0x22000007)/CPatch pair. Tail-calls Connect(v32) on the retry/teardown path.
+- Drift v79→v72: major-version compared = **0x48 (72)** (was 0x4F=79 in v79). VERSION_HEADER byte still 8.
+- Label applied: yes (symbol)
+- Notes: disambiguated from the three Connect* variants — recv-side handler (getpeername + cloned recv + SendPacket driver), takes bSuccess.
+
+### 8-byte client-key finding (feeds Task 13 / §5.6; CWvsContext.h `>83` gate, bypass/socket_hooks.cpp:310-312)
+- **Verdict: ABSENT in v72 (no-key form) — confirms the `BUILD_MAJOR_VERSION > 83` gate prediction (v72 < 83 → no key, matching v79).**
+- Evidence: OnConnect's post-handshake send has two mutually-exclusive branches on `[this+9]` (m_ctxConnect.bLogin):
+  - else / logged-in branch @0x48572a: `COutPacket(20=0x14=PLAYER_LOGGED_IN); Encode4(charId=*(g_pWvsContext+8352)); Encode1(0|1 per TSecType bit *(g_pWvsContext+8252)&0x80); Encode1(0); CClientSocket::SendPacket;` then returns. The encoder sequence is exactly **Encode4/Encode1/Encode1** — there is **no `EncodeBuffer(m_aClientKey, 8)`** anywhere, and CWvsContext has no m_aClientKey member below v83. v72 has neither the 16-byte machineId (v84+) nor any 8-byte client key in this path.
+  - bLogin branch @0x4856cd: builds the GetExceptionFileName report (CFileStream read) and `COutPacket(26); Encode2(len); EncodeBuffer(report,len)` — unrelated to a client key.
+- Verified against the v72 binary (decompile of OnConnect 0x48528f), not a server round-trip.
+
+### CClientSocket::ConnectLogin (key: C_CLIENT_SOCKET_CONNECT_LOGIN)
+- v72 address: 0x00484EA5 (size 0x19D)
+- v79 address (task-008): 0x0048C773
+- Heuristic: IDB symbol `?ConnectLogin@CClientSocket@@QAEXXZ`; second anchor = GetCmdLine(0)/GetCmdLine(1) (0x8f5495) + rand server-table pick (ZArray<long> shuffle) -> Connect(CONNECTCONTEXT)(0x4850fc); **sole caller is CWvsApp::ConnectLogin (0x8f38e5)**.
+- Drift v79→v72: direct. Distinct from CWvsApp::ConnectLogin (the message-pump driver) — this is the CClientSocket method it invokes.
+- Label applied: yes (symbol)
+
+### CClientSocket::Connect(CONNECTCONTEXT) (key: C_CLIENT_SOCKET_CONNECT_CTX)
+- v72 address: 0x004850FC (size 0x64)
+- v79 address (task-008): 0x0048C9CA
+- Heuristic: IDB symbol `?Connect@CClientSocket@@QAEXABUCONNECTCONTEXT@1@@Z` (public); second anchor = its only meaningful call is the private Connect(sockaddr_in)(0x485188); callers are ConnectLogin(0x484ea5) + CWvsContext::IssueConnect(0x8fea69).
+- Drift v79→v72: direct.
+- Label applied: yes (symbol)
+- Notes: the CONNECTCONTEXT overload that *calls* CONNECT_ADR, not a `socket` caller.
+
+### CClientSocket::Connect(sockaddr_in) (key: C_CLIENT_SOCKET_CONNECT_ADR)
+- v72 address: 0x00485188 (size 0x107)
+- v79 address (task-008): 0x0048CA56
+- Heuristic: IDB symbol `?Connect@CClientSocket@@IAEXPBUsockaddr_in@@@Z` (private) — the **sole `socket` import (0x9cf35c) caller** (`socket(2,1,0)`=AF_INET/SOCK_STREAM); second anchor = inline ClearSendReceiveCtx + closesocket teardown, then WSAAsyncSelect via cloned dword_AA7834(s,hwnd,1025,51) then cloned connect dword_AA7854(s,addr,16) tolerating WSAEWOULDBLOCK(10035), OnConnect(this,0) on the synchronous paths.
+- Drift v79→v72: direct; the `socket` import xref is the most stable anchor; connect/select indirected through cloned slots in v72 just like v79/v83. The close step is now inlined (was a ZSocketBase::CloseSocket call in v79).
+- Label applied: yes (symbol)
+
+### ZSocketBase::CloseSocket (key: Z_SOCKET_BASE_CLOSE_SOCKET) — INLINED / NEW v72 SENTINEL
+- v72 address: 0x00000000 (was real 0x0048C699 in v79)
+- v79 address (task-008): 0x0048C699
+- Heuristic: confirmed-inlined (SP-5 backward direction). v79 had a standalone `?CloseSocket@ZSocketBase@@QAEXXZ` (shutdown(s,2)+closesocket+ -1 sentinel, size 0x20) called by Close + Connect(sockaddr_in). In v72 there is **no standalone function**: the close teardown is inlined into CClientSocket::Close(0x48668f), Connect(sockaddr_in)(0x485188) and ~CClientSocket(0x484e0b), and `shutdown` is **not imported at all** (v72 ws2_32 imports lack shutdown → the v72 inline close is closesocket-only). The `closesocket` import (0x9cf344) has exactly 4 callers (ctor-EH, dtor, Connect, Close), none a standalone CloseSocket; the closesocket thunk (0x952570) has 0 callers.
+- Drift v79→v72: not found as a discrete function — inlined; behavior also dropped the shutdown(s,2) step.
+- Label applied: n/a
+- Notes: **FLAG for gate/edit owner** — bypass/socket_hooks.cpp:324 (`pThis->m_sock.CloseSocket()` inside CClientSocket__Connect_Addr_Hook) calls Z_SOCKET_BASE_CLOSE_SOCKET as a function pointer. For v72 the consuming hook must inline the close (closesocket(m_sock._m_hSocket); _m_hSocket=-1) instead of calling 0, or its Connect-Addr reimplementation must be skipped for v72. The consuming edit must tolerate Z_SOCKET_BASE_CLOSE_SOCKET==0.
+
+### ZSocketBuffer::Alloc (key: Z_SOCKET_BUFFER_ALLOC)
+- v72 address: 0x004862F8 (size 0x4D)
+- v79 address (task-008): 0x0048DBEA
+- Heuristic: IDB symbol `?Alloc@ZSocketBuffer@@SAPAV1@IABVZAllocHelper@@@Z`; second anchor = static factory doing TWO ZAllocEx<ZAllocAnonSelector>::Alloc calls (payload size a1, then the placement ctor sub_486345) and called by OnConnect with the 0x5B4 receive-buffer size.
+- Drift v79→v72: direct (the dual-alloc + 0x5B4 OnConnect caller idiom holds).
+- Label applied: yes (symbol)
+
+### CClientSocket::Close (key: C_CLIENT_SOCKET_CLOSE)
+- v72 address: 0x0048668F (size 0x1D)
+- v79 address (task-008): 0x0048DF81
+- Heuristic: IDB symbol `?Close@CClientSocket@@QAEXXZ`; second anchor = the 2-step body `ClearSendReceiveCtx(this); if([this+8]!=-1){closesocket([this+8]); [this+8]=-1;}` — the close is now **inlined** (v79 called ZSocketBase::CloseSocket). Also called at the top of OnConnect's failure path.
+- Drift v79→v72: ZSocketBase::CloseSocket inlined (see that key); otherwise direct.
+- Label applied: yes (symbol)
+
+### CClientSocket::ClearSendReceiveCtx (key: C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX)
+- v72 address: 0x00486CF0 (size 0x21)
+- v79 address (task-008): 0x0048E5D7
+- Heuristic: IDB symbol `?ClearSendReceiveCtx@CClientSocket@@IAEXXZ`; second anchor = zeroes [this+26]/[this+56(word)]/[this+30] then resets the recv ([this+60]) and send ([this+80]) ZLists via sub_48716C; called by the ctor, Close, and OnConnect.
+- Drift v79→v72: direct.
+- Label applied: yes (symbol)
+
 ### COutPacket
 _(entries: ctor/Init, Encode1/2/4/buffer, …)_
 
