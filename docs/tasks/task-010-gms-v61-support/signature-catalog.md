@@ -353,9 +353,81 @@ Confirmed via `mcp__ida-pro__survey_binary` on port 13344 (2026-06-27).
 - Label applied: yes (renamed sub_5FFCE0 → canonical symbol).
 - Notes: spot-check — the 1460/0x5B4 MTU chunk + ^0x13 shuffle + SendPacket call edge identify it independent of any symbol (there was none to trust).
 
-### Cluster 3 — CConfig / windowed-mode (Task 6)*
+### Cluster 3 — CConfig / windowed-mode (Task 8)
 
-*(pending)*
+> All CConfig method symbols are present (mangled) in v61. The ctor symbol `??0CConfig@@QAE@XZ`
+> was NOT present (was `sub_47921D`); relabeled this task. Two structural anchors confirm each.
+
+#### CConfig::CConfig ctor (key: C_CONFIG)
+- v61 0x0047921D (v72 0x48C0D3). Was `sub_47921D` → relabeled `??0CConfig@@QAE@XZ`.
+- Anchor 1: SBB-singleton store `dword_974ED4 = (a1+1!=0) ? a1 : 0` (g_CConfig_pInstance) + vtable `off_8E6760` at `*a1`.
+- Anchor 2: `memset(this+0x1BC, 0, 0x1BD)` (distinctive 0x1BD size) + StringPool(2497) + RegOpenKeyExA(HKLM 0x80000002 via dword_978168).
+- Drift v72→v61: StringPool 2497 (v72 2530); memset offset this+0x1BC (v72 0x234); size 0x1BD ported directly.
+
+#### g_CConfig_pInstance (key: C_CONFIG_INSTANCE_ADDR)
+- v61 0x00974ED4 (v72 0xAA3AC0). Stored in ctor (above); returned by `TSingleton<CConfig>::GetInstance`(0x4EFFB6). Renamed from `dword_974ED4`.
+
+#### CConfig::GetPartnerCode (key: C_CONFIG_GET_PARTNER_CODE)
+- v61 0x00564566 (v72 0x5B12BD). Symbol `?GetPartnerCode@CConfig@@`.
+- Anchor 1: string `uiWndZ0` (aUiwndz0 @0x962620). Anchor 2: GetOpt_Int(0,key,0,0x80000000,0x7FFFFFFF) via sub_47B793. Ported directly.
+
+#### CConfig::ApplySysOpt (key: C_CONFIG_APPLY_SYS_OPT)
+- v61 0x0047B28E (v72 0x48E7EC). Symbol `?ApplySysOpt@CConfig@@`.
+- Anchor 1: qmemcpy(this+0x58, a2, 0x30) + dual CWvsContext flag writes `dword_974EF8 + 13088/13092` (v==1||3 / v==2||3).
+- Anchor 2: `100*(x+1)/20` volume formula → SetBGMVolume/SetSEVolume(dword_974ED0) + InputSystemInstanceAddr+2416.
+- Drift: flag offsets 13088/13092 (v72 13572/13576).
+
+#### CConfig::CheckExecPathReg (key: C_CONFIG_CHECK_EXEC_PATH_REG)
+- v61 0x00479B4D (v72 0x48CBAE). Symbol `?CheckExecPathReg@CConfig@@`.
+- Anchor 1: StringPool(3071/3072) + 0x5C backslash char (92) + Right(1)/Left compare.
+- Anchor 2: GetFileAttributes(dword_977F04; `==-1 || &0x10`) + strcmp + GetOpt_String/SetOpt_String.
+- Drift: StringPool 3071/3072 (v72 3109/3110); reg-handle gate this[38] (v72 this+0xBC).
+
+#### g_CConfig_SysOpt_WindowedMode (key: C_CONFIG_SYS_OPT_WINDOWED_MODE)
+- v61 0x00978E24 (v72 0xAA87AC). Renamed from `dword_978E24`. Standalone global (NOT a config-struct member).
+- Anchor 1: CreateMainWindow(0x8239D0) window-style branch `dword_978E24 != 0 ? 0x80000000 : 0x80000` + exStyle `?8:0`.
+- Anchor 2: read in InitializeGr2D(0x824550) `pvargSrc.lVal = dword_978E24`.
+- Note: only 2 read sites in v61 (v72 had 3 incl. SetUp). Feeds Task 13.
+
+### Cluster 3b — IGCipher / SystemInfo / sync / ZXString / ZArray / CMob utils (Task 8)
+
+#### GetSEPrivilege (key: GET_SE_PRIVILEGE) — NEW v61-ONLY SENTINEL (absent)
+- v61 0x00000000 (was real v72 0x44989E). Confirmed absent both directions (SP-5):
+  - v61: `find_regex "Privilege"` → 0 strings; `imports_query *Token*/*Privilege*` → 0; advapi32 import table fully enumerated (22 entries) lacks OpenProcessToken/LookupPrivilegeValueA/AdjustTokenPrivileges.
+  - v72 (cross-check, port 13343): string "SeDebugPrivilege"@0xA5A564 PRESENT; OpenProcessToken/AdjustTokenPrivileges/LookupPrivilegeValueA imports PRESENT; GetSEPrivilege@0x44989E (size 0x6A) PRESENT.
+- Debug-privilege escalation post-dates v61. **FLAGGED for gate/edit owner** — consuming edit must tolerate 0.
+
+#### CIGCipher::innoHash (key: C_IG_CIPHER_INNO_HASH)
+- v61 0x0086274C (v72 0x940D7E). Symbol `?innoHash@CIGCipher@@`.
+- Anchor 1: no-key seed `0xC65053F2` (v6 = -967814158) — identical to v72 (v79 differs: 0xC6EF3720).
+- Anchor 2: bShuffle per-byte loop sub_862787. Ported directly.
+
+#### ZSynchronizedHelper<ZFatalSection> ctor/dtor (keys: ..._CTOR / ..._DTOR)
+- CTOR v61 0x00402ABA (v72 0x402AB8, +2 bytes). Symbol present. Anchors: acquire-loop calling off_966D68 (TryEnter) + Sleep(0) retry via dword_977EAC.
+- DTOR v61 0x00402ADF (= ctor+0x25; v72 0x402ADD). Body `mov eax,[ecx]; dec dword[eax+4]; jnz; and dword[eax],0; retn` (RAII release of recursion count). Listing aliases under ZAllocEx::Alloc (dump aliasing) — not renamed.
+
+#### CSystemInfo ctor + Init + GetGameRoomClient + GetMachineId (keys: C_SYSTEM_INFO[_INIT/_GET_GAME_ROOM_CLIENT/_GET_MACHINE_ID])
+- ctor v61 0x008658E0 (v72 0x94A6C0): `mov [eax], off_8F0E44; retn` (vtable install). Symbol present.
+- Init v61 0x00865920 (v72 0x94A700): Anchor 1 = Netbios MAC (ncb_command 0x37/0x32/0x33) + GetVolumeInformationA. Anchor 2 = RegOpenKeyExA(HKLM, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion") + "CxSupportId" value (16B) + CoCreateGuid fallback. Ported directly.
+- GetGameRoomClient v61 0x00865D00 (v72 0x94AAE0): symbol + 0x11B4 process-table fn + call-graph adjacency (consecutive, same class) + SendCheckPasswordPacket caller.
+- GetMachineId v61 0x00865C00 (v72 0x94A9E0): `lea eax,[ecx+0x14]; retn` returns cached 16-byte id (stored at this+0x14 in Init). Symbol + body.
+
+#### ZArray<E>::RemoveAll (key: Z_ARRAY_REMOVE_ALL)
+- v61 0x0045DBB3 (v72 0x425CEC). Symbol `?RemoveAll@?$ZArray@E@@`.
+- Anchor 1: `if(*this){ZAllocEx::Free(*this-4); *this=0}` shape. Anchor 2: byte-stride (`@E@` = unsigned char element), `*this-4` header back-step.
+- Drift: v61 ZAllocEx::Free is single-arg (v72 passed selector unk_AA7CB8).
+
+#### ZXString<char>::_Cat / TrimRight / TrimLeft (keys: Z_X_STRING_GET_BUFFER / _TRIM_RIGHT / _TRIM_LEFT)
+- _Cat v61 0x0045DFA4 (v72 0x425D2B): empty→GetBuffer(Size,0)+memcpy (==assign); non-empty→capacity grow (`v8*=2`)+append. needs-main-review (no dedicated pure-assign; repo calls on fresh ZXStrings only).
+- TrimRight v61 0x0045DD5B (v72 0x46C9B4): default whitespace `asc_96156C " \t\r\n"` + strchr from tail + inner GetBuffer(0x415000).
+- TrimLeft v61 0x0045DE10 (v72 0x46CA69): same `asc_96156C` literal + strchr from head + memcpy-shift remainder to front; adjacent right after TrimRight. All symbol + body confirmed.
+
+#### CMob::CMob ctor (key: C_MOB_C_MOB) [needs-main-review — DOOM-FIX HOOK TARGET]
+- v61 0x005C2128 (v72 0x611CDB). Symbol `??0CMob@@QAE@PAVCMobTemplate@@@Z`.
+- Anchor 1: sole caller `CreateMob`(0x5C20EC) does `ZAllocEx::Alloc(1168)` (0x490, non-zeroing) then CMob::CMob.
+- Anchor 2: 3 vtables off_8E9AE8/8E9AC4/8E9AC0 at this+0/1/2 + m_pTemplate@this+0x15C + 31/100/24 fuse (this+282/284/285) + _ZtlSecureTear chain + MobStat::SetFrom(this+368) + StringPool(942)/PcCreateObject<IWzCanvas> tail@this+0x45C.
+- Drift v72→v61: alloc 1168 (v72 1216, v79 1304); StringPool 942 (v72 958); m_pTemplate this+0x15C (v72 0x160).
+- **DOOM finding (feeds Task 15 gate audit):** the `m_bDoomReserved` / doom-tail field **DOES NOT EXIST in v61.** Struct is only 0x490 bytes (even smaller than v72's 0x4C0). The v84 doom field sits at 0x540/0x544 — far past the v61 struct end. The ctor's highest write is this+0x47C (a field) and the IWzCanvas com_ptr at this+0x45C; there is **NO write anywhere near 0x540**, and no doom field can exist (past allocation). So v61 lands on the doom-fix `< 84` "needs-fix" side, identical disposition to v72/v79 (field absent, not merely uninitialized).
 
 ### Cluster 4 — Login / Stage / Logo / Title (Task 6)
 

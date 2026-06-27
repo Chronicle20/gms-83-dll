@@ -12,7 +12,7 @@ set(VERSION_HEADER 8) # CONFIRMED v72 in OnConnect (0x48528f): `if (v17 != 8)` @
 set(PLAYER_LOGGED_IN 0x14) # CONFIRMED v72: COutPacket(20) @0x48572a, logged-in (non-bLogin, [this+9]==0) OnConnect(0x48528f) branch (then Encode4 charId + Encode1 + Encode1); held == v79 (Task 10)
 set(CLIENT_START_ERROR 0x1A) # DRIFT v79 0x19 -> v72 0x1A: COutPacket(26) @0x4856cd, bLogin OnConnect(0x48528f) branch (GetExceptionFileName CFileStream report relay -> Encode2 len + EncodeBuffer report). Confirmed v72 (Task 10; affects redirect/bypass)
 
-set(GET_SE_PRIVILEGE 0x0044989E) # GetSEPrivilege (named); OpenProcessToken+LookupPrivilegeValueA("SeDebugPrivilege")+AdjustTokenPrivileges. v72 confirmed (import quartet + string); DRIFT v79 0x44A48E
+set(GET_SE_PRIVILEGE 0x00000000) # absent in v61 — NEW v61-ONLY SENTINEL (was real v72 0x44989E GetSEPrivilege). v61 lacks debug-privilege escalation entirely: 0 "SeDebugPrivilege"/"Privilege" strings, NO OpenProcessToken/LookupPrivilegeValueA/AdjustTokenPrivileges imports (v72 has all four + string @0xA5A564 + GetSEPrivilege@0x44989E). Confirmed both directions. FLAGGED for gate/edit owner (SP-5 backward, R7)
 
 set(C_ACTION_MAN_CREATE_INSTANCE_ADDR 0x00825F46) # symbol ?CreateInstance@?$TSingleton@VCActionMan@@; Alloc(0x2A0=672)+ctor CActionMan::CActionMan(0x405b79); reads/stores ActionManInstanceAddr(0x970830); called from CWvsApp::SetUp(0x823175)@0x8232a5. RELOCATED from v72 0x8F6172
 set(C_ACTION_MAN_INSTANCE_ADDR 0x00970830) # ActionManInstanceAddr (dword_970830); singleton dword read at top of CreateInstance(0x825f46) + store in ctor. RELOCATED from v72 0xA9F3F4
@@ -38,12 +38,12 @@ set(Z_SOCKET_BASE_CLOSE_SOCKET 0x00000000) # INLINED in v61 (sentinel, confirmed
 
 set(Z_SOCKET_BUFFER_ALLOC 0x00473D71) # symbol; dual ZAllocEx<ZAllocAnonSelector>::Alloc(a1, then 28=0x1C header)+placement ctor sub_473DBE; called by OnConnect(0x472def) with 0x5B4
 
-set(C_CONFIG 0x0048C0D3) # symbol ??0CConfig@@QAE@XZ; SBB-singleton store -> g_CConfig_pInstance(AA3AC0) + 31/100/24 fuse + StringPool(2530=0x9E2) + RegOpenKeyExA(HKLM via dword_AA77B8) + memset(this+0x234,0x1BD). DRIFT v79 0x49392C; StringPool 2530 (v79 2532)
-set(C_CONFIG_INSTANCE_ADDR 0x00AA3AC0) # g_CConfig_pInstance (renamed); SBB store in CConfig ctor @0x48C0D3, read by SendCheckPasswordPacket -> GetPartnerCode(g_CConfig). DRIFT v79 0xB0BED0
-set(C_CONFIG_GET_PARTNER_CODE 0x005B12BD) # symbol ?GetPartnerCode@CConfig@@; uiWndZ0 key (aUiwndz0) + GetOpt_Int(0,key,0,INT_MIN=0x80000000,INT_MAX=0x7FFFFFFF). DRIFT v79 0x5CC09D
-set(C_CONFIG_APPLY_SYS_OPT 0x0048E7EC) # symbol ?ApplySysOpt@CConfig@@; rep movsd this+0x60(12 dwords=0x30)+CWvsContext(dword_A9F438) flags @+0x3504/+0x3508 + 100*(x+1)/20 volume (imul 0x64/idiv 0x14)->SetBGMVolume/SetSEVolume(dword_AA3ABC) + InputSystemInstanceAddr+0x970. DRIFT v79 0x4960F9
-set(C_CONFIG_CHECK_EXEC_PATH_REG 0x0048CBAE) # symbol ?CheckExecPathReg@CConfig@@; this+0xBC reg-handle gate + StringPool(3109/3110 = 0xC25/0xC26) + 0x5C backslash + GetFileAttributes(dword_AA7554; ==-1||&0x10) + strcmp. DRIFT v79 0x49440C; StringPool 3109/3110 (v79 3114/3115)
-set(C_CONFIG_SYS_OPT_WINDOWED_MODE 0x00AA87AC) # g_CConfig_SysOpt_WindowedMode (renamed); read by 3 sites: SetUp(0x8F2C49), CreateMainWindow(0x8F3850 style branch 0x80000000/0x80000 + ?8:0 exstyle), InitializeGr2D(0x8F438B). DRIFT v79 0xB11548. Task 13 windowed-mode global
+set(C_CONFIG 0x0047921D) # ctor (was sub_47921D, relabeled ??0CConfig@@QAE@XZ in v61); SBB-singleton store -> g_CConfig_pInstance(0x974ED4) + vtable off_8E6760 + StringPool(2497) + RegOpenKeyExA(HKLM 0x80000002 via dword_978168) + memset(this+0x1BC,0x1BD). RELOCATED from v72 0x48C0D3; StringPool 2497 (v72 2530), memset off this+0x1BC (v72 0x234)
+set(C_CONFIG_INSTANCE_ADDR 0x00974ED4) # g_CConfig_pInstance (renamed); SBB store in CConfig ctor @0x47921D, returned by TSingleton<CConfig>::GetInstance(0x4EFFB6). RELOCATED from v72 0xAA3AC0
+set(C_CONFIG_GET_PARTNER_CODE 0x00564566) # symbol ?GetPartnerCode@CConfig@@; uiWndZ0 key (aUiwndz0) + GetOpt_Int(0,key,0,0x80000000,0x7FFFFFFF) via sub_47B793. RELOCATED from v72 0x5B12BD; anchors ported directly
+set(C_CONFIG_APPLY_SYS_OPT 0x0047B28E) # symbol ?ApplySysOpt@CConfig@@; qmemcpy this+0x58(0x30 bytes)+CWvsContext(dword_974EF8) flags @+13088/+13092 + 100*(x+1)/20 volume (imul 0x64/idiv 0x14)->SetBGMVolume/SetSEVolume(dword_974ED0) + InputSystemInstanceAddr+2416. RELOCATED from v72 0x48E7EC; flag offsets 13088/13092 (v72 13572/13576)
+set(C_CONFIG_CHECK_EXEC_PATH_REG 0x00479B4D) # symbol ?CheckExecPathReg@CConfig@@; this[38] reg-handle gate + StringPool(3071/3072) + 0x5C backslash + GetFileAttributes(dword_977F04; ==-1||&0x10) + strcmp + GetOpt_String/SetOpt_String. RELOCATED from v72 0x48CBAE; StringPool 3071/3072 (v72 3109/3110), handle gate this[38] (v72 this+0xBC)
+set(C_CONFIG_SYS_OPT_WINDOWED_MODE 0x00978E24) # g_CConfig_SysOpt_WindowedMode (renamed); read by CreateMainWindow(0x8239D0 style branch !=0?0x80000000:0x80000 + ?8:0 exstyle) + InitializeGr2D(0x824550). RELOCATED from v72 0xAA87AC. Task 13 windowed-mode global
 
 set(C_FUNC_KEY_MAPPED_MAN 0x0051AA0E) # symbol ??0CFuncKeyMappedMan@@QAE@XZ (ctor); installs vtable CFuncKeyMappedMan_vftable(0x8E7F58), instance dword_975CA0, memcpy DefaultFKM(0x962138) 0x1BD twice (this+4, this+449); called from CreateInstance(0x826038)@0x826068. RELOCATED from v72 0x5512EC
 set(C_FUNC_KEY_MAPPED_MAN_VFTABLE 0x008E7F58) # CFuncKeyMappedMan_vftable; installed at *this (`*this = &off_8E7F58`) in the ctor 0x51aa0e. RELOCATED from v72 0x9D22D8
@@ -97,10 +97,10 @@ set(C_OUT_PACKET_ENCODE_STR 0x00458C91) # needs-main-review; symbol EncodeStr (0
 set(C_OUT_PACKET_ENCODE_BUFFER 0x00456FBA) # needs-main-review; symbol EncodeBuffer (0x2a); _EnsureCapacity(Size)+memcpy(0x876550)+add [esi+8],edi; retn 8; in 5-sibling fan-in. DRIFT v72 0x465CB2 (relocated)
 set(C_OUT_PACKET_MAKE_BUFFER_LIST 0x005FFCE0) # needs-main-review; sole MakeBufferList callee of CClientSocket::SendPacket(0x474125) + 1460/0x5B4 MTU chunk + ^0x13 shuffle (ROR1(v^0x13,3)) + ZSocketBuffer::Alloc; size 0x342 == v72/v83. Was unnamed sub_5FFCE0, renamed. DRIFT v72 0x6570FA (relocated)
 
-set(C_IG_CIPHER_INNO_HASH 0x00940D7E) # symbol ?innoHash@CIGCipher@@; no-key seed 0xC65053F2 + bShuffle loop (sub_940DB9); called from SendPacket between MakeBufferList+Flush. DRIFT v79 0x993442; seed 0xC65053F2 (v79 0xC6EF3720)
+set(C_IG_CIPHER_INNO_HASH 0x0086274C) # symbol ?innoHash@CIGCipher@@; no-key seed 0xC65053F2 (== v72) + bShuffle loop (sub_862787). RELOCATED from v72 0x940D7E; seed 0xC65053F2 ported directly (v79 differs 0xC6EF3720)
 
-set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR 0x00402AB8) # symbol ??0?$ZSynchronizedHelper@VZFatalSection@@@@; acquire-loop off_A60AFC + Sleep(0) retry (dword_AA74FC); called from SendPacket (this+124). v72 == v79 VA (same 0x402AB8) but v72-specific globals confirm identity; DRIFT v83 0x403166
-set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR 0x00402ADD) # ctor+0x25; mov eax,[ecx]; dec [eax+4]; jnz; and [eax],0 (release recursion count). RAII release pair w/ ctor. v72 confirmed by body; v72 == v79 VA. DRIFT v83 0x40318B. Listing aliases under ZAllocEx::Alloc (dump aliasing) — not renamed
+set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR 0x00402ABA) # symbol ??0?$ZSynchronizedHelper@VZFatalSection@@@@; acquire-loop off_966D68 + Sleep(0) retry (dword_977EAC). RELOCATED from v72 0x402AB8 (+2 bytes); v61-specific globals confirm identity
+set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR 0x00402ADF) # ctor+0x25; mov eax,[ecx]; dec [eax+4]; jnz; and [eax],0 (release recursion count). RAII release pair w/ ctor; confirmed by body. RELOCATED from v72 0x402ADD. Listing aliases under ZAllocEx::Alloc (dump aliasing) — not renamed
 
 set(C_QUEST_MAN_CREATE_INSTANCE 0x00825C78) # symbol ?CreateInstance@?$TSingleton@VCQuestMan@@; Alloc(412)+ctor CQuestMan::CQuestMan(0x628c28); reads/stores QuestManInstanceAddr(0x975DFC); called from SetUp(0x823175)@0x8232c2. RELOCATED from v72 0x8F5E99
 set(C_QUEST_MAN_INSTANCE_ADDR 0x00975DFC) # QuestManInstanceAddr (dword_975DFC); singleton dword read/stored in CreateInstance(0x825c78). RELOCATED from v72 0xAA4D28
@@ -127,10 +127,10 @@ set(RESET_LSP 0x00449DC1) # ResetLSP — PRESENT in v72 (symbol-labeled, size 0x
 set(C_STAGE_ON_MOUSE_ENTER 0x00659F7A) # body = if(arg) if([CInputSystem singleton dword_975050 + 0x9B4]) SetCursorState(0); retn 4. Unnamed in v61 (relabeled ?OnMouseEnter@CStage@@UAEXH@Z). Witness = CLogin IUIMsgHandler vtable (off_8E8BF8) slot 5. RELOCATED v72 0x8DF289
 set(C_STAGE_ON_PACKET 0x00659F99) # IDB symbol ?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z; also = CLogo OnPacket vtable (off_8E9618) slot 0. RELOCATED v72 0x6C0C61
 
-set(C_SYSTEM_INFO 0x0094A6C0) # ctor (symbol ??0CSystemInfo@@QAE@XZ); installs vtable off_9DC404 (size 9); stack-constructed before Init in CLogin::SendCheckPasswordPacket. DRIFT v79 0x99CDB0
-set(C_SYSTEM_INFO_INIT 0x0094A700) # symbol ?Init@CSystemInfo@@; Netbios MAC (ncb 0x37/0x32/0x33) + GetVolumeInformationA + RegOpenKeyExA("SOFTWARE\Microsoft\Windows\CurrentVersion") + CxSupportId(16B) + CoCreateGuid fallback. DRIFT v79 0x99CDF0
-set(C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT 0x0094AAE0) # symbol ?GetGameRoomClient@CSystemInfo@@ (0x11B4 process-table fn); called from SendCheckPasswordPacket. DRIFT v79 0x99D1D0
-set(C_SYSTEM_INFO_GET_MACHINE_ID 0x0094A9E0) # symbol ?GetMachineId@CSystemInfo@@ (size 4); returns cached 16-byte id; EncodeBuffer(id,16) in SendCheckPasswordPacket. DRIFT v79 0x99D0D0
+set(C_SYSTEM_INFO 0x008658E0) # ctor (symbol ??0CSystemInfo@@QAE@XZ); installs vtable off_8F0E44; stack-constructed before Init in CLogin::SendCheckPasswordPacket. RELOCATED from v72 0x94A6C0
+set(C_SYSTEM_INFO_INIT 0x00865920) # symbol ?Init@CSystemInfo@@; Netbios MAC (ncb 0x37/0x32/0x33) + GetVolumeInformationA + RegOpenKeyExA("SOFTWARE\Microsoft\Windows\CurrentVersion") + CxSupportId(16B) + CoCreateGuid fallback. RELOCATED from v72 0x94A700; anchors ported directly
+set(C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT 0x00865D00) # symbol ?GetGameRoomClient@CSystemInfo@@ (0x11B4 process-table fn); called from SendCheckPasswordPacket. RELOCATED from v72 0x94AAE0
+set(C_SYSTEM_INFO_GET_MACHINE_ID 0x00865C00) # symbol ?GetMachineId@CSystemInfo@@; lea eax,[ecx+0x14] returns cached 16-byte id; EncodeBuffer(id,16) in SendCheckPasswordPacket. RELOCATED from v72 0x94A9E0
 
 set(C_UI_TITLE_INSTANCE_ADDR 0x00975FC0) # UITitleInstanceAddr (dword_975FC0); read as CUITitle* by CLogin::SendCheckPasswordPacket (0x564418) + OnCheckPasswordResult/OnCheckPinCodeResult/login-control fan-in (sub_56363B etc.). RELOCATED v72 0xAA5114
 
@@ -169,11 +169,11 @@ set(WIN_MAIN_PATCHER_OFFSET 0x19A) # measured v61: call ?ShowStartUpWndModal@@YA
 set(C_WND_MAN_S_UPDATE 0x0081652D) # symbol ?s_Update@CWndMan@@SAXXZ; sole callee of interest inside CallUpdate(0x82490A) (call-graph). RELOCATED from v72 0x8E2D73
 set(C_WND_MAN_REDRAW_INVALIDATED_WINDOWS 0x008162B1) # symbol ?RedrawInvalidatedWindows@CWndMan@@SAXXZ; called from Run(0x8233CC) right after CallUpdate. RELOCATED from v72 0x8E2AF7
 
-set(Z_ARRAY_REMOVE_ALL 0x00425CEC) # symbol ?RemoveAll@?$ZArray@E@@; if(*this){ZAllocEx::Free(*this-4, selector unk_AA7CB8);*this=0}; stride-1. DRIFT v79 0x4260F4
+set(Z_ARRAY_REMOVE_ALL 0x0045DBB3) # symbol ?RemoveAll@?$ZArray@E@@; if(*this){ZAllocEx::Free(*this-4);*this=0}; stride-1. RELOCATED from v72 0x425CEC; v61 Free is single-arg (v72 passed selector unk_AA7CB8)
 
-set(Z_X_STRING_GET_BUFFER 0x00425D2B) # symbol ?_Cat@?$ZXString@D@@ (in-place assign family); empty->GetBuffer(Size,0)(0x414576)+memcpy+ReleaseBuffer (==assign), non-empty->grow+append. needs-main-review: no dedicated pure-assign in v72 (same as v79/v84); repo only calls on fresh ZXStrings. DRIFT v79 0x426133
-set(Z_X_STRING_TRIM_RIGHT 0x0046C9B4) # symbol ?TrimRight@?$ZXString@D@@; default " \t\r\n" (asc_A5AAF0) + strchr + inner GetBuffer(0x414576). DRIFT v79 0x46DB7E
-set(Z_X_STRING_TRIM_LEFT 0x0046CA69) # symbol ?TrimLeft@?$ZXString@D@@; same whitespace literal (asc_A5AAF0) + strchr + memcpy-shift remainder to front; adjacent to/right after TrimRight. DRIFT v79 0x46DC33
+set(Z_X_STRING_GET_BUFFER 0x0045DFA4) # symbol ?_Cat@?$ZXString@D@@ (in-place assign family); empty->GetBuffer(Size,0)(0x415000)+memcpy (==assign), non-empty->grow(*2)+append. needs-main-review: no dedicated pure-assign (same as v72/v79/v84); repo only calls on fresh ZXStrings. RELOCATED from v72 0x425D2B
+set(Z_X_STRING_TRIM_RIGHT 0x0045DD5B) # symbol ?TrimRight@?$ZXString@D@@; default " \t\r\n" (asc_96156C) + strchr + inner GetBuffer(0x415000). RELOCATED from v72 0x46C9B4
+set(Z_X_STRING_TRIM_LEFT 0x0045DE10) # symbol ?TrimLeft@?$ZXString@D@@; same whitespace literal (asc_96156C) + strchr + memcpy-shift remainder to front; adjacent to/right after TrimRight. RELOCATED from v72 0x46CA69
 
 set(C_FIELD_SEND_JOIN_PARTY_MSG 0x00514462) # symbol ?SendJoinPartyMsg@CField@@QAEXABV?$ZXString@D@@@Z; COutPacket(0x7A)+Encode1(4=invite)+EncodeStr(name)+SendPacket(0x4866ac); reads g_pWvsContext(0xA9F438); one-arg invitee. OPCODE DRIFT 0x79(v79)->0x7A(v72). v72 relocated from v79 0x51B4C9
 set(C_FIELD_SEND_JOIN_PARTY_MSG_OFFSET 0x60) # measured v72: level-gate jnb(73 2F)@0x5144C2 (cmp al,0Ah); delta from base 0x514462 (DRIFT vs v79 0x5E; same jnb instr, longer v72 preamble)
@@ -189,7 +189,7 @@ set(DR_INIT 0x00000000) # CONFIRMED absent in v72: DR subsystem absent (Task 2 R
 set(CE_TRACER_RUN 0x00000000) # CONFIRMED absent in v72: CeTracer (AhnLab eTracer) is a v95+ feature; no "eTracer"/"CeTracer" string in v72 (find_regex). Confirmed absent (SP-5)
 set(SEND_HS_LOG 0x00000000) # ABSENT in v61 (carried sentinel; already absent v72, was real 0x0093F8E0 in v79). No SendHSLog symbol; the AhnLab HShield report log post-dates v61. v61 SetUp(0x823175) has no HShield/EHSvc strings — anti-tamper is only CSecurityClient. FLAG gate/edit owner: consuming edit must tolerate 0
 
-set(C_MOB_C_MOB 0x00611CDB) # symbol ??0CMob@@QAE@PAVCMobTemplate@@@Z (sole caller CreateMob 0x611C9F, ZAllocEx::Alloc(0x4C0=1216) non-zeroing); CLife base(sub_5AB61E) + 3 vtables (off_9D4010/9D3FEC/9D3FE8) + m_pTemplate@this+0x160 + 31/100/24 fuse + _ZtlSecureTear chain + MobStat::SetFrom(0x6D0896) + StringPool(958=0x3BE)/IWzCanvas tail@this+0x484. needs-main-review. DRIFT v79 0x630C2C; alloc 1216 (v79 1304); StringPool 958 (v79 957). DOOM (Task 15): m_bDoomReserved LEFT UNINITIALIZED + doom tail DOES NOT EXIST in v72 (struct only 0x4C0; v84 doom field is at 0x540/0x544, past struct end; highest ctor write ~this+0x4B8) -> v72 on doom-fix (<84) needs-fix side
+set(C_MOB_C_MOB 0x005C2128) # symbol ??0CMob@@QAE@PAVCMobTemplate@@@Z (sole caller CreateMob 0x5C20EC, ZAllocEx::Alloc(0x490=1168) non-zeroing); 3 vtables (off_8E9AE8/8E9AC4/8E9AC0) + m_pTemplate@this+0x15C + 31/100/24 fuse + _ZtlSecureTear chain + MobStat::SetFrom(this+368) + StringPool(942)/IWzCanvas tail@this+0x45C. needs-main-review. RELOCATED from v72 0x611CDB; alloc 1168 (v72 1216); StringPool 942 (v72 958). DOOM (Task 15): m_bDoomReserved FIELD DOES NOT EXIST in v61 (struct only 0x490, even smaller than v72 0x4C0; v84 doom field at 0x540/0x544 is past struct end; highest ctor write this+0x47C, IWzCanvas tail this+0x45C; NO doom write) -> v61 on doom-fix (<84) needs-fix side, same as v72/v79
 
 set(C_SECURITY_CLIENT_ON_PACKET_RET_STUB 0x00000000) # JMS only — JMS185 in-place RET stub (positive re-confirmed real @0xB3B96B, Task 10); GMS v72 hooks CSecurityClient::OnPacket via C_SECURITY_CLIENT_ON_PACKET (0x9422D1). Absent in GMS v72 by design (SP-5)
 set(C_SECURITY_CLIENT_ON_PACKET_CHECK 0x00000000) # JMS only — JMS185 integrity-check fn re-confirmed real @0xB3B5F7 (CSecurityClient method (this,u16,COutPacket*), Task 10); no GMS counterpart. Absent in GMS v72 by design (SP-5)

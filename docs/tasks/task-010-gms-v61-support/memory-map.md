@@ -90,7 +90,7 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `GET_SE_PRIVILEGE` | `0x0044989E` | `0x0044989E` | ☐ | — |
+| `GET_SE_PRIVILEGE` | `0x0044989E` | `0x00000000` | ✔ | Cluster 3b — NEW v61 SENTINEL (absent; FLAGGED) |
 
 ### CActionMan
 
@@ -135,12 +135,12 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_CONFIG` | `0x0048C0D3` | `0x0048C0D3` | ☐ | — |
-| `C_CONFIG_INSTANCE_ADDR` | `0x00AA3AC0` | `0x00AA3AC0` | ☐ | — |
-| `C_CONFIG_GET_PARTNER_CODE` | `0x005B12BD` | `0x005B12BD` | ☐ | — |
-| `C_CONFIG_APPLY_SYS_OPT` | `0x0048E7EC` | `0x0048E7EC` | ☐ | — |
-| `C_CONFIG_CHECK_EXEC_PATH_REG` | `0x0048CBAE` | `0x0048CBAE` | ☐ | — |
-| `C_CONFIG_SYS_OPT_WINDOWED_MODE` | `0x00AA87AC` | `0x00AA87AC` | ☐ | — |
+| `C_CONFIG` | `0x0048C0D3` | `0x0047921D` | ✔ | Cluster 3 |
+| `C_CONFIG_INSTANCE_ADDR` | `0x00AA3AC0` | `0x00974ED4` | ✔ | Cluster 3 |
+| `C_CONFIG_GET_PARTNER_CODE` | `0x005B12BD` | `0x00564566` | ✔ | Cluster 3 |
+| `C_CONFIG_APPLY_SYS_OPT` | `0x0048E7EC` | `0x0047B28E` | ✔ | Cluster 3 |
+| `C_CONFIG_CHECK_EXEC_PATH_REG` | `0x0048CBAE` | `0x00479B4D` | ✔ | Cluster 3 |
+| `C_CONFIG_SYS_OPT_WINDOWED_MODE` | `0x00AA87AC` | `0x00978E24` | ✔ | Cluster 3 |
 
 ### CFuncKeyMappedMan / DefaultFKM / DefaultQKM
 
@@ -228,14 +228,14 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_IG_CIPHER_INNO_HASH` | `0x00940D7E` | `0x00940D7E` | ☐ | — |
+| `C_IG_CIPHER_INNO_HASH` | `0x00940D7E` | `0x0086274C` | ✔ | Cluster 3b |
 
 ### ZSynchronizedHelper / ZFatalSection
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR` | `0x00402AB8` | `0x00402AB8` | ☐ | — |
-| `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR` | `0x00402ADD` | `0x00402ADD` | ☐ | — |
+| `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR` | `0x00402AB8` | `0x00402ABA` | ✔ | Cluster 3b |
+| `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR` | `0x00402ADD` | `0x00402ADF` | ✔ | Cluster 3b |
 
 ### CQuestMan
 
@@ -298,10 +298,10 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_SYSTEM_INFO` | `0x0094A6C0` | `0x0094A6C0` | ☐ | — |
-| `C_SYSTEM_INFO_INIT` | `0x0094A700` | `0x0094A700` | ☐ | — |
-| `C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT` | `0x0094AAE0` | `0x0094AAE0` | ☐ | — |
-| `C_SYSTEM_INFO_GET_MACHINE_ID` | `0x0094A9E0` | `0x0094A9E0` | ☐ | — |
+| `C_SYSTEM_INFO` | `0x0094A6C0` | `0x008658E0` | ✔ | Cluster 3b |
+| `C_SYSTEM_INFO_INIT` | `0x0094A700` | `0x00865920` | ✔ | Cluster 3b |
+| `C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT` | `0x0094AAE0` | `0x00865D00` | ✔ | Cluster 3b |
+| `C_SYSTEM_INFO_GET_MACHINE_ID` | `0x0094A9E0` | `0x00865C00` | ✔ | Cluster 3b |
 
 ### CUITitle
 
@@ -368,10 +368,10 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `Z_ARRAY_REMOVE_ALL` | `0x00425CEC` | `0x00425CEC` | ☐ | — |
-| `Z_X_STRING_GET_BUFFER` | `0x00425D2B` | `0x00425D2B` | ☐ | — |
-| `Z_X_STRING_TRIM_RIGHT` | `0x0046C9B4` | `0x0046C9B4` | ☐ | — |
-| `Z_X_STRING_TRIM_LEFT` | `0x0046CA69` | `0x0046CA69` | ☐ | — |
+| `Z_ARRAY_REMOVE_ALL` | `0x00425CEC` | `0x0045DBB3` | ✔ | Cluster 3b |
+| `Z_X_STRING_GET_BUFFER` | `0x00425D2B` | `0x0045DFA4` | ✔ | Cluster 3b |
+| `Z_X_STRING_TRIM_RIGHT` | `0x0046C9B4` | `0x0045DD5B` | ✔ | Cluster 3b |
+| `Z_X_STRING_TRIM_LEFT` | `0x0046CA69` | `0x0045DE10` | ✔ | Cluster 3b |
 
 ### CField party / CWvsContext migrate
 
@@ -397,7 +397,7 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_MOB_C_MOB` | `0x00611CDB` | `0x00611CDB` | ☐ | — |
+| `C_MOB_C_MOB` | `0x00611CDB` | `0x005C2128` | ✔ | Cluster 3b — needs-main-review; doom-tail ABSENT in v61 |
 
 ### JMS-only sentinels
 
