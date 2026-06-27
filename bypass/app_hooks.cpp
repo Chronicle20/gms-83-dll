@@ -46,8 +46,10 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime
         pThis->m_tUpdateTime = tCurTime;
 #if defined(REGION_GMS)
         pThis->m_tLastServerIPCheck = tCurTime;
+#if BUILD_MAJOR_VERSION >= 72 // v61 lacks the 2nd IP-check + GG-hook timer (task-010)
         pThis->m_tLastServerIPCheck2 = tCurTime;
         pThis->m_tLastGGHookingAPICheck = tCurTime;
+#endif
 #endif
         pThis->m_tLastSecurityCheck = tCurTime;
         pThis->m_bFirstUpdate = 0;
