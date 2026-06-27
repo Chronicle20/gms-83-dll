@@ -170,24 +170,24 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_LOGIN_UPDATE` | `0x005AFBBE` | `0x005AFBBE` | ☐ | — |
-| `C_LOGIN_SEND_CHECK_PASSWORD_PACKET` | `0x005B1170` | `0x005B1170` | ☐ | — |
+| `C_LOGIN_UPDATE` | `0x005AFBBE` | `0x00562EDC` | ✔ | catalog: CLogin::Update |
+| `C_LOGIN_SEND_CHECK_PASSWORD_PACKET` | `0x005B1170` | `0x00564418` | ✔ | catalog: CLogin::SendCheckPasswordPacket |
 
 ### CLogo
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_LOGO` | `0x005E11F9` | `0x005E11F9` | ☐ | — |
-| `C_LOGO_GET_RTTI` | `0x00421565` | `0x00421565` | ☐ | — |
-| `C_LOGO_IS_KIND_OF` | `0x0042156B` | `0x0042156B` | ☐ | — |
-| `C_LOGO_UPDATE` | `0x005E1789` | `0x005E1789` | ☐ | — |
-| `C_LOGO_ON_MOUSE_BUTTON` | `0x005E1774` | `0x005E1774` | ☐ | — |
-| `C_LOGO_ON_SET_FOCUS` | `0x005E1237` | `0x005E1237` | ☐ | — |
-| `C_LOGO_ON_KEY` | `0x005E174D` | `0x005E174D` | ☐ | — |
-| `C_LOGO_LOGO_END` | `0x005E1381` | `0x005E1381` | ☐ | — |
-| `C_LOGO_FORCED_END` | `0x005E135F` | `0x005E135F` | ☐ | — |
-| `C_LOGO_INIT` | `0x005E12F1` | `0x005E12F1` | ☐ | — |
-| `C_LOGO_INIT_NX_LOGO` | `0x005E13CB` | `0x005E13CB` | ☐ | — |
+| `C_LOGO` | `0x005E11F9` | `0x005950F4` | ✔ | catalog: CLogo::CLogo |
+| `C_LOGO_GET_RTTI` | `0x00421565` | `0x00595138` | ✔ | catalog: CLogo::GetRTTI |
+| `C_LOGO_IS_KIND_OF` | `0x0042156B` | `0x0059513E` | ✔ | catalog: CLogo::IsKindOf |
+| `C_LOGO_UPDATE` | `0x005E1789` | `0x00595670` | ✔ | catalog: CLogo::Update |
+| `C_LOGO_ON_MOUSE_BUTTON` | `0x005E1774` | `0x0059565B` | ✔ | catalog: CLogo::OnMouseButton |
+| `C_LOGO_ON_SET_FOCUS` | `0x005E1237` | `0x00595132` | ✔ | catalog: CLogo::OnSetFocus |
+| `C_LOGO_ON_KEY` | `0x005E174D` | `0x00595634` | ✔ | catalog: CLogo::OnKey |
+| `C_LOGO_LOGO_END` | `0x005E1381` | `0x0059527C` | ✔ | catalog: CLogo::LogoEnd |
+| `C_LOGO_FORCED_END` | `0x005E135F` | `0x0059525A` | ✔ | catalog: CLogo::ForcedEnd |
+| `C_LOGO_INIT` | `0x005E12F1` | `0x005951EC` | ✔ | catalog: CLogo::Init |
+| `C_LOGO_INIT_NX_LOGO` | `0x005E13CB` | `0x005952C6` | ✔ | catalog: CLogo::InitNXLogo |
 
 ### CMacroSysMan / CBattleRecordMan (sentinels)
 
@@ -272,14 +272,14 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `STAGE_INSTANCE_ADDR` | `0x00AA54D4` | `0x00AA54D4` | ☐ | — |
-| `SET_STAGE` | `0x006C1FBB` | `0x006C1FBB` | ☐ | — |
+| `STAGE_INSTANCE_ADDR` | `0x00AA54D4` | `0x00976264` | ✔ | catalog: Stage singleton |
+| `SET_STAGE` | `0x006C1FBB` | `0x0065B22A` | ✔ | catalog: set_stage |
 
 ### GrInstanceAddr
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `GR_INSTANCE_ADDR` | `0x00AA85FC` | `0x00AA85FC` | ☐ | — |
+| `GR_INSTANCE_ADDR` | `0x00AA85FC` | `0x00978D34` | ✔ | catalog: GR singleton |
 
 ### ResetLSP
 
@@ -291,8 +291,8 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_STAGE_ON_MOUSE_ENTER` | `0x008DF289` | `0x008DF289` | ☐ | — |
-| `C_STAGE_ON_PACKET` | `0x006C0C61` | `0x006C0C61` | ☐ | — |
+| `C_STAGE_ON_MOUSE_ENTER` | `0x008DF289` | `0x00659F7A` | ✔ | catalog: CStage::OnMouseEnter |
+| `C_STAGE_ON_PACKET` | `0x006C0C61` | `0x00659F99` | ✔ | catalog: CStage::OnPacket |
 
 ### CSystemInfo
 
@@ -307,7 +307,7 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_UI_TITLE_INSTANCE_ADDR` | `0x00AA5114` | `0x00AA5114` | ☐ | — |
+| `C_UI_TITLE_INSTANCE_ADDR` | `0x00AA5114` | `0x00975FC0` | ✔ | catalog: CUITitle singleton |
 
 ### g_dwTargetOS
 

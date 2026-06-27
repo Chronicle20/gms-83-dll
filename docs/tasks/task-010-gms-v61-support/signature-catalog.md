@@ -357,9 +357,148 @@ Confirmed via `mcp__ida-pro__survey_binary` on port 13344 (2026-06-27).
 
 *(pending)*
 
-### Cluster 4 — CLogin / CLogo / stage flow (Task 7)
+### Cluster 4 — Login / Stage / Logo / Title (Task 6)
 
-*(pending)*
+> **CLogo vtables (v61).** The CLogo ctor (0x5950F4) writes 4 vtable pointers — SAME shape as
+> v72/v79: [this]=primary IStage `off_8E9668`, [this+4]=IUIMsgHandler `off_8E961C`,
+> [this+8]=IStage::OnPacket `off_8E9618`, [this+0Ch]=`off_8E9614`. Base ctor sub_45BE8F
+> installs the CStage CWnd-rooted vtable (off_8E65E4) before the override. **Slot order matches
+> v72 with NO drift**: primary {slot0=Update 0x595670, slot1=Init 0x5951EC, slot2=ForcedEnd 0x59525A};
+> IUIMsgHandler {slot0=OnKey 0x595634, slot1=OnSetFocus 0x595132, slot2=OnMouseButton 0x59565B};
+> OnPacket {slot0=CStage::OnPacket 0x659F99}.
+>
+> **GetRTTI/IsKindOf slot-order DRIFT (FR-14).** Unlike v72 (which retained the mangled
+> `?GetRTTI@CLogo@@`/`?IsKindOf@CLogo@@` symbols in a distant stub region 0x42156x), v61 **strips
+> these two symbols entirely** (func_query for GetRTTI/IsKindOf returns 0 binary-wide) and places
+> them **inline in the CLogo translation-unit block**: GetRTTI=0x595138 (`mov eax, offset 0x975FD4; retn`)
+> and IsKindOf=0x59513E (= GetRTTI+6, CRTTI-chain walk on the same descriptor 0x975FD4), immediately
+> after CLogo::OnSetFocus (0x595132). The CLogo CRTTI descriptor 0x975FD4 is a content-less zero
+> global (no name string, like v72's dword_AA4D2C) referenced only by the CLogo descriptor-init thunk
+> sub_5950E9 (just before the ctor) + this GetRTTI/IsKindOf pair. They are NOT runtime-vtable slot0/1
+> of the CLogo object (its [this+0] is the IStage Update vtable); they live in a CWnd-rooted vtable
+> shared with CLogo subclasses (same situation as v72's 0x9cf9e4/0x9daed8 blocks).
+>
+> **Shared-Update verdict (Step-2 note).** In v61 `C_LOGO_UPDATE` (0x595670, CLogo primary slot0,
+> init-once timer body) and `C_LOGIN_UPDATE` (0x562EDC, CLogin primary slot0, login-form body) are
+> **DISTINCT functions → DIVERGED**, same as v72/v79. The v83 coincidence (both = 0x5F4C16) does NOT
+> hold below v83. Verified independently (separate vtables, separate bodies).
+>
+> **No v61-only sentinels in this cluster** — NX logo, all CStage handlers, the title manager, the GR
+> singleton all exist in v61.
+
+#### CLogin::Update   (key: C_LOGIN_UPDATE)
+- v61 address: 0x00562EDC  |  v72 (task-009): 0x005AFBBE
+- Heuristic: two anchors — (1) CLogin primary vtable `off_8E8C44` slot0 (CLogin ctor 0x5620D4 installs it); (2) body tail-dispatches to CLogin::SendCheckPasswordPacket (0x564418) + MakeVACDlg/ResetVAC/RemoveNoticeConnecting (all CLogin methods), reads CUITitle singleton (dword_975FC0), and InvalidateRect-s the form CWnd at this+408.
+- Drift v72→v61: relocated; **InvalidateRect is now a DIRECT `CWnd::InvalidateRect` (0x813331) call** (v72 used the indirect func-ptr dword_AA7624); member offsets shifted (this+316/320/408). DIVERGES from C_LOGO_UPDATE — same verdict as v72.
+- Label applied: yes (renamed `CLogin__Update`).
+
+#### CLogin::SendCheckPasswordPacket   (key: C_LOGIN_SEND_CHECK_PASSWORD_PACKET)
+- v61 address: 0x00564418  |  v72 (task-009): 0x005B1170
+- Heuristic: two anchors — (1) IDB symbol `?SendCheckPasswordPacket@CLogin@@QAEHPBD0@Z`; (2) `COutPacket::COutPacket(pkt, 1)` (opcode/seq=1) then EncodeStr(user)+EncodeStr(pass) (0x458C91) + EncodeBuffer(CSystemInfo::GetMachineId,16) + Encode4(GameRoomClient)+Encode1×3+Encode4(GetPartnerCode) + `CClientSocket::SendPacket(g_pClientSocketInstance, pkt)` = the resolved send **0x474125**.
+- Drift v72→v61: relocated; **opcode immediate is 1 (== v72; was 0x05 in v79)** — read, not copied. EncodeStr-pair + SendPacket(0x474125) structure held. Cross-confirms the CUITitle global (dword_975FC0) + the socket send key.
+- Label applied: yes (symbol present).
+
+#### CLogo::CLogo (ctor)   (key: C_LOGO)
+- v61 address: 0x005950F4 (size 0x3e)  |  v72 (task-009): 0x005E11F9
+- Heuristic: two anchors — (1) IDB symbol `??0CLogo@@QAE@XZ`; (2) 4 consecutive vtable-pointer stores ([this]=off_8E9668, +4=off_8E961C, +8=off_8E9618, +0Ch=off_8E9614) after base ctor sub_45BE8F + the member-zero block; allocated by CLogo::LogoEnd (0x59527C) Alloc+ctor.
+- Drift v72→v61: relocated; 4-vtable-write shape held identical to v72.
+- Label applied: yes (symbol present).
+
+#### CLogo::GetRTTI   (key: C_LOGO_GET_RTTI)
+- v61 address: 0x00595138 (size 0x6)  |  v72 (task-009): 0x00421565
+- Heuristic: two anchors — (1) body `mov eax, offset 0x975FD4 (CLogo CRTTI descriptor); retn` returning the same descriptor IsKindOf walks; (2) located inline in the CLogo TU block immediately after CLogo::OnSetFocus (0x595132) and adjacent to IsKindOf (0x59513E), sharing descriptor 0x975FD4 (also referenced by the CLogo descriptor-init thunk sub_5950E9 right before the CLogo ctor 0x5950F4).
+- Drift v72→v61: **symbol stripped in v61** (v72 had `?GetRTTI@CLogo@@UBEPBVCRTTI@@XZ`); relocated from the distant RTTI-stub region (v72 0x42156x) to **inline in the CLogo block** (slot-index/placement drift). Located by byte-sig + descriptor linkage, then relabeled to the v72-form canonical symbol.
+- Label applied: yes (relabeled `?GetRTTI@CLogo@@UBEPBVCRTTI@@XZ`).
+
+#### CLogo::IsKindOf   (key: C_LOGO_IS_KIND_OF)
+- v61 address: 0x0059513E (size 0x21)  |  v72 (task-009): 0x0042156B
+- Heuristic: two anchors — (1) the CRTTI base-chain walk body (`v2=&desc; while(v2!=arg){v2=*v2; if(!v2)return 0;} return 1`) on descriptor 0x975FD4 — the SAME descriptor GetRTTI returns; (2) = GetRTTI+6, the adjacent stub pair in the CLogo TU block. Body byte-sig matched the wildcarded v72 IsKindOf pattern.
+- Drift v72→v61: symbol stripped; inline placement drift (same as GetRTTI). Descriptor-chain-walk + shared 0x975FD4 + GetRTTI adjacency held.
+- Label applied: yes (relabeled `?IsKindOf@CLogo@@UBEHPBVCRTTI@@@Z`).
+
+#### CLogo::Update   (key: C_LOGO_UPDATE)
+- v61 address: 0x00595670  |  v72 (task-009): 0x005E1789
+- Heuristic: two anchors — (1) CLogo primary vtable `off_8E9668` slot0; (2) init-once timer body `cmp [esi+24h],0 → call dword_9781C4 (GetUpdateTime) → mov [esi+24h],eax`, then elapsed-time logo body (cmp 0x5DC).
+- Drift v72→v61: relocated; timer field [esi+0x24] held (== v72). Was an undefined function — `define_func` before rename. DIVERGES from C_LOGIN_UPDATE.
+- Label applied: yes (renamed `CLogo__Update`).
+
+#### CLogo::OnMouseButton   (key: C_LOGO_ON_MOUSE_BUTTON)
+- v61 address: 0x0059565B  |  v72 (task-009): 0x005E1774
+- Heuristic: two anchors — (1) CLogo IUIMsgHandler vtable `off_8E961C` slot2; (2) body `cmp [esp+arg_0], 202h (WM_LBUTTONUP) → add ecx,-4 (thiscall adjust) → call CLogo::InitNXLogo (0x5952C6)`.
+- Drift v72→v61: relocated; 0x202 + InitNXLogo path held identical.
+- Label applied: yes (renamed `CLogo__OnMouseButton`).
+
+#### CLogo::OnSetFocus   (key: C_LOGO_ON_SET_FOCUS)
+- v61 address: 0x00595132  |  v72 (task-009): 0x005E1237
+- Heuristic: two anchors — (1) CLogo IUIMsgHandler vtable `off_8E961C` slot1; (2) body `push 1; pop eax; retn 4` (always-true stub).
+- Drift v72→v61: relocated; identical stub shape.
+- Label applied: yes (renamed `CLogo__OnSetFocus_IUI`).
+
+#### CLogo::OnKey   (key: C_LOGO_ON_KEY)
+- v61 address: 0x00595634  |  v72 (task-009): 0x005E174D
+- Heuristic: two anchors — (1) CLogo IUIMsgHandler vtable `off_8E961C` slot0; (2) body `test byte [esp+0Bh],80h (key-up filter) → cmp [esp+4],0Dh/1Bh/20h (13/27/32) → add ecx,-4 → call CLogo::InitNXLogo (0x5952C6)`.
+- Drift v72→v61: relocated; the 13/27/32 + InitNXLogo cluster held. Was an undefined function — `define_func` before rename.
+- Label applied: yes (renamed `CLogo__OnKey`).
+
+#### CLogo::LogoEnd   (key: C_LOGO_LOGO_END)
+- v61 address: 0x0059527C  |  v72 (task-009): 0x005E1381
+- Heuristic: two anchors — (1) call-graph fingerprint `ZAllocEx::Alloc(476) → CLogin::CLogin (0x5620D4) → set_stage (0x65B22A)` (sole such caller of the CLogin ctor + set_stage); (2) reached as the conditional skip-logo tail of CLogo::Init (0x5951EC).
+- Drift v72→v61: relocated; **CLogin alloc size 0x1DC (476) — SMALLER than v72 0x23C (572) and v79 0x258 (600)**. set_stage callee confirmed independently (0x65B22A).
+- Label applied: yes (renamed `CLogo__LogoEnd`).
+
+#### CLogo::ForcedEnd   (key: C_LOGO_FORCED_END)
+- v61 address: 0x0059525A  |  v72 (task-009): 0x005E135F
+- Heuristic: two anchors — (1) CLogo primary vtable `off_8E9668` slot2; (2) body `CSoundMan::PlayBGM(...,1000,...)` + nullsub_89 tail.
+- Drift v72→v61: relocated; PlayBGM(1000=0x3E8) + nullsub-tail idiom held.
+- Label applied: yes (renamed `CLogo__ForcedEnd`).
+
+#### CLogo::Init   (key: C_LOGO_INIT)
+- v61 address: 0x005951EC  |  v72 (task-009): 0x005E12F1
+- Heuristic: two anchors — (1) CLogo primary vtable `off_8E9668` slot1; (2) body sub-init (0x595726) → `CInputSystem::ShowCursor(dword_975050, 0)` → `CWvsApp::GetCmdLine(3)`; if cmdline non-empty AND g_CWvsApp[+0x28]!=0 tail-calls LogoEnd (0x59527C) skip-logo shortcut.
+- Drift v72→v61: relocated; ShowCursor(0)+GetCmdLine(3)+conditional-LogoEnd shape held. CInputSystem singleton = dword_975050 (cross-confirms the real v61 InputSystem global — note the seed C_INPUT_SYSTEM_INSTANCE_ADDR is still the v72 value 0xAA3E84, to be corrected in Task 7).
+- Label applied: yes (renamed `CLogo__Init`).
+
+#### CLogo::InitNXLogo   (key: C_LOGO_INIT_NX_LOGO)
+- v61 address: 0x005952C6  |  v72 (task-009): 0x005E13CB
+- Heuristic: two anchors — (1) init-once guard `this[10]==0` (=[this+0x28]) → GetUpdateTime (dword_9781C4) store-back → `StringPool::GetBSTR(&unk_9787F0, …, 1380)` NX-logo resource → IWzResMan::GetObjectA sprite load; (2) callers = CLogo::OnKey (0x595634) + CLogo::OnMouseButton (0x59565B).
+- Drift v72→v61: relocated; **StringPool ID drifted to 1380 (0x564)** (v72 1386/0x56A, v79 0x568). Guard at [this+0x28] held. Verify via the resolved resource, not the numeric ID, in older builds.
+- Label applied: yes (renamed `CLogo__InitNXLogo`).
+
+#### Stage singleton   (key: STAGE_INSTANCE_ADDR)
+- v61 address: 0x00976264  |  v72 (task-009): 0x00AA54D4
+- Heuristic: two anchors — (1) store/clear by `set_stage` (0x65B22A) — `dword_976264 = 0` at entry, new stage installed via sub_65B4A9, then dispatched `(*(*dword_976264+4))(dword_976264, a2)` = Init (vtable+4); (2) read by `CWvsApp::CallUpdate` (0x82490A) and `CClientSocket::ProcessPacket` (0x47440A) stage dispatch (xrefs_to confirms the writer/reader split).
+- Drift v72→v61: relocated into the v61 .data window (0x97xxxx); singleton store/clear pattern held.
+- Label applied: yes (renamed `StageInstanceAddr`).
+
+#### set_stage   (key: SET_STAGE)
+- v61 address: 0x0065B22A (size 0x18a)  |  v72 (task-009): 0x006C1FBB
+- Heuristic: two anchors — (1) IDB symbol `?set_stage@@YAXPAVCStage@@PAX@Z`; (2) clears STAGE_INSTANCE_ADDR (0x976264), calls old-stage ForcedEnd (vtable+8), installs new stage (sub_65B4A9), calls new-stage Init (vtable+4 via dword_976264). Also the sole set_stage caller from CLogo::LogoEnd.
+- Drift v72→v61: relocated; **v61 symbol is the free function `set_stage` (lowercase, like v72)**. Store+ForcedEnd+Init triple held.
+- Label applied: yes (symbol present).
+
+#### GR singleton   (key: GR_INSTANCE_ADDR)
+- v61 address: 0x00978D34  |  v72 (task-009): 0x00AA85FC
+- Heuristic: two anchors — (1) output-arg store — `CWvsApp::InitializeGr2D` (0x824550) calls factory `sub_826D55(res, &dword_978D34, 0)` which writes the IWzGr2D through the pointer; (2) consumed as IWzGr2D — CreateCanvas 800×600 (vtable+12) + SetColor(0xFF000000) (vtable+76) in InitializeGr2D.
+- Drift v72→v61: relocated; factory drifted to sub_826D55 (v72 sub_8F7257); output-arg→store→IWzGr2D-dispatch chain held.
+- Label applied: yes (renamed `GrInstanceAddr`).
+
+#### CStage::OnMouseEnter   (key: C_STAGE_ON_MOUSE_ENTER)
+- v61 address: 0x00659F7A (size 0x1f)  |  v72 (task-009): 0x008DF289
+- Heuristic: two anchors — (1) body `if(arg) if([CInputSystem singleton dword_975050 + 0x9B4 (2484)]) CInputSystem::SetCursorState(dword_975050, 0); retn 4` — the SetCursorState-on-singleton-with-+0x9B4-guard fingerprint; (2) vtable witness — appears as an inherited CStage virtual in CLogin's IUIMsgHandler vtable `off_8E8BF8` slot 5 (get_bytes = 0x659F7A).
+- Drift v72→v61: **symbol stripped in v61** (v72 had `?OnMouseEnter@CStage@@UAEXH@Z`); relocated next to the CStage OnPacket cluster (0x659xxx). SetCursorState (0x525501) + [+0x9B4] guard body held. The CLogo block overrides OnMouseEnter, so use a non-overriding CStage subclass (CLogin) vtable as the witness (same subtlety task-008/009 flagged).
+- Label applied: yes (relabeled `?OnMouseEnter@CStage@@UAEXH@Z`).
+
+#### CStage::OnPacket   (key: C_STAGE_ON_PACKET)
+- v61 address: 0x00659F99 (size 0x3a)  |  v72 (task-009): 0x006C0C61
+- Heuristic: two anchors — (1) IDB symbol `?OnPacket@CStage@@UAEXJAAVCInPacket@@@Z`; (2) = CLogo OnPacket vtable `off_8E9618` slot0 (get_bytes confirmed).
+- Drift v72→v61: relocated; symbol + CLogo-vtable cross-ref both held.
+- Label applied: yes (symbol present).
+
+#### CUITitle singleton   (key: C_UI_TITLE_INSTANCE_ADDR)
+- v61 address: 0x00975FC0  |  v72 (task-009): 0x00AA5114
+- Heuristic: two anchors — (1) read as CUITitle* by CLogin::SendCheckPasswordPacket (0x564418) — `(*(*(dword_975FC0+4)+52))(dword_975FC0+4)` control dispatch; (2) the broad CLogin login-control fan-in via xrefs_to — OnCheckPasswordResult, OnGuestIDLoginResult, OnCheckPinCodeResult, and the CLogin ctor/teardown helpers (sub_562452/sub_56363B).
+- Drift v72→v61: relocated into the v61 .data window; the CUITitle-singleton read/dispatch pattern held.
+- Label applied: yes (renamed `UITitleInstanceAddr`).
 
 ### Cluster 5 — Manager singletons (Task 8)
 
