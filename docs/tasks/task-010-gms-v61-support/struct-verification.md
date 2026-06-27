@@ -130,3 +130,123 @@ No source edits in this evidence task. The 3 confirmed-shares-v72 gates need no 
 `#else` already serves v61; v72/v79/v83/v84/v87/v95/v111/JMS185 untouched. The 2 splits, when
 applied in Task 17, add a `< 72` term that no supported version except v61 satisfies (disjoint),
 keeping every other version's selected branch unchanged.
+
+## Task 13 (Category C + special) — core/net layout headers, exhaustive size
+
+Read-only `disasm` only; no struct types applied (R10/R12). Lane re-confirmed: active IDB = port
+13344 `GMS_v61.1_U_DEVM.exe` (`list_instances`; v48@13345 distractor never probed). Per **D5**
+every v61 size is independently measured (no IDB below v61). v61 retains full mangled symbols.
+
+### Step 1 — per-header gate truth table (v61)
+
+Every enumerated upper gate is **false** for v61 (→ base/excluded branch). Confirmed truth values:
+
+| Header:line | Gate | v61 | Effect on v61 layout |
+|---|---|---|---|
+| CWvsApp.h:14 | `>= 95` | F | OS-version block (`m_nOSVersion`…`m_b64BitInfo`) absent |
+| CWvsApp.h:38 | `>= 72` | F | `m_tLastServerIPCheck2`+`m_tLastGGHookingAPICheck` absent (the −0x8, Task 3) |
+| CWvsApp.h:45/51 | `>= 87` | F | `m_tNextSecurityCheck`, `m_pBackupBuffer`+`m_dwBackupBufferSize` absent |
+| CWvsApp.h:48/55 | `>= 95` | F | `m_bEnabledDX9`, `m_dwClearStackLog`+`m_bWindowActive` absent |
+| CWvsApp.h:102 | `== 61` | **T** | selected branch → `assert_size 0x58` |
+| CWvsContext.h:46 | `>= 95` | F | `m_bFirstUserLoad` absent |
+| CWvsContext.h:56/101/148/241/253 | `>= 87` | F | `m_bPetHelpPopUpShown`, `m_bTesterAccount`, 60-slot equip→**52-slot #else**, `m_pUIAccountMoreInfo`/`m_pUIFindFriend`, `m_pClock` absent |
+| **CWvsContext.h:98** | **`> 83`** | **F** | **`m_aClientKey[8]` ABSENT** (special — see Step 2) |
+| CWvsContext.h:160/172/181/201/215/232/237/339 | `>= 95` (±JMS) | F | v95 pools/UI/itemmsg members absent |
+| CClientSocket.h:22 | `>= 111` | F | `dummy1` (+4 pad) absent |
+| CLogin.h:205/211/221/260/278/282 | `>= 95` (±JMS) | F | `m_pLayerBook`, `m_nFadeOutLoginStep`, `m_nBuyCharCount`, `m_nCurSelectedSubJob`, `m_bCharSale`/`m_nCharSaleJob`, `m_bCanHaveExtraChar` absent |
+| **CLogin.h:235** | **`== 83`** | **F** | **`unk3[5]` ABSENT** (special — Task 3, re-anchored Step 3) |
+| COutPacket.h:9/32 | `>= 111` | F | `dummy1` (+4 pad) absent |
+| CConfig.h:52/82 | `>= 111` | F | `m_v111Pad` absent |
+| CConfig.h:84 | `== 95` | F | → base GMS `#else` branch (`assert_size >= 1072`) |
+| ConfigSysOpt.h:15 | `>= 95` | F | `bSysOpt_LargeScreen`+`bSysOpt_WindowedMode` ABSENT (windowed-mode cross-check, Step 4) |
+
+### Step 2 — CWvsContext `m_aClientKey[8]` (`> 83`, special) + embedded SecondaryStat
+
+**`m_aClientKey[8]` ABSENT — confirmed against the v61 binary.** `CClientSocket::OnConnect`
+login-hello (tail @`0x4731bb`) builds `COutPacket`, then `Encode4([g_pWvsContext+0x2088])` →
+`Encode1` → `Encode1` → `SendPacket`. There is **NO** `EncodeBuffer(m_aClientKey, 8)` anywhere in
+the hello — matching Task 4/10 (`COutPacket(20);Encode4;Encode1;Encode1`, no 8-byte key). So the
+`> 83` block is correctly excluded for v61. [[project_v84_clientkey_gate_trap]] confirmed at source.
+
+**⚠️ Embedded SecondaryStat = 0x970 — DIVERGES from base 0xB88 by −0x218 (Cat-C surprise).**
+Two independent v61 anchors, neither assuming 0xB88:
+- `CWvsContext::OnTemporaryStatReset` @`0x84353a`: `mov edi,ecx; add edi,2114h; … mov ecx,edi;
+  call SecondaryStat::Reset` ⇒ **m_secondaryStat @ ctx+0x2114**.
+- `CWvsContext::OnForcedStatSet` @`0x843718`: `lea ecx,[esi+2A84h]; call ForcedStat::Decode`
+  ⇒ **m_forcedStat @ ctx+0x2A84** (ctor `sub_82C1A8` corroborates: `lea ecx,[esi+2114h]` SecondaryStat init then `lea ecx,[esi+2A84h]` `ForcedStat::Clear`).
+- Δ = 0x2A84 − 0x2114 = **0x970** = `sizeof(SecondaryStat)` (adjacent members). Corroborated a 3rd
+  way: the highest SecondaryStat field touched in `OnTemporaryStatReset` is `[edi+0x96C]`
+  (+4 = 0x970 — last member, a `TemporaryStat_GuidedBullet` ZRef). **This shifts every CWvsContext
+  field after m_secondaryStat; Task 15 MUST gate SecondaryStat to 0x970 for v61 (split), not 0xB88.**
+
+**`sizeof(CWvsContext) ≈ 0x3340`.** v61 CWvsContext is a **static/BSS object @`0x978F70`** (NOT
+heap-allocated): `sub_82C11E` = `mov ecx, offset unk_978F70; jmp sub_82C1A8(ctor)`; ctor writes
+`g_pWvsContext`(=`0x974ef8`) = aligned base. Ctor `sub_82C1A8` highest field write = `[esi+0x333C]`
+(`0x82c5d1`) ⇒ end ≈ **0x3340**. Embedded landmarks: vtable@0, m_secondaryStat@0x2114,
+m_forcedStat@0x2A84, m_temporaryStatView@0x2B14, GUILDDATA@0x2CAC, ALLIANCEDATA@0x2CE0.
+**Gate verdict: `unchanged`** (the `> 83` m_aClientKey block is correctly absent; no edit to
+CWvsContext.h needed) — **BUT flag the embedded-SecondaryStat split to Task 15** (size delta, not a
+CWvsContext.h gate).
+
+### Step 3 — CLogin `unk3[5]` (`== 83`) re-anchored
+
+**`sizeof(CLogin) = 0x1DC` (476).** Independent anchor: stage-creation in `sub_8460D8`
+(`CWvsApp::ConnectLogin` path) — `push 1DCh; Alloc(ZAllocEx); CLogin::CLogin(@0x5620d4); set_stage`
+(`0x8460f9`–`0x846115`). `unk3[5]` (`== 83`, 0x14) is **ABSENT** in v61 (Task 3: ctor builds exactly
+one ZList = `m_lNewEquip`). **Verdict: `unchanged`** (`== 83` correctly excludes v61; no edit).
+Note: 0x1DC < the v95-PDB ref 0x2C8 (expected: v61 lacks all `>= 95` members + `unk3[5]`); any v61-vs-v72
+base delta would trace to the `CMapLoadable` base class, deferred to its own audit (Task 14/15), not a
+CLogin.h gate.
+
+### Step 4 — CWvsApp / CClientSocket / COutPacket / CConfig / ConfigSysOpt
+
+- **CWvsApp = 0x58** (recorded here per D5; full derivation in Task 3 above). All `>= 87`/`>= 95`
+  blocks absent (gate table). `== 61` branch selected → `assert_size 0x58`. **Verdict:
+  `branch-added`** (Task 3), upper-gate members confirmed absent.
+- **CClientSocket = 0x94** (148). Anchor: `TSingleton<CClientSocket>::CreateInstance` @`0x825ff3`
+  → `push 94h; Alloc; CClientSocket::CClientSocket(@0x4727fb)` (`0x826007`–`0x826023`). `>= 111`
+  `dummy1` absent → base layout. **Verdict: `unchanged`.**
+- **COutPacket = 0x10** (16). Anchor: ctor `??0COutPacket@@QAE@J@Z` @`0x5ffc4f` → init `sub_5FFC98`
+  writes `[esi]`(m_bLoopback), `[esi+8]=0`(m_uOffset), `[esi+0Ch]=0`(m_bIsEncryptedByShanda);
+  `m_aSendBuff` ZArray@+4 (RemoveAll unwind). Highest write +0xC ⇒ 0x10. `>= 111` `dummy1` absent.
+  Byte-identical to documented v83/v84/v87 (0x10). **Verdict: `unchanged`.**
+- **CConfig = 0x380** (896). Anchor: `CWvsApp::SetUp` @`0x8231a8` → `push 380h; Alloc;
+  CConfig::CConfig(@0x47921d)`. `>= 111`/`== 95` false → base GMS `#else` (assert `>= 1072`).
+  **Verdict: `unchanged`** (gates correct; our v95-shaped struct is oversized-but-safe, no member read).
+  **⚠️ Note:** real v61 size **896 < the assert comment's claimed "1072 = smallest GMS real size"**
+  (header CConfig.h:91 comment is now stale — v61 is the new GMS floor at 896). Functionally safe:
+  the real client allocs its own 896 immediate; the static_assert checks OUR struct (≥1592) ≥ 1072,
+  which holds; we read no CConfig data member.
+- **ConfigSysOpt (CONFIG_SYSOPT) = 0x30** (12 ints). Anchor: `CConfig::ApplySysOpt` @`0x47b28e`
+  → `push 0Ch; lea edi,[ebx+58h]; rep movsd` copies **12 dwords** from the source `CONFIG_SYSOPT*`
+  into `CConfig.m_sysOpt` (@CConfig+0x58). `>= 95` `bSysOpt_LargeScreen`+`bSysOpt_WindowedMode`
+  **ABSENT** ⇒ 12-int base (with them it would be 14 = 0x38). Windowed-mode cross-check: SetUp sets
+  the **global** `g_CConfig_SysOpt_WindowedMode` (`0x978e24`) = 0x10 (`0x8231cd`) — a default flag,
+  NOT a struct field; ApplySysOpt's last copied field is `[CConfig+0x84]` = `bSysOpt_Minimap_Normal`
+  (index 11), confirming no windowed-mode slot in-struct. **Verdict: `unchanged`.**
+
+### Step 5 — verdict table (7 headers)
+
+| Header | v61 size | Per-gate present/absent (v61) | Deciding v61 anchor | Verdict |
+|---|---|---|---|---|
+| CWvsApp.h | **0x58** (88) | `>=72`/`>=87`/`>=95` blocks ABSENT; `==61` selected | WinMain stack-ctor Δ=0x58 (Task 3) | `branch-added` (Task 3) |
+| CWvsContext.h | **≈0x3340** (static @0x978F70) | `>83` m_aClientKey ABSENT; `>=87` 60-slot→52-slot #else; `>=87`/`>=95` members ABSENT | ctor `sub_82C1A8` highest write +0x333C; OnConnect hello no key-buffer | `unchanged` (gate) **+ flag SecondaryStat=0x970 split → Task 15** |
+| CClientSocket.h | **0x94** (148) | `>=111` dummy1 ABSENT | CreateInstance `push 94h` @0x826007 | `unchanged` |
+| CLogin.h | **0x1DC** (476) | `==83` unk3[5] ABSENT; `>=95` members ABSENT | stage Alloc `push 1DCh` @0x8460f9 | `unchanged` |
+| COutPacket.h | **0x10** (16) | `>=111` dummy1 ABSENT | ctor init sub_5FFC98 highest write +0xC | `unchanged` |
+| CConfig.h | **0x380** (896) | `>=111`/`==95` ABSENT → base `#else` | SetUp Alloc `push 380h` @0x8231a8 | `unchanged` (⚠ real 896 < comment's 1072 floor) |
+| ConfigSysOpt.h | **0x30** (48) | `>=95` LargeScreen+WindowedMode ABSENT | ApplySysOpt `rep movsd` 0xC @0x47b29d | `unchanged` |
+
+### Cat-C divergences surfaced (do NOT force `unchanged`)
+1. **Embedded SecondaryStat = 0x970 (v61) vs base 0xB88 (−0x218)** — measured 3 ways
+   (m_forcedStat−m_secondaryStat delta; highest field [+0x96C]). Shifts every CWvsContext field
+   after m_secondaryStat. **Feeds Task 15 as a SecondaryStat SPLIT; CWvsContext.h itself needs no
+   gate edit** (it embeds whatever SecondaryStat.h computes).
+2. **CConfig real = 896 (0x380)** is below the CConfig.h:91 comment's stated "1072 = smallest GMS
+   real size." Comment is stale (v61 is the new GMS floor); the `>= 1072` assert still holds against
+   our oversized v95-shaped struct, and no CConfig member is read, so functionally safe — flag for a
+   comment refresh, no gate change.
+
+All seven gate verdicts are `unchanged`/`branch-added` (no NEW source edit required for the 7
+headers in this task); the two divergences above are size facts that propagate to Task 15
+(SecondaryStat) and a stale-comment note, not new gates on these 7 headers.
