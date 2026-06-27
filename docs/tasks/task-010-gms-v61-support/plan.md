@@ -567,35 +567,35 @@ Resolved last (FR-7; design §3.3 cluster 8). Includes the exception-dispatch + 
 
 > Confirm the exact sentinel/key membership against the generated tracking table (Task 1 Step 4) and task-009's `v72_1.cmake` comments — the lists above mirror task-009's cluster 8.
 
-- [ ] **Step 1: Confirm the three protocol constants against v61 (FR-6, R6, PRD §9)**
+- [x] **Step 1: Confirm the three protocol constants against v61 (FR-6, R6, PRD §9)**
 
 Do **not** copy v72 values — v61 predates v72, so opcode/handler-table drift is *more* plausible. In v61 (lane discipline):
 - `VERSION_HEADER` — the version word the client sends in its hello/login handshake. Find it in the connect/login send path (resolved Tasks 4/6). Confirm `8` or record the v61 value.
 - `PLAYER_LOGGED_IN` / `CLIENT_START_ERROR` — send opcodes. Locate the handler/sender that uses each (login flow), read the immediate, confirm or record the v61 value.
 - If any differ, use the v61 value and note the delta in the catalog (affects `redirect`/`bypass`). Cross-check against atlas-ms's version-aware registries ([[reference_atlas_ms]]).
 
-- [ ] **Step 2: Resolve the exception-dispatch keys (SP-1)**
+- [x] **Step 2: Resolve the exception-dispatch keys (SP-1)**
 
 `C_TI_DISCONNECT_EXCEPTION`, `C_TI_TERMINATE_EXCEPTION`, `C_TI_PATCH_EXCEPTION`, `C_TI_ZEXCEPTION` are the TException-family vtables/handlers; `C_PATCH_EXCEPTION_BUILDER` and `C_COM_RAISE_ERROR_EX` are the builder/raise helpers. Anchor via their RTTI/type strings + call-graph (the CLIENT_START_ERROR relay path). SP-1 two anchors each. These exist in v72/v79/v83 — expect them present in v61; confirm by anchor, don't assume.
 
-- [ ] **Step 3: Decide the v61 CFileStream relay disposition (FR-8a)**
+- [x] **Step 3: Decide the v61 CFileStream relay disposition (FR-8a)**
 
 Start from task-009's **v72** disposition of the CFileStream relay (its `signature-catalog.md`). Determine for v61 whether the stream helpers (`CFileStream::Open`/`GetLength`/`Read`/`Close` + vftable) are **recoverable** (locatable by anchor) or should carry `0` like the v72 verdict:
 - Search v61 for the `CFileStream` RTTI/vtable + the `CreateFileA` call inside its `Open`.
 - If recoverable → resolve each as a real address (SP-1), set `C_FILE_STREAM_RESOLVED 1`, and set `C_FILE_STREAM_OPEN_INLINE` per whether v61 inlines `CreateFileA` (1) or has an out-of-line `Open` (0).
 - If not cleanly recoverable → carry `0` / `0x0`, with a `# unrecoverable in v61, relay gated off` comment. Document the decision in the catalog either way. **Note the CFileStream relay is a backward-direction sentinel candidate (R7) — if the helpers are a v72-era feature absent in v61, flag it for the relay edit owner.**
 
-- [ ] **Step 4: Confirm GMS-absent sentinels, both directions (SP-5)**
+- [x] **Step 4: Confirm GMS-absent sentinels, both directions (SP-5)**
 
 - `C_BATTLE_RECORD_MAN_CREATE_INSTANCE`, `DR_CHECK`, `DR_INIT`, `CE_TRACER_RUN`: search v61 for each feature's anchor. Expect **absent** (these post-date v61 or are GMS-absent). Carry `0x00000000` + comment, record "confirmed absent + how". Cross-reference the R11 finding from Task 2 Step 2 for `DR_INIT`/`DR_CHECK`.
 - `RESET_LSP`: use task-009's v72 disposition as the starting hypothesis (not v83's stale "does not exist" comment). Determine the v61 disposition **explicitly** — locate the LSP-reset function in v61 (SP-1) if it exists, else carry a sentinel — and document which.
 - **Backward direction (R7):** if any v72 *real-address* key resolved in Tasks 2–9 turned out **absent** in v61, it is a new v61-only sentinel — confirm it is recorded with a `# absent in v61` comment and flagged for the gate/edit owner (SP-5 backward). Collect the full list of new v61-only sentinels here for the task report.
 
-- [ ] **Step 5: Confirm JMS-only sentinels (SP-5)**
+- [x] **Step 5: Confirm JMS-only sentinels (SP-5)**
 
 The five JMS-only keys: confirm the positive case in JMS185 (lane discipline) so the anchor is real, then show it absent in v61. Carry `0x00000000` with `# JMS only` for the GMS v61 build.
 
-- [ ] **Step 6: Label (where applicable), checkpoint, validate, commit**
+- [x] **Step 6: Label (where applicable), checkpoint, validate, commit**
 
 Constants need no IDB label; any sentinel/relay found present gets labeled. `idb_save`. Run the validator (expect `OK: all 159 keys…`). Flip rows to ✔.
 

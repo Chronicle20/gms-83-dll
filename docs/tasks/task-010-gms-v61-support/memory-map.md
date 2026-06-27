@@ -82,9 +82,9 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `VERSION_HEADER` | `8` | `8` | ☐ | — |
-| `PLAYER_LOGGED_IN` | `0x14` | `0x14` | ☐ | — |
-| `CLIENT_START_ERROR` | `0x1A` | `0x1A` | ☐ | — |
+| `VERSION_HEADER` | `8` | `8` | ✔ | OnConnect 0x472faf |
+| `PLAYER_LOGGED_IN` | `0x14` | `0x14` | ✔ | OnConnect 0x4731bb |
+| `CLIENT_START_ERROR` | `0x1A` | `0x19` | ✔ | OnConnect 0x47315d (DRIFT) |
 
 ### Security privilege
 
@@ -194,7 +194,7 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
 | `C_MACRO_SYS_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ✔ | catalog (Cluster 5) |
-| `C_BATTLE_RECORD_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ☐ | — |
+| `C_BATTLE_RECORD_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ✔ | absent (no string) |
 
 ### CMapleTVMan
 
@@ -285,7 +285,7 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `RESET_LSP` | `0x00449DC1` | `0x00449DC1` | ☐ | — |
+| `RESET_LSP` | `0x00449DC1` | `0x00000000` | ✔ | new v61 sentinel (no wpclsp str) |
 
 ### CStage
 
@@ -388,9 +388,9 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `DR_CHECK` | `0x00000000` | `0x00000000` | ☐ | — |
-| `DR_INIT` | `0x00000000` | `0x00000000` | ☐ | — |
-| `CE_TRACER_RUN` | `0x00000000` | `0x00000000` | ☐ | — |
+| `DR_CHECK` | `0x00000000` | `0x00000000` | ✔ | absent (no NtGetContextThread) |
+| `DR_INIT` | `0x00000000` | `0x00000000` | ✔ | absent (SetUp no DR_init) |
+| `CE_TRACER_RUN` | `0x00000000` | `0x00000000` | ✔ | absent (no eTracer str) |
 | `SEND_HS_LOG` | `0x00000000` | `0x00000000` | ✔ | cat§Cluster1 SendHSLog (absent) |
 
 ### CMob
@@ -403,31 +403,31 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_SECURITY_CLIENT_ON_PACKET_RET_STUB` | `0x00000000` | `0x00000000` | ☐ | — |
-| `C_SECURITY_CLIENT_ON_PACKET_CHECK` | `0x00000000` | `0x00000000` | ☐ | — |
-| `C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET` | `0x00000000` | `0x00000000` | ☐ | — |
-| `C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET` | `0x00000000` | `0x00000000` | ☐ | — |
-| `WIN_MAIN_LAUNCHER_STUB` | `0x00000000` | `0x00000000` | ☐ | — |
+| `C_SECURITY_CLIENT_ON_PACKET_RET_STUB` | `0x00000000` | `0x00000000` | ✔ | JMS only |
+| `C_SECURITY_CLIENT_ON_PACKET_CHECK` | `0x00000000` | `0x00000000` | ✔ | JMS only |
+| `C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET` | `0x00000000` | `0x00000000` | ✔ | JMS only |
+| `C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET` | `0x00000000` | `0x00000000` | ✔ | JMS only |
+| `WIN_MAIN_LAUNCHER_STUB` | `0x00000000` | `0x00000000` | ✔ | JMS only |
 
 ### Exception dispatch
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_TI_DISCONNECT_EXCEPTION` | `0x009E34C0` | `0x009E34C0` | ☐ | — |
-| `C_TI_TERMINATE_EXCEPTION` | `0x009DF8C8` | `0x009DF8C8` | ☐ | — |
-| `C_TI_PATCH_EXCEPTION` | `0x009ECC20` | `0x009ECC20` | ☐ | — |
-| `C_TI_ZEXCEPTION` | `0x009E0048` | `0x009E0048` | ☐ | — |
-| `C_PATCH_EXCEPTION_BUILDER` | `0x004FEEB7` | `0x004FEEB7` | ☐ | — |
-| `C_COM_RAISE_ERROR_EX` | `0x004031B5` | `0x004031B5` | ☐ | — |
+| `C_TI_DISCONNECT_EXCEPTION` | `0x009E34C0` | `0x00900678` | ✔ | Run 0x8235af + OnConnect |
+| `C_TI_TERMINATE_EXCEPTION` | `0x009DF8C8` | `0x008F4240` | ✔ | Run 0x8235d8 + OnConnect |
+| `C_TI_PATCH_EXCEPTION` | `0x009ECC20` | `0x00900668` | ✔ | Run 0x823586 + OnConnect |
+| `C_TI_ZEXCEPTION` | `0x009E0048` | `0x008F6B60` | ✔ | Run 0x8235e9 + OnConnect |
+| `C_PATCH_EXCEPTION_BUILDER` | `0x004FEEB7` | `0x004DC6E4` | ✔ | CPatchException_Build |
+| `C_COM_RAISE_ERROR_EX` | `0x004031B5` | `0x004031B7` | ✔ | _com_issue_error |
 
 ### CFileStream relay
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_FILE_STREAM_RESOLVED` | `1` | `1` | ☐ | — |
-| `C_FILE_STREAM_OPEN_INLINE` | `0` | `0` | ☐ | — |
-| `C_FILE_STREAM_OPEN` | `0x00485A2A` | `0x00485A2A` | ☐ | — |
-| `C_FILE_STREAM_GET_LENGTH` | `0x00485BB3` | `0x00485BB3` | ☐ | — |
-| `C_FILE_STREAM_READ` | `0x00485CDE` | `0x00485CDE` | ☐ | — |
-| `C_FILE_STREAM_CLOSE` | `0x004859CC` | `0x004859CC` | ☐ | — |
-| `C_FILE_STREAM_VFTABLE` | `0x009D0914` | `0x009D0914` | ☐ | — |
+| `C_FILE_STREAM_RESOLVED` | `1` | `1` | ✔ | recoverable v61 |
+| `C_FILE_STREAM_OPEN_INLINE` | `0` | `0` | ✔ | out-of-line |
+| `C_FILE_STREAM_OPEN` | `0x00485A2A` | `0x004734A3` | ✔ | CFileStream_Open |
+| `C_FILE_STREAM_GET_LENGTH` | `0x00485BB3` | `0x0047362C` | ✔ | CFileStream_GetLength |
+| `C_FILE_STREAM_READ` | `0x00485CDE` | `0x00473757` | ✔ | CFileStream_Read |
+| `C_FILE_STREAM_CLOSE` | `0x004859CC` | `0x00473445` | ✔ | CFileStream_Close |
+| `C_FILE_STREAM_VFTABLE` | `0x009D0914` | `0x008E66BC` | ✔ | CFileStream_vftable |

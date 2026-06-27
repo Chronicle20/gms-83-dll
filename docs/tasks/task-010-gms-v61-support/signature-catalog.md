@@ -111,7 +111,7 @@ Confirmed via `mcp__ida-pro__survey_binary` on port 13344 (2026-06-27).
 - v61 address: 0x008233CC (`?Run@CWvsApp@@QAEXPAH@Z`, size 0x240)
 - v72 address (task-009): 0x008F2F82 (size 0x418)
 - Heuristic: IDB symbol; two structural anchors — (1) the four exception type-info refs `__TI3?AVCPatchException@@`(0x900668) / `__TI3?AVCDisconnectException@@`(0x900678) / `__TI3?AVCTerminateException@@`(0x8F4240) / `__TI1?AVZException@@`(0x8F6B60), thrown via `_CxxThrowException` on codes 0x20000000 / 0x21000000-6 / 0x22000000-B; (2) the CallUpdate(0x82490A)/RedrawInvalidatedWindows(0x8162B1) callee pair + ISMsgProc(0x825094) dispatch. Loop exits on msg type 18 (WM_QUIT).
-- NOTE: the v61 `__TI` exception-type-info addresses (0x900668/0x900678/0x8F4240/0x8F6B60) DIFFER from the cmake seed (v72's 0x9ECC20/0x9E34C0/0x9DF8C8/0x9E0048) — those C_TI_* keys are Task 10's, recorded here for the consumer.
+- NOTE: the v61 `__TI` exception-type-info addresses (0x900668/0x900678/0x8F4240/0x8F6B60) DIFFER from the cmake seed (v72's 0x9ECC20/0x9E34C0/0x9DF8C8/0x9E0048) — those C_TI_* keys are Task 10's. **RESOLVED in Task 10** (cmake updated, see Cluster 7); confirmed by the same throw-site quad here plus the OnConnect(0x472d42) throws.
 - Chain trace (high-value): v72 0x8F2F82 + v83 — same exception quad + CallUpdate/Redraw pair.
 - Label applied: yes (symbol).
 
@@ -676,13 +676,58 @@ already-relocated v61 keys.
 - Drift v72→v61: both addresses relocated (instance 0x974EF8 vs 0xA9F438; fn 0x82DD91 vs 0x8FF597); member block 0x33xx→0x31xx; offset coincides (0x0F); +4 socket layout broken (see divergence). Caller/trio shape stable.
 - Label applied: yes (OnEnterGame symbol present; g_pWvsContext renamed from dword_974EF8).
 
-### Cluster 7 — Misc utils / exception dispatch (Task 10)
+### Cluster 7 — Protocol constants + exception dispatch (Task 10)
 
-*(pending)*
+#### Protocol constants (keys: VERSION_HEADER, PLAYER_LOGGED_IN, CLIENT_START_ERROR) — READ from v61, not copied
+All three read directly from the v61 `CClientSocket::OnConnect` (0x472d42) handshake/post-handshake send path (the same fn that carries the version-header guard and the two `[this+9]`(m_ctxConnect.bLogin) send branches).
+- **VERSION_HEADER = 8** — `if ( v18 != 8 )` @0x472faf throws CTerminateException(0x22000007). Held identical to v72/v79 (still 8). The *major-version* byte compared right after is **0x3D (61)** (`> 0x3Du` @0x472fd3, `< 0x3Du` @0x473009) — that is the build-version probe, distinct from VERSION_HEADER.
+- **PLAYER_LOGGED_IN = 0x14 (20)** — `COutPacket::COutPacket(v43, 20)` @0x4731bb in the *else / logged-in* branch (`[this+9]==0`), then `Encode4(charId=*(g_pWvsContext+8328)); Encode1(0); Encode1(0); SendPacket`. Held == v72/v79. (Minor drift: v72's 2nd Encode1 carried a TSecType bit; v61 emits literal Encode1(0).)
+- **CLIENT_START_ERROR = 0x19 (25)** — **DRIFT v72 0x1A(26) → v61 0x19(25)**. `COutPacket::COutPacket(v43, 25)` @0x47315d in the *bLogin* branch (`[this+9]!=0`): builds the GetExceptionFileName report via the CFileStream relay, then `Encode2(len); EncodeBuffer(report,len); SendPacket`. Read the v61 immediate (25), not assumed. Affects redirect/bypass.
+- Cross-check: atlas-ms is server-side and version-gates by handshake; the opcode-25 vs 26 client send drift is a client-only relay opcode (the CLIENT_START_ERROR report packet), consistent with the general v61 opcode-drift pattern (cf. party 0x7A→0x70, ITC 0x9A→0x87).
 
-### Cluster 8 — CFileStream relay (Task 11)
+#### Exception type-info globals (keys: C_TI_DISCONNECT/TERMINATE/PATCH_EXCEPTION, C_TI_ZEXCEPTION)
+Each confirmed by **two anchors**: (1) IDB RTTI mangled symbol `__TI3?AVC<...>Exception@@` / `__TI1?AVZException@@`; (2) **double throw-site** — referenced at `_CxxThrowException` in BOTH `CWvsApp::Run` (0x8233CC) dispatch block (0x823558–0x8235e9) AND `CClientSocket::OnConnect` (0x472d42) handshake throws, with the same code ranges.
+- **C_TI_DISCONNECT_EXCEPTION = 0x900678** (`__TI3?AVCDisconnectException@@`); codes 0x21000000–0x21000006 (553648128–553648134); Run @0x8235af, OnConnect @0x472db5. RELOCATED v61 (v72 0x9E34C0).
+- **C_TI_TERMINATE_EXCEPTION = 0x8F4240** (`__TI3?AVCTerminateException@@`); codes 0x22000000–0x2200000B (570425344–570425355); Run @0x8235d8, OnConnect @0x472d95/0x472fc9/0x473023. RELOCATED v61 (v72 0x9DF8C8).
+- **C_TI_PATCH_EXCEPTION = 0x900668** (`__TI3?AVCPatchException@@`); code ==0x20000000; Run @0x823586, OnConnect @0x473004. RELOCATED v61 (v72 0x9ECC20).
+- **C_TI_ZEXCEPTION = 0x8F6B60** (`__TI1?AVZException@@`); default/underrun throws; Run @0x8235e9, OnConnect @0x472ee7/0x472f41/0x472f62/0x472f84. RELOCATED v61 (v72 0x9E0048).
+- Drift: all four relocated; addresses match the candidates noted in Task 2 (0x900668/0x900678/0x8F4240/0x8F6B60), confirmed here by both anchors not pasted.
 
-*(pending)*
+#### CPatchException_Build (key: C_PATCH_EXCEPTION_BUILDER)
+- v61 address: 0x004DC6E4 (labeled `CPatchException_Build` this task; was sub_4DC6E4) | v72: 0x4FEEB7
+- Anchor 1 (structure): builder body `*(_DWORD*)this = 0x20000000; memset(this+4, 0, 0x504); *v3 = 61; *((_WORD*)this+3) = a2; strcpy(this+776, ver); strcpy(this+1032, path)`.
+- Anchor 2 (call-graph): reached from `CWvsApp::Run` @0x823568 AND `OnConnect` @0x472fe5, each immediately before `qmemcpy(buf, ret, 1288)` + `_CxxThrowException(&buf, &__TI3?AVCPatchException@@)`.
+- **Drift v72→v61:** the embedded major-version immediate is **61** (`*v3 = 61`) vs 72/79/83 in the upper builds — read, recorded.
+
+#### _com_issue_error (key: C_COM_RAISE_ERROR_EX)
+- v61 address: 0x004031B7 (IDB symbol `?_com_issue_error@@YGXJ@Z`) | v72: 0x4031B5 (DRIFT +2)
+- Anchor 1 (symbol): mangled `?_com_issue_error@@YGXJ@Z` (1-arg HRESULT raiser).
+- Anchor 2 (structure): HRESULT-classification body `cmp di,3 / cmp di,0Ah / cmp di,0Bh; push 80070057h (E_INVALIDARG); mov word ptr [esi],0Ah` — the FAILED-render classifier.
+- Note: distinct from Run's discrete 2-arg `_com_raise_error(hr,0)` @0x823465 (`?_com_raise_error@@` at 0x875f0a). This 1-arg form is the structural/semantic analog the relay uses. Confirmed by symbol + body, not copied.
+
+#### GMS-absent sentinels (SP-5, confirmed absent in v61)
+- **DR_CHECK / DR_INIT = 0x0** — DR/anti-debug subsystem absent: `SetUp`(0x823175) has no DR_init step (anti-tamper is only CSecurityClient CreateInstance+InitModule, even cleaner than v72); `imports_query` NtGetContextThread/GetThreadContext/*ContextThread* → empty. v84 in-field freeze class cannot occur in v61.
+- **CE_TRACER_RUN = 0x0** — `find_regex eTracer|CeTracer` → 0; AhnLab eTracer is v95+.
+- **C_BATTLE_RECORD_MAN_CREATE_INSTANCE = 0x0** — `find_regex BattleRecord` → 0; not in the v61 SetUp CreateInstance chain; v95+ feature.
+- **RESET_LSP = 0x0 — NEW v61-ONLY SENTINEL** (was carried v72 seed 0x00449DC1). v72's ResetLSP anchored on TWO strings "wpclsp.dll" + "Protocol_Catalog9" WinSock2 reg-path — `find_regex` for both → 0 in v61. The v61 CWvsApp ctor (0x822E44) makes no ResetLSP call (Task 2: ctor simpler than v72, no IsWow64Process/g_dwTargetOS/ResetLSP). WSAStartup/LSP-reset machinery post-dates v61. **FLAG gate/edit owner: consuming edit must tolerate 0.**
+
+#### JMS-only sentinels (SP-5; positive re-confirmed in JMS185 lane 13342, absent in GMS v61)
+- **C_SECURITY_CLIENT_ON_PACKET_RET_STUB = 0x0** — JMS185 positive @0xB3B96B (CSecurityClient `Aossdk_GetMkdS4Object` security-init, throws CSecurityKeyCryptInitFailed). v61: no Aossdk/MkdS4 (`find_regex` → only the generic RTTI desc `.?AVCSecurityKeyCryptInitFailed@@`); GMS v61 hooks via C_SECURITY_CLIENT_ON_PACKET (0x8637C4, Decode1→0/2/3 form).
+- **C_SECURITY_CLIENT_ON_PACKET_CHECK = 0x0** — JMS185 positive @0xB3B5F7 (`if(pData%31)` + CRC32 + `COutPacket::Init(0x10)/Encode1(1)/Encode4(crc)/Encode4`). v61 OnPacket has no %31 integrity check.
+- **C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET = 0x0** — JMS185 CHECK+0x19 jz patch offset; no GMS counterpart.
+- **C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET = 0x0** — JMS185 in-place windowed-mode patch offset (0x94); GMS v61 forces windowed via C_CONFIG_SYS_OPT_WINDOWED_MODE (0x978E24).
+- **WIN_MAIN_LAUNCHER_STUB = 0x0** — JMS185 StartUpDlgClass window proc @0x7F3CE0; GMS v61 disables patcher via WIN_MAIN_PATCHER_OFFSET NOP.
+
+### Cluster 8 — CFileStream relay (Task 10 Step 3) — RECOVERABLE in v61
+
+OnConnect (0x472d42) decompiles clean (not CFG-obfuscated), so the CLIENT_START_ERROR report-read helpers resolve to real addresses (FR-8a). Two anchors each: (1) **call-graph** — all are the exact helpers driven from OnConnect's bLogin report-read path (vftable install @0x47308d, Open @0x4730c8, GetLength @0x4730d3, Read @0x4730fd, Close @0x473108/0x473126); (2) **structure** — the per-helper idiom below.
+- **C_FILE_STREAM_RESOLVED = 1**, **C_FILE_STREAM_OPEN_INLINE = 0** (out-of-line Open exists; CreateFileA not inlined into OnConnect). Same disposition as v72/v79. **Relay feature is PRESENT in v61 — not a v72-era addition, so NOT a backward sentinel; relay stays enabled, no flag.**
+- **C_FILE_STREAM_OPEN = 0x004734A3** (labeled `CFileStream_Open`) — `sub_4734A3(name,3,128,1,0x80000000,0,0)` = OPEN_EXISTING/FILE_ATTRIBUTE_NORMAL/share=1/GENERIC_READ; first calls Close-reset, then CreateFileA via cloned slot `dword_977F0C`, stores handle this[4], OR open-flags this[13] (|1 open, |2 when GENERIC_READ bit 0x40000000 set). RELOCATED v61 (v72 0x485A2A).
+- **C_FILE_STREAM_GET_LENGTH = 0x0047362C** (labeled `CFileStream_GetLength`) — thiscall wrapper dispatching object `vtable[+60]`. RELOCATED v61 (v72 0x485BB3).
+- **C_FILE_STREAM_READ = 0x00473757** (labeled `CFileStream_Read`) — memcpy from mapped view if range valid, else ReadFile via cloned slot `dword_977F10`. RELOCATED v61 (v72 0x485CDE).
+- **C_FILE_STREAM_CLOSE = 0x00473445** (labeled `CFileStream_Close`) — CloseHandle via cloned slot `dword_977E48`, handle this[4]=-1, this[13]=0 (also dtor body). RELOCATED v61 (v72 0x4859CC).
+- **C_FILE_STREAM_VFTABLE = 0x008E66BC** (labeled `CFileStream_vftable`; was off_8E66BC) — installed at the stream object v32[0] in OnConnect @0x47308d/0x473116; GetLength dispatches its slot 15 (offset +60). RELOCATED v61 (v72 0x9D0914).
+- All five labeled in the v61 IDB this task (rename + idb_save).
 
 ### Cluster 9 — Gate confirm/split (Task 12)
 
