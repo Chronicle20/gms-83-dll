@@ -99,20 +99,20 @@ to per-field where a gate boundary moves.
 |---|---|---|---|---|
 | CWvsApp.h | 0x60 | == v79 (both 0x60) | branch-added (72 → 0x60 branch :97) | WinMain stack-ctor @0x8EF809 → this=ebp-0xF4; highest field @+0x5C (m_ahInput[2]), next local @+0x6C → 0x60; ctor @0x8F26C7 field-init through +0x38 matches v79 |
 | CFuncKeyMappedMan.h | 0x388 | == v79 (both 0x388) | branch-added (72 → ==79 0x388 branch :50) | task-2: CreateInstance Alloc(0x388) + ctor extent; member gate :18 (>=83\|\|JMS) excludes v72 → quickslot pair absent → header computes 0x388 |
-| CUIToolTip.h | ☐ | ☐ | ☐ | |
-| CMob.h | ☐ | ☐ | ☐ (confirm v72 doom tail absent + base size) | |
+| CUIToolTip.h | reduced (m_aLineInfo@0x20) | == v79 (ctor byte-identical) | two-way-confirmed-shares-v79 (gate :92 correct) | v72 ctor 0x7F9C33 vs v79 0x842317: both `mov [esi+10h]`=m_pLayer then eh-vector-ctor m_aLineInfo[32]@esi+0x20 (elem 0x20), then identical post-array writes @0x424+. No m_pLayerAdditional (would push array to 0x24). Plan-table "v79 0x514==v83" was a planning error: v79 also lacks it. |
+| CMob.h | 0x4C0 | **DIVERGES**: v72 0x4C0 vs v79 0x518 (−0x58) | **split-three-way** (size diverges; doom-tail field itself absent in both) | CreateMob 0x611C9F `push 4C0h`; ctor 0x611CDB highest write `[esi+4B8h]`. v79 CreateMob 0x630BF0 `push 518h`. Doom tail (would start ~0x528) ABSENT in both. No assert_size → divergence is SILENT; v72 needs distinct member gates (front −0x28, MobStat −0x1C, tail) in Task 14/16. |
 | CMapLoadable.h | ☐ | ☐ | ☐ | |
 | CLogin.h | n/a (member gate, no assert_size) | v72 has 1 ZList block; v79/v83 have 2 | unchanged (==83 correctly excludes v72; no edit) | v72 ctor @0x5AECED builds ONE ZList (off_9D317C @this+0x174 = m_lNewEquip) then m_aCmd[5] @+0x1C8. v79 @0x5C94AD/0x5C94C3 and v83 @0x5F3D32/0x5F3D42 build TWO ZLists (unk3@+0x1A0 v83, m_lNewEquip). v72 lacks the unk3 ZList → member absent |
 | CWvsContext.h | ☐ | ☐ | ☐ (m_aClientKey absent; SecondaryStat embed size) | |
 | CClientSocket.h | ☐ | ☐ | ☐ | |
 | CLogo.h | ☐ | ☐ | ☐ | |
-| CFadeWnd.h | ☐ | ☐ | ☐ (CWnd cascade) | |
+| CFadeWnd.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 (see CWnd.h row) → no re-derivation forced; CFadeWnd ctor 0x4FFD72 adds own fields @0xA4+ |
 | CCtrlButton.h | ☐ | ☐ | ☐ | |
 | CCtrlCheckBox.h | ☐ | ☐ | ☐ | |
-| CWnd.h | ☐ | ☐ | ☐ (pin sizeof first — cascade root) | |
-| CUIWnd.h | ☐ | ☐ | ☐ (CWnd cascade) | |
-| CUITitle.h | ☐ | ☐ | ☐ (CWnd cascade) | |
-| CUILoginStart.h | ☐ | ☐ | ☐ (CWnd cascade) | |
+| CWnd.h | tail→0x70 (≡ v79) | == v79 (ctor + base helper byte-identical) | **two-way-confirmed-shares-v79** — CASCADE NOT TRIGGERED | v72 ctor 0x4D9043 + base helper sub_8DD47E vs v79 ctor 0x4E168D + sub_92D5ED: identical field set. Both base helpers jump m_pLayer@0x18→m_nBackgrndX@0x38 (anim layers @0x1C/0x20 ABSENT in both); both ctors write [esi+64h]/[esi+68h]/[esi+70h]; identical ZArray<IWzCanvas>@0x60 unwind. Note: ctor writes reach 0x70 in BOTH (full sizeof≈0x74, not the comment's 0x64) — equal in v72 & v79, so gate verdict unaffected. |
+| CUIWnd.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 → no re-derivation forced |
+| CUITitle.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 → no re-derivation forced |
+| CUILoginStart.h | (inherits CWnd) | == v79 (CWnd shares) | CWnd cascade NOT triggered → still size-confirm in Task 14 | CWnd base ≡ v79 → no re-derivation forced |
 | CConfig.h | ☐ | ☐ | ☐ | |
 | ConfigSysOpt.h | ☐ | ☐ | ☐ | |
 | COutPacket.h | ☐ | ☐ | ☐ | |
@@ -120,7 +120,7 @@ to per-field where a gate boundary moves.
 | PartyData.h | ☐ | ☐ | ☐ (packed) | |
 | PartyMember.h | ☐ | ☐ | ☐ (packed) | |
 | GuildData.h | ☐ | ☐ | ☐ (packed) | |
-| MobStat.h | ☐ | ☐ | ☐ (Weakness group: confirm absent for v72) | |
+| MobStat.h | tail reduced (lBurnedInfo@0x1C4) | **DIVERGES**: v72 ~0x1D8 vs v79 0x1F8 (−0x1C) | **split-three-way** (size diverges; Weakness field itself absent in both) | Embedded in CMob: v72 @CMob+0x178 (ctor 0x611DA3 `lea eax,[ebx+1C4h]`=lBurnedInfo ZList off_9D4020), v79 @CMob+0x1A0 (ctor 0x630D1E `lea eax,[ebx+1E0h]`=lBurnedInfo). Unwind funclets confirm (v72 `add 1C4h` / v79 `add 1E0h`). Weakness group absent in both; v72 reclaims an additional ~0xC block beyond it → distinct v72 gate in Task 14/16. |
 
 ## Cross-version safety (FR-13)
 
@@ -199,4 +199,91 @@ This suggests v79 **also possesses** the member that `CLogin.h:235` gates to `==
 shift offsets after `m_lNewEquip`. Out of scope for this Category-A v72 task (v72 verdict is
 unaffected: v72 genuinely has only one ZList → `unk3[5]` absent → exclusion correct), but the
 v79 `==83` exclusion may be a task-008 error worth re-checking.
+
+## Task 12 (Category B) audit record — the five `>= 83 || JMS` below-floor gates
+
+Re-grepped live (`grep -rn "BUILD_MAJOR_VERSION >= 83" common/*.h`): exactly the five sites
+`CWnd.h:25`, `CFuncKeyMappedMan.h:19`, `CMob.h:239`, `CUIToolTip.h:92`, `MobStat.h:128`
+(CUIToolTip uses the parenthesised `(>=83)||JMS` form; line numbers otherwise as planned).
+Lane discipline: v72 = port 13343 `GMS_v72.1_U_DEVM.exe` (active confirmed via `list_instances`);
+v79 = port 13339 `GMS_v79_1_DEVM.exe`. Read-only `disasm` only; no struct types applied (R10).
+Both IDBs retain full mangled symbols.
+
+**Result: 3 confirmed-shares-v79, 2 split-three-way. The CWnd cascade is NOT triggered.**
+
+### 1. CWnd.h:25 — CASCADE ROOT → `two-way-confirmed-shares-v79` (no cascade)
+v72 `CWnd::CWnd` 0x4D9043 → calls base helper sub_8DD47E, then `[esi+64h]=[esi+68h]=[esi+70h]=0`
+and sets 3 base vtables. v79 `CWnd::CWnd` 0x4E168D is structurally identical (same three writes,
+calls sub_92D5ED). The base helpers are field-for-field identical:
+- both `memset(this+8, 0, 0xC)`, then zero 0x14,0x18,0x38,0x3C,0x50,0x54,0x58,0x5C,0x60 and set
+  the `m_lpChildren` ZList sentinel @0x48;
+- both **skip 0x1C/0x20** (jump m_pLayer@0x18 → m_nBackgrndX@0x38) ⇒ the gated `m_pAnimationLayer`
+  + `m_pOverlabLayer` are ABSENT in v72 exactly as in v79;
+- identical unwind funclets at +8/+0x18/+0x48/+0x60 (incl. a `ZArray<_com_ptr_t<IWzCanvas>>`@0x60).
+
+**Three landmarks, all == v79:** (a) ctor field-init extent (highest write 0x70 in BOTH);
+(b) `CWnd::Destroy` 0x8DF182 touches the same fields (m_pLayer@0x18, m_lpChildren@0x48,
+m_pFocusChild@0x5C); (c) the base-helper write set is byte-identical to v79's sub_92D5ED.
+v72 CWnd ≡ v79 CWnd ⇒ the `>=83||JMS` gate already excludes v72 correctly. The five derived
+classes (CDialog, CUIWnd, CFadeWnd, CUITitle, CUILoginStart) inherit v79's verdict — **no
+re-derivation forced**; each is still independently size-confirmed in Task 14 (D5).
+> Side note (does not change the verdict): the ctors write through 0x70 in BOTH v79 and v72, so
+> the true `sizeof(CWnd)` is ≈0x74, not the `0x64` stated in the CWnd.h task-008 comment. The
+> figure is equal across v79/v72, and CWnd.h carries no `assert_size`, so it is harmless here —
+> flagged only as a v79-comment accuracy nit for whoever owns CWnd.h.
+
+### 2. CFuncKeyMappedMan.h:19 — `two-way-confirmed-shares-v79`
+v72 `TSingleton<CFuncKeyMappedMan>::CreateInstance` 0x8F6264 → `push 388h` / `Alloc` ⇒
+`sizeof = 0x388` == v79. The quickslot pair (`m_aQuickslotKeyMapped[8]`×2, +0x40) is gated out
+at :19 and absent in v72. Re-derived independently of Task 2 (the size-assert branch
+`(==72||==79) → 0x388` added in Task 3 is consistent). Gate correct for v72.
+
+### 3. CUIToolTip.h:92 — `two-way-confirmed-shares-v79`
+v72 ctor 0x7F9C33 and v79 ctor 0x842317 are byte-identical in the layer region: both
+`mov [esi+10h],edi` (m_pLayer) then `eh vector constructor` over `[esi+20h]`, count 0x20,
+element 0x20 (`m_aLineInfo[32]`), then identical post-array zeroing from 0x424. m_pLayer@0x10 is
+immediately followed (0x14/0x18/0x1C = m_nLastX/Y/m_nLineNo) by `m_aLineInfo`@0x20 — **no slot
+for `m_pLayerAdditional`** (its presence would shift the array to 0x24). It is ABSENT in v72
+**and in v79**. ⚠️ The plan-table annotation "v79 0x514 (== v83)" is a planning error: v79 also
+lacks `m_pLayerAdditional` (its ctor proves it), so the `>=83||JMS` gate correctly excludes v79
+too. Gate correct for v72.
+
+### 4. CMob.h:239 — `split-three-way` (size diverges; doom-tail field shared-absent)
+v72 `CreateMob` 0x611C9F → `push 4C0h` ⇒ `sizeof(CMob) = 0x4C0`; ctor 0x611CDB highest member
+write `[esi+4B8h]` (last member @0x4B8, +pad → 0x4C0). v79 `CreateMob` 0x630BF0 → `push 518h`.
+**v72 0x4C0 vs v79 0x518 = −0x58.** The gated doom tail (`m_bDoomReserved`/SN/
+`m_lpStatChangeReserved`, which in v83 begins ~0x528) is ABSENT in both v72 and v79 — so the
+`:239` field gate itself stays `#else` for v72. But CMob has **no `assert_size`**, and the
+struct size genuinely diverges, so the header silently mis-lays-out v72. The −0x58 decomposes
+as: front/base region −0x28 (first sub-object group v72@0x88 vs v79@0xB0; MobStat embed
+v72@0x178 vs v79@0x1A0), MobStat-internal −0x1C (see #5), remainder ~−0x14 in the tail.
+**Disposition: split-three-way** — v72 needs its own below-floor member gates + a new size guard
+distinct from v79's reduced branch (Task 14/16/17). Drives the doom-fix gate (Task 15 / Cat C):
+exclusion remains correct (doom write would be OOB on a 0x4C0 object).
+Re-anchor (boundary): two independent v72 anchors agree — `CreateMob` Alloc immediate (0x4C0)
+and the ctor's highest field write (0x4B8).
+
+### 5. MobStat.h:128 — `split-three-way` (size diverges; Weakness field shared-absent)
+MobStat is embedded in CMob (initialised via `MobStat::SetFrom`, this = MobStat base):
+- v72: base = CMob+0x178; `lBurnedInfo` ZList (vtable off_9D4020) at `[ebx+1C4h]` = MobStat+**0x1C4**
+  (ctor 0x611DA3; confirmed by unwind funclet `add ecx,1C4h`).
+- v79: base = CMob+0x1A0; `lBurnedInfo` (vtable off_A30C58) at `[ebx+1E0h]` = MobStat+**0x1E0**
+  (ctor 0x630D1E; unwind funclet `add ecx,1E0h`). Matches header comment "lBurnedInfo v79@0x1E0".
+
+**v72 MobStat is 0x1C smaller than v79** (≈0x1D8 vs 0x1F8). The gated Weakness group
+(`nWeakness_/rWeakness_/tWeakness_` + pad = 0x10) is ABSENT in both — but v72 reclaims an
+ADDITIONAL ~0xC block beyond it (0x1C − 0x10), so v72 diverges further than v79's reduced branch.
+MobStat carries no `assert_size`, so this too is a silent mis-layout. **Disposition:
+split-three-way** — v72 needs a distinct gate for the extra missing ~0xC (pin the exact member
+in Task 14/16). Re-anchor (boundary): two independent v72 paths agree on MobStat+0x1C4 — the
+ctor `lea` and the destructor unwind funclet.
+
+### Cross-version safety note (FR-13)
+The two confirmed-shares gates (CWnd, CFuncKeyMappedMan, CUIToolTip) need **no edit** — v79's
+`#else` branch already serves v72 unchanged; v79/v83/v84/v87/v95/v111/JMS185 untouched. The two
+splits (CMob, MobStat) must, per D8, add a GMS-guarded `BUILD_MAJOR_VERSION < 79` arm ABOVE the
+existing `#else`, leaving the v79 branch byte-identical in effect (Task 17). Because neither
+header has an `assert_size`, the split is about removing the extra v72-absent members (and adding
+a v72 size guard), NOT about the doom-tail/Weakness field gates at :239/:128 themselves (those
+stay `#else` for v72, shared-absent with v79).
 </content>
