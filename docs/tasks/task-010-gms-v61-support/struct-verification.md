@@ -338,3 +338,130 @@ surfaced a v61-specific size divergence.
 No source edits in this evidence task. All 9 headers' selected branches for v72/v79/v83/v84/v87/
 v95/v111/JMS185 are untouched; v61 simply joins the existing base/`#else` branch that v72 already
 occupies for every gate. No `assert_size` change, no struct-type application.
+
+## Task 15 (Category B/C struct audit) — Mob/stat family, exhaustive size (4 headers)
+
+Read-only `disasm` only; no struct types applied (R10/R12). Lane re-confirmed via `list_instances`:
+active = port **13344 `GMS_v61.1_U_DEVM.exe`**. For the SecondaryStat base re-confirmation I also
+measured v72 (13343), v79 (13339), v83 (13340) — single-lane switches, each re-confirmed by binary
+name. v61 retains full mangled symbols. **This is the highest-stakes struct task** — the three split
+rows must pin which members v61 lacks so Task 17 writes a correct member-level `< 72` gate.
+
+### Step 1 — per-gate truth table (v61); every enumerated upper gate is FALSE → base/excluded branch
+
+| Header:line | Gate | v61 | Effect on v61 layout |
+|---|---|---|---|
+| CMob.h:99 | `>=79` | F | attack-ready/charge block absent (== v72; both <79) |
+| CMob.h:112 | `<95` | **T** | `unknown1` ZList PRESENT (== v72) |
+| CMob.h:146/168/188/249 | `>=95`(±JMS) | F | m_nPhase, multi-body arcs, m_tLastHitDazzledMob, v95 tail absent |
+| CMob.h:219 | `>=87\|\|JMS` | F | SECPOINT m_ptPos/Prev → 4-int `#else` (== v72) |
+| CMob.h:231/235 | `>=84`(±JMS) | F | m_aMultiTargetForBall, m_aRandTimeforAreaAttack/m_delaySkill absent |
+| **CMob.h:241** | **`>=83\|\|JMS`** | **F** | doom tail (m_bDoomReserved/SN/m_lpStatChangeReserved) ABSENT (== v72) |
+| CMob.h:246 | `>=87\|\|JMS` | F | m_bChasing absent |
+| MobStat.h:128 | `>=83\|\|JMS` | F | Weakness group (n/r/tWeakness_) ABSENT (== v72) |
+| MobStat.h:133/139/157 | `>=95`(±JMS) | F | TimeBomb, MagicCrash/elem/HealByDamage, bCannotEvade absent |
+| **MobStat.h:154** | **`>=79\|\|JMS`** | **F** | `bDisable` ABSENT (== v72; both <79) |
+| SecondaryStat.h:393 | `>=87\|\|JMS` | F | DojangShield (3 tears) absent |
+| SecondaryStat.h:405/419 | `==87\|\|JMS` | F | nReverseInput/rDojangBerserk → 12B int `#else` (== base) |
+| SecondaryStat.h:626 | `>=84\|\|JMS` | F | Flying/Frozen (6 tears) absent |
+| SecondaryStat.h:640 | `>=87\|\|JMS` | F | AssistCharge/Enrage (6 tears) absent |
+| SecondaryStat.h:655/732 | `>=95`(±JMS) | F | SuddenDeath… + v95 tail absent |
+| CMapLoadable.h:143/160/171 | `>=95` | F | m_bField, m_lpLayerLetterBox, m_bPlayHoldedBGM/m_tPlayHoldedBGM absent |
+| CMapLoadable.h:154 | `>=84\|\|JMS` | F | m_lVisibleByQuest ABSENT |
+
+### Step 2 — verdict table (4 headers)
+
+| Header | v61 size | v61 vs adjacent | Per-gate (v61) | Deciding v61 anchor | Verdict |
+|---|---|---|---|---|---|
+| CMob.h | **0x490** (1168) | **DIVERGES** −0x30 vs v72 0x4C0 | all gates == v72 (doom `>=83` absent) | ctor @0x5C2128 highest write 0x47C / Alloc 490h; MobStat embed @+0x170 | **split** (size; via MobStat embed + base — see below) |
+| MobStat.h | **0x1B8** (440) | **DIVERGES** −0x20 vs v72 0x1D8 | all gates == v72 (Weakness/bDisable absent) | `SetFrom` @0x6685A7 memset 1B8h; nFs `fstp [edi+198h]`, lBurnedInfo@0x1A4 | **split** (size; 8 trailing status ints) |
+| SecondaryStat.h | **0x970** (2416) | **DIVERGES** −0x140 vs v72 0xAB0 | all `>=84/87/95`/`==87` ABSENT | ctor `sub_82C1A8` Δ(forcedStat 0x2A84 − secStat 0x2114) | **split** (size; members UNRESOLVED — flagged) |
+| CMapLoadable.h | **0xEC** (236) | smaller than v95 0x148 (gated members) | all `>=84/95` ABSENT | `CField::CField` @0x4E4830 base ctor `sub_59D8CD` highest write +0xE8; own members @+0xEC | **unchanged** |
+
+### Step 3 — CMob: the −0x30 is INHERITED, not an own-member gate
+**Every CMob.h version gate evaluates IDENTICALLY for v61 and v72** (proven from source — see Step 1:
+all `>=79/83/84/87/95`±JMS FALSE for both, `<95` TRUE for both, both `REGION_GMS` gates TRUE). ⇒
+**CMob's own direct members do NOT differ between v61 and v72.** The −0x30 decomposes (measured both
+lanes — v72 ctor `??0CMob@@` @0x611CDB):
+- **embedded MobStat −0x20**: embed v61 @CMob+0x170 vs v72 @CMob+0x178; MobStat 0x1B8 vs 0x1D8.
+  → realized by the **MobStat.h `<72` split**.
+- **base/sub-struct −0x10**: CLife base subobject ends @0x80 (v61, `m_nMobChargeCount`@0x80) vs @0x84
+  (v72, `m_nMobChargeCount`@0x84) → pre-MobStat −0x8; post-MobStat region −0x8. Lives in the **CLife
+  base + embedded sub-structs**, NOT any CMob.h gate.
+
+**Task 17 disposition (CMob.h):** add the `< 72` size guard but **NO new own-member gate** — CMob
+shrinks to 0x490 once MobStat.h is gated (−0x20) and CLife is correctly sized (−0x10). CMob.h has no
+`assert_size`, so the residual −0x10 (CLife/sub-structs) does not break compilation. Doom write
+(`==83`) stays correctly OOB-excluded for v61. **FLAG:** the −0x10 is in **CLife.h** (currently
+ungated — JMS-only) + embedded sub-structs, OUTSIDE the 4 audited headers; recorded for whoever
+models CLife. (Without it, the CMob model computes ~0x4A0 not 0x490 — precision gap, non-breaking.)
+
+### Step 3 — MobStat: the −0x20 = 8 trailing status ints (candidate flagged)
+MobStat.h gates are IDENTICAL for v61/v72 (`bDisable` `>=79` FALSE both; `Weakness` `>=83` FALSE
+both). So the −0x20 is **8 status ints (0x20) the header models as always-present but v61 lacks** —
+NOT the gated Weakness/bDisable. `SetFrom` (v61 @0x6685A7 / v72 @0x6D0896) copies the early stats
+(nLevel@0, aDamagedElemAttr[8]@4, nPAD@0x24, nPDR@0x34, nMAD@0x44, nMDR@0x54, nACC@0x64, nEVA@0x74,
+nSpeed@0x84) to **identical offsets** in both; only nFs/bInvincible/lBurnedInfo shift by exactly 0x20
+(v61 nFs@0x198, v72 nFs@0x1B8). ⇒ the missing 8 ints sit in the ungated status region **between 0x84
+(after nSpeed) and 0x198 (before nFs)**, by trailing append.
+- **Strong candidate (FLAGGED, not field-proven):** the trailing ungated group MobStat.h **lines
+  117-124** — `nMCounter_`,`rMCounter_`,`tMCounter_`,`wMCounter_`,`nCounterProb_`,`nBodyPressure_`,
+  `rBodyPressure_`,`tBodyPressure_` (exactly 8 ints = 0x20). SetFrom does not enumerate the status
+  region (it is memset), so confirm the boundary before Task 17 gates it. Base v72 0x1D8 re-confirmed.
+
+### Step 3 — SecondaryStat: base re-confirmed (0xB88 = v79); members UNRESOLVED → FLAGGED
+**Full size sequence measured this task** (CWvsContext m_secondaryStat..m_forcedStat adjacency):
+
+| Ver | m_secondaryStat | m_forcedStat | sizeof(SecondaryStat) |
+|---|---|---|---|
+| v61 | ctx+0x2114 | ctx+0x2A84 | **0x970** |
+| v72 | ctx+0x212C | ctx+0x2BDC | **0xAB0** |
+| v79 | ctx+0x212C | ctx+0x2CB4 | **0xB88** |
+| v83 | ctx+0x2134 | ctx+0x2E0C | **0xCD8** |
+
+**Base re-confirmation:** the premised "base 0xB88" is **v79**, NOT v72 (0xAB0) or v83 (0xCD8). v61's
+−0x218 was the v61-vs-**v79** delta. The `< 72` split anchor is **v72 = 0xAB0 ⇒ v61 lacks 0x140 (320
+bytes) vs v72.** Every `>=84/87/95`/`==87` gate is ABSENT for v61 (confirmed Step 1) — the `>87`
+m_aClientKey and `==87`/`>=87` blocks all correctly excluded.
+
+**MEMBER IDENTIFICATION — UNRESOLVED, FLAGGED FOR THE USER (do NOT let Task 17 guess):**
+1. **atlas-ms cannot adjudicate below v87** (cross-validator `stat-registry-cross-validator`): every
+   TemporaryStat WeaponAttack..SoulStone is registered unconditionally for all GMS versions; first
+   presence gate is `post87`→Flying. atlas carries the same floor the header does.
+2. **The header over-models even v83** — real v83 = 0xCD8 but the header (all `>=84/87/95` false for
+   v83) computes ~0xE00; it contains UNGATED v95-only slots (`nMechanic_`@0x2A0 + Aura family
+   `nMaxLevelBuff_`/`nAura_`/`tUpdateAura_`/`nSuperBody_`/`nDarkAura_`/`nBlueAura_`/`nYellowAura_`,
+   ≈0x108-0x12C). So the header field inventory is not a faithful base for any sub-v95 build.
+3. **Growth is interspersed, not trailing** — the ride-vehicle stat read in OnTemporaryStatReset is
+   @SecondaryStat+0x964 (v61) vs +0xA94 (v72): it moved +0x130 of the +0x140 total, so most new slots
+   sit BEFORE that late stat.
+- **Consequence:** a guessed `<72` member gate would mis-remove slots and corrupt every CWvsContext
+  field after m_secondaryStat (and m_forcedStat@+0x2A84, …). **Recommended:** dispatch
+  `version-port-verifier` on the **v61 SecondaryStat ctor `sub_65F66F`** (its per-stat
+  `_ZtlSecureTear` inits enumerate every slot in layout order) and diff vs the v72 ctor to enumerate
+  the exact removed groups by byte range, BEFORE Task 17 writes the gate. A faithful older-version
+  model likely needs multi-way (`<72`/`<79`/`<83`) gates since SecondaryStat grew at every step; the
+  ungated v95-only Mechanic/Aura slots should separately be gated `>=95` (affects v83/v87 too).
+
+### Step 3 — CMapLoadable (README-critical): unchanged, all gated members absent
+v61 = **0xEC**. Anchor: `CField::CField` @0x4E4830 → base ctor `sub_59D8CD` (calls `CStage::CStage`
+@0x45BE8F), highest field write `[esi+0E8h]`; CField's first own member (ZList) @+0xEC. Gated members
+confirmed ABSENT at the anchor: `m_bField` (`>=95`) — the slot @+0x34 is the `m_pSpace2D` ZRef vtable
+(`off_8E60F4`), no int there; `m_lVisibleByQuest` (`>=84\|\|JMS`); `m_lpLayerLetterBox` (`>=95`);
+`m_bPlayHoldedBGM`/`m_tPlayHoldedBGM` (`>=95`) — struct ends cleanly @0xEC (last writes
+`[esi+0E4h]`/`[esi+0E8h]` = m_tRestoreBgmVolume/m_nRestoreBgmVolume). No `assert_size` in the header.
+**Verdict: `unchanged`** — every gate correctly excludes v61 → base/#else; no edit. (v95 PDB ref
+0x148; the delta beyond gated members is the version-variant CStage base.)
+
+### Split dispositions for Task 17 (summary)
+- **CMob.h:** `< 72` size guard only; NO own-member gate (members == v72); shrink inherited from
+  MobStat embed + CLife base. Doom `>=83` already correct.
+- **MobStat.h:** `< 72` arm removing 8 trailing status ints (candidate lines 117-124 — CONFIRM first).
+- **SecondaryStat.h:** `< 72` arm needed but **member set UNRESOLVED — must be enumerated from
+  `sub_65F66F` before gating** (highest risk; wrong gate corrupts CWvsContext). Base = v72 0xAB0.
+- **CMapLoadable.h:** no edit (`unchanged`).
+
+### Cross-version safety (FR-13)
+No source edits in this evidence task. The 3 split rows feed Task 17; CMapLoadable needs no change
+(v72/v79/v83/v84/v87/v95/v111/JMS185 all keep their existing branches). A `< 72` term is disjoint
+from every supported version except v61.
