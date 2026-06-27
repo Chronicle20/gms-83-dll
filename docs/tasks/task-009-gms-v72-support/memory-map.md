@@ -101,9 +101,9 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 
 | # | Key | v79 value | v72 value | status | signature ref |
 |---|-----|-----------|-----------|--------|---------------|
-| 1 | `VERSION_HEADER` | `8` | `8` | ☐ | |
-| 2 | `PLAYER_LOGGED_IN` | `0x14` | `0x14` | ☐ | |
-| 3 | `CLIENT_START_ERROR` | `0x19` | `0x19` | ☐ | |
+| 1 | `VERSION_HEADER` | `8` | `8` | ✔ | OnConnect 0x48528f `if(v17!=8)`@0x485520 (Task 10) |
+| 2 | `PLAYER_LOGGED_IN` | `0x14` | `0x14` | ✔ | OnConnect COutPacket(20)@0x48572a (Task 10) |
+| 3 | `CLIENT_START_ERROR` | `0x19` | `0x1A` | ✔ | DRIFT: OnConnect COutPacket(26)@0x4856cd (Task 10) |
 | 4 | `GET_SE_PRIVILEGE` | `0x0044A48E` | `0x0044989E` | ✔ | sig-cat: GetSEPrivilege |
 | 5 | `C_ACTION_MAN_CREATE_INSTANCE_ADDR` | `0x00946A09` | `0x008F6172` | ✔ | sig-cat: TSingleton<CActionMan>::CreateInstance |
 | 6 | `C_ACTION_MAN_INSTANCE_ADDR` | `0x00B07804` | `0x00A9F3F4` | ✔ | sig-cat: ActionManInstanceAddr |
@@ -158,7 +158,7 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 55 | `C_LOGO_INIT` | `0x005FF9BC` | `0x005E12F1` | ✔ | sig-cat: CLogo::Init |
 | 56 | `C_LOGO_INIT_NX_LOGO` | `0x005FFA96` | `0x005E13CB` | ✔ | sig-cat: CLogo::InitNXLogo |
 | 57 | `C_MACRO_SYS_MAN_CREATE_INSTANCE` | `0x00946C88` | `0x00000000` | ✔ | sig-cat: CMacroSysMan (NEW v72 SENTINEL — absent; FLAG) |
-| 58 | `C_BATTLE_RECORD_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ☐ | |
+| 58 | `C_BATTLE_RECORD_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ✔ | absent: no "BattleRecord" string, not in v72 TSingleton list (Task 10 SP-5) |
 | 59 | `C_MAPLE_TV_MAN_CREATE_INSTANCE` | `0x00946BEA` | `0x008F6353` | ✔ | sig-cat: TSingleton<CMapleTVMan>::CreateInstance |
 | 60 | `C_MAPLE_TV_MAN_INSTANCE_ADDR` | `0x00B0D458` | `0x00AA4E68` | ✔ | sig-cat: MapleTVManInstanceAddr |
 | 61 | `C_MAPLE_TV_MAN_INIT` | `0x006074C7` | `0x005E8B18` | ✔ | sig-cat: CMapleTVMan::Init |
@@ -189,7 +189,7 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 86 | `STAGE_INSTANCE_ADDR` | `0x00B0DADC` | `0x00AA54D4` | ✔ | sig-cat: Stage singleton |
 | 87 | `SET_STAGE` | `0x006F1AC0` | `0x006C1FBB` | ✔ | sig-cat: set_stage |
 | 88 | `GR_INSTANCE_ADDR` | `0x00B10F74` | `0x00AA85FC` | ✔ | sig-cat: GR singleton |
-| 89 | `RESET_LSP` | `0x0044A9B1` | `0x0044A9B1` | ☐ | |
+| 89 | `RESET_LSP` | `0x0044A9B1` | `0x00449DC1` | ✔ | DRIFT: ResetLSP, wpclsp.dll+Protocol_Catalog9 xrefs, caller CWvsApp ctor (Task 10) |
 | 90 | `C_STAGE_ON_MOUSE_ENTER` | `0x0092F3F8` | `0x008DF289` | ✔ | sig-cat: CStage::OnMouseEnter |
 | 91 | `C_STAGE_ON_PACKET` | `0x006F079F` | `0x006C0C61` | ✔ | sig-cat: CStage::OnPacket |
 | 92 | `C_SYSTEM_INFO` | `0x0099CDB0` | `0x0094A6C0` | ✔ | sig-cat: CSystemInfo ctor |
@@ -237,27 +237,27 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 134 | `C_FIELD_SEND_CREATE_NEW_PARTY_MSG_OFFSET` | `0x9D` | `0x9E` | ✔ | sig-cat: SendCreateNewPartyMsg offset (DRIFT) |
 | 135 | `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST` | `0x0095DD85` | `0x0090C9BD` | ✔ | sig-cat: CWvsContext::SendMigrateToITCRequest (needs-main-review; opcode 0x99→0x9A) |
 | 136 | `C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET` | `0xE9` | `0xE9` | ✔ | sig-cat: SendMigrateToITCRequest offset (re-measured) |
-| 137 | `DR_CHECK` | `0x00000000` | `0x00000000` | ☐ | |
-| 138 | `DR_INIT` | `0x00000000` | `0x00000000` | ☐ | |
-| 139 | `CE_TRACER_RUN` | `0x00000000` | `0x00000000` | ☐ | |
+| 137 | `DR_CHECK` | `0x00000000` | `0x00000000` | ✔ | absent: no NtGetContextThread import (Task 2/10 SP-5) |
+| 138 | `DR_INIT` | `0x00000000` | `0x00000000` | ✔ | absent: SetUp has no DR_init (Task 2/10 SP-5) |
+| 139 | `CE_TRACER_RUN` | `0x00000000` | `0x00000000` | ✔ | absent: no eTracer string (Task 10 SP-5) |
 | 140 | `SEND_HS_LOG` | `0x0093F8E0` | `0x00000000` | ✔ | sig-cat: SendHSLog (NEW v72 SENTINEL — absent; FLAG) |
 | 141 | `C_MOB_C_MOB` | `0x00630C2C` | `0x00611CDB` | ✔ | sig-cat: CMob::CMob (needs-main-review; doom tail ABSENT in v72, alloc 0x4C0) |
-| 142 | `C_SECURITY_CLIENT_ON_PACKET_RET_STUB` | `0x00000000` | `0x00000000` | ☐ | |
-| 143 | `C_SECURITY_CLIENT_ON_PACKET_CHECK` | `0x00000000` | `0x00000000` | ☐ | |
-| 144 | `C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET` | `0x00000000` | `0x00000000` | ☐ | |
-| 145 | `C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET` | `0x00000000` | `0x00000000` | ☐ | |
-| 146 | `WIN_MAIN_LAUNCHER_STUB` | `0x00000000` | `0x00000000` | ☐ | |
-| 147 | `C_TI_DISCONNECT_EXCEPTION` | `0x00A40868` | `0x00A40868` | ☐ | |
-| 148 | `C_TI_TERMINATE_EXCEPTION` | `0x00A3CC38` | `0x00A3CC38` | ☐ | |
-| 149 | `C_TI_PATCH_EXCEPTION` | `0x00A4AAD8` | `0x00A4AAD8` | ☐ | |
-| 150 | `C_TI_ZEXCEPTION` | `0x00A3D3B8` | `0x00A3D3B8` | ☐ | |
-| 151 | `C_PATCH_EXCEPTION_BUILDER` | `0x0050A81B` | `0x0050A81B` | ☐ | |
-| 152 | `C_COM_RAISE_ERROR_EX` | `0x004031B5` | `0x004031B5` | ☐ | |
-| 153 | `C_FILE_STREAM_RESOLVED` | `1` | `1` | ☐ | |
-| 154 | `C_FILE_STREAM_OPEN_INLINE` | `0` | `0` | ☐ | |
-| 155 | `C_FILE_STREAM_OPEN` | `0x0048D31C` | `0x0048D31C` | ☐ | |
-| 156 | `C_FILE_STREAM_GET_LENGTH` | `0x0048D4A5` | `0x0048D4A5` | ☐ | |
-| 157 | `C_FILE_STREAM_READ` | `0x0048D5D0` | `0x0048D5D0` | ☐ | |
-| 158 | `C_FILE_STREAM_CLOSE` | `0x0048D2BE` | `0x0048D2BE` | ☐ | |
-| 159 | `C_FILE_STREAM_VFTABLE` | `0x00A2CA2C` | `0x00A2CA2C` | ☐ | |
+| 142 | `C_SECURITY_CLIENT_ON_PACKET_RET_STUB` | `0x00000000` | `0x00000000` | ✔ | JMS only — JMS185 @0xB3B96B confirmed real; absent GMS v72 (Task 10) |
+| 143 | `C_SECURITY_CLIENT_ON_PACKET_CHECK` | `0x00000000` | `0x00000000` | ✔ | JMS only — JMS185 @0xB3B5F7 confirmed real; absent GMS v72 (Task 10) |
+| 144 | `C_SECURITY_CLIENT_ON_PACKET_CHECK_OFFSET` | `0x00000000` | `0x00000000` | ✔ | JMS only — absent GMS v72 (Task 10) |
+| 145 | `C_WVS_APP_INITIALIZE_GR2D_WINDOWED_OFFSET` | `0x00000000` | `0x00000000` | ✔ | JMS only — absent GMS v72 (Task 10) |
+| 146 | `WIN_MAIN_LAUNCHER_STUB` | `0x00000000` | `0x00000000` | ✔ | JMS only — JMS185 @0x7F3CE0 confirmed real; absent GMS v72 (Task 10) |
+| 147 | `C_TI_DISCONNECT_EXCEPTION` | `0x00A40868` | `0x009E34C0` | ✔ | RELOC: RTTI symbol + Run@0x8f333d/OnConnect@0x485314 (Task 10) |
+| 148 | `C_TI_TERMINATE_EXCEPTION` | `0x00A3CC38` | `0x009DF8C8` | ✔ | RELOC: RTTI symbol + Run@0x8f3366/OnConnect throws (Task 10) |
+| 149 | `C_TI_PATCH_EXCEPTION` | `0x00A4AAD8` | `0x009ECC20` | ✔ | RELOC: RTTI symbol + Run@0x8f3318/OnConnect@0x485575 (Task 10) |
+| 150 | `C_TI_ZEXCEPTION` | `0x00A3D3B8` | `0x009E0048` | ✔ | RELOC: RTTI symbol + Run@0x8f3377/OnConnect (Task 10) |
+| 151 | `C_PATCH_EXCEPTION_BUILDER` | `0x0050A81B` | `0x004FEEB7` | ✔ | RELOC: CPatchException_Build, *(this+4)=72, Run@0x8f32f5+OnConnect@0x485556 (Task 10) |
+| 152 | `C_COM_RAISE_ERROR_EX` | `0x004031B5` | `0x004031B5` | ✔ | DIRECT: ?_com_issue_error@@ symbol+body confirmed v72 (Task 10) |
+| 153 | `C_FILE_STREAM_RESOLVED` | `1` | `1` | ✔ | recoverable: clean OnConnect 0x48528f (Task 10 FR-8a) |
+| 154 | `C_FILE_STREAM_OPEN_INLINE` | `0` | `0` | ✔ | out-of-line Open 0x485A2A, CreateFileA not inlined (Task 10) |
+| 155 | `C_FILE_STREAM_OPEN` | `0x0048D31C` | `0x00485A2A` | ✔ | RELOC: CFileStream_Open, cloned CreateFileA dword_AA755C (Task 10) |
+| 156 | `C_FILE_STREAM_GET_LENGTH` | `0x0048D4A5` | `0x00485BB3` | ✔ | RELOC: CFileStream_GetLength, vtable[+60] (Task 10) |
+| 157 | `C_FILE_STREAM_READ` | `0x0048D5D0` | `0x00485CDE` | ✔ | RELOC: CFileStream_Read, memcpy/ReadFile dword_AA7560 (Task 10) |
+| 158 | `C_FILE_STREAM_CLOSE` | `0x0048D2BE` | `0x004859CC` | ✔ | RELOC: CFileStream_Close, CloseHandle dword_AA7498 (Task 10) |
+| 159 | `C_FILE_STREAM_VFTABLE` | `0x00A2CA2C` | `0x009D0914` | ✔ | RELOC: CFileStream_vftable, installed OnConnect@0x485618 (Task 10) |
 </content>

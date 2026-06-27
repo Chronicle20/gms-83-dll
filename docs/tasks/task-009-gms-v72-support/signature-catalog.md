@@ -708,6 +708,61 @@ any new v72-only sentinels — record the evidence of absence, not just the `0x0
   the 1st Alloc arg, NOT the instance) does **not** apply to the v72 port because the seed source (v79) was
   already 0. Verdict: carry 0 for both; v79 seed correct; no allocator-selector mis-inheritance.
 
+## Task 10 — protocol constants + exception-dispatch + CFileStream + sentinels
+
+All resolved from the v72 `CClientSocket::OnConnect` (0x48528f) — which decompiles **CLEAN**
+(not CFG-obfuscated like v83), so the whole CLIENT_START_ERROR report-read chain is visible —
+and the `CWvsApp::Run` (0x8f2f82) exception-dispatch block (0x8f32ea-0x8f3377).
+
+### Protocol constants (keys: VERSION_HEADER / PLAYER_LOGGED_IN / CLIENT_START_ERROR)
+- v72 host: `CClientSocket::OnConnect` (0x48528f). Heuristic: read immediates in the clean OnConnect.
+- VERSION_HEADER = **8**: `if (v17 != 8)` @0x485520 → CTerminateException 0x22000007. Held == v79/v83.
+  (Major-version byte == **0x48** = 72 @0x485544 → CPatchException above / CTerminateException below; build corroboration, not a key.)
+- PLAYER_LOGGED_IN = **0x14**: `COutPacket::COutPacket(_, 20)` @0x48572a in the logged-in (non-bLogin, `[this+9]==0`) branch (then Encode4 charId + Encode1 + Encode1). Held == v79/v83.
+- CLIENT_START_ERROR = **0x1A** (DRIFT v79 0x19): `COutPacket::COutPacket(_, 26)` @0x4856cd in the bLogin branch (then Encode2 len + EncodeBuffer report). **This is the Task-4-predicted drift, confirmed.** Affects redirect/bypass error-report relay.
+- Drift v79→v72: VERSION_HEADER/PLAYER_LOGGED_IN direct; CLIENT_START_ERROR 0x19→0x1A (+1, opcode-table shift). Atlas-ms is server-side and does not constrain these client send opcodes.
+
+### Exception type-info globals (keys: C_TI_DISCONNECT/TERMINATE/PATCH_EXCEPTION, C_TI_ZEXCEPTION)
+- Heuristic (two anchors each): (1) IDB **RTTI symbol** `__TI3?AVC…Exception@@` / `__TI1?AVZException@@`; (2) the `_ThrowInfo` operand at the `_CxxThrowException` site in **both** CWvsApp::Run AND OnConnect.
+- v72 addresses: C_TI_DISCONNECT **0x009E34C0** (Run throw @0x8f333d, codes 0x21000000-0x21000006; OnConnect @0x485314) · C_TI_TERMINATE **0x009DF8C8** (Run @0x8f3366, 0x22000000-0x2200000B; OnConnect @0x4852f4/0x48553a/0x485594) · C_TI_PATCH **0x009ECC20** (Run @0x8f3318, ==0x20000000; OnConnect @0x485575) · C_TI_ZEXCEPTION **0x009E0048** (Run default @0x8f3377; OnConnect underrun throws).
+- Drift v79→v72: all four RELOCATED (v79 0xA40868/0xA3CC38/0xA4AAD8/0xA3D3B8). Symbol+throw-site anchors held perfectly across the gap.
+- Label applied: yes (already RTTI-symbol-labeled in v72 IDB).
+
+### CPatchException builder (key: C_PATCH_EXCEPTION_BUILDER) — renamed CPatchException_Build
+- v72 address: **0x004FEEB7**. v79: 0x50A81B. Heuristic: call-graph — reached from the CPatch throw site in Run (`sub_4FEEB7(*((_DWORD*)v2+16))` @0x8f32f5) AND OnConnect (`sub_4FEEB7(v54)` @0x485556), each followed by qmemcpy 1288 + `_CxxThrowException(_, &__TI3?AVCPatchException@@)`.
+- Body: `*this = 0x20000000`, `*(this+4) = 72` (**major DRIFT** vs v79 79 / v83 83), `memset(this+4, 0, 0x504)`, two strcpy (exception-file path + "\\" literal). Confirms the version stamp lives here.
+- Drift v79→v72: RELOCATED; embedded major version 79→72. Label applied: yes (CPatchException_Build).
+
+### COM HRESULT raiser (key: C_COM_RAISE_ERROR_EX)
+- v72 address: **0x004031B5** (== v79 VA, but re-confirmed in v72 — not copied). Heuristic: IDB symbol `?_com_issue_error@@YGXJ@Z` + body (HRESULT 3/10/11 classification, the 1-arg `_com_issue_error(long)` form). Run's discrete COM call is the 2-arg `_com_raise_error(hr,0)` @0x8f3022 (?_com_raise_error@@ 0x95254c); the 1-arg form is the structural/semantic FAILED-render analog (same as v83/v95).
+- Drift v79→v72: DIRECT (low CRT-ish address region, like Z_SYNCHRONIZED globals). Label applied: yes (symbol).
+
+### CFileStream report-read relay (keys: C_FILE_STREAM_*) — FR-8a decision: RESOLVED = 1
+- **Decision: RECOVERABLE in v72 → C_FILE_STREAM_RESOLVED 1, C_FILE_STREAM_OPEN_INLINE 0** (same disposition as v79). Rationale: v72 OnConnect (0x48528f) decompiles cleanly, exposing the stock report-read chain in the bLogin branch (vftable install @0x485618 → Open @0x485639 → GetLength @0x485644 → ZArray alloc + Read @0x48566e → Close @0x485679/0x485697).
+- CFileStream_Open (0x00485A2A): out-of-line; first calls Close to reset, then CreateFileA via cloned slot **dword_AA755C**, stores handle this[4], ORs open-flag this[13]. Args (name,3,128,1,0x80000000,0,0) = disposition/flags/share=1/access GENERIC_READ. → OPEN_INLINE 0.
+- CFileStream_GetLength (0x00485BB3): thiscall wrapper dispatching the object vtable slot at +60.
+- CFileStream_Read (0x00485CDE): (this,dst,len) memcpy from mapped view, or ReadFile via cloned slot **dword_AA7560** on the unmapped path.
+- CFileStream_Close (0x004859CC): CloseHandle via cloned slot **dword_AA7498**, sets handle this[4]=-1 (also dtor body).
+- CFileStream_vftable (0x009D0914): object vtable installed at v35[0] in OnConnect.
+- v79 addresses: OPEN 0x48D31C · GET_LENGTH 0x48D4A5 · READ 0x48D5D0 · CLOSE 0x48D2BE · VFTABLE 0xA2CA2C — all RELOCATED. Label applied: yes (renamed CFileStream_* in v72 IDB).
+
+### GMS-absent sentinels — confirmed absent (SP-5)
+- C_BATTLE_RECORD_MAN_CREATE_INSTANCE: no "BattleRecord" string (find_regex); not in the complete v72 TSingleton CreateInstance list (Task 7). v95+ feature. Carry 0.
+- DR_CHECK / DR_INIT: no NtGetContextThread/GetContextThread import (imports_query empty); SetUp has no DR_init (Task 2 R11/R12). DR subsystem absent. Carry 0.
+- CE_TRACER_RUN: no "eTracer"/"CeTracer" string. v95+ AhnLab feature. Carry 0.
+
+### RESET_LSP — PRESENT in v72 (DRIFT) — corrects v79 value, confirms task-008 verdict
+- v72 address: **0x00449DC1** (symbol ResetLSP, size 0x1a0). v79: 0x44A9B1 (DRIFT — the 0x449xxx region relocated, cf. GET_SE_PRIVILEGE v72 0x44989E vs v79 0x44A48E).
+- Heuristic (two anchors): string xref "wpclsp.dll" (0xa5a598)@0x449e33 + WinSock2 `…Protocol_Catalog9\Catalog_Entries\…` reg path (0xa5a5b8)@0x449dea, both into the same fn; sole caller = CWvsApp ctor (0x8f26c7) @0x8f29f2.
+- Verdict: starting from task-008's v79 "PRESENT" disposition (NOT v83's stale "does not exist"), confirmed PRESENT in v72 at a drifted address. The repo `ResetLSP()` derefs `*(void**)RESET_LSP`; value is the function entry per GMS convention.
+
+### JMS-only sentinels — positive confirmed in JMS185, absent in GMS v72 (SP-5)
+- Lane: re-confirmed in JMS185 (MapleStory_dump_SCY.exe, port 13342): C_SECURITY_CLIENT_ON_PACKET_CHECK real @0xB3B5F7 (CSecurityClient method `(this,u16,COutPacket*)`); C_SECURITY_CLIENT_ON_PACKET_RET_STUB real @0xB3B96B; WIN_MAIN_LAUNCHER_STUB (StartUpDlgClass window proc) real @0x7F3CE0.
+- GMS v72 disposition: absent by design — GMS hooks CSecurityClient::OnPacket via C_SECURITY_CLIENT_ON_PACKET (0x9422D1), forces windowed via C_CONFIG_SYS_OPT_WINDOWED_MODE (0xAA87AC), disables patcher via WIN_MAIN_PATCHER_OFFSET. All five carry 0 + `# JMS only`.
+
+### Backward-direction cross-check (R5)
+No Task-10 v79 *real-address* key turned out absent in v72: VERSION_HEADER/PLAYER_LOGGED_IN/CLIENT_START_ERROR (constants), the four C_TI_*, the builder, _com_issue_error, the five CFileStream helpers, and RESET_LSP are all PRESENT in v72 (relocated/drifted, not absent). The already-recorded backward sentinels from earlier tasks remain correct: SEND_HS_LOG (Task 2), Z_SOCKET_BASE_CLOSE_SOCKET (Task 4), C_MACRO_SYS_MAN_CREATE_INSTANCE (Task 7) — each carries `# absent in v72`/new-v72-only-sentinel + FLAG. No new Task-10 backward sentinel introduced.
+
 ## Cross-version drift summary (fill at end)
 
 A short table of which heuristic classes survived v79→v72 best, to guide the next (older)
