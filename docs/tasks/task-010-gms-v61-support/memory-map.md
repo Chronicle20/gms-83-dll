@@ -111,25 +111,25 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_CLIENT_SOCKET_INSTANCE_ADDR` | `0x00A9F434` | `0x00A9F434` | ☐ | — |
-| `C_CLIENT_SOCKET_CREATE_INSTANCE` | `0x008F621F` | `0x008F621F` | ☐ | — |
-| `C_CLIENT_SOCKET_SEND_PACKET` | `0x004866AC` | `0x004866AC` | ☐ | — |
-| `C_CLIENT_SOCKET_FLUSH` | `0x00486734` | `0x00486734` | ☐ | — |
-| `C_CLIENT_SOCKET_MANIPULATE_PACKET` | `0x0048684E` | `0x0048684E` | ☐ | — |
-| `C_CLIENT_SOCKET_PROCESS_PACKET` | `0x00486922` | `0x00486922` | ☐ | — |
-| `C_CLIENT_SOCKET_CLOSE` | `0x0048668F` | `0x0048668F` | ☐ | — |
-| `C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX` | `0x00486CF0` | `0x00486CF0` | ☐ | — |
-| `C_CLIENT_SOCKET_ON_CONNECT` | `0x0048528F` | `0x0048528F` | ☐ | — |
-| `C_CLIENT_SOCKET_CONNECT_LOGIN` | `0x00484EA5` | `0x00484EA5` | ☐ | — |
-| `C_CLIENT_SOCKET_CONNECT_CTX` | `0x004850FC` | `0x004850FC` | ☐ | — |
-| `C_CLIENT_SOCKET_CONNECT_ADR` | `0x00485188` | `0x00485188` | ☐ | — |
+| `C_CLIENT_SOCKET_INSTANCE_ADDR` | `0x00A9F434` | `0x00975054` | ✔ | catalog: g_pClientSocketInstance |
+| `C_CLIENT_SOCKET_CREATE_INSTANCE` | `0x008F621F` | `0x00825FF3` | ✔ | catalog: TSingleton<CClientSocket>::CreateInstance |
+| `C_CLIENT_SOCKET_SEND_PACKET` | `0x004866AC` | `0x00474125` | ✔ | catalog: CClientSocket::SendPacket (HV) |
+| `C_CLIENT_SOCKET_FLUSH` | `0x00486734` | `0x0047421C` | ✔ | catalog: CClientSocket::Flush (HV) |
+| `C_CLIENT_SOCKET_MANIPULATE_PACKET` | `0x0048684E` | `0x00474336` | ✔ | catalog: CClientSocket::ManipulatePacket (HV) |
+| `C_CLIENT_SOCKET_PROCESS_PACKET` | `0x00486922` | `0x0047440A` | ✔ | catalog: CClientSocket::ProcessPacket (HV) |
+| `C_CLIENT_SOCKET_CLOSE` | `0x0048668F` | `0x00474108` | ✔ | catalog: CClientSocket::Close |
+| `C_CLIENT_SOCKET_CLEAR_SEND_RECEIVE_CTX` | `0x00486CF0` | `0x004748B5` | ✔ | catalog: CClientSocket::ClearSendReceiveCtx |
+| `C_CLIENT_SOCKET_ON_CONNECT` | `0x0048528F` | `0x00472D42` | ✔ | catalog: CClientSocket::OnConnect |
+| `C_CLIENT_SOCKET_CONNECT_LOGIN` | `0x00484EA5` | `0x00472A0B` | ✔ | catalog: CClientSocket::ConnectLogin |
+| `C_CLIENT_SOCKET_CONNECT_CTX` | `0x004850FC` | `0x00472C3E` | ✔ | catalog: CClientSocket::Connect(CONNECTCONTEXT) |
+| `C_CLIENT_SOCKET_CONNECT_ADR` | `0x00485188` | `0x00472CA3` | ✔ | catalog: CClientSocket::Connect(sockaddr_in) |
 
 ### ZSocketBase / ZSocketBuffer
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `Z_SOCKET_BASE_CLOSE_SOCKET` | `0x00000000` | `0x00000000` | ☐ | — |
-| `Z_SOCKET_BUFFER_ALLOC` | `0x004862F8` | `0x004862F8` | ☐ | — |
+| `Z_SOCKET_BASE_CLOSE_SOCKET` | `0x00000000` | `0x00000000` | ✔ | catalog: inlined sentinel (confirmed absent) |
+| `Z_SOCKET_BUFFER_ALLOC` | `0x004862F8` | `0x00473D71` | ✔ | catalog: ZSocketBuffer::Alloc |
 
 ### CConfig
 
