@@ -500,9 +500,56 @@ Confirmed via `mcp__ida-pro__survey_binary` on port 13344 (2026-06-27).
 - Drift v72→v61: relocated into the v61 .data window; the CUITitle-singleton read/dispatch pattern held.
 - Label applied: yes (renamed `UITitleInstanceAddr`).
 
-### Cluster 5 — Manager singletons (Task 8)
+### Cluster 5 — Manager singletons (Task 7)
 
-*(pending)*
+**Static-init walk.** Every `*::CreateInstance` is reached from `CWvsApp::SetUp` (v61 0x823175,
+fully symbol-decompiled). The TSingleton<T>::CreateInstance template instantiations cluster at
+v61 0x825c78–0x826124 (right after WinMain/ctor/SetUp). Each `CreateInstance` reads/stores its
+instance global and tail-calls the ctor (Alloc(size)+ctor). SetUp call-order:
+CSecurityClient → CClientSocket → CFuncKeyMappedMan → CQuickslotKeyMappedMan → (InitializeInput:
+CInputSystem) → CActionMan → CAnimationDisplayer → CMapleTVMan → CQuestMan → CMonsterBookMan.
+Anchor 1 for every CreateInstance/global = its SetUp call-site (call-graph); anchor 2 = the
+TSingleton symbol + Alloc-size/ctor body. Cross-checks proving v61 lane: ISMsgProc(0x825094),
+ProcessPacket default range 0x1A..0x5B, CClientSocket::CreateInstance(0x825ff3) all match the
+already-relocated v61 keys.
+
+#### ActionMan   (keys: C_ACTION_MAN_CREATE_INSTANCE_ADDR / _INSTANCE_ADDR / _INIT / _SWEEP_CACHE)
+- CreateInstance 0x00825F46 (v72 0x8F6172); instance global ActionManInstanceAddr 0x00970830 (v72 0xA9F3F4); Alloc(672)+ctor 0x405b79.
+- Init 0x00405EFE (sym ?Init@CActionMan@@; SetUp@0x8232ac on CreateInstance result). SweepCache 0x0040F179 (sym ?SweepCache@CActionMan@@; xrefs_to → sole caller CallUpdate 0x82490a@0x824a9f).
+- Drift v72→v61: all relocated; symbols + call-graph held.
+
+#### AnimationDisplayer   (key: C_ANIMATION_DISPLAYER_CREATE_INSTANCE)
+- 0x00825F9C (v72 0x8F61C8); Alloc(408)+ctor 0x4271c4; instance dword_974EAC; SetUp@0x8232b1.
+
+#### FuncKeyMappedMan / Quickslot   (keys: C_FUNC_KEY_MAPPED_MAN / _VFTABLE / _INSTANCE_ADDR / _CREATE_INSTANCE / DEFAULT_FKM / DEFAULT_QKM / C_QUICKSLOT_KEY_MAPPED_MAN)
+- ctor C_FUNC_KEY_MAPPED_MAN 0x0051AA0E (sym ??0CFuncKeyMappedMan@@); installs vftable off_8E7F58 (C_FUNC_KEY_MAPPED_MAN_VFTABLE 0x008E7F58), stores instance FuncKeyMappedManInstanceAddr 0x00975CA0, memcpy DefaultFKM(0x00962138) 0x1BD ×2.
+- CreateInstance 0x00826038 (v72 0x8F6264); Alloc(0x388=904) — v61 size == v72.
+- DEFAULT_FKM_INSTANCE_ADDR 0x00962138: two xrefs (ctor 0x51aa25 + DefaultFuncKeyMap@CFuncKeyMappedMan 0x51addf).
+- DEFAULT_QKM_INSTANCE_ADDR = 0 (carried sentinel): ctor zeroes quickslot region (this+224/+225=0), no QKM memcpy — same as v72. FLAGGED.
+- C_QUICKSLOT_KEY_MAPPED_MAN 0x0082608E (v72 0x8F62BA); Alloc(0x30=48)+ctor 0x5972e9; instance dword_974EE4; SetUp@0x823200.
+
+#### InputSystem   (keys: C_INPUT_SYSTEM / _CREATE_INSTANCE / _INSTANCE_ADDR / _INIT / _UPDATE_DEVICE / _GET_IS_MESSAGE / _GENERATE_AUTO_KEY_DOWN / _SHOW_CURSOR)
+- Reached via CWvsApp::InitializeInput (v61 0x8247c3). ctor C_INPUT_SYSTEM 0x00824817; CreateInstance 0x00825C20; Init 0x00524CEB; ShowCursor 0x00525162 (all symbol-named).
+- **C_INPUT_SYSTEM_INSTANCE_ADDR = 0x00975050 (CORRECTION).** v72 seed 0xAA3E84 was STALE/WRONG for v61. Real v61 singleton = dword_975050, confirmed three ways: read/stored in CreateInstance(0x825c20); C_STAGE_ON_MOUSE_ENTER reads [dword_975050+0x9B4]; CLogo::Init calls ShowCursor(dword_975050). (Task 6 originally surfaced this.)
+- Three unnamed methods found by Run(0x8233CC) position + body (renamed this task): UPDATE_DEVICE 0x00525113 (Run <=2 branch; if(!a1)UpdateKeyboard else if(a1==1)UpdateMouse); GET_IS_MESSAGE 0x00525130 (inner ISMsgProc loop; this[625] gate, copies 3 dwords from this[626]); GENERATE_AUTO_KEY_DOWN 0x005260FA (else-branch before CSecurityClient::Update; *a2=256 + GetSpecialKeyFlag). All bodies match v72 structure.
+
+#### MapleTVMan   (keys: C_MAPLE_TV_MAN_CREATE_INSTANCE / _INSTANCE_ADDR / _INIT) — PRESENT in v61
+- CreateInstance 0x00826124 (v72 0x8F6353); Alloc(944)+ctor 0x59b913; instance MapleTVManInstanceAddr 0x00975DDC; Init 0x0059BB27 (sym; SetUp@0x8232bd). NOT a backward sentinel — confirmed present.
+
+#### MonsterBookMan   (keys: C_MONSTER_BOOK_MAN_CREATE_INSTANCE / _INSTANCE_ADDR / _LOAD_BOOK) — PRESENT in v61
+- CreateInstance 0x00825D13 (v72 0x8F5F3F); Alloc(164)+ctor 0x825d58; instance 0x00975CF8; LoadBook 0x005DD687 (sym; SetUp@0x8232f9). Confirmed present.
+
+#### QuestMan   (keys: C_QUEST_MAN_CREATE_INSTANCE / _INSTANCE_ADDR / _LOAD_DEMAND / _LOAD_PARTY_QUEST_INFO / _LOAD_EXCLUSIVE)
+- CreateInstance 0x00825C78 (v72 0x8F5E99); Alloc(412)+ctor 0x628c28; instance 0x00975DFC; LoadDemand 0x00629040 (sym; SetUp@0x8232c9).
+- **LOAD_PARTY_QUEST_INFO = 0 and LOAD_EXCLUSIVE = 0 — NEW v61-ONLY SENTINELS** (were real v72 0x6887DE / 0x689C3E). Absence evidence: func_query name_regex "PartyQuest"/"Exclusive" → 0 results across all of v61; full *CQuestMan* symbol set lacks both; v61 SetUp does NOT call them (v72 SetUp did). Features post-date v61. FLAGGED for gate/edit owner.
+
+#### MacroSysMan / RadioManager — ABSENT in v61 (carried sentinels, also absent v72)
+- C_MACRO_SYS_MAN_CREATE_INSTANCE = 0: no CMacroSysMan symbol/func/string; macro role folded into CWvsContext::OnMacroSysDataInit (0x849bce). FLAGGED.
+- C_RADIO_MANAGER_CREATE_INSTANCE / _INSTANCE_ADDR = 0: no CRadioManager symbol/func/string; not in SetUp chain; radio folded into CMapleTVMan. **Radio-quirk:** v72 seed already 0, so the v83 allocator-selector trap (0xBF0B00) never applied — nothing wrong inherited; v61 also 0. FLAGGED.
+
+#### SecurityClient   (keys: C_SECURITY_CLIENT_CREATE_INSTANCE / _INSTANCE_ADDR / _ON_PACKET)
+- CreateInstance 0x008260E2 (v72 0x8F630E); Alloc(88)+ctor 0x86333d; instance SecurityClientInstanceAddr 0x0097085C (also used in SetUp@0x8231ec *(g+56) + Run CSecurityClient::Update sub_86354E@0x8234ed).
+- C_SECURITY_CLIENT_ON_PACKET 0x008637C4 (unnamed in v61, renamed OnPacket_CSecurityClient): reached from ProcessPacket(0x47440a) case 0x14; body Decode1 → integrity-handler dispatch (0/2/3). **needs-main-review** (security_hooks boundary). Dispatch shape differs from v72 (v61 switches 0/2/3, v72 cmp==4) — relocated by call-site role, not byte match.
 
 ### Cluster 6 — Party / migrate senders (Task 9)
 

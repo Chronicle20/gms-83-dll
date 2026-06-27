@@ -96,16 +96,16 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_ACTION_MAN_CREATE_INSTANCE_ADDR` | `0x008F6172` | `0x008F6172` | ☐ | — |
-| `C_ACTION_MAN_INSTANCE_ADDR` | `0x00A9F3F4` | `0x00A9F3F4` | ☐ | — |
-| `C_ACTION_MAN_INIT` | `0x0040681C` | `0x0040681C` | ☐ | — |
-| `C_ACTION_MAN_SWEEP_CACHE` | `0x0040FE89` | `0x0040FE89` | ☐ | — |
+| `C_ACTION_MAN_CREATE_INSTANCE_ADDR` | `0x008F6172` | `0x00825F46` | ✔ | catalog (Cluster 5) |
+| `C_ACTION_MAN_INSTANCE_ADDR` | `0x00A9F3F4` | `0x00970830` | ✔ | catalog (Cluster 5) |
+| `C_ACTION_MAN_INIT` | `0x0040681C` | `0x00405EFE` | ✔ | catalog (Cluster 5) |
+| `C_ACTION_MAN_SWEEP_CACHE` | `0x0040FE89` | `0x0040F179` | ✔ | catalog (Cluster 5) |
 
 ### CAnimationDisplayer
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_ANIMATION_DISPLAYER_CREATE_INSTANCE` | `0x008F61C8` | `0x008F61C8` | ☐ | — |
+| `C_ANIMATION_DISPLAYER_CREATE_INSTANCE` | `0x008F61C8` | `0x00825F9C` | ✔ | catalog (Cluster 5) |
 
 ### CClientSocket
 
@@ -146,25 +146,25 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_FUNC_KEY_MAPPED_MAN` | `0x005512EC` | `0x005512EC` | ☐ | — |
-| `C_FUNC_KEY_MAPPED_MAN_VFTABLE` | `0x009D22D8` | `0x009D22D8` | ☐ | — |
-| `C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR` | `0x00AA4CB8` | `0x00AA4CB8` | ☐ | — |
-| `C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE` | `0x008F6264` | `0x008F6264` | ☐ | — |
-| `DEFAULT_FKM_INSTANCE_ADDR` | `0x00A5B838` | `0x00A5B838` | ☐ | — |
-| `DEFAULT_QKM_INSTANCE_ADDR` | `0x00000000` | `0x00000000` | ☐ | — |
+| `C_FUNC_KEY_MAPPED_MAN` | `0x005512EC` | `0x0051AA0E` | ✔ | catalog (Cluster 5) |
+| `C_FUNC_KEY_MAPPED_MAN_VFTABLE` | `0x009D22D8` | `0x008E7F58` | ✔ | catalog (Cluster 5) |
+| `C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR` | `0x00AA4CB8` | `0x00975CA0` | ✔ | catalog (Cluster 5) |
+| `C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE` | `0x008F6264` | `0x00826038` | ✔ | catalog (Cluster 5) |
+| `DEFAULT_FKM_INSTANCE_ADDR` | `0x00A5B838` | `0x00962138` | ✔ | catalog (Cluster 5) |
+| `DEFAULT_QKM_INSTANCE_ADDR` | `0x00000000` | `0x00000000` | ✔ | catalog (Cluster 5) |
 
 ### CInputSystem
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_INPUT_SYSTEM` | `0x008F489E` | `0x008F489E` | ☐ | — |
-| `C_INPUT_SYSTEM_CREATE_INSTANCE` | `0x008F5E41` | `0x008F5E41` | ☐ | — |
-| `C_INPUT_SYSTEM_INSTANCE_ADDR` | `0x00AA3E84` | `0x00AA3E84` | ☐ | — |
-| `C_INPUT_SYSTEM_INIT` | `0x0055CBA9` | `0x0055CBA9` | ☐ | — |
-| `C_INPUT_SYSTEM_UPDATE_DEVICE` | `0x0055CFD3` | `0x0055CFD3` | ☐ | — |
-| `C_INPUT_SYSTEM_GET_IS_MESSAGE` | `0x0055CFF0` | `0x0055CFF0` | ☐ | — |
-| `C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN` | `0x0055DFBC` | `0x0055DFBC` | ☐ | — |
-| `C_INPUT_SYSTEM_SHOW_CURSOR` | `0x0055D022` | `0x0055D022` | ☐ | — |
+| `C_INPUT_SYSTEM` | `0x008F489E` | `0x00824817` | ✔ | catalog (Cluster 5) |
+| `C_INPUT_SYSTEM_CREATE_INSTANCE` | `0x008F5E41` | `0x00825C20` | ✔ | catalog (Cluster 5) |
+| `C_INPUT_SYSTEM_INSTANCE_ADDR` | `0x00AA3E84` | `0x00975050` | ✔ | catalog (Cluster 5) |
+| `C_INPUT_SYSTEM_INIT` | `0x0055CBA9` | `0x00524CEB` | ✔ | catalog (Cluster 5) |
+| `C_INPUT_SYSTEM_UPDATE_DEVICE` | `0x0055CFD3` | `0x00525113` | ✔ | catalog (Cluster 5) |
+| `C_INPUT_SYSTEM_GET_IS_MESSAGE` | `0x0055CFF0` | `0x00525130` | ✔ | catalog (Cluster 5) |
+| `C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN` | `0x0055DFBC` | `0x005260FA` | ✔ | catalog (Cluster 5) |
+| `C_INPUT_SYSTEM_SHOW_CURSOR` | `0x0055D022` | `0x00525162` | ✔ | catalog (Cluster 5) |
 
 ### CLogin
 
@@ -193,24 +193,24 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_MACRO_SYS_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ☐ | — |
+| `C_MACRO_SYS_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ✔ | catalog (Cluster 5) |
 | `C_BATTLE_RECORD_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ☐ | — |
 
 ### CMapleTVMan
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_MAPLE_TV_MAN_CREATE_INSTANCE` | `0x008F6353` | `0x008F6353` | ☐ | — |
-| `C_MAPLE_TV_MAN_INSTANCE_ADDR` | `0x00AA4E68` | `0x00AA4E68` | ☐ | — |
-| `C_MAPLE_TV_MAN_INIT` | `0x005E8B18` | `0x005E8B18` | ☐ | — |
+| `C_MAPLE_TV_MAN_CREATE_INSTANCE` | `0x008F6353` | `0x00826124` | ✔ | catalog (Cluster 5) |
+| `C_MAPLE_TV_MAN_INSTANCE_ADDR` | `0x00AA4E68` | `0x00975DDC` | ✔ | catalog (Cluster 5) |
+| `C_MAPLE_TV_MAN_INIT` | `0x005E8B18` | `0x0059BB27` | ✔ | catalog (Cluster 5) |
 
 ### CMonsterBookMan
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_MONSTER_BOOK_MAN_CREATE_INSTANCE` | `0x008F5F3F` | `0x008F5F3F` | ☐ | — |
-| `C_MONSTER_BOOK_MAN_INSTANCE_ADDR` | `0x00AA4D24` | `0x00AA4D24` | ☐ | — |
-| `C_MONSTER_BOOK_MAN_LOAD_BOOK` | `0x0062F410` | `0x0062F410` | ☐ | — |
+| `C_MONSTER_BOOK_MAN_CREATE_INSTANCE` | `0x008F5F3F` | `0x00825D13` | ✔ | catalog (Cluster 5) |
+| `C_MONSTER_BOOK_MAN_INSTANCE_ADDR` | `0x00AA4D24` | `0x00975CF8` | ✔ | catalog (Cluster 5) |
+| `C_MONSTER_BOOK_MAN_LOAD_BOOK` | `0x0062F410` | `0x005DD687` | ✔ | catalog (Cluster 5) |
 
 ### COutPacket
 
@@ -241,32 +241,32 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_QUEST_MAN_CREATE_INSTANCE` | `0x008F5E99` | `0x008F5E99` | ☐ | — |
-| `C_QUEST_MAN_INSTANCE_ADDR` | `0x00AA4D28` | `0x00AA4D28` | ☐ | — |
-| `C_QUEST_MAN_LOAD_DEMAND` | `0x00683A9D` | `0x00683A9D` | ☐ | — |
-| `C_QUEST_MAN_LOAD_PARTY_QUEST_INFO` | `0x006887DE` | `0x006887DE` | ☐ | — |
-| `C_QUEST_MAN_LOAD_EXCLUSIVE` | `0x00689C3E` | `0x00689C3E` | ☐ | — |
+| `C_QUEST_MAN_CREATE_INSTANCE` | `0x008F5E99` | `0x00825C78` | ✔ | catalog (Cluster 5) |
+| `C_QUEST_MAN_INSTANCE_ADDR` | `0x00AA4D28` | `0x00975DFC` | ✔ | catalog (Cluster 5) |
+| `C_QUEST_MAN_LOAD_DEMAND` | `0x00683A9D` | `0x00629040` | ✔ | catalog (Cluster 5) |
+| `C_QUEST_MAN_LOAD_PARTY_QUEST_INFO` | `0x006887DE` | `0x00000000` | ✔ | catalog (Cluster 5) |
+| `C_QUEST_MAN_LOAD_EXCLUSIVE` | `0x00689C3E` | `0x00000000` | ✔ | catalog (Cluster 5) |
 
 ### CQuickslotKeyMappedMan
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_QUICKSLOT_KEY_MAPPED_MAN` | `0x008F62BA` | `0x008F62BA` | ☐ | — |
+| `C_QUICKSLOT_KEY_MAPPED_MAN` | `0x008F62BA` | `0x0082608E` | ✔ | catalog (Cluster 5) |
 
 ### CRadioManager (sentinels)
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_RADIO_MANAGER_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ☐ | — |
-| `C_RADIO_MANAGER_INSTANCE_ADDR` | `0x00000000` | `0x00000000` | ☐ | — |
+| `C_RADIO_MANAGER_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ✔ | catalog (Cluster 5) |
+| `C_RADIO_MANAGER_INSTANCE_ADDR` | `0x00000000` | `0x00000000` | ✔ | catalog (Cluster 5) |
 
 ### CSecurityClient
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_SECURITY_CLIENT_CREATE_INSTANCE` | `0x008F630E` | `0x008F630E` | ☐ | — |
-| `C_SECURITY_CLIENT_INSTANCE_ADDR` | `0x00AA3EE4` | `0x00AA3EE4` | ☐ | — |
-| `C_SECURITY_CLIENT_ON_PACKET` | `0x009422D1` | `0x009422D1` | ☐ | — |
+| `C_SECURITY_CLIENT_CREATE_INSTANCE` | `0x008F630E` | `0x008260E2` | ✔ | catalog (Cluster 5) |
+| `C_SECURITY_CLIENT_INSTANCE_ADDR` | `0x00AA3EE4` | `0x0097085C` | ✔ | catalog (Cluster 5) |
+| `C_SECURITY_CLIENT_ON_PACKET` | `0x009422D1` | `0x008637C4` | ✔ | catalog (Cluster 5) |
 
 ### Stage / set_stage
 
