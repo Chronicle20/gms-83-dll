@@ -250,3 +250,91 @@ CLogin.h gate.
 All seven gate verdicts are `unchanged`/`branch-added` (no NEW source edit required for the 7
 headers in this task); the two divergences above are size facts that propagate to Task 15
 (SecondaryStat) and a stale-comment note, not new gates on these 7 headers.
+
+## Task 14 (Category C / cascade) — UI/control family, exhaustive size (9 headers; CWnd cascade)
+
+Read-only `disasm` only; no struct types applied (R10/R12). Lane re-confirmed via `list_instances`:
+active IDB = port **13344 `GMS_v61.1_U_DEVM.exe`** (v48@13345 distractor never probed; v72@13343).
+Per **D5** every v61 size below is independently measured against a v61 anchor even where it
+"should" match the base. v61 retains full mangled C++ symbols.
+
+### Step 1 — per-header gate truth table (v61); every upper gate is FALSE → base/excluded branch
+
+| Header:line | Gate | v61 | Effect on v61 layout |
+|---|---|---|---|
+| CWnd.h:4 | `>=95 \|\| JMS` | F | `UIOrigin` enum (no member) |
+| **CWnd.h:25** | **`>=83 \|\| JMS`** | **F** | `m_pAnimationLayer`/`m_pOverlabLayer` ABSENT (cascade root; Task 12) |
+| CWnd.h:35 | `>=87 \|\| JMS` | F | `m_ptCursorRel` → 2-int `#else` (`m_ptCursorRel_x/_y`) |
+| CWnd.h:44 | `>=95` | F | `m_origin` ABSENT |
+| CUIWnd.h:11 | `>=95` | F | `m_nSmallScreenX..m_bIsLargeMode` (5 fields) ABSENT |
+| CUIToolTip.h:82 | `>=95` | F | `CLineInfo::m_bUseDotImage` ABSENT (CLineInfo=0x24 here w/o it; member sits past v61 use) |
+| CUIToolTip.h:92 | `>=83 \|\| JMS` | F | `m_pLayerAdditional` ABSENT (Task 12) |
+| CUIToolTip.h:100 | `>=95 \|\| JMS` | F | `m_nOptionLineNo`+`m_aOptionLineInfo[32]` ABSENT |
+| CUIToolTip.h:125 | `>=84 \|\| JMS` | F | `m_pFontGen_Unknown` ABSENT |
+| CUIToolTip.h:128 | `>=87 \|\| JMS` | F | `m_pFontH_White` ABSENT |
+| CUIToolTip.h:131 | `>=87` | F | `m_pFontStan_Prp` ABSENT |
+| CUIToolTip.h:134 | `>=95` | F | `m_pFontStan_Dsc..m_pFontSkill_Dsc` (4) ABSENT |
+| CUIToolTip.h:152 | `>=84 \|\| JMS` | F | `m_pCanvasEquip_Durability[2][2]` ABSENT |
+| CCtrlButton.h:32 | `>=95` | F | `m_sToolTipFromData` ABSENT |
+| CCtrlCheckBox.h:16 | `>=95` | F | `m_nTextOffsetX`+`m_nTextOffsetY` ABSENT |
+| CFadeWnd.h:18 | `REGION_GMS` | **T** | `m_bUserAlarm` PRESENT (region gate, not version) |
+| **CFadeWnd.h:24** | **`>=87 \|\| JMS`** | **F** | `m_nLevel`/`m_nJobCode`/`m_nExpQuestID` ABSENT (proven by size arithmetic, below) |
+| CUITitle.h:3 | `>=95 \|\| JMS` | F | base = **CDialog** (not CFadeWnd) — correct for v61 |
+| CUITitle.h:12 | `>=95 \|\| JMS` | F | `m_rcRMA` ABSENT |
+| CUILoginStart.h:8 | `>=95 \|\| JMS` | F | `m_pFont`+`m_pCanvasChannelName` ABSENT |
+| CUILoginStart.h:12 | `REGION_GMS` | **T** | 5-element `m_aBtParam[5]`/`m_apButton[5]` (GMS branch) — correct for v61 |
+| CLogo.h:5/16/30 | `>=95` | F | `VIDEO_STATE`, `m_pLayerBackground`, `m_bVideoMode`/`m_videoState` ABSENT |
+| CLogo.h:27 | `>=95 \|\| JMS` | F | `m_bNXFadeOut` ABSENT |
+| CLogo.h:34/91 | `>=111` | F | `dummy1` ABSENT |
+| CLogo.h:93 | `==95` | F | falls to `#elif REGION_GMS` → `assert_size(sizeof(CLogo) >= 0x38)` |
+
+### Step 2 — CWnd cascade resolution (R5): NOT triggered; all 5 derived sizes independently confirmed
+
+v61 `sizeof(CWnd)` base subobject = **0x64 == v72** (Task 12; re-anchored here: ctor `CWnd::CWnd`
+@`0x4BB456` writes `[esi+64h]=[esi+68h]=[esi+70h]=0` + 3 vtables, highest write 0x70 — anim-layer
+pair `>=83||JMS` absent, byte-identical to v72). **Cascade NOT triggered** → the five CWnd-derived
+classes inherit v72's verdict, each independently size-confirmed below (D5). No derived class
+surfaced a v61-specific size divergence.
+
+| Derived class | v61 size | Independent v61 anchor | Cascade verdict |
+|---|---|---|---|
+| **CDialog** (intermediate) | **0x74** | `CFadeWnd::SetOption` @`0x4DD232` stores first own member `m_a0`→`[ecx+74h]` (and `CFadeWnd::CFadeWnd` @`0x4DD186` calls `CWnd::CWnd` directly then writes `m_nPhase`@`0xA4`; the 11 anim fields back-fill to `m_a0`@0x74) ⇒ CDialog ends @0x74 (CWnd 0x64 + 0x10) | confirmed-shares-v72 |
+| **CUIWnd** | **0x59C** | `CUIWnd::OnDestroy` @`0x707C24` reads `[this+574h]` (`m_nUIType`) ⇒ embedded `m_uiToolTip`(0x50C)@0x68 ends @0x574; then 6 ints + 2 bools + `m_nOption` + ZArray + ZXString ⇒ 0x59C. `>=95` 5-field block absent | confirmed-shares-v72 |
+| **CFadeWnd** | **0xD0** | `CUIFadeYesNo::CUIFadeYesNo` @`0x4DDC49` calls `CFadeWnd::CFadeWnd` then writes its FIRST own member `[esi+0D0h]` ⇒ sizeof(CFadeWnd)=0xD0. `CreateGuildInvite` @`0x4E04EB`: `m_nType`@0xBC(=7), `m_sInviter` ZXString @0xC0 (via sub_414F76). **`>=87` block ABSENT — proven:** m_dwSN/m_dwFriendID must occupy 0xC4..0xD0; the 0xC-byte level/job/quest block cannot also fit ⇒ if present, size would be ≥0xD8 (it is 0xD0) | confirmed-shares-v72 |
+| **CUITitle** | **≈0x5E4** | `CUITitle::EnableLoginCtrl` @`0x58966D` touches button/edit ZRefs up to `[esi+0D4h]` (`m_pEditPasswd`); trailing embedded `m_uiToolTipTitle`(CUIToolTip 0x50C)@≈0xD8 ⇒ ≈0x5E4. base=CDialog (line 3 `>=95` false), `m_rcRMA` absent. (Size is observed-lower-bound + embedded-toolTip; gate verdict solid.) | confirmed-shares-v72 |
+| **CUILoginStart** | **≈0xBC** | Fully inlined in v61 (no standalone symbol). Computed from proven CDialog base (0x74) + `m_pLogin` + GMS `m_aBtParam[5]`(0x28) + `m_apButton[5]`(0x14) + `m_nViewWorldButtonType` + `m_bRequestSent`. `>=95` pair absent; GMS 5-element arrays selected (region gate, correct) | confirmed-shares-v72 |
+
+### Step 3 — per-header size + gated-field present/absent verdict (9 headers)
+
+| Header | v61 size | Per-gate present/absent (v61) | Deciding v61 anchor | Verdict |
+|---|---|---|---|---|
+| CWnd.h | **0x64** (base subobject; ctor writes through 0x70) | anim-layer pair `>=83` ABSENT; `m_ptCursorRel` 2-int `#else`; `m_origin` `>=95` ABSENT | ctor `CWnd::CWnd` @0x4BB456 (highest write 0x70); == v72 (Task 12, 3 landmarks) | **confirmed-shares-v72** (cascade root, not triggered) |
+| CUIWnd.h | **0x59C** (1436) | `>=95` 5-field block ABSENT | `OnDestroy` @0x707C24 `[this+574h]`=m_nUIType ⇒ toolTip 0x68..0x574 | **unchanged** (confirmed-shares-v72) |
+| CUIToolTip.h | **0x50C** (1292) | `m_pLayerAdditional`(>=83), opt-line block(>=95), `m_pFontGen_Unknown`(>=84), `m_pFontH_White`/`m_pFontStan_Prp`(>=87), stan/skill fonts(>=95), Durability(>=84), CLineInfo dot(>=95) ALL ABSENT | Task 12 (ctor @0x748FFE byte-identical v72) + re-anchored: embedded in CUIWnd spans 0x68→0x574 = 0x50C | **confirmed-shares-v72** |
+| CWnd.h derived → CFadeWnd.h | **0xD0** (208) | `m_bUserAlarm` PRESENT (GMS); `m_nLevel`/`m_nJobCode`/`m_nExpQuestID` `>=87` ABSENT | `CUIFadeYesNo` ctor @0x4DDC49 first own member @0xD0; `CreateGuildInvite` m_nType@0xBC/m_sInviter@0xC0; >=87 block can't fit (arithmetic) | **confirmed-shares-v72** (unchanged) |
+| CCtrlButton.h | **0x5A0** (1440) | `m_sToolTipFromData` `>=95` ABSENT | ctor `CCtrlButton::CCtrlButton` @0x44E442: CCtrlWnd base@0x68, embedded `m_uiToolTip`(0x50C)@0x90 ⇒ ends 0x59C, `m_bSelfDisable`@0x59C ⇒ 0x5A0 | **unchanged** |
+| CCtrlCheckBox.h | **≈0x9C** (156) | `m_nTextOffsetX`/`m_nTextOffsetY` `>=95` ABSENT | Fully inlined in v61 (no symbol). Computed from CCtrlWnd base 0x68 (proven via CCtrlButton ctor) + 4 ints + ZXString + 5 fields + canvas[4]; only gate is `>=95` (absent). No `assert_size` ⇒ size non-load-bearing | **unchanged** |
+| CUITitle.h | **≈0x5E4** (1508) | base=CDialog (`>=95` false); `m_rcRMA` `>=95` ABSENT; JMS `m_unk` absent (GMS) | `EnableLoginCtrl` @0x58966D members to m_pEditPasswd@0xD4 + embedded CUIToolTip 0x50C | **unchanged** |
+| CUILoginStart.h | **≈0xBC** (188) | `m_pFont`/`m_pCanvasChannelName` `>=95` ABSENT; 5-element GMS arrays selected | Computed from proven CDialog base 0x74; inlined (no symbol). No `assert_size` | **unchanged** |
+| CLogo.h | **0x38** (56) | `m_pLayerBackground`/`m_bVideoMode`/`m_videoState`/`VIDEO_STATE`(>=95), `m_bNXFadeOut`(>=95\|JMS), `dummy1`(>=111) ALL ABSENT | ctor `CLogo::CLogo` @0x5950F4 highest field write `[esi+34h]`=`m_bNXFadeIn` (+vtables to 0xC) ⇒ 0x38; CStage base via sub_45BE8F. == v83/v84/v87 (header note) | **unchanged** (`#elif REGION_GMS` `assert_size >= 0x38` holds) |
+
+### Findings / divergences
+- **No split surfaced.** All 9 headers + the CDialog cascade intermediate take the v72/base branch
+  for v61; every enumerated `>=83`/`>=84`/`>=87`/`>=95`/`>=111`/`==95` gate is FALSE for v61, and
+  the two region gates (`CFadeWnd::m_bUserAlarm`, `CUILoginStart` 5-arrays) select the GMS branch
+  correctly. The cascade is confirmed NOT triggered (CWnd 0x64 == v72).
+- **Investigated false-alarm (recorded for audit trail):** CUIFadeYesNo's first member at 0xD0 and
+  CreateGuildInvite's `m_nType`@0xBC initially read as if CFadeWnd carried the `>=87` quest/level
+  block. Probed to resolution — m_dwSN/m_dwFriendID provably occupy 0xC4..0xD0, so the 0xC-byte
+  `m_nLevel/m_nJobCode/m_nExpQuestID` block is **absent** (its presence would force size ≥0xD8).
+  Gate `CFadeWnd.h:24 >=87` is correct for v61. **Not flagged to Task 17.**
+- **Size-precision caveats (gate verdicts unaffected):** CUITitle (≈0x5E4), CUILoginStart (≈0xBC),
+  CCtrlCheckBox (≈0x9C) are leaf classes fully/partly inlined in v61 — their byte sizes are
+  observed-lower-bound (CUITitle) or computed from a proven base (CUILoginStart/CCtrlCheckBox)
+  rather than a single Alloc anchor. None carries an `assert_size`, and none is a layout-shifting
+  base, so the exact byte count is non-load-bearing; the `unchanged` gate verdict is firm.
+
+### Cross-version safety (FR-13)
+No source edits in this evidence task. All 9 headers' selected branches for v72/v79/v83/v84/v87/
+v95/v111/JMS185 are untouched; v61 simply joins the existing base/`#else` branch that v72 already
+occupies for every gate. No `assert_size` change, no struct-type application.
