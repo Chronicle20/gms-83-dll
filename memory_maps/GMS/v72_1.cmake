@@ -13,12 +13,12 @@ set(CLIENT_START_ERROR 0x19) # confirmed v79: COutPacket(25) @0x48cfbf, bLogin O
 
 set(GET_SE_PRIVILEGE 0x0044A48E) # GetSEPrivilege (named); OpenProcessToken+LookupPrivilegeValueA("SeDebugPrivilege")+AdjustTokenPrivileges
 
-set(C_ACTION_MAN_CREATE_INSTANCE_ADDR 0x00946A09) # TSingleton<CActionMan>::CreateInstance; Alloc(672)+ctor; instance global 0xB07804
-set(C_ACTION_MAN_INSTANCE_ADDR 0x00B07804) # ActionManInstanceAddr; the mov [g],eax store in CreateInstance
-set(C_ACTION_MAN_INIT 0x0040681C) # symbol ?Init@CActionMan@@QAEXXZ
-set(C_ACTION_MAN_SWEEP_CACHE 0x0040FEEA) # symbol ?SweepCache@CActionMan@@QAEXXZ
+set(C_ACTION_MAN_CREATE_INSTANCE_ADDR 0x008F6172) # symbol ?CreateInstance@?$TSingleton@VCActionMan@@; Alloc(0x2A0=672)+ctor 0x406497; instance global ActionManInstanceAddr 0xA9F3F4; called from CWvsApp::SetUp @0x8f2d1b. RELOCATED (was v79 0x946A09)
+set(C_ACTION_MAN_INSTANCE_ADDR 0x00A9F3F4) # ActionManInstanceAddr; singleton dword read at top of CreateInstance + SBB store in ctor. RELOCATED (was v79 0xB07804); v72 singleton globals cluster at 0xA9F3Fx
+set(C_ACTION_MAN_INIT 0x0040681C) # symbol ?Init@CActionMan@@QAEXXZ; called from SetUp @0x8f2d22 right after CreateInstance. DIRECT (== v79)
+set(C_ACTION_MAN_SWEEP_CACHE 0x0040FE89) # symbol ?SweepCache@CActionMan@@QAEXXZ; sole caller CWvsApp::CallUpdate (0x8f4991). DRIFT (was v79 0x40FEEA)
 
-set(C_ANIMATION_DISPLAYER_CREATE_INSTANCE 0x00946A5F) # TSingleton<CAnimationDisplayer>::CreateInstance; Alloc(424)+ctor; instance 0xB0BE9C
+set(C_ANIMATION_DISPLAYER_CREATE_INSTANCE 0x008F61C8) # symbol ?CreateInstance@?$TSingleton@VCAnimationDisplayer@@; Alloc(0x1A8=424)+ctor 0x431b69; instance 0xAA3A8C; called from SetUp @0x8f2d27. RELOCATED (was v79 0x946A5F)
 
 set(C_CLIENT_SOCKET_INSTANCE_ADDR 0x00A9F434) # g_pClientSocketInstance; SBB-singleton store at top of CClientSocket ctor (0x484c95) + CreateInstance store; read by whole send subsystem (CField/CCashShop senders). DRIFT vs v79 0xB07844 (CWvsContext singleton = +4 = 0xA9F438)
 set(C_CLIENT_SOCKET_CREATE_INSTANCE 0x008F621F) # TSingleton<CClientSocket>::CreateInstance (symbol); Alloc(148=0x94)+ctor(0x484c95)+store g_pClientSocketInstance
@@ -44,22 +44,22 @@ set(C_CONFIG_APPLY_SYS_OPT 0x004960F9) # symbol ?ApplySysOpt@CConfig@@; qmemcpy(
 set(C_CONFIG_CHECK_EXEC_PATH_REG 0x0049440C) # symbol ?CheckExecPathReg@CConfig@@; this[48] reg handle + StringPool(3114/3115) + 92 backslash + GetFileAttributes(==-1||&0x10)
 set(C_CONFIG_SYS_OPT_WINDOWED_MODE 0x00B11548) # g_CConfig_SysOpt_WindowedMode; CreateMainWindow style branch (?0x80000000:720896 / ?8:0) + InitializeGr2D device reader (Task 13 windowed-mode offset)
 
-set(C_FUNC_KEY_MAPPED_MAN 0x00569DE5) # symbol ??0CFuncKeyMappedMan@@QAE@XZ (ctor); installs vtable 0xA2EB38, instance 0xB0D2A8
-set(C_FUNC_KEY_MAPPED_MAN_VFTABLE 0x00A2EB38) # off_A2EB38; installed at *this in the ctor
-set(C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR 0x00B0D2A8) # dword_B0D2A8; SBB-singleton store in ctor + read by CreateInstance
-set(C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE 0x00946AFB) # TSingleton<CFuncKeyMappedMan>::CreateInstance; Alloc(904)+ctor
+set(C_FUNC_KEY_MAPPED_MAN 0x005512EC) # symbol ??0CFuncKeyMappedMan@@QAE@XZ (ctor); installs vtable CFuncKeyMappedMan_vftable 0x9D22D8, instance 0xAA4CB8, memcpy DefaultFKM 0xA5B838 (0x1BD); called from CreateInstance @0x8f6294. RELOCATED (was v79 0x569DE5)
+set(C_FUNC_KEY_MAPPED_MAN_VFTABLE 0x009D22D8) # CFuncKeyMappedMan_vftable; installed at *this (`*this = &off_9D22D8`) in the ctor 0x5512ec. RELOCATED (was v79 0xA2EB38)
+set(C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR 0x00AA4CB8) # FuncKeyMappedManInstanceAddr; SBB-singleton store in ctor + read at top of CreateInstance. RELOCATED (was v79 0xB0D2A8)
+set(C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE 0x008F6264) # symbol ?CreateInstance@?$TSingleton@VCFuncKeyMappedMan@@; Alloc(0x388=904)+ctor 0x5512ec; called from SetUp @0x8f2c77. Alloc size 0x388 confirms Task 2 CFuncKeyMappedMan sizing. RELOCATED (was v79 0x946AFB)
 
-set(DEFAULT_FKM_INSTANCE_ADDR 0x00ABF99C) # DefaultFKMInstanceAddr (unk_ABF99C); 445-byte FKM default blob, memcpy src in ctor + DefaultFuncKeyMap
-set(DEFAULT_QKM_INSTANCE_ADDR 0x00000000) # ABSENT in v79: FKM ctor zeroes the quickslot region (no QKM-default memcpy); v83 32-byte blob has no v79 byte-match. FLAG gate/edit owner (key_mapped_hooks quickslot memcpy must tolerate 0)
+set(DEFAULT_FKM_INSTANCE_ADDR 0x00A5B838) # DefaultFKMInstanceAddr; 445-byte (0x1BD) FKM default blob, memcpy src in ctor 0x5512ec (this+4 and this+449) + DefaultFuncKeyMap 0x5516c1. RELOCATED (was v79 0xABF99C)
+set(DEFAULT_QKM_INSTANCE_ADDR 0x00000000) # ABSENT in v72 (as v79): FKM ctor 0x5512ec zeroes the quickslot region (*((_DWORD*)this+224)=0; +225=0) — no QKM-default memcpy. Confirmed absent. FLAG gate/edit owner (key_mapped_hooks quickslot memcpy must tolerate 0)
 
-set(C_INPUT_SYSTEM 0x00945204) # symbol ??0CInputSystem@@QAE@XZ (ctor); CreateInstance allocs 2512, instance 0xB0C29C
-set(C_INPUT_SYSTEM_CREATE_INSTANCE 0x009466CD) # TSingleton<CInputSystem>::CreateInstance; Alloc(2512)+ctor
-set(C_INPUT_SYSTEM_INSTANCE_ADDR 0x00B0C29C) # InputSystemInstanceAddr (dword_B0C29C); read by ApplySysOpt + CWvsApp::Run input pump
-set(C_INPUT_SYSTEM_INIT 0x005757D4) # symbol ?Init@CInputSystem@@QAEXPAUHWND__@@PAPAX@Z
-set(C_INPUT_SYSTEM_UPDATE_DEVICE 0x00575BFE) # UpdateDevice_CInputSystem; if(!a1)UpdateKeyboard else if(a1==1)UpdateMouse; called from Run (msgtype<=2 branch)
-set(C_INPUT_SYSTEM_GET_IS_MESSAGE 0x00575C1B) # GetIsMessage_CInputSystem; this[625] gate, copies 3 dwords; Run inner drain loop w/ ISMsgProc
-set(C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN 0x00576BE7) # GenerateAutoKeyDown_CInputSystem; *a2=256 + GetSpecialKeyFlag; Run else-branch before CSecurityClient::Update
-set(C_INPUT_SYSTEM_SHOW_CURSOR 0x00575C4D) # symbol ?ShowCursor@CInputSystem@@QAEXH@Z
+set(C_INPUT_SYSTEM 0x008F489E) # symbol ??0CInputSystem@@QAE@XZ (ctor); called from InitializeInput @0x8f4615 + CreateInstance @0x8f5e71. RELOCATED (was v79 0x945204)
+set(C_INPUT_SYSTEM_CREATE_INSTANCE 0x008F5E41) # symbol ?CreateInstance@?$TSingleton@VCInputSystem@@; Alloc(0x9D0=2512)+ctor 0x8f489e; called from CWvsApp::InitializeInput @0x8f4626. RELOCATED (was v79 0x9466CD)
+set(C_INPUT_SYSTEM_INSTANCE_ADDR 0x00AA3E84) # InputSystemInstanceAddr; singleton dword read at top of CreateInstance; cross-confirmed by C_STAGE_ON_MOUSE_ENTER (SetCursorState on dword_AA3E84). RELOCATED (was v79 0xB0C29C)
+set(C_INPUT_SYSTEM_INIT 0x0055CBA9) # symbol ?Init@CInputSystem@@QAEXPAUHWND__@@PAPAX@Z; called from InitializeInput @0x8f462d. RELOCATED (was v79 0x5757D4)
+set(C_INPUT_SYSTEM_UPDATE_DEVICE 0x0055CFD3) # UpdateDevice_CInputSystem; if(!a1)UpdateKeyboard(0x55dc61) else if(a1==1)UpdateMouse(0x55d7e8); called from Run msgtype<=2 branch @0x8f304e (v84-name hint in IDB). RELOCATED (was v79 0x575BFE)
+set(C_INPUT_SYSTEM_GET_IS_MESSAGE 0x0055CFF0) # GetIsMessage_CInputSystem; this[625] gate, copies 3 dwords from this[626]; Run inner drain loop w/ ISMsgProc @0x8f305d (v84-name hint). RELOCATED (was v79 0x575C1B)
+set(C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN 0x0055DFBC) # GenerateAutoKeyDown_CInputSystem; *a2=256 + GetSpecialKeyFlag(0x55ded5); Run else-branch @0x8f3091 right before CSecurityClient::Update(sub_94222A,SecurityClientInstanceAddr) (v84-name hint). RELOCATED (was v79 0x576BE7)
+set(C_INPUT_SYSTEM_SHOW_CURSOR 0x0055D022) # symbol ?ShowCursor@CInputSystem@@QAEXH@Z; called from CLogo::Init @0x5e130c. RELOCATED (was v79 0x575C4D)
 
 set(C_LOGIN_UPDATE 0x005AFBBE) # CLogin primary vtable (off_9D316C) slot0; body uses [esi+0x15C] + InvalidateRect via dword_AA7624 ptr — DIVERGES from C_LOGO_UPDATE in v72 (0x5E1789); shared 0x5F4C16 in v83
 set(C_LOGIN_SEND_CHECK_PASSWORD_PACKET 0x005B1170) # IDB symbol ?SendCheckPasswordPacket@CLogin@@QAEHPBD0@Z; COutPacket(opcode=1, was 0x05 in v79) + EncodeStr x2 + SendPacket(0x4866AC)
@@ -76,17 +76,17 @@ set(C_LOGO_FORCED_END 0x005E135F) # CLogo primary vtable (off_9D3B94) slot 2; Pl
 set(C_LOGO_INIT 0x005E12F1) # CLogo primary vtable (off_9D3B94) slot 1; sub-init + CInputSystem::ShowCursor(0) + CWvsApp::GetCmdLine(3) + conditional LogoEnd
 set(C_LOGO_INIT_NX_LOGO 0x005E13CB) # StringPool ID 1386 (0x56A; was 0x568 in v79) NX-logo resource + init-once guard on [this+0x28]
 
-set(C_MACRO_SYS_MAN_CREATE_INSTANCE 0x00946C88) # CreateInstance_TSingleton_CMacroSysMan; Alloc(80)+ctor 0x6CBBFC; instance 0xB0C118 (matches v83 macro-instance usage by UseFuncKeyMapped+NotifyAvatarModified); called from InitializeGameData tail
+set(C_MACRO_SYS_MAN_CREATE_INSTANCE 0x00000000) # ABSENT in v72 (new v72-only sentinel; was real 0x00946C88 in v79). CMacroSysMan does not exist as a separate singleton in v72: no CMacroSysMan symbol, no "Macro" string, and it is NOT in the complete TSingleton CreateInstance list. The macro-sys-data-init role is folded into CQuickslotKeyMappedMan — CWvsContext::OnMacroSysDataInit (0x92126b) operates on QuickslotKeyMappedManInstanceAddr (0xAA3D04). FLAG gate/edit owner: consuming edit must tolerate 0
 
 set(C_BATTLE_RECORD_MAN_CREATE_INSTANCE 0x00000000) # absent in v79: CBattleRecordMan is a v95+ feature; no CBattleRecordMan symbol or string in v79. Confirmed absent
 
-set(C_MAPLE_TV_MAN_CREATE_INSTANCE 0x00946BEA) # TSingleton<CMapleTVMan>::CreateInstance; Alloc(992)+ctor 0x6072B1; instance 0xB0D458
-set(C_MAPLE_TV_MAN_INSTANCE_ADDR 0x00B0D458) # MapleTVManInstanceAddr (dword_B0D458); also drives the scheduled-message path in CWvsContext::Update (v83's radio role)
-set(C_MAPLE_TV_MAN_INIT 0x006074C7) # symbol ?Init@CMapleTVMan@@QAEXXZ
+set(C_MAPLE_TV_MAN_CREATE_INSTANCE 0x008F6353) # symbol ?CreateInstance@?$TSingleton@VCMapleTVMan@@; Alloc(0x3D0=976)+ctor 0x5e8902; instance 0xAA4E68; called from SetUp @0x8f2d2c. RELOCATED (was v79 0x946BEA)
+set(C_MAPLE_TV_MAN_INSTANCE_ADDR 0x00AA4E68) # MapleTVManInstanceAddr; singleton dword read at top of CreateInstance; also drives the scheduled-message path (v83's radio role — radio is folded into CMapleTVMan). RELOCATED (was v79 0xB0D458)
+set(C_MAPLE_TV_MAN_INIT 0x005E8B18) # symbol ?Init@CMapleTVMan@@QAEXXZ; called from SetUp @0x8f2d33 right after CreateInstance. RELOCATED (was v79 0x6074C7)
 
-set(C_MONSTER_BOOK_MAN_CREATE_INSTANCE 0x009467D6) # TSingleton<CMonsterBookMan>::CreateInstance; Alloc(164)+ctor 0x94681B; instance 0xB0D314
-set(C_MONSTER_BOOK_MAN_INSTANCE_ADDR 0x00B0D314) # MonsterBookManInstanceAddr (dword_B0D314)
-set(C_MONSTER_BOOK_MAN_LOAD_BOOK 0x00651C1F) # symbol ?LoadBook@CMonsterBookMan@@QAEHXZ
+set(C_MONSTER_BOOK_MAN_CREATE_INSTANCE 0x008F5F3F) # symbol ?CreateInstance@?$TSingleton@VCMonsterBookMan@@; Alloc(0xA4=164)+ctor 0x8f5f84; instance 0xAA4D24; called from SetUp @0x8f2d7e. RELOCATED (was v79 0x9467D6)
+set(C_MONSTER_BOOK_MAN_INSTANCE_ADDR 0x00AA4D24) # MonsterBookManInstanceAddr; singleton dword read at top of CreateInstance. RELOCATED (was v79 0xB0D314)
+set(C_MONSTER_BOOK_MAN_LOAD_BOOK 0x0062F410) # symbol ?LoadBook@CMonsterBookMan@@QAEHXZ; called from SetUp @0x8f2d85 (failure -> CTerminateException). RELOCATED (was v79 0x651C1F)
 
 set(C_OUT_PACKET 0x00656FA1) # symbol ??0COutPacket@@QAE@J@Z; _Alloc(256/push 100h)+Init(0x65707C) structure. DRIFT v79 0x67AD6B (helper sub_486FE4)
 set(C_OUT_PACKET_ENCODE_1 0x004062C7) # symbol Encode1; push 1 + mov [eax+ecx],dl + inc; shared _EnsureCapacity 0x4062E5. DIRECT (== v79)
@@ -101,20 +101,20 @@ set(C_IG_CIPHER_INNO_HASH 0x00993442) # symbol ?innoHash@CIGCipher@@; seed -9678
 set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR 0x00402AB8) # symbol ??0?$ZSynchronizedHelper@VZFatalSection@@@@; acquire-loop off_AC4ECC + Sleep(0) retry (dword_B0FDE4); called from SendPacket (this+124). DRIFT: v83 0x403166
 set(Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR 0x00402ADD) # ctor+0x25; dec [eax+4]; jnz; and [eax],0 (release recursion count). RAII release pair w/ ctor (inlined in SendPacket; jmp from loc_9BD033). DRIFT: v83 0x40318B. Listing aliases under ZAllocEx::Alloc (dump aliasing)
 
-set(C_QUEST_MAN_CREATE_INSTANCE 0x00946725) # TSingleton<CQuestMan>::CreateInstance; Alloc(648)+ctor 0x6A86CD; instance 0xB0D318
-set(C_QUEST_MAN_INSTANCE_ADDR 0x00B0D318) # QuestManInstanceAddr (dword_B0D318)
-set(C_QUEST_MAN_LOAD_DEMAND 0x006A8CD6) # symbol ?LoadDemand@CQuestMan@@QAEHXZ
-set(C_QUEST_MAN_LOAD_PARTY_QUEST_INFO 0x006AE1F4) # symbol ?LoadPartyQuestInfo@CQuestMan@@QAEXXZ
-set(C_QUEST_MAN_LOAD_EXCLUSIVE 0x006AF68D) # symbol ?LoadExclusive@CQuestMan@@QAEXXZ
+set(C_QUEST_MAN_CREATE_INSTANCE 0x008F5E99) # symbol ?CreateInstance@?$TSingleton@VCQuestMan@@; Alloc(0x258=600)+ctor 0x6834e4; instance 0xAA4D28; called from SetUp @0x8f2d38. RELOCATED (was v79 0x946725)
+set(C_QUEST_MAN_INSTANCE_ADDR 0x00AA4D28) # QuestManInstanceAddr; singleton dword read at top of CreateInstance + SetUp LoadPartyQuestInfo((CQuestMan*)dword_AA4D28) @0x8f2d6e. RELOCATED (was v79 0xB0D318)
+set(C_QUEST_MAN_LOAD_DEMAND 0x00683A9D) # symbol ?LoadDemand@CQuestMan@@QAEHXZ; called from SetUp @0x8f2d3f (failure -> CTerminateException). RELOCATED (was v79 0x6A8CD6)
+set(C_QUEST_MAN_LOAD_PARTY_QUEST_INFO 0x006887DE) # symbol ?LoadPartyQuestInfo@CQuestMan@@QAEXXZ; called from SetUp @0x8f2d6e on QuestManInstanceAddr. RELOCATED (was v79 0x6AE1F4)
+set(C_QUEST_MAN_LOAD_EXCLUSIVE 0x00689C3E) # symbol ?LoadExclusive@CQuestMan@@QAEXXZ; called from SetUp @0x8f2d79 on QuestManInstanceAddr. RELOCATED (was v79 0x6AF68D)
 
-set(C_QUICKSLOT_KEY_MAPPED_MAN 0x00946B51) # TSingleton<CQuickslotKeyMappedMan>::CreateInstance; Alloc(48)+ctor 0x602158; instance 0xB0C114
+set(C_QUICKSLOT_KEY_MAPPED_MAN 0x008F62BA) # symbol ?CreateInstance@?$TSingleton@VCQuickslotKeyMappedMan@@; Alloc(0x30=48)+ctor 0x5e385d; instance 0xAA3D04; called from SetUp @0x8f2c7c. Also hosts the v72 macro-sys role (OnMacroSysDataInit 0x92126b). RELOCATED (was v79 0x946B51)
 
-set(C_RADIO_MANAGER_CREATE_INSTANCE 0x00000000) # ABSENT in v79: no CRadioManager singleton (not in the 0x946xxx cluster); the scheduled-message/radio role is folded into CMapleTVMan in v79. FLAG gate/edit owner (common/CRadioManager.cpp must tolerate 0)
-set(C_RADIO_MANAGER_INSTANCE_ADDR 0x00000000) # ABSENT in v79 (see above). v83 seed 0xBF0B00 was ALWAYS WRONG: it is the dword_BF0B00 ZAllocEx allocator-selector (1st Alloc arg), not the instance; the real v83 instance was 0xBEC3B4. v79 has no separate radio instance.
+set(C_RADIO_MANAGER_CREATE_INSTANCE 0x00000000) # ABSENT in v72 (as v79): no CRadioManager singleton — confirmed absent from the COMPLETE v72 TSingleton CreateInstance list (11 entries, none CRadioManager) + no CRadioManager symbol/string. The scheduled-message/radio role is folded into CMapleTVMan (0xAA4E68). FLAG gate/edit owner (common/CRadioManager.cpp must tolerate 0)
+set(C_RADIO_MANAGER_INSTANCE_ADDR 0x00000000) # ABSENT in v72 (see above). RADIO-QUIRK VERDICT: the v79 seed of 0 is CORRECT for v72 — the v83 allocator-selector trap (0xBF0B00 = dword ZAllocEx selector, not the instance) does NOT apply here because the v79 seed was already 0, so nothing wrong was inherited. v72 has no separate radio instance global.
 
-set(C_SECURITY_CLIENT_CREATE_INSTANCE 0x00946BA5) # TSingleton<CSecurityClient>::CreateInstance; Alloc(316)+ctor 0x994493; instance 0xB0C308
-set(C_SECURITY_CLIENT_INSTANCE_ADDR 0x00B0C308) # SecurityClientInstanceAddr (dword_B0C308)
-set(C_SECURITY_CLIENT_ON_PACKET 0x00994995) # OnPacket_CSecurityClient; Decode1==4 -> OnCheckClientIntegrityRequest; reached from CClientSocket::ProcessPacket case 0x14. needs-main-review (security_hooks boundary)
+set(C_SECURITY_CLIENT_CREATE_INSTANCE 0x008F630E) # symbol ?CreateInstance@?$TSingleton@VCSecurityClient@@; Alloc(0x13C=316)+ctor 0x941dcf; instance 0xAA3EE4; called from SetUp @0x8f2c2e (then InitModule/StartModule). RELOCATED (was v79 0x946BA5)
+set(C_SECURITY_CLIENT_INSTANCE_ADDR 0x00AA3EE4) # SecurityClientInstanceAddr; singleton dword read at top of CreateInstance + SetUp InitModule/StartModule on dword_AA3EE4 + Run CSecurityClient::Update(sub_94222A,dword_AA3EE4). RELOCATED (was v79 0xB0C308)
+set(C_SECURITY_CLIENT_ON_PACKET 0x009422D1) # symbol ?OnPacket@CSecurityClient@@QAEXAAVCInPacket@@@Z; body Decode1; cmp al,4; jnz; OnCheckClientIntegrityRequest(0x9422f0); reached from CClientSocket::ProcessPacket case 0x14. SPOT-CHECKED. needs-main-review (security_hooks boundary). RELOCATED (was v79 0x994995)
 
 set(STAGE_INSTANCE_ADDR 0x00AA54D4) # StageInstanceAddr (dword_AA54D4); zeroed then written by set_stage (0x6C1FBB); read by CWvsApp::CallUpdate (0x8F4991) + CClientSocket::ProcessPacket stage dispatch
 set(SET_STAGE 0x006C1FBB) # IDB symbol ?set_stage@@YAXPAVCStage@@PAX@Z; clears STAGE_INSTANCE_ADDR, calls old_stage->vtable[2]=ForcedEnd, stores new stage, calls new_stage->vtable[1]=Init

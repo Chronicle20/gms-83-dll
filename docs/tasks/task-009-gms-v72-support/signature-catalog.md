@@ -448,8 +448,70 @@ _(entries: instance addr, CreateInstance, SendPacket, Flush, OnConnect, Process,
 ### Config / Input / FuncKeyMappedMan
 _(entries: CConfig ctor + ApplySysOpt, CInputSystem, CFuncKeyMappedMan CreateInstance + ctor)_
 
-### Manager singletons
-_(entries: *_CREATE_INSTANCE / *_INSTANCE_ADDR — ActionMan, AnimationDisplayer, etc.)_
+### Manager singletons (Task 7)
+
+**Cluster anchor — CWvsApp::SetUp (0x008F2A7D).** The whole manager-singleton chain is driven from one
+function: `CWvsApp::SetUp`. It calls `TSingleton<X>::CreateInstance()` in a fixed order, and each
+`CreateInstance` (an `__EH_prolog` thunk) reads its instance global at the top
+(`mov eax, <g>; test eax; jnz ret` — the TSingleton lazy-init guard) and, if null, calls
+`ZAllocEx<ZAllocAnonSelector>::Alloc(<size>)` + the class ctor (the SBB-singleton ctor stores `this`
+into `<g>`). So **two anchors fall out together for every pair**: (1) the surviving mangled
+`?CreateInstance@?$TSingleton@V<Class>@@…` symbol, and (2) the SetUp call site + the `Alloc(<size>)`
+immediate that matches the class object size + the instance global the guard reads. v72's complete
+TSingleton list is 11 entries (CUIQuestAlarm, CInputSystem, CQuestMan, CMonsterBookMan, CActionMan,
+CAnimationDisplayer, CClientSocket, CFuncKeyMappedMan, CQuickslotKeyMappedMan, CSecurityClient,
+CMapleTVMan) — **no CMacroSysMan, no CRadioManager** (see Sentinels).
+
+The v72 manager `CreateInstance` cluster relocated to **0x8F5E41–0x8F6353** (the v79 cluster was at
+0x946xxx — a wholesale move; never inherit a v79 0x946xxx address). The instance globals relocated to
+the v72 singleton .data window **0xA9F3F4 / 0xAA3xxx / 0xAA4xxx** (v79 used 0xB07xxx / 0xB0Cxxx /
+0xB0Dxxx). Method functions kept their own addresses (relocated independently). All 14 globals/methods
+labeled in the v72 IDB.
+
+| Manager | CreateInstance (key …_CREATE_INSTANCE) | instance global (key …_INSTANCE_ADDR) | Alloc | ctor | SetUp call site |
+|---|---|---|---|---|---|
+| ActionMan | 0x008F6172 | 0x00A9F3F4 | 0x2A0=672 | 0x406497 | 0x8f2d1b |
+| AnimationDisplayer | 0x008F61C8 | 0x00AA3A8C (no key) | 0x1A8=424 | 0x431b69 | 0x8f2d27 |
+| MapleTVMan | 0x008F6353 | 0x00AA4E68 | 0x3D0=976 | 0x5e8902 | 0x8f2d2c |
+| MonsterBookMan | 0x008F5F3F | 0x00AA4D24 | 0xA4=164 | 0x8f5f84 | 0x8f2d7e |
+| QuestMan | 0x008F5E99 | 0x00AA4D28 | 0x258=600 | 0x6834e4 | 0x8f2d38 |
+| InputSystem | 0x008F5E41 | 0x00AA3E84 | 0x9D0=2512 | 0x8f489e | InitializeInput 0x8f4626 |
+| FuncKeyMappedMan | 0x008F6264 | 0x00AA4CB8 | 0x388=904 | 0x5512ec | 0x8f2c77 |
+| QuickslotKeyMappedMan | 0x008F62BA | 0x00AA3D04 (no key) | 0x30=48 | 0x5e385d | 0x8f2c7c |
+| SecurityClient | 0x008F630E | 0x00AA3EE4 | 0x13C=316 | 0x941dcf | 0x8f2c2e |
+
+- Drift v79→v72: every CreateInstance + every instance global RELOCATED (wholesale cluster move). The
+  TSingleton lazy-init codegen + the `Alloc(size)` immediate held perfectly — Alloc sizes match the
+  class identities, giving a robust structural anchor independent of the symbol. MapleTVMan Alloc =
+  976 (v79 comment said 992) and QuestMan = 600 (v79 said 648): the v72 objects are slightly smaller
+  (older/reduced members), but the symbol + SetUp order made the identity unambiguous.
+
+#### Manager method keys (Task 7 Step 3)
+- `C_ACTION_MAN_INIT` 0x0040681C — symbol `?Init@CActionMan@@`; SetUp call @0x8f2d22 (right after ActionMan CreateInstance). **DIRECT (== v79).**
+- `C_ACTION_MAN_SWEEP_CACHE` 0x0040FE89 — symbol `?SweepCache@CActionMan@@`; sole caller CWvsApp::CallUpdate (0x8f4991). Drift: 0x40FE89 vs v79 0x40FEEA (the v79 cmake value 0x40FEEA was mid-function — corrected to the function entry).
+- `C_MAPLE_TV_MAN_INIT` 0x005E8B18 — symbol `?Init@CMapleTVMan@@`; SetUp call @0x8f2d33.
+- `C_MONSTER_BOOK_MAN_LOAD_BOOK` 0x0062F410 — symbol `?LoadBook@CMonsterBookMan@@`; SetUp call @0x8f2d85 (failure throws CTerminateException).
+- `C_QUEST_MAN_LOAD_DEMAND` 0x00683A9D — symbol `?LoadDemand@CQuestMan@@`; SetUp call @0x8f2d3f (failure throws CTerminateException).
+- `C_QUEST_MAN_LOAD_PARTY_QUEST_INFO` 0x006887DE — symbol `?LoadPartyQuestInfo@CQuestMan@@`; SetUp call @0x8f2d6e on QuestManInstanceAddr (dword_AA4D28).
+- `C_QUEST_MAN_LOAD_EXCLUSIVE` 0x00689C3E — symbol `?LoadExclusive@CQuestMan@@`; SetUp call @0x8f2d79 on dword_AA4D28.
+- `C_INPUT_SYSTEM_INIT` 0x0055CBA9 — symbol `?Init@CInputSystem@@`; InitializeInput call @0x8f462d.
+- `C_INPUT_SYSTEM_SHOW_CURSOR` 0x0055D022 — symbol `?ShowCursor@CInputSystem@@`; caller CLogo::Init @0x5e130c (ShowCursor(0) on the InputSystem singleton).
+- `C_SECURITY_CLIENT_ON_PACKET` 0x009422D1 — **[needs-main-review, spot-checked]** symbol `?OnPacket@CSecurityClient@@`; body = `Decode1; cmp al,4; jnz; OnCheckClientIntegrityRequest(0x9422f0)` — matches the documented integrity-check dispatch; reached from CClientSocket::ProcessPacket (0x486922) case 0x14.
+
+#### InputSystem unnamed methods (no surviving symbol — call-graph + body anchors)
+The 3 input-pump methods have no mangled symbol in v72; resolved via CWvsApp::Run (0x8F2F82) call sites
++ body shape. The v72 IDB also carried unresolved "v84 name" hints that matched exactly (relabeled).
+- `C_INPUT_SYSTEM_UPDATE_DEVICE` 0x0055CFD3 — Run msgtype<=2 branch `sub_55CFD3(v3)` @0x8f304e; body `if(!a1) UpdateKeyboard(0x55dc61); if(a1==1) UpdateMouse(0x55d7e8)`. Two anchors: call-graph (Run) + body shape. (v84 hint: UpdateDevice_CInputSystem.)
+- `C_INPUT_SYSTEM_GET_IS_MESSAGE` 0x0055CFF0 — Run inner drain loop `while(sub_55CFF0(&v32)) ISMsgProc(...)` @0x8f305d; body `if(!this[625]) return 0; copy 3 dwords from this[626]`. (v84 hint: GetIsMessage_CInputSystem.)
+- `C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN` 0x0055DFBC — Run else-branch `if(sub_55DFBC(&v32)) ISMsgProc(...)` @0x8f3091, immediately before `sub_94222A(SecurityClientInstanceAddr)` = CSecurityClient::Update; body `*a2=256; … GetSpecialKeyFlag(0x55ded5)`. (v84 hint: GenerateAutoKeyDown_CInputSystem.)
+
+#### DEFAULT_FKM_INSTANCE_ADDR / DEFAULT_QKM_INSTANCE_ADDR
+- `DEFAULT_FKM_INSTANCE_ADDR` 0x00A5B838 — the 445-byte (0x1BD) FKM default blob. Two anchors: (1) FKM
+  ctor 0x5512ec `memcpy(this+4, &unk_A5B838, 0x1BD)` (and a second memcpy to this+449); (2) symbol
+  `?DefaultFuncKeyMap@CFuncKeyMappedMan@@` (0x5516c1) `memcpy(this+4, unk_A5B838, 0x1BD)`. Relocated (v79 0xABF99C).
+- `DEFAULT_QKM_INSTANCE_ADDR` 0x00000000 — confirmed absent: FKM ctor 0x5512ec does **not** memcpy a
+  quickslot-default blob; it zeroes the region (`*((_DWORD*)this+224)=0; +225=0`). Same disposition as
+  v79. FLAG: key_mapped_hooks quickslot memcpy must tolerate 0.
 
 ### WinMain + offsets
 _(entries: WIN_MAIN, AD_BALLOON_CONDITIONAL offset, PATCHER offset, SEND_HS_LOG)_
@@ -483,6 +545,23 @@ note any drift from v79's confirmed VERSION_HEADER=8)_
 ### Sentinels (confirmed absent in v72)
 _(DR_CHECK, DR_INIT, CE_TRACER_RUN, C_BATTLE_RECORD_MAN_CREATE_INSTANCE, JMS-only keys, and
 any new v72-only sentinels — record the evidence of absence, not just the `0x0`)_
+
+#### C_MACRO_SYS_MAN_CREATE_INSTANCE — NEW v72-only sentinel (was real 0x00946C88 in v79). **FLAG.**
+- Evidence of absence (3 independent): (1) no `CMacroSysMan` function symbol (`*CMacroSysMan*` filter empty);
+  (2) no `Macro`/`MacroSysMan` string (find_regex empty); (3) **not** in the COMPLETE v72 TSingleton
+  CreateInstance list (11 entries enumerated).
+- Where the feature went: the macro-sys-data-init role is folded into **CQuickslotKeyMappedMan** in v72.
+  `CWvsContext::OnMacroSysDataInit` (0x92126b) operates on QuickslotKeyMappedManInstanceAddr (0xAA3D04)
+  (`sub_5E39CE(dword_AA3D04)`), not on any CMacroSysMan instance.
+- Disposition: carry `0x00000000` + `# absent in v72`. FLAG gate/edit owner — consuming edit must tolerate 0.
+
+#### C_RADIO_MANAGER_CREATE_INSTANCE / C_RADIO_MANAGER_INSTANCE_ADDR — confirmed absent (as v79). **FLAG (existing).**
+- Evidence: no CRadioManager symbol/string; not in the complete TSingleton list. The scheduled-message/radio
+  role is folded into **CMapleTVMan** (instance 0xAA4E68), same as v79.
+- **Radio-quirk verdict:** the v79 seed for both keys was already `0x00000000`, so there is NO wrong value
+  to inherit. The v83 allocator-selector trap (v83 seed 0xBF0B00 = the `dword ZAllocEx` selector passed as
+  the 1st Alloc arg, NOT the instance) does **not** apply to the v72 port because the seed source (v79) was
+  already 0. Verdict: carry 0 for both; v79 seed correct; no allocator-selector mis-inheritance.
 
 ## Cross-version drift summary (fill at end)
 

@@ -105,11 +105,11 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 2 | `PLAYER_LOGGED_IN` | `0x14` | `0x14` | ☐ | |
 | 3 | `CLIENT_START_ERROR` | `0x19` | `0x19` | ☐ | |
 | 4 | `GET_SE_PRIVILEGE` | `0x0044A48E` | `0x0044A48E` | ☐ | |
-| 5 | `C_ACTION_MAN_CREATE_INSTANCE_ADDR` | `0x00946A09` | `0x00946A09` | ☐ | |
-| 6 | `C_ACTION_MAN_INSTANCE_ADDR` | `0x00B07804` | `0x00B07804` | ☐ | |
-| 7 | `C_ACTION_MAN_INIT` | `0x0040681C` | `0x0040681C` | ☐ | |
-| 8 | `C_ACTION_MAN_SWEEP_CACHE` | `0x0040FEEA` | `0x0040FEEA` | ☐ | |
-| 9 | `C_ANIMATION_DISPLAYER_CREATE_INSTANCE` | `0x00946A5F` | `0x00946A5F` | ☐ | |
+| 5 | `C_ACTION_MAN_CREATE_INSTANCE_ADDR` | `0x00946A09` | `0x008F6172` | ✔ | sig-cat: TSingleton<CActionMan>::CreateInstance |
+| 6 | `C_ACTION_MAN_INSTANCE_ADDR` | `0x00B07804` | `0x00A9F3F4` | ✔ | sig-cat: ActionManInstanceAddr |
+| 7 | `C_ACTION_MAN_INIT` | `0x0040681C` | `0x0040681C` | ✔ | sig-cat: CActionMan::Init (DIRECT) |
+| 8 | `C_ACTION_MAN_SWEEP_CACHE` | `0x0040FEEA` | `0x0040FE89` | ✔ | sig-cat: CActionMan::SweepCache |
+| 9 | `C_ANIMATION_DISPLAYER_CREATE_INSTANCE` | `0x00946A5F` | `0x008F61C8` | ✔ | sig-cat: TSingleton<CAnimationDisplayer>::CreateInstance |
 | 10 | `C_CLIENT_SOCKET_INSTANCE_ADDR` | `0x00B07844` | `0x00A9F434` | ✔ | sig-cat: g_pClientSocketInstance |
 | 11 | `C_CLIENT_SOCKET_CREATE_INSTANCE` | `0x00946AB6` | `0x008F621F` | ✔ | sig-cat: TSingleton<CClientSocket>::CreateInstance |
 | 12 | `C_CLIENT_SOCKET_SEND_PACKET` | `0x0048DF93` | `0x004866AC` | ✔ | sig-cat: CClientSocket::SendPacket (needs-main-review) |
@@ -130,20 +130,20 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 27 | `C_CONFIG_APPLY_SYS_OPT` | `0x004960F9` | `0x004960F9` | ☐ | |
 | 28 | `C_CONFIG_CHECK_EXEC_PATH_REG` | `0x0049440C` | `0x0049440C` | ☐ | |
 | 29 | `C_CONFIG_SYS_OPT_WINDOWED_MODE` | `0x00B11548` | `0x00B11548` | ☐ | |
-| 30 | `C_FUNC_KEY_MAPPED_MAN` | `0x00569DE5` | `0x00569DE5` | ☐ | |
-| 31 | `C_FUNC_KEY_MAPPED_MAN_VFTABLE` | `0x00A2EB38` | `0x00A2EB38` | ☐ | |
-| 32 | `C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR` | `0x00B0D2A8` | `0x00B0D2A8` | ☐ | |
-| 33 | `C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE` | `0x00946AFB` | `0x00946AFB` | ☐ | |
-| 34 | `DEFAULT_FKM_INSTANCE_ADDR` | `0x00ABF99C` | `0x00ABF99C` | ☐ | |
-| 35 | `DEFAULT_QKM_INSTANCE_ADDR` | `0x00000000` | `0x00000000` | ☐ | |
-| 36 | `C_INPUT_SYSTEM` | `0x00945204` | `0x00945204` | ☐ | |
-| 37 | `C_INPUT_SYSTEM_CREATE_INSTANCE` | `0x009466CD` | `0x009466CD` | ☐ | |
-| 38 | `C_INPUT_SYSTEM_INSTANCE_ADDR` | `0x00B0C29C` | `0x00B0C29C` | ☐ | |
-| 39 | `C_INPUT_SYSTEM_INIT` | `0x005757D4` | `0x005757D4` | ☐ | |
-| 40 | `C_INPUT_SYSTEM_UPDATE_DEVICE` | `0x00575BFE` | `0x00575BFE` | ☐ | |
-| 41 | `C_INPUT_SYSTEM_GET_IS_MESSAGE` | `0x00575C1B` | `0x00575C1B` | ☐ | |
-| 42 | `C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN` | `0x00576BE7` | `0x00576BE7` | ☐ | |
-| 43 | `C_INPUT_SYSTEM_SHOW_CURSOR` | `0x00575C4D` | `0x00575C4D` | ☐ | |
+| 30 | `C_FUNC_KEY_MAPPED_MAN` | `0x00569DE5` | `0x005512EC` | ✔ | sig-cat: CFuncKeyMappedMan::CFuncKeyMappedMan (ctor) |
+| 31 | `C_FUNC_KEY_MAPPED_MAN_VFTABLE` | `0x00A2EB38` | `0x009D22D8` | ✔ | sig-cat: CFuncKeyMappedMan_vftable |
+| 32 | `C_FUNC_KEY_MAPPED_MAN_INSTANCE_ADDR` | `0x00B0D2A8` | `0x00AA4CB8` | ✔ | sig-cat: FuncKeyMappedManInstanceAddr |
+| 33 | `C_FUNC_KEY_MAPPED_MAN_CREATE_INSTANCE` | `0x00946AFB` | `0x008F6264` | ✔ | sig-cat: TSingleton<CFuncKeyMappedMan>::CreateInstance |
+| 34 | `DEFAULT_FKM_INSTANCE_ADDR` | `0x00ABF99C` | `0x00A5B838` | ✔ | sig-cat: DefaultFKMInstanceAddr |
+| 35 | `DEFAULT_QKM_INSTANCE_ADDR` | `0x00000000` | `0x00000000` | ✔ | sig-cat: DefaultQKM (confirmed absent; FLAG) |
+| 36 | `C_INPUT_SYSTEM` | `0x00945204` | `0x008F489E` | ✔ | sig-cat: CInputSystem::CInputSystem (ctor) |
+| 37 | `C_INPUT_SYSTEM_CREATE_INSTANCE` | `0x009466CD` | `0x008F5E41` | ✔ | sig-cat: TSingleton<CInputSystem>::CreateInstance |
+| 38 | `C_INPUT_SYSTEM_INSTANCE_ADDR` | `0x00B0C29C` | `0x00AA3E84` | ✔ | sig-cat: InputSystemInstanceAddr |
+| 39 | `C_INPUT_SYSTEM_INIT` | `0x005757D4` | `0x0055CBA9` | ✔ | sig-cat: CInputSystem::Init |
+| 40 | `C_INPUT_SYSTEM_UPDATE_DEVICE` | `0x00575BFE` | `0x0055CFD3` | ✔ | sig-cat: CInputSystem::UpdateDevice |
+| 41 | `C_INPUT_SYSTEM_GET_IS_MESSAGE` | `0x00575C1B` | `0x0055CFF0` | ✔ | sig-cat: CInputSystem::GetIsMessage |
+| 42 | `C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN` | `0x00576BE7` | `0x0055DFBC` | ✔ | sig-cat: CInputSystem::GenerateAutoKeyDown |
+| 43 | `C_INPUT_SYSTEM_SHOW_CURSOR` | `0x00575C4D` | `0x0055D022` | ✔ | sig-cat: CInputSystem::ShowCursor |
 | 44 | `C_LOGIN_UPDATE` | `0x005CA348` | `0x005AFBBE` | ✔ | sig-cat: CLogin::Update |
 | 45 | `C_LOGIN_SEND_CHECK_PASSWORD_PACKET` | `0x005CBF50` | `0x005B1170` | ✔ | sig-cat: CLogin::SendCheckPasswordPacket |
 | 46 | `C_LOGO` | `0x005FF8C4` | `0x005E11F9` | ✔ | sig-cat: CLogo::CLogo (ctor) |
@@ -157,14 +157,14 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 54 | `C_LOGO_FORCED_END` | `0x005FFA2A` | `0x005E135F` | ✔ | sig-cat: CLogo::ForcedEnd |
 | 55 | `C_LOGO_INIT` | `0x005FF9BC` | `0x005E12F1` | ✔ | sig-cat: CLogo::Init |
 | 56 | `C_LOGO_INIT_NX_LOGO` | `0x005FFA96` | `0x005E13CB` | ✔ | sig-cat: CLogo::InitNXLogo |
-| 57 | `C_MACRO_SYS_MAN_CREATE_INSTANCE` | `0x00946C88` | `0x00946C88` | ☐ | |
+| 57 | `C_MACRO_SYS_MAN_CREATE_INSTANCE` | `0x00946C88` | `0x00000000` | ✔ | sig-cat: CMacroSysMan (NEW v72 SENTINEL — absent; FLAG) |
 | 58 | `C_BATTLE_RECORD_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ☐ | |
-| 59 | `C_MAPLE_TV_MAN_CREATE_INSTANCE` | `0x00946BEA` | `0x00946BEA` | ☐ | |
-| 60 | `C_MAPLE_TV_MAN_INSTANCE_ADDR` | `0x00B0D458` | `0x00B0D458` | ☐ | |
-| 61 | `C_MAPLE_TV_MAN_INIT` | `0x006074C7` | `0x006074C7` | ☐ | |
-| 62 | `C_MONSTER_BOOK_MAN_CREATE_INSTANCE` | `0x009467D6` | `0x009467D6` | ☐ | |
-| 63 | `C_MONSTER_BOOK_MAN_INSTANCE_ADDR` | `0x00B0D314` | `0x00B0D314` | ☐ | |
-| 64 | `C_MONSTER_BOOK_MAN_LOAD_BOOK` | `0x00651C1F` | `0x00651C1F` | ☐ | |
+| 59 | `C_MAPLE_TV_MAN_CREATE_INSTANCE` | `0x00946BEA` | `0x008F6353` | ✔ | sig-cat: TSingleton<CMapleTVMan>::CreateInstance |
+| 60 | `C_MAPLE_TV_MAN_INSTANCE_ADDR` | `0x00B0D458` | `0x00AA4E68` | ✔ | sig-cat: MapleTVManInstanceAddr |
+| 61 | `C_MAPLE_TV_MAN_INIT` | `0x006074C7` | `0x005E8B18` | ✔ | sig-cat: CMapleTVMan::Init |
+| 62 | `C_MONSTER_BOOK_MAN_CREATE_INSTANCE` | `0x009467D6` | `0x008F5F3F` | ✔ | sig-cat: TSingleton<CMonsterBookMan>::CreateInstance |
+| 63 | `C_MONSTER_BOOK_MAN_INSTANCE_ADDR` | `0x00B0D314` | `0x00AA4D24` | ✔ | sig-cat: MonsterBookManInstanceAddr |
+| 64 | `C_MONSTER_BOOK_MAN_LOAD_BOOK` | `0x00651C1F` | `0x0062F410` | ✔ | sig-cat: CMonsterBookMan::LoadBook |
 | 65 | `C_OUT_PACKET` | `0x0067AD6B` | `0x00656FA1` | ✔ | sig-cat: COutPacket::COutPacket (needs-main-review) |
 | 66 | `C_OUT_PACKET_ENCODE_1` | `0x004062C7` | `0x004062C7` | ✔ | sig-cat: COutPacket::Encode1/2/4 (needs-main-review) |
 | 67 | `C_OUT_PACKET_ENCODE_2` | `0x0042539C` | `0x00424F84` | ✔ | sig-cat: COutPacket::Encode1/2/4 (needs-main-review) |
@@ -175,17 +175,17 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 72 | `C_IG_CIPHER_INNO_HASH` | `0x00993442` | `0x00993442` | ☐ | |
 | 73 | `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_CTOR` | `0x00402AB8` | `0x00402AB8` | ☐ | |
 | 74 | `Z_SYNCHRONIZED_HELPER_Z_FATAL_SECTION_DTOR` | `0x00402ADD` | `0x00402ADD` | ☐ | |
-| 75 | `C_QUEST_MAN_CREATE_INSTANCE` | `0x00946725` | `0x00946725` | ☐ | |
-| 76 | `C_QUEST_MAN_INSTANCE_ADDR` | `0x00B0D318` | `0x00B0D318` | ☐ | |
-| 77 | `C_QUEST_MAN_LOAD_DEMAND` | `0x006A8CD6` | `0x006A8CD6` | ☐ | |
-| 78 | `C_QUEST_MAN_LOAD_PARTY_QUEST_INFO` | `0x006AE1F4` | `0x006AE1F4` | ☐ | |
-| 79 | `C_QUEST_MAN_LOAD_EXCLUSIVE` | `0x006AF68D` | `0x006AF68D` | ☐ | |
-| 80 | `C_QUICKSLOT_KEY_MAPPED_MAN` | `0x00946B51` | `0x00946B51` | ☐ | |
-| 81 | `C_RADIO_MANAGER_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ☐ | |
-| 82 | `C_RADIO_MANAGER_INSTANCE_ADDR` | `0x00000000` | `0x00000000` | ☐ | |
-| 83 | `C_SECURITY_CLIENT_CREATE_INSTANCE` | `0x00946BA5` | `0x00946BA5` | ☐ | |
-| 84 | `C_SECURITY_CLIENT_INSTANCE_ADDR` | `0x00B0C308` | `0x00B0C308` | ☐ | |
-| 85 | `C_SECURITY_CLIENT_ON_PACKET` | `0x00994995` | `0x00994995` | ☐ | |
+| 75 | `C_QUEST_MAN_CREATE_INSTANCE` | `0x00946725` | `0x008F5E99` | ✔ | sig-cat: TSingleton<CQuestMan>::CreateInstance |
+| 76 | `C_QUEST_MAN_INSTANCE_ADDR` | `0x00B0D318` | `0x00AA4D28` | ✔ | sig-cat: QuestManInstanceAddr |
+| 77 | `C_QUEST_MAN_LOAD_DEMAND` | `0x006A8CD6` | `0x00683A9D` | ✔ | sig-cat: CQuestMan::LoadDemand |
+| 78 | `C_QUEST_MAN_LOAD_PARTY_QUEST_INFO` | `0x006AE1F4` | `0x006887DE` | ✔ | sig-cat: CQuestMan::LoadPartyQuestInfo |
+| 79 | `C_QUEST_MAN_LOAD_EXCLUSIVE` | `0x006AF68D` | `0x00689C3E` | ✔ | sig-cat: CQuestMan::LoadExclusive |
+| 80 | `C_QUICKSLOT_KEY_MAPPED_MAN` | `0x00946B51` | `0x008F62BA` | ✔ | sig-cat: TSingleton<CQuickslotKeyMappedMan>::CreateInstance |
+| 81 | `C_RADIO_MANAGER_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ✔ | sig-cat: CRadioManager (confirmed absent; FLAG) |
+| 82 | `C_RADIO_MANAGER_INSTANCE_ADDR` | `0x00000000` | `0x00000000` | ✔ | sig-cat: CRadioManager (absent; radio-quirk verdict — v79 seed 0 correct) |
+| 83 | `C_SECURITY_CLIENT_CREATE_INSTANCE` | `0x00946BA5` | `0x008F630E` | ✔ | sig-cat: TSingleton<CSecurityClient>::CreateInstance |
+| 84 | `C_SECURITY_CLIENT_INSTANCE_ADDR` | `0x00B0C308` | `0x00AA3EE4` | ✔ | sig-cat: SecurityClientInstanceAddr |
+| 85 | `C_SECURITY_CLIENT_ON_PACKET` | `0x00994995` | `0x009422D1` | ✔ | sig-cat: CSecurityClient::OnPacket (needs-main-review, spot-checked) |
 | 86 | `STAGE_INSTANCE_ADDR` | `0x00B0DADC` | `0x00AA54D4` | ✔ | sig-cat: Stage singleton |
 | 87 | `SET_STAGE` | `0x006F1AC0` | `0x006C1FBB` | ✔ | sig-cat: set_stage |
 | 88 | `GR_INSTANCE_ADDR` | `0x00B10F74` | `0x00AA85FC` | ✔ | sig-cat: GR singleton |
