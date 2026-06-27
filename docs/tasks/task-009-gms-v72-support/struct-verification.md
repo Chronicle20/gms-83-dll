@@ -98,7 +98,7 @@ to per-field where a gate boundary moves.
 | Header | v72 size | v72 vs v79 | Gate verdict | Deciding v72 evidence |
 |---|---|---|---|---|
 | CWvsApp.h | 0x60 | == v79 (both 0x60) | branch-added (72 → 0x60 branch :97) | WinMain stack-ctor @0x8EF809 → this=ebp-0xF4; highest field @+0x5C (m_ahInput[2]), next local @+0x6C → 0x60; ctor @0x8F26C7 field-init through +0x38 matches v79 |
-| CFuncKeyMappedMan.h | 0x388 | == v79 (both 0x388) | branch-added (72 → ==79 0x388 branch :50) | task-2: CreateInstance Alloc(0x388) + ctor extent; member gate :18 (>=83\|\|JMS) excludes v72 → quickslot pair absent → header computes 0x388 |
+| CFuncKeyMappedMan.h | **0x388** (904, FULL) | == v79 (both 0x388) | branch-added (72 → `(==72\|\|==79)` 0x388 assert branch :52) + all 3 member gates resolve consistently | task-2: CreateInstance Alloc(0x388) + ctor extent; member gate :19 (`>=83\|\|JMS`) excludes v72 → quickslot pair absent → header computes 0x388. **Task 16 independent reconciliation (full size):** CreateInstance 0x8F6264 `push 388h`→Alloc→ctor 0x5512ec: vtable@0, `memcpy([esi+4],0x1BD)`=m_aFuncKeyMapped[89], `memcpy([esi+1C1h],0x1BD)`=m_aFuncKeyMapped_Old[89] (ends 0x37E), then `and [esi+380h],0`/`and [esi+384h],0`=m_nPetConsumeItemID/MPItemID → **highest write 0x384 ⇒ sizeof 0x388**. Pet ints sit at 0x380 *immediately after* the two FK arrays with **no 0x40 quickslot gap** ⇒ quickslot pair (`:19 >=83\|\|JMS`) ABSENT; dummy1 (`:25 >=111\|\|JMS`) ABSENT; m_nNormalAttackCode (`:31 >=95`) ABSENT. 0x3C8 (v83) − quickslot 0x40 = 0x388, matching the `==72\|\|==79` branch. |
 | CUIToolTip.h | **0x50C** (full) | == v79 (ctor byte-identical) | two-way-confirmed-shares-v79 (gate :92 correct) + all upper gates absent | v72 ctor 0x7F9C33 vs v79 0x842317: both `mov [esi+10h]`=m_pLayer then eh-vector-ctor m_aLineInfo[32]@esi+0x20 (elem 0x20 → CLineInfo lacks `>=95` m_bUseDotImage), then identical post-array writes @0x424+. No m_pLayerAdditional (`>=83`, would push array to 0x24); no m_aOptionLineInfo (`>=95\|\|JMS`); no Gen_Unknown(`>=84`)/H_White(`>=87`)/Stan_Prp(`>=87`)/Stan_Dsc..Skill_Dsc(`>=95`); no Durability(`>=84`). **Full size from CCtrlButton embed: alloc 0x59C − m_uiToolTip@0x8C − m_bSelfDisable(4) = 0x50C** (Task 14); == v79 (byte-identical ctor). ⚠ Header field-list bottom-up computes 0x514 — an 8-byte / 2-field overcount in the shared `<87` font/canvas region (no assert_size; shared v72==v79; not gate-relevant — flag for header owner). Plan-table "v79 0x514==v83" was a planning error: v83 has m_pLayerAdditional (0x518) while v72/v79 = 0x50C. |
 | CMob.h | 0x4C0 | **DIVERGES**: v72 0x4C0 vs v79 0x518 (−0x58) | **split-three-way** (size diverges; doom-tail field itself absent in both) | CreateMob 0x611C9F `push 4C0h`; ctor 0x611CDB highest write `[esi+4B8h]`. v79 CreateMob 0x630BF0 `push 518h`. Doom tail ABSENT both. **Task 15 PINS the −0x58:** FRONT −0x28 = CLife base −4 (m_nMobChargeCount v72@0x84 vs v79@0x88) + **REGION_GMS block `CMob.h:97–105` (m_bAttackReady…m_effectAttack, 0x24) ABSENT in v72** (v72 1st ZList@0x88 directly after m_nMobChargeCount@0x84; v79 @0xB0 after the 0x24 block); MobStat embed −0x20; TAIL −0x10 (ungated, not byte-pinned). Task-17: gate `:97` block `>=79`; CLife −4 + tail −0x10 not CMob.h-gateable (flag). |
 | CMapLoadable.h | 0x114 (276) | == v79 (both <84/<95; front == v95 dump) | base/excluded — `>=84` m_lVisibleByQuest, `>=95` m_bField/m_lpLayerLetterBox/m_bPlayHoldedBGM+m_tPlayHoldedBGM ABSENT | Front anchor: PrepareNextBGM 0x5F3496 `mov [esi+1Ch]`=m_tNextMusic (CStage base 0x18 == v95 dump). Size = v95 0x148 − m_bField(4) − m_lVisibleByQuest(0x14) − m_lpLayerLetterBox(0x14) − m_bPlayHolded pair(8) = 0x114; corroborated by task-006 v84=0x128 (= 0x114 + m_lVisibleByQuest 0x14). No assert_size; tail not independently anchored (Task 15). |
@@ -117,9 +117,9 @@ to per-field where a gate boundary moves.
 | ConfigSysOpt.h | base (ends at bSysOpt_Minimap_Normal) | == v83 base | base/excluded — `>=95` bSysOpt_LargeScreen + bSysOpt_WindowedMode ABSENT | v72 windowed-mode is a **standalone global** g_CConfig_SysOpt_WindowedMode @0xAA87AC (SetUp 0x8f2c49 sets =0x10; readers CreateMainWindow/InitializeGr2D — sig-cat:490), OUTSIDE the CConfig instance (0xAA87AC > instance end 0xAA3EBC) → NOT a CONFIG_SYSOPT field. `>=95` gate correctly excludes it from v72's embedded CONFIG_SYSOPT |
 | COutPacket.h | 0x10 (base) | == v83/v79 (both 0x10) | base/excluded — `>=111` dummy1 ABSENT | ctor 0x656fa1: `and [esi+4],0` + ZArray _Alloc(0x100) on [esi+4]=m_aSendBuff, then Init(seq) (m_uOffset@8 / m_bIsEncryptedByShanda@0xC / m_bLoopback@0); unwind funclet RemoveAll on [esi+4]. Single ZArray member, no +0x10 field → 0x10. static_assert `>=0x10` holds |
 | SecondaryStat.h | **0xAB0** (2736) | **DIVERGES**: v72 0xAB0 vs v79/v83 0xB88 (−0xD8) | base/excluded — `>=87` DojangShield/AssistCharge/Enrage, `==87` byte-variants (v72→#else int), `>=84` Flying/Frozen, `>=95` blocks ALL ABSENT; **+ NEW ungated base shrink −0xD8 (~18 SecureTear slots)** | Embedded @CWvsContext+0x212C in BOTH (OnTemporaryStatReset: v72 0x918F3C / v79 0x96AB32 `add edi,212Ch`). aTemporaryStat[7] (last member, 0x1C): [0]/RideVehicle v72@SecondaryStat+0xA94 vs v79@0xB6C; [4]/GuidedBullet v72@0xAA4 vs v79@0xB7C — both Δ=−0xD8. v72 sizeof = 0xA94+0x1C = **0xAB0**; v79 = 0xB6C+0x1C = 0xB88 (independently re-confirms 0xB88). Reset 0x6CA91A confirms field layout matches header (nPAD_ @+0xC). **SIZE-CRITICAL:** shifts m_forcedStat + all CWvsContext members after m_secondaryStat by −0xD8 (pre-stat region @≤0x212C unaffected). Exact 18 missing base stats not pinned (Task 15 concern). |
-| PartyData.h | ☐ | ☐ | ☐ (packed) | |
-| PartyMember.h | ☐ | ☐ | ☐ (packed) | |
-| GuildData.h | ☐ | ☐ | ☐ (packed) | |
+| PartyData.h | **0x12A** (298) | == v79 (both decode 0x12A) | base/excluded — `>=95` m_nSKillID (in TOWNPORTAL), adwFieldID[6], aPQReward[6]/aPQRewardType[6]/dwPQRewardMobTemplateID/bPQReward ALL ABSENT (packed) | **Firm:** PARTYDATA::Decode 0x4d0898 `push 12Ah` → `push ecx`(this) → `CInPacket::DecodeBuffer(this, 0x12A)` — whole **packed** struct decoded as one raw buffer ⇒ sizeof=0x12A. Independent: packed bottom-up reproduces 0x12A exactly (party=0xCA + aTownPortal[6]×0x10=0x60). **Gate boundary:** v95 PARTYDATA::Decode 0x4f2b00 `push 17Ah` (+0x50 = the `>=95` additions); v79 0x4d8693 also `push 12Ah`. No assert_size. (Task 16) |
+| PartyMember.h | **0xCA** (202) | == v79 (shared; part of 0x12A decode) | base/**included** — `< 95` adwFieldID[6] **PRESENT** (v72 < 95 ⇒ gate TRUE) | Embedded as PARTYDATA::party@0 (packed). v72 walk: adwCharacterID[6]@0–0x17, asCharacterName[6][13]@0x18–0x65, anJob[6]@0x66, anLevel[6]@0x7E, anChannelID[6]@0x96, dwPartyBossCharacterID@0xAE, **adwFieldID[6]@0xB2–0xC9 → 0xCA**. The 0x18 adwFieldID is INSIDE PARTYDATA's 0x12A raw decode — were it absent (v95 path, where it's promoted to PARTYDATA), PARTYMEMBER would be 0xB2 and the v95 decode confirms that shift (v95 `push 17Ah`). No assert_size. (Task 16) |
+| GuildData.h | **0x2A** (42) | == v79 (shared `< 95` shape) | base/excluded — `>=95` nLevel + ZMap mSkillRecord + ZArray aSkillRecordOnlyID ALL ABSENT | GUILDDATA::Decode 0x4d0a03 walks field-by-field and **stops at nAllianceID**: nGuildID@0(Decode4), sGuildName@4(DecodeStr), asGradeName@8(5×ZArray InsertBefore+DecodeStr), adwCharacterID@0xC(ZArray _Alloc+DecodeBuffer n×4), aMemberData@0x10(ZArray, DecodeBuffer n×0x25), nMaxMemberNum@0x14(Decode4), nMarkBg@0x18(Decode2), nMarkBgColor@0x1A(Decode1), **nMark@0x1B(Decode2 — UNALIGNED ⇒ packed)**, nMarkColor@0x1D(Decode1), sNotice@0x1E(DecodeStr), nPoint@0x22(Decode4), nAllianceID@0x26(Decode4) → ends **0x2A**. **NO nLevel/mSkillRecord/aSkillRecordOnlyID decode** ⇒ `>=95` block absent. No assert_size. (Task 16) |
 | MobStat.h | **0x1D8** (472) | **DIVERGES**: v72 0x1D8 vs v79 0x1F8 (−0x20) | **split-three-way** (size diverges; Weakness field itself absent in both) | **Firm anchors:** SetFrom v72 0x6D0896 `push 1D8h` memset (=sizeof); CMob ctor `lea eax,[ebx+1C4h]`=lBurnedInfo@0x1C4 (+0x14=0x1D8). v79 SetFrom 0x702675 `push 1F8h`; lBurnedInfo@0x1E0. **Task 15 PINS the −0x1C (sizeof −0x20):** nFs (long double) v72 `fstp[edi+1B8h]`@0x1B8 vs v79 `fstp[edi+1D0h]`@0x1D0 → status region `[0x94,nFs)` is **0x18 (6 ungated status ints) shorter in v72**; PLUS **`int bDisable` (MobStat.h:152) ABSENT in v72** (v72 copies 1 post-nFs field@0x1C0; v79 copies 2 @0x1D8+0x1DC). +0x4 v79 align-pad → sizeof −0x20. (Task 12 "−0x1C" = lBurnedInfo position delta.) Task-17: gate bDisable + 6 status ints `<79`; 6 ints named-candidate. |
 
 ## Cross-version safety (FR-13)
@@ -526,3 +526,61 @@ Minor residual: tail not independently disasm-anchored (no assert_size; verdict 
 No edits in this evidence task → no truth-table changes. CMob/MobStat split dispositions unchanged from Task 12 (add a
 GMS `< 79` arm ABOVE the `#else`, v79 byte-identical). SecondaryStat/CMapLoadable take the base/excluded branch
 identically to v79 for every gate; v79/v83/v84/v87/v95/v111/JMS185 selections unaffected.
+
+## Task 16 (Party/Guild/misc family) audit record — 4 headers; **24/24 complete**
+
+Lane: v72 = port 13343 `GMS_v72.1_U_DEVM.exe` (active confirmed via `list_instances`); cross-checks v79 = port 13339
+`GMS_v79_1_DEVM.exe`, v95 = port 13337 `GMS_v95.0_U_DEVM.exe`. Read-only `disasm`; no struct types (R10). `get_metadata`
+not exposed → `list_instances` active-field substituted. No source edits (evidence task). Full report:
+`.superpowers/sdd/task-16-report.md`. **Result: all 4 headers take the gate-correct branch — PartyMember `< 95`
+adwFieldID PRESENT, PartyData/GuildData/CFuncKeyMappedMan `>=95`/`>=83`/`>=111`/`>=95` fields ABSENT. All three party
+structs are PACKED (pack(1)) — confirmed by raw `DecodeBuffer` sizing and unaligned packet-decode offsets.**
+
+### Step 1 — `BUILD_MAJOR_VERSION` gates per header, v72 truth value
+
+| Header:line | Gate | v72 truth | Gated field(s) | v72 verdict |
+|---|---|---|---|---|
+| PartyMember.h:9 | `< 95` | **TRUE** | adwFieldID[6] (per-member home field) | **present** (base/included) |
+| PartyData.h:9 | `>= 95` | FALSE | TOWNPORTAL::m_nSKillID | absent |
+| PartyData.h:16 | `>= 95` | FALSE | adwFieldID[6] (promoted-to-PARTYDATA copy) | absent |
+| PartyData.h:20 | `>= 95` | FALSE | aPQReward[6]/aPQRewardType[6]/dwPQRewardMobTemplateID/bPQReward | absent |
+| GuildData.h:27 | `>= 95` | FALSE | nLevel + ZMap mSkillRecord + ZArray aSkillRecordOnlyID | absent |
+| CFuncKeyMappedMan.h:19 | `>= 83 \|\| JMS` | FALSE | m_aQuickslotKeyMapped[8]×2 (0x40) | absent |
+| CFuncKeyMappedMan.h:25 | `>= 111 \|\| JMS` | FALSE | dummy1 | absent |
+| CFuncKeyMappedMan.h:31 | `>= 95` | FALSE | m_nNormalAttackCode | absent |
+| CFuncKeyMappedMan.h:52 (assert) | `== 72 \|\| == 79` | **TRUE** | size guard | assert 0x388 (Task 3 branch) |
+
+### Step 2 — per-header v72 size + anchor
+1. **PartyData 0x12A (298)** — `PARTYDATA::Decode` 0x4d0898 `push 12Ah` → `DecodeBuffer(this, 0x12A)` (whole packed
+   struct, raw). Two anchors agree: (a) the Alloc/decode immediate 0x12A; (b) packed bottom-up = party 0xCA + 6×0x10
+   aTownPortal = 0x12A. Boundary: v95 `push 17Ah` (+0x50). v79 0x4d8693 `push 12Ah` (== v72).
+2. **PartyMember 0xCA (202)** — embedded at PARTYDATA+0; packed. adwFieldID[6] occupies 0xB2–0xC9 (the `< 95` field is
+   PRESENT, inside the 0x12A raw decode). v95 promotes it to PARTYDATA so v95 PARTYMEMBER = 0xB2; v72 keeps it → 0xCA.
+3. **GuildData 0x2A (42)** — `GUILDDATA::Decode` 0x4d0a03 walks nGuildID@0 → … → nAllianceID@0x26 (Decode4) and ends
+   at 0x2A; **never decodes** nLevel/mSkillRecord/aSkillRecordOnlyID (the `>=95` block). nMark decoded to `[esi+1Bh]`
+   (unaligned word) proves pack(1). (GUILDMEMBER element = 0x25 from the `DecodeBuffer(n×0x25)` on aMemberData.)
+4. **CFuncKeyMappedMan 0x388 (904, FULL)** — CreateInstance 0x8F6264 `push 388h`→Alloc→ctor 0x5512ec. Independent
+   reconciliation: ctor lays vtable@0, two `memcpy(...,0x1BD)` FK arrays @+4 / @+0x1C1 (ends 0x37E), then pet-item ints
+   @0x380/0x384 (highest write 0x384 → 0x388). The pet ints follow the FK arrays with **no 0x40 quickslot gap** ⇒ all
+   three member gates (quickslot `>=83`, dummy1 `>=111`, m_nNormalAttackCode `>=95`) resolve ABSENT, fully consistent
+   with the `(==72||==79) → 0x388` assert branch added in Task 3. (0x3C8 v83 − 0x40 quickslot = 0x388.)
+
+### Step 3 — 24-header verdict table completeness
+All **24** rows in the per-header verdict log now carry a v72 size + v72-vs-v79 column + gate verdict + deciding v72
+disasm evidence. **Zero `☐` rows remain. Count = 24/24.** The five Category-B rows (CWnd, CFuncKeyMappedMan, CUIToolTip,
+CMob, MobStat) each carry an explicit v72-vs-v79 comparison (3 confirmed-shares-v79, 2 split-three-way).
+
+### Cross-version safety (FR-13)
+No edits in this evidence task → no truth-table changes. All 4 headers take the gate-correct branch identically to v79
+(PartyMember `< 95` included; PartyData/GuildData `>=95` excluded; CFuncKeyMappedMan quickslot/dummy1/normal-attack
+excluded). v79/v83/v84/v87/v95/v111/JMS185 selections unaffected. The CFuncKeyMappedMan `(==72||==79) → 0x388` assert
+branch (Task 3) is re-confirmed consistent with all three member gates.
+
+### Concerns (lower-bound notes)
+- None of the 4 headers has an `assert_size` **except** CFuncKeyMappedMan, whose 0x388 reconciles firmly (two
+  independent v72 anchors). PartyData/PartyMember/GuildData sizes are firm regardless (raw `DecodeBuffer` immediate and a
+  complete field-by-field decode walk), so no lower-bound caveat is needed for them.
+- The three party/guild structs are pack(1) (proved by the raw 0x12A `DecodeBuffer` and the unaligned `[esi+1Bh]` word
+  decode in GUILDDATA). If the in-tree headers are compiled with default alignment they would over-count (PARTYDATA
+  0x12C vs 0x12A; GUILDDATA 0x2C vs 0x2A) — documentation-hygiene only (no `assert_size`, not gate-relevant); flag for the
+  header owner if exact sizeof ever matters.
