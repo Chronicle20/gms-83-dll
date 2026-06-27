@@ -144,19 +144,19 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 41 | `C_INPUT_SYSTEM_GET_IS_MESSAGE` | `0x00575C1B` | `0x00575C1B` | ☐ | |
 | 42 | `C_INPUT_SYSTEM_GENERATE_AUTO_KEY_DOWN` | `0x00576BE7` | `0x00576BE7` | ☐ | |
 | 43 | `C_INPUT_SYSTEM_SHOW_CURSOR` | `0x00575C4D` | `0x00575C4D` | ☐ | |
-| 44 | `C_LOGIN_UPDATE` | `0x005CA348` | `0x005CA348` | ☐ | |
-| 45 | `C_LOGIN_SEND_CHECK_PASSWORD_PACKET` | `0x005CBF50` | `0x005CBF50` | ☐ | |
-| 46 | `C_LOGO` | `0x005FF8C4` | `0x005FF8C4` | ☐ | |
-| 47 | `C_LOGO_GET_RTTI` | `0x0042196A` | `0x0042196A` | ☐ | |
-| 48 | `C_LOGO_IS_KIND_OF` | `0x00421970` | `0x00421970` | ☐ | |
-| 49 | `C_LOGO_UPDATE` | `0x005FFE54` | `0x005FFE54` | ☐ | |
-| 50 | `C_LOGO_ON_MOUSE_BUTTON` | `0x005FFE3F` | `0x005FFE3F` | ☐ | |
-| 51 | `C_LOGO_ON_SET_FOCUS` | `0x005FF902` | `0x005FF902` | ☐ | |
-| 52 | `C_LOGO_ON_KEY` | `0x005FFE18` | `0x005FFE18` | ☐ | |
-| 53 | `C_LOGO_LOGO_END` | `0x005FFA4C` | `0x005FFA4C` | ☐ | |
-| 54 | `C_LOGO_FORCED_END` | `0x005FFA2A` | `0x005FFA2A` | ☐ | |
-| 55 | `C_LOGO_INIT` | `0x005FF9BC` | `0x005FF9BC` | ☐ | |
-| 56 | `C_LOGO_INIT_NX_LOGO` | `0x005FFA96` | `0x005FFA96` | ☐ | |
+| 44 | `C_LOGIN_UPDATE` | `0x005CA348` | `0x005AFBBE` | ✔ | sig-cat: CLogin::Update |
+| 45 | `C_LOGIN_SEND_CHECK_PASSWORD_PACKET` | `0x005CBF50` | `0x005B1170` | ✔ | sig-cat: CLogin::SendCheckPasswordPacket |
+| 46 | `C_LOGO` | `0x005FF8C4` | `0x005E11F9` | ✔ | sig-cat: CLogo::CLogo (ctor) |
+| 47 | `C_LOGO_GET_RTTI` | `0x0042196A` | `0x00421565` | ✔ | sig-cat: CLogo::GetRTTI |
+| 48 | `C_LOGO_IS_KIND_OF` | `0x00421970` | `0x0042156B` | ✔ | sig-cat: CLogo::IsKindOf |
+| 49 | `C_LOGO_UPDATE` | `0x005FFE54` | `0x005E1789` | ✔ | sig-cat: CLogo::Update |
+| 50 | `C_LOGO_ON_MOUSE_BUTTON` | `0x005FFE3F` | `0x005E1774` | ✔ | sig-cat: CLogo::OnMouseButton |
+| 51 | `C_LOGO_ON_SET_FOCUS` | `0x005FF902` | `0x005E1237` | ✔ | sig-cat: CLogo::OnSetFocus |
+| 52 | `C_LOGO_ON_KEY` | `0x005FFE18` | `0x005E174D` | ✔ | sig-cat: CLogo::OnKey |
+| 53 | `C_LOGO_LOGO_END` | `0x005FFA4C` | `0x005E1381` | ✔ | sig-cat: CLogo::LogoEnd |
+| 54 | `C_LOGO_FORCED_END` | `0x005FFA2A` | `0x005E135F` | ✔ | sig-cat: CLogo::ForcedEnd |
+| 55 | `C_LOGO_INIT` | `0x005FF9BC` | `0x005E12F1` | ✔ | sig-cat: CLogo::Init |
+| 56 | `C_LOGO_INIT_NX_LOGO` | `0x005FFA96` | `0x005E13CB` | ✔ | sig-cat: CLogo::InitNXLogo |
 | 57 | `C_MACRO_SYS_MAN_CREATE_INSTANCE` | `0x00946C88` | `0x00946C88` | ☐ | |
 | 58 | `C_BATTLE_RECORD_MAN_CREATE_INSTANCE` | `0x00000000` | `0x00000000` | ☐ | |
 | 59 | `C_MAPLE_TV_MAN_CREATE_INSTANCE` | `0x00946BEA` | `0x00946BEA` | ☐ | |
@@ -186,17 +186,17 @@ Status legend: ☐ todo · ◐ located, IDB labeled · ✔ written to cmake + ca
 | 83 | `C_SECURITY_CLIENT_CREATE_INSTANCE` | `0x00946BA5` | `0x00946BA5` | ☐ | |
 | 84 | `C_SECURITY_CLIENT_INSTANCE_ADDR` | `0x00B0C308` | `0x00B0C308` | ☐ | |
 | 85 | `C_SECURITY_CLIENT_ON_PACKET` | `0x00994995` | `0x00994995` | ☐ | |
-| 86 | `STAGE_INSTANCE_ADDR` | `0x00B0DADC` | `0x00B0DADC` | ☐ | |
-| 87 | `SET_STAGE` | `0x006F1AC0` | `0x006F1AC0` | ☐ | |
-| 88 | `GR_INSTANCE_ADDR` | `0x00B10F74` | `0x00B10F74` | ☐ | |
+| 86 | `STAGE_INSTANCE_ADDR` | `0x00B0DADC` | `0x00AA54D4` | ✔ | sig-cat: Stage singleton |
+| 87 | `SET_STAGE` | `0x006F1AC0` | `0x006C1FBB` | ✔ | sig-cat: set_stage |
+| 88 | `GR_INSTANCE_ADDR` | `0x00B10F74` | `0x00AA85FC` | ✔ | sig-cat: GR singleton |
 | 89 | `RESET_LSP` | `0x0044A9B1` | `0x0044A9B1` | ☐ | |
-| 90 | `C_STAGE_ON_MOUSE_ENTER` | `0x0092F3F8` | `0x0092F3F8` | ☐ | |
-| 91 | `C_STAGE_ON_PACKET` | `0x006F079F` | `0x006F079F` | ☐ | |
+| 90 | `C_STAGE_ON_MOUSE_ENTER` | `0x0092F3F8` | `0x008DF289` | ✔ | sig-cat: CStage::OnMouseEnter |
+| 91 | `C_STAGE_ON_PACKET` | `0x006F079F` | `0x006C0C61` | ✔ | sig-cat: CStage::OnPacket |
 | 92 | `C_SYSTEM_INFO` | `0x0099CDB0` | `0x0099CDB0` | ☐ | |
 | 93 | `C_SYSTEM_INFO_INIT` | `0x0099CDF0` | `0x0099CDF0` | ☐ | |
 | 94 | `C_SYSTEM_INFO_GET_GAME_ROOM_CLIENT` | `0x0099D1D0` | `0x0099D1D0` | ☐ | |
 | 95 | `C_SYSTEM_INFO_GET_MACHINE_ID` | `0x0099D0D0` | `0x0099D0D0` | ☐ | |
-| 96 | `C_UI_TITLE_INSTANCE_ADDR` | `0x00B0D738` | `0x00B0D738` | ☐ | |
+| 96 | `C_UI_TITLE_INSTANCE_ADDR` | `0x00B0D738` | `0x00AA5114` | ✔ | sig-cat: CUITitle singleton |
 | 97 | `G_DW_TARGET_OS` | `0x00B0239C` | `0x00A9A164` | ✔ | sig-cat: g_dwTargetOS |
 | 98 | `C_WVS_APP` | `0x00942D3B` | `0x008F26C7` | ✔ | sig-cat: CWvsApp::CWvsApp (needs-main-review) |
 | 99 | `C_WVS_APP_INSTANCE_ADDR` | `0x00B07A68` | `0x00A9F658` | ✔ | sig-cat: g_CWvsApp |
