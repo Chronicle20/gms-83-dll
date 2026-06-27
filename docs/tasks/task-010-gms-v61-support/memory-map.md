@@ -45,14 +45,14 @@ in during execution.
 
 ## Subsystem checklist (mirror of PRD §5 — tick as resolved)
 
-- [ ] CWvsApp lifecycle (`C_WVS_APP_*`) — incl. `C_WVS_APP_SET_UP` init sequence
+- [x] CWvsApp lifecycle (`C_WVS_APP_*`) — incl. `C_WVS_APP_SET_UP` init sequence (Task 2; NO DR_init, NO InitializeAuth)
 - [ ] CClientSocket / ZSocket send/flush/process/connect
 - [ ] COutPacket encode primitives
 - [ ] CLogin / CLogo / CStage / CUITitle login+stage flow
 - [ ] CConfig windowed-mode / sys-opt
 - [ ] CInputSystem / CFuncKeyMappedMan / quickslot
 - [ ] Manager singletons (`*_CREATE_INSTANCE` / `*_INSTANCE_ADDR`)
-- [ ] WinMain entry + offsets (ad balloon / patcher — investigate existence)
+- [x] WinMain entry + offsets (Task 2; ad balloon + patcher both PRESENT in v61 — offsets re-measured 0x714 / 0x19A)
 - [ ] Party / migrate message senders (+ call-site offsets)
 - [ ] Misc utils (`ZArray::RemoveAll`, `ZXString` trim/get-buffer, fatal section, `CSystemInfo`, `CIGCipher`)
 - [ ] Exception-dispatch keys (`C_TI_*EXCEPTION`, `C_PATCH_EXCEPTION_BUILDER`, `C_COM_RAISE_ERROR_EX`, `C_FILE_STREAM_*`)
@@ -313,33 +313,33 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `G_DW_TARGET_OS` | `0x00A9A164` | `0x00A9A164` | ☐ | — |
+| `G_DW_TARGET_OS` | `0x00A9A164` | `0x00000000` | ✔ | cat§Cluster1 globals (NEW SENTINEL) |
 
 ### CWvsApp
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_WVS_APP` | `0x008F26C7` | `0x008F26C7` | ☐ | — |
-| `C_WVS_APP_INSTANCE_ADDR` | `0x00A9F658` | `0x00A9F658` | ☐ | — |
-| `C_WVS_APP_IS_MSG_PROC` | `0x008F57AB` | `0x008F57AB` | ☐ | — |
-| `C_WVS_APP_INITIALIZE_AUTH` | `0x00000000` | `0x00000000` | ☐ | — |
-| `C_WVS_APP_INITIALIZE_PCOM` | `0x008F3735` | `0x008F3735` | ☐ | — |
-| `C_WVS_APP_CREATE_MAIN_WINDOW` | `0x008F3755` | `0x008F3755` | ☐ | — |
-| `C_WVS_APP_CONNECT_LOGIN` | `0x008F38E5` | `0x008F38E5` | ☐ | — |
-| `C_WVS_APP_INITIALIZE_RES_MAN` | `0x008F3A55` | `0x008F3A55` | ☐ | — |
-| `C_WVS_APP_INITIALIZE_GR2D` | `0x008F432B` | `0x008F432B` | ☐ | — |
-| `C_WVS_APP_INITIALIZE_INPUT` | `0x008F45D1` | `0x008F45D1` | ☐ | — |
-| `C_WVS_APP_INITIALIZE_SOUND` | `0x008F493B` | `0x008F493B` | ☐ | — |
-| `C_WVS_APP_INITIALIZE_GAME_DATA` | `0x008F4E13` | `0x008F4E13` | ☐ | — |
-| `C_WVS_APP_CREATE_WND_MANAGER` | `0x008F39F2` | `0x008F39F2` | ☐ | — |
-| `C_WVS_APP_GET_CMD_LINE` | `0x008F5495` | `0x008F5495` | ☐ | — |
-| `C_WVS_APP_DIR_BACK_SLASH_TO_SLASH` | `0x008F55F2` | `0x008F55F2` | ☐ | — |
-| `C_WVS_APP_DIR_UP_DIR` | `0x008F5638` | `0x008F5638` | ☐ | — |
-| `C_WVS_APP_DIR_SLASH_TO_BACK_SLASH` | `0x008F5615` | `0x008F5615` | ☐ | — |
-| `C_WVS_APP_GET_EXCEPTION_FILE_NAME` | `0x008F57FC` | `0x008F57FC` | ☐ | — |
-| `C_WVS_APP_CALL_UPDATE` | `0x008F4991` | `0x008F4991` | ☐ | — |
-| `C_WVS_APP_RUN` | `0x008F2F82` | `0x008F2F82` | ☐ | — |
-| `C_WVS_APP_SET_UP` | `0x008F2A7D` | `0x008F2A7D` | ☐ | — |
+| `C_WVS_APP` | `0x008F26C7` | `0x00822E44` | ✔ | cat§Cluster1 ctor |
+| `C_WVS_APP_INSTANCE_ADDR` | `0x00A9F658` | `0x00970A78` | ✔ | cat§Cluster1 globals |
+| `C_WVS_APP_IS_MSG_PROC` | `0x008F57AB` | `0x00825094` | ✔ | cat§Cluster1 ISMsgProc |
+| `C_WVS_APP_INITIALIZE_AUTH` | `0x00000000` | `0x00000000` | ✔ | cat§Cluster1 InitializeAuth (absent) |
+| `C_WVS_APP_INITIALIZE_PCOM` | `0x008F3735` | `0x008239B0` | ✔ | cat§Cluster1 Initialize* |
+| `C_WVS_APP_CREATE_MAIN_WINDOW` | `0x008F3755` | `0x008239D0` | ✔ | cat§Cluster1 Initialize* |
+| `C_WVS_APP_CONNECT_LOGIN` | `0x008F38E5` | `0x00823B5B` | ✔ | cat§Cluster1 Initialize* |
+| `C_WVS_APP_INITIALIZE_RES_MAN` | `0x008F3A55` | `0x00823CA7` | ✔ | cat§Cluster1 Initialize* |
+| `C_WVS_APP_INITIALIZE_GR2D` | `0x008F432B` | `0x00824550` | ✔ | cat§Cluster1 Initialize* |
+| `C_WVS_APP_INITIALIZE_INPUT` | `0x008F45D1` | `0x008247C3` | ✔ | cat§Cluster1 Initialize* |
+| `C_WVS_APP_INITIALIZE_SOUND` | `0x008F493B` | `0x008248B4` | ✔ | cat§Cluster1 Initialize* |
+| `C_WVS_APP_INITIALIZE_GAME_DATA` | `0x008F4E13` | `0x00824AB5` | ✔ | cat§Cluster1 Initialize* |
+| `C_WVS_APP_CREATE_WND_MANAGER` | `0x008F39F2` | `0x00823C44` | ✔ | cat§Cluster1 Initialize* |
+| `C_WVS_APP_GET_CMD_LINE` | `0x008F5495` | `0x00824D80` | ✔ | cat§Cluster1 helpers |
+| `C_WVS_APP_DIR_BACK_SLASH_TO_SLASH` | `0x008F55F2` | `0x00824EDB` | ✔ | cat§Cluster1 helpers |
+| `C_WVS_APP_DIR_UP_DIR` | `0x008F5638` | `0x00824F21` | ✔ | cat§Cluster1 helpers |
+| `C_WVS_APP_DIR_SLASH_TO_BACK_SLASH` | `0x008F5615` | `0x00824EFE` | ✔ | cat§Cluster1 helpers |
+| `C_WVS_APP_GET_EXCEPTION_FILE_NAME` | `0x008F57FC` | `0x008250E5` | ✔ | cat§Cluster1 helpers |
+| `C_WVS_APP_CALL_UPDATE` | `0x008F4991` | `0x0082490A` | ✔ | cat§Cluster1 helpers |
+| `C_WVS_APP_RUN` | `0x008F2F82` | `0x008233CC` | ✔ | cat§Cluster1 Run |
+| `C_WVS_APP_SET_UP` | `0x008F2A7D` | `0x00823175` | ✔ | cat§Cluster1 SetUp |
 
 ### CWvsContext
 
@@ -353,16 +353,16 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `WIN_MAIN` | `0x008EF5AD` | `0x008EF5AD` | ☐ | — |
-| `WIN_MAIN_AD_BALLOON_CONDITIONAL` | `0x959` | `0x959` | ☐ | — |
-| `WIN_MAIN_PATCHER_OFFSET` | `0x212` | `0x212` | ☐ | — |
+| `WIN_MAIN` | `0x008EF5AD` | `0x008205EF` | ✔ | cat§Cluster1 WinMain |
+| `WIN_MAIN_AD_BALLOON_CONDITIONAL` | `0x959` | `0x714` | ✔ | cat§Cluster1 WinMain offsets |
+| `WIN_MAIN_PATCHER_OFFSET` | `0x212` | `0x19A` | ✔ | cat§Cluster1 WinMain offsets |
 
 ### CWndMan
 
 | Key | v72 value | v61 value | status | signature ref |
 |---|---|---|---|---|
-| `C_WND_MAN_S_UPDATE` | `0x008E2D73` | `0x008E2D73` | ☐ | — |
-| `C_WND_MAN_REDRAW_INVALIDATED_WINDOWS` | `0x008E2AF7` | `0x008E2AF7` | ☐ | — |
+| `C_WND_MAN_S_UPDATE` | `0x008E2D73` | `0x0081652D` | ✔ | cat§Cluster1 CWndMan |
+| `C_WND_MAN_REDRAW_INVALIDATED_WINDOWS` | `0x008E2AF7` | `0x008162B1` | ✔ | cat§Cluster1 CWndMan |
 
 ### ZArray / ZXString
 
@@ -391,7 +391,7 @@ Keys grouped in the order they appear in `include/memory_map.h.in`.
 | `DR_CHECK` | `0x00000000` | `0x00000000` | ☐ | — |
 | `DR_INIT` | `0x00000000` | `0x00000000` | ☐ | — |
 | `CE_TRACER_RUN` | `0x00000000` | `0x00000000` | ☐ | — |
-| `SEND_HS_LOG` | `0x00000000` | `0x00000000` | ☐ | — |
+| `SEND_HS_LOG` | `0x00000000` | `0x00000000` | ✔ | cat§Cluster1 SendHSLog (absent) |
 
 ### CMob
 

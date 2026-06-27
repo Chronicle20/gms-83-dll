@@ -134,40 +134,40 @@ set(C_SYSTEM_INFO_GET_MACHINE_ID 0x0094A9E0) # symbol ?GetMachineId@CSystemInfo@
 
 set(C_UI_TITLE_INSTANCE_ADDR 0x00AA5114) # UITitleInstanceAddr (dword_AA5114); read as CUITitle* by CUITitle::EnableLoginCtrl callers (sub_5B1318, SendCheckPasswordPacket) + destroyed via CWnd::Destroy in CLogin teardown (sub_5AF0C7, ForcedEnd path)
 
-set(G_DW_TARGET_OS 0x00A9A164) # g_dwTargetOS; =1996 on OS major<5 or IsWow64Process, in CWvsApp ctor (DRIFT vs v79 0xB0239C)
+set(G_DW_TARGET_OS 0x00000000) # ABSENT in v61 (new v61-only sentinel; was real 0x00A9A164 in v72). WoW64/target-OS marker (mov g_dwTargetOS,7CCh/1996 on OS major<5 OR IsWow64Process true) post-dates v61: v61 ctor (0x822E44) calls GetVersionEx but stores major<6/platformId==1 into a CWvsApp member, NO 7CCh store (byte-search C7 05 ?? ?? ?? ?? CC 07 00 00 = 0 hits), NO IsWow64Process, NO ResetLSP. FLAG gate/edit owner: consuming edit must tolerate 0
 
-set(C_WVS_APP 0x008F26C7) # ??0CWvsApp@@QAE@PBD@Z (ctor); WebStart/GameLaunching/token + IsWow64Process + g_CWvsApp/g_dwTargetOS writers + ResetLSP tail; sole WebStart referrer. needs-main-review
-set(C_WVS_APP_INSTANCE_ADDR 0x00A9F658) # g_CWvsApp; SBB-singleton store at top of ctor (DRIFT vs v79 0xB07A68)
-set(C_WVS_APP_IS_MSG_PROC 0x008F57AB) # symbol ?ISMsgProc@CWvsApp@@IAEXIIJ@Z; per-message dispatch, called from Run
-set(C_WVS_APP_INITIALIZE_AUTH 0x00000000) # absent in v72 (confirmed, like v79): NMCO/CNMCOClientObject auth subsystem post-dates v72; SetUp makes no auth call
-set(C_WVS_APP_INITIALIZE_PCOM 0x008F3735) # symbol ?InitializePCOM@CWvsApp@@IAEXXZ; called from SetUp (call-graph)
-set(C_WVS_APP_CREATE_MAIN_WINDOW 0x008F3755) # symbol ?CreateMainWindow@CWvsApp@@IAEXXZ; called from SetUp
-set(C_WVS_APP_CONNECT_LOGIN 0x008F38E5) # symbol ?ConnectLogin@CWvsApp@@QAEXXZ; called from SetUp
-set(C_WVS_APP_INITIALIZE_RES_MAN 0x008F3A55) # symbol ?InitializeResMan@CWvsApp@@IAEXXZ; called from SetUp
-set(C_WVS_APP_INITIALIZE_GR2D 0x008F432B) # symbol ?InitializeGr2D@CWvsApp@@IAEXXZ; called from SetUp
-set(C_WVS_APP_INITIALIZE_INPUT 0x008F45D1) # symbol ?InitializeInput@CWvsApp@@IAEXXZ; called from SetUp
-set(C_WVS_APP_INITIALIZE_SOUND 0x008F493B) # symbol ?InitializeSound@CWvsApp@@IAEXXZ; called from SetUp
-set(C_WVS_APP_INITIALIZE_GAME_DATA 0x008F4E13) # symbol ?InitializeGameData@CWvsApp@@IAEXXZ; called from SetUp
-set(C_WVS_APP_CREATE_WND_MANAGER 0x008F39F2) # symbol ?CreateWndManager@CWvsApp@@IAEXXZ; called from SetUp
-set(C_WVS_APP_GET_CMD_LINE 0x008F5495) # symbol ?GetCmdLine@CWvsApp@@QAE?AV?$ZXString@D@@H@Z; called repeatedly from ctor
-set(C_WVS_APP_DIR_BACK_SLASH_TO_SLASH 0x008F55F2) # symbol ?Dir_BackSlashToSlash@CWvsApp@@SAXPAD@Z; SetUp exec-path normalize step 1
-set(C_WVS_APP_DIR_UP_DIR 0x008F5638) # symbol ?Dir_upDir@CWvsApp@@SAXPAD@Z; SetUp exec-path step 2
-set(C_WVS_APP_DIR_SLASH_TO_BACK_SLASH 0x008F5615) # symbol ?Dir_SlashToBackSlash@CWvsApp@@SAXPAD@Z; SetUp exec-path step 3
-set(C_WVS_APP_GET_EXCEPTION_FILE_NAME 0x008F57FC) # symbol ?GetExceptionFileName@CWvsApp@@SAPBDXZ; called from top of WinMain
-set(C_WVS_APP_CALL_UPDATE 0x008F4991) # symbol ?CallUpdate@CWvsApp@@QAEXJ@Z; 30ms frame step + sole CWndMan::s_Update caller; called from Run
-set(C_WVS_APP_RUN 0x008F2F82) # symbol ?Run@CWvsApp@@QAEXPAH@Z; msg-pump; exception-TI quad (Patch/Disconnect/Terminate/ZException) + CallUpdate/Redraw pair. needs-main-review
-set(C_WVS_APP_SET_UP 0x008F2A7D) # symbol ?SetUp@CWvsApp@@QAEXXZ; init driver; Global\meteora+ehsvc+ws2_32 strings; walks Initialize*/Create* cluster; NO DR_init. needs-main-review
+set(C_WVS_APP 0x00822E44) # ??0CWvsApp@@QAE@PBD@Z (ctor); symbol + string xrefs WebStart(0x969384)/token(0x96937C)/GameLaunching(0x96936C) + g_CWvsApp SBB store + called from WinMain before SetUp. v61 ctor SIMPLER than v72: NO IsWow64Process/g_dwTargetOS/ResetLSP. needs-main-review
+set(C_WVS_APP_INSTANCE_ADDR 0x00970A78) # g_CWvsApp (renamed in IDB); SBB-singleton store at top of ctor (0x822E44); readers = ConnectLogin/SendCheckPasswordPacket/OnSelectWorldResult (login flow). RELOCATED from v72 0xA9F658
+set(C_WVS_APP_IS_MSG_PROC 0x00825094) # ?ISMsgProc@CWvsApp@@IAEXIIJ@Z (was sub_825094, labeled this task; size 0x51); per-message dispatch, called only from Run(0x8233CC) both <=2 and >3 branches. RELOCATED from v72 0x8F57AB
+set(C_WVS_APP_INITIALIZE_AUTH 0x00000000) # absent in v61 (confirmed, like v72/v79): no InitializeAuth symbol; NMCO/CNMCOClientObject auth subsystem post-dates v61; SetUp(0x823175) makes no auth call
+set(C_WVS_APP_INITIALIZE_PCOM 0x008239B0) # symbol ?InitializePCOM@CWvsApp@@IAEXXZ; called from SetUp(0x823175) (call-graph). RELOCATED from v72 0x8F3735
+set(C_WVS_APP_CREATE_MAIN_WINDOW 0x008239D0) # symbol ?CreateMainWindow@CWvsApp@@IAEXXZ; called from SetUp. RELOCATED from v72 0x8F3755
+set(C_WVS_APP_CONNECT_LOGIN 0x00823B5B) # symbol ?ConnectLogin@CWvsApp@@QAEXXZ; called from SetUp. RELOCATED from v72 0x8F38E5
+set(C_WVS_APP_INITIALIZE_RES_MAN 0x00823CA7) # symbol ?InitializeResMan@CWvsApp@@IAEXXZ; called from SetUp. RELOCATED from v72 0x8F3A55
+set(C_WVS_APP_INITIALIZE_GR2D 0x00824550) # symbol ?InitializeGr2D@CWvsApp@@IAEXXZ; called from SetUp. RELOCATED from v72 0x8F432B
+set(C_WVS_APP_INITIALIZE_INPUT 0x008247C3) # symbol ?InitializeInput@CWvsApp@@IAEXXZ; called from SetUp. RELOCATED from v72 0x8F45D1
+set(C_WVS_APP_INITIALIZE_SOUND 0x008248B4) # symbol ?InitializeSound@CWvsApp@@IAEXXZ; called from SetUp. RELOCATED from v72 0x8F493B
+set(C_WVS_APP_INITIALIZE_GAME_DATA 0x00824AB5) # symbol ?InitializeGameData@CWvsApp@@IAEXXZ; called from SetUp. RELOCATED from v72 0x8F4E13
+set(C_WVS_APP_CREATE_WND_MANAGER 0x00823C44) # symbol ?CreateWndManager@CWvsApp@@IAEXXZ; called from SetUp. RELOCATED from v72 0x8F39F2
+set(C_WVS_APP_GET_CMD_LINE 0x00824D80) # symbol ?GetCmdLine@CWvsApp@@QAE?AV?$ZXString@D@@H@Z; called repeatedly from ctor. RELOCATED from v72 0x8F5495
+set(C_WVS_APP_DIR_BACK_SLASH_TO_SLASH 0x00824EDB) # symbol ?Dir_BackSlashToSlash@CWvsApp@@SAXPAD@Z; SetUp exec-path normalize step 1. RELOCATED from v72 0x8F55F2 (v61 addr order BackSlashToSlash<SlashToBackSlash<upDir, same as v72)
+set(C_WVS_APP_DIR_UP_DIR 0x00824F21) # symbol ?Dir_upDir@CWvsApp@@SAXPAD@Z; SetUp exec-path step 2. RELOCATED from v72 0x8F5638
+set(C_WVS_APP_DIR_SLASH_TO_BACK_SLASH 0x00824EFE) # symbol ?Dir_SlashToBackSlash@CWvsApp@@SAXPAD@Z; SetUp exec-path step 3. RELOCATED from v72 0x8F5615
+set(C_WVS_APP_GET_EXCEPTION_FILE_NAME 0x008250E5) # symbol ?GetExceptionFileName@CWvsApp@@SAPBDXZ; called from top of WinMain(0x8205EF). RELOCATED from v72 0x8F57FC
+set(C_WVS_APP_CALL_UPDATE 0x0082490A) # symbol ?CallUpdate@CWvsApp@@QAEXJ@Z; sole CWndMan::s_Update(0x81652D) caller; called from Run. RELOCATED from v72 0x8F4991
+set(C_WVS_APP_RUN 0x008233CC) # symbol ?Run@CWvsApp@@QAEXPAH@Z; msg-pump; exception-TI quad (CPatchException 0x900668 / CDisconnect 0x900678 / CTerminate 0x8F4240 / ZException 0x8F6B60, codes 0x20000000/0x21000000-6/0x22000000-B) + CallUpdate(0x82490A)/Redraw(0x8162B1) pair; loop exits msg type 18. RELOCATED from v72 0x8F2F82. needs-main-review
+set(C_WVS_APP_SET_UP 0x00823175) # symbol ?SetUp@CWvsApp@@QAEXXZ; init driver; srand->CSecurityClient CreateInstance/InitModule->InitializePCOM->CreateMainWindow->CClientSocket CreateInstance->ConnectLogin->FuncKey/Quickslot CreateInstance->ResMan->Gr2D->Input->Sound->GameData->CreateWndManager->ApplySysOpt->ActionMan/MapleTV/Quest/MonsterBook->Dir_* exec-path->CLogo->set_stage. NO InitializeAuth, NO DR_init/anti-debug (even cleaner than v72: no meteora/ehsvc/IAT-clone). RELOCATED from v72 0x8F2A7D. needs-main-review
 
 set(C_WVS_CONTEXT_INSTANCE_ADDR 0x00A9F438) # g_pWvsContext; CWvsContext singleton = g_pClientSocketInstance(0xA9F434)+4; loaded as this-arg to OnEnterGame in set_stage(0x6c205e) + read by both party senders + migrate. v72 relocated from v79 0xB07848
 set(C_WVS_CONTEXT_ON_ENTER_GAME 0x008FF597) # symbol ?OnEnterGame@CWvsContext@@QAEXXZ; sole caller set_stage(0x6c1fbb)@0x6c2064 GetCharacterData!=0 branch; runs this+0x33xx member-ctor block (v79 +0x34xx; per-version offsets). v72 relocated from v79 0x950297
 set(C_WVS_CONTEXT_ON_ENTER_GAME_OFFSET 0x0F) # measured v72: first body instr lea ecx,[esi+3330h] @0x8FF5A6 after EH-prolog+reg-save; delta from base 0x8FF597 (v72 omits the v83 push 1, like v79; coincides with v79 0x0F, re-measured not copied)
 
-set(WIN_MAIN 0x008EF5AD) # _WinMain@16; symbol + two startup literals (\npkgameuninstnomsg.exe / "MapleStoryGlobal :: ... Internet Explorer") + ctor->SetUp->Run chain; sole caller PE entry start(0x955DA3). needs-main-review
-set(WIN_MAIN_AD_BALLOON_CONDITIONAL 0x959) # measured v72: jz(74 6F)@0x8EFF06 guarding ShowADBalloon block (490/190/60 — DRIFT vs v79 740/300/60) then MapleStoryGlobal push; delta from WinMain base 0x8EF5AD (DRIFT vs v79 0xA3D)
-set(WIN_MAIN_PATCHER_OFFSET 0x212) # measured v72: call ShowStartUpWndModal(E8 97 FD FF FF)@0x8EF7BF; delta from WinMain base 0x8EF5AD (coincides with v79 0x212; re-measured at byte level, NOT copied)
+set(WIN_MAIN 0x008205EF) # _WinMain@16; string xref "MapleStoryGlobal :: ... Internet Explorer"(0x96932C) + ctor(0x822E44)->SetUp(0x823175)->Run(0x8233CC) chain; sole caller PE entry start(0x87921F). RELOCATED from v72 0x8EF5AD. needs-main-review
+set(WIN_MAIN_AD_BALLOON_CONDITIONAL 0x714) # measured v61: jz(74 6D)@0x820D03 guarding ShowADBalloon block (dims 490/190/60 = 0x1EA/0xBE/0x3C, same as v72) then MapleStoryGlobal push; delta from WinMain base 0x8205EF. DRIFT vs v72 0x959 (re-measured at byte level, NOT copied). no-ad-balloon edit flips first byte 0x74->0xEB
+set(WIN_MAIN_PATCHER_OFFSET 0x19A) # measured v61: call ?ShowStartUpWndModal@@YAXXZ(E8 0F FE FF FF)@0x820789; delta from WinMain base 0x8205EF. DRIFT vs v72 0x212 (re-measured at byte level, NOT copied). no-patcher edit NOPs these 5 bytes
 
-set(C_WND_MAN_S_UPDATE 0x008E2D73) # symbol ?s_Update@CWndMan@@SAXXZ; sole callee of interest inside CallUpdate (call-graph)
-set(C_WND_MAN_REDRAW_INVALIDATED_WINDOWS 0x008E2AF7) # symbol ?RedrawInvalidatedWindows@CWndMan@@SAXXZ; called from Run right after CallUpdate
+set(C_WND_MAN_S_UPDATE 0x0081652D) # symbol ?s_Update@CWndMan@@SAXXZ; sole callee of interest inside CallUpdate(0x82490A) (call-graph). RELOCATED from v72 0x8E2D73
+set(C_WND_MAN_REDRAW_INVALIDATED_WINDOWS 0x008162B1) # symbol ?RedrawInvalidatedWindows@CWndMan@@SAXXZ; called from Run(0x8233CC) right after CallUpdate. RELOCATED from v72 0x8E2AF7
 
 set(Z_ARRAY_REMOVE_ALL 0x00425CEC) # symbol ?RemoveAll@?$ZArray@E@@; if(*this){ZAllocEx::Free(*this-4, selector unk_AA7CB8);*this=0}; stride-1. DRIFT v79 0x4260F4
 
@@ -187,7 +187,7 @@ set(C_WVS_CONTEXT_SEND_MIGRATE_TO_ITC_REQUEST_OFFSET 0xE9) # measured v72: ITC-g
 set(DR_CHECK 0x00000000) # CONFIRMED absent in v72: DR/anti-debug subsystem not present (Task 2 R11/R12: SetUp has no DR_init step). Re-confirmed Task 10: no NtGetContextThread/GetContextThread import (imports_query empty). Confirmed absent (SP-5)
 set(DR_INIT 0x00000000) # CONFIRMED absent in v72: DR subsystem absent (Task 2 R11/R12: SetUp anti-tamper is only CSecurityClient+meteora+ehsvc+IAT-clone, no DR_init). Re-confirmed Task 10 (no NtGetContextThread import). Confirmed absent (SP-5)
 set(CE_TRACER_RUN 0x00000000) # CONFIRMED absent in v72: CeTracer (AhnLab eTracer) is a v95+ feature; no "eTracer"/"CeTracer" string in v72 (find_regex). Confirmed absent (SP-5)
-set(SEND_HS_LOG 0x00000000) # ABSENT in v72 (new v72-only sentinel; was real 0x0093F8E0 in v79). The AhnLab HShield report log (sprintf "%s\HShield" + "MapleStory_Global:%s" -> EHSvc.dll ordinal-10 report) post-dates v72: those format strings + the report thunk are absent, and CConfig::GetSessionCharacterName (0x89065E) has no SendHSLog caller. v72 HackShield init folded into CSecurityClient::InitModule. FLAG gate/edit owner: consuming edit must tolerate 0
+set(SEND_HS_LOG 0x00000000) # ABSENT in v61 (carried sentinel; already absent v72, was real 0x0093F8E0 in v79). No SendHSLog symbol; the AhnLab HShield report log post-dates v61. v61 SetUp(0x823175) has no HShield/EHSvc strings — anti-tamper is only CSecurityClient. FLAG gate/edit owner: consuming edit must tolerate 0
 
 set(C_MOB_C_MOB 0x00611CDB) # symbol ??0CMob@@QAE@PAVCMobTemplate@@@Z (sole caller CreateMob 0x611C9F, ZAllocEx::Alloc(0x4C0=1216) non-zeroing); CLife base(sub_5AB61E) + 3 vtables (off_9D4010/9D3FEC/9D3FE8) + m_pTemplate@this+0x160 + 31/100/24 fuse + _ZtlSecureTear chain + MobStat::SetFrom(0x6D0896) + StringPool(958=0x3BE)/IWzCanvas tail@this+0x484. needs-main-review. DRIFT v79 0x630C2C; alloc 1216 (v79 1304); StringPool 958 (v79 957). DOOM (Task 15): m_bDoomReserved LEFT UNINITIALIZED + doom tail DOES NOT EXIST in v72 (struct only 0x4C0; v84 doom field is at 0x540/0x544, past struct end; highest ctor write ~this+0x4B8) -> v72 on doom-fix (<84) needs-fix side
 
