@@ -584,3 +584,89 @@ branch (Task 3) is re-confirmed consistent with all three member gates.
   decode in GUILDDATA). If the in-tree headers are compiled with default alignment they would over-count (PARTYDATA
   0x12C vs 0x12A; GUILDDATA 0x2C vs 0x2A) — documentation-hygiene only (no `assert_size`, not gate-relevant); flag for the
   header owner if exact sizeof ever matters.
+
+## Task 17 (gate rewrites) record — 2 source edits applied; cross-version validated
+
+Lane: source-editing task (no IDA probe — verdicts inherited from Tasks 12 + 15). Two of the
+five Category-B gates were `split-three-way` (CMob, MobStat); the other three
+(CWnd, CFuncKeyMappedMan, CUIToolTip) are `two-way-confirmed-shares-v79` → **no edit**.
+The CWnd cascade was NOT triggered → the 5 derived headers are untouched.
+
+**Edits applied (house guard form, minimal contiguous region, D8 convention):**
+
+1. `common/CMob.h:97` — the `REGION_GMS` attack-ready block (`m_bAttackReady` … `m_effectAttack`,
+   0x24 bytes) gated `#if (defined(REGION_GMS))` → `#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 79)`.
+   The block was already GMS-only (JMS never had it); adding `&& >= 79` drops it for GMS 72 only.
+2. `common/MobStat.h:152` — `int bDisable;` (previously **unconditional**) wrapped in
+   `#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 79 || defined(REGION_JMS)`.
+   The `|| defined(REGION_JMS)` term is REQUIRED so JMS (which had the field unconditionally)
+   keeps it byte-identical — matches the house `>= N || JMS` form used by the Weakness gate above.
+
+### FR-13 truth table — CMob.h:97 attack-ready block (`REGION_GMS && >= 79`)
+
+| Version | Branch selected | block present? | Changed? |
+|---|---|---|---|
+| GMS 72 | else (no match) | **absent** | **NEW (was present — bug fixed)** |
+| GMS 79 | `>= 79` | present | unchanged |
+| GMS 83/84/87 | `>= 79` | present | unchanged |
+| GMS 95/111 | `>= 79` | present | unchanged (111 from build constant: 111 ≥ 79 = present) |
+| JMS 185 | REGION_GMS false | absent | unchanged (block was always GMS-only) |
+
+### FR-13 truth table — MobStat.h:152 `int bDisable` (`(REGION_GMS && >= 79) || JMS`)
+
+| Version | Branch selected | bDisable present? | Changed? |
+|---|---|---|---|
+| GMS 72 | none | **absent** | **NEW (was present — bug fixed)** |
+| GMS 79 | `>= 79` | present | unchanged |
+| GMS 83/84/87 | `>= 79` | present | unchanged |
+| GMS 95/111 | `>= 79` | present | unchanged (111 from build constant: 111 ≥ 79 = present) |
+| JMS 185 | `REGION_JMS` | present | unchanged (was unconditional → still present) |
+
+Both v72 exclusions are **disjoint** (`< 79` is satisfied by no supported version except v72),
+so no other version's selected branch changes. **v111 (not loaded):** settled from the build
+constant alone — `111 >= 79` is true for both gates, so v111 selects the same branch as v79+
+(present); no IDB needed.
+
+### Empirical verification (exactly what was run — verbatim)
+
+Preprocess (`gcc -E -DREGION_GMS -DBUILD_MAJOR_VERSION={72,79,83} -DBUILD_MINOR_VERSION=1 -I common -I include`):
+- `CMob.h` `m_bAttackReady` occurrences — GMS 72 → **0**, GMS 79 → **1**, GMS 83 → **1**; JMS185 → 0 (unchanged).
+- `MobStat.h` `bDisable` occurrences — GMS 72 → **0**, GMS 79 → **1**, GMS 83 → **1**; JMS185 → 1 (unchanged).
+- v79 branch effect unchanged at `-DBUILD_MAJOR_VERSION=79` for both fields (present, as before).
+
+Real build (authoritative local pre-flight):
+- `scripts/wsl-build.sh GMS 72 1` → `>> OK` (compiles + links all edit DLLs + proxy).
+- `scripts/wsl-build.sh GMS 79 1` → `>> OK` (neighbor — no regression).
+- `cmake -DREGION=GMS -DMAJOR=72 -DMINOR=1 -P cmake/CheckMemoryMapKeys.cmake` →
+  `-- OK: all 159 keys defined and non-empty for GMS v72.1`.
+
+### Documented residuals (NOT gated — unpinned, NO assert_size, no v72 consumer dereferences these)
+
+Per [[feedback-prefer-confirmation]] discipline these are surfaced rather than fake-pinned. None
+has an `assert_size`, so they do not break the v72 build; each is a silent over-count of the v72
+layout in a header no v72 edit dereferences offset-sensitively.
+
+1. **CMob CLife base −4 + tail −0x10** — the front −4 (`m_nMobChargeCount` v72@0x84 vs v79@0x88) is
+   in the CLife base, NOT a `CMob.h`-own member; the −0x10 tail shrink is ungated CMob tail members
+   the ctor inits via non-sequential SecureTear funclets (not individually byte-pinned). Neither is
+   gateable from `CMob.h` alone. CMob has no `assert_size`; doom-fix exclusion already correct
+   (Task 15). After the :97 gate, the remaining v72 CMob over-count is −0x14 (−4 CLife + −0x10 tail).
+2. **MobStat 6 status ints (−0x18)** — the memset-0 status region `[0x94, nFs)` is 0x18 (6 ints)
+   shorter in v72 (`nFs` v72@0x1B8 vs v79@0x1D0), but the region isn't field-copied so the exact 6
+   ints are named-candidate only, NOT byte-pinned (Task 15). Documented rather than guessed. After
+   the :152 `bDisable` gate, the remaining v72 MobStat over-count is −0x18 (the 6 status ints) +
+   0x4 v79 align-pad.
+3. **SecondaryStat.h −0xD8 (~18 base SecureTear stats)** — SIZE-CRITICAL ungated base shrink: v72
+   `sizeof(SecondaryStat) = 0xAB0` vs v79/v83 base 0xB88 (Task 15, independently anchored via
+   `aTemporaryStat` member offsets). The 18 missing ≈0xC SecureTear slots are not individually
+   pinned; the header over-counts v72 by 0xD8, shifting `m_forcedStat` + all `CWvsContext` members
+   after `m_secondaryStat` by −0xD8 (pre-stat region ≤0x212C unaffected). No `assert_size`; left
+   ungated pending a future byte-pin of the 18 base stats.
+
+`CMob.h:239` doom gate and `MobStat.h:128` Weakness gate left AS-IS — both absent in v72 **and**
+v79 (shared-`#else`), already correct (no v72-specific arm needed).
+
+### Cross-version safety (FR-13) — summary
+Both rewrites add a v72-only exclusion that is disjoint from every other supported version; the
+v79 `#else`/present branch is byte-identical in effect (preprocess + `wsl-build GMS 79 1` confirm).
+v79/v83/v84/v87/v95/v111/JMS185 all select their prior branch. Green local builds for v72 AND v79.
