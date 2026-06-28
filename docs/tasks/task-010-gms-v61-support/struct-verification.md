@@ -726,26 +726,29 @@ m_rgHorz (RANGE = 2 ints = 0x8).
 | GMS 111 (not loaded; 111≥72) | F | present | present | unchanged — settleable from build constant |
 | JMS 185 | F (REGION_GMS undef) | present | present | unchanged |
 
-### Gate 4 — SecondaryStat.h: aTemporaryStat[6] (v61) vs [7] (v72+) — Site D only; Sites A/B/C FLAGGED (not gated)
-The header is a v95+ over-model unfaithful to BOTH v61 and v72 (Task 15b: it over-models v72 by
-~0x350 with ungated v95-era stats; its field inventory/offsets match neither binary). Therefore a
-member-trim to v61's exact **0x970** is NOT derivable from this header. Of the 4 divergence sites
-(`v61_secondarystat_layout.md`): SITE D (the trailing two-state array, v61 6 entries vs v72 7) is
-the ONLY one cleanly + faithfully expressible as a named member-level split — applied. SITES A
-(SpiritJavelin +0x24), B (Infinity +0x48), C (GhostMorph trailing +0xB8) are v72-extra
-`_ZtlSecureTear` records whose individual names are NOT pinned and whose header offsets do not
-correspond to the real layout → NOT gated (would be guessing). SecondaryStat is LATENT for v61 (no
-v61 edit reads any CWvsContext field at/after m_secondaryStat) and has no static_assert, so the
-residual size mismatch is non-breaking (layout-doc option 2 — acceptable). Reaching exact 0x970
-would require the option-1 full self-contained v61 rebuild (deferred — disproportionate risk for a
-latent/no-assert struct).
+### Gate 4 — SecondaryStat.h: full self-contained v61 layout under `#if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72`
+The existing header is a v95+ over-model unfaithful to v61 from the very first stat group (e.g.
+over-model nPAD = 5 tears incl. nItemPADR; v61 = 4 tears @0x30; over-model Barrier is near struct
+end, v61 Barrier @0x15C). A tail-graft approach (sharing the over-model prefix up to 0x78C) cannot
+produce the correct 0x970 total. The shipped approach is the **full self-contained v61 rebuild**
+(task-17b): the entire struct body is wrapped in
+`#if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72` (v61 body) `#else` (the original over-model
+body verbatim) `#endif`. This simultaneously handles Sites A/B/C/D and folds the old Site-D
+`[6]/[7]` array gate into the single body gate (no double gate needed). A v61-gated
+`assert_size(sizeof(SecondaryStat), 0x970)` locks the size.
 
-| Version | branch | aTemporaryStat | Sites A/B/C | Effect |
+The v61 body: 59 masked stat groups at their doc offsets + 6×4B trailing array @0x958 + the 0xC
+base (`void* _vfptr` + `unsigned int _uStatHead[2]`, nPAD starts @0xC). Every offset chains to
+exactly **0x970 (2416)**. Named members where the binary pinned them; 11 `_ZtlSecureTear_unkN_`
+placeholders (offset+size annotated) for v61 tears whose individual intra-group names were not
+symbol-pinned.
+
+| Version | branch | layout body | sizeof | assert_size |
 |---|---|---|---|---|
-| GMS 61 | `< 72` (new) | **[6]** | not gated (documented) | array faithful (6×4); total still v95-over-model (NOT 0x970) |
-| GMS 72/79/83/84/87/95 | `#else` | [7] | unchanged | unchanged |
-| GMS 111 (not loaded; 111≥72) | `#else` | [7] | unchanged | unchanged — settleable from build constant |
-| JMS 185 | `#else` | [7] | unchanged | unchanged |
+| GMS 61 | **`< 72` (new)** | **full faithful v61 rebuild** | **0x970** | **PASS** (`wsl-build.sh GMS 61 1 → OK`) |
+| GMS 72/79/83/84/87/95 | `#else` | original over-model (verbatim) | unchanged | unchanged (no regression; `GMS 72 1 → OK`, `GMS 79 1 → OK`) |
+| GMS 111 (not loaded; 111≥72) | `#else` | original over-model (verbatim) | unchanged | unchanged — settleable by construction (111 ≥ 72) |
+| JMS 185 | `#else` (REGION_GMS undef) | original over-model (verbatim) | unchanged | unchanged |
 
 **Cross-version safety (FR-13):** every `< 72` arm is disjoint from all supported versions except
 v61 (v72/79/83/84/87/95/111 all ≥72 → `#else`/base; JMS has REGION_GMS undefined → base). v111 is
