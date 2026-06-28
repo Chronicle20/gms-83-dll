@@ -108,6 +108,11 @@ class MobStat {
     int rDazzle_;
     int tDazzle_;
     int nRiseByToss_;
+    // v61: rRiseByToss_..rMCounter_ (8 ints, 0x20) absent — the RiseByToss/Counter block is
+    // reduced; nFs lands v61 +0x198 vs v72 +0x1B8 (MobStat 0x1B8 vs v72 0x1D8). The 8-int
+    // count/contiguity is disasm-anchored (Task 15b MobStat::DecodeTemporary diff); the v72
+    // branch (#else effect) is byte-identical. split, verified task-010
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72)
     int rRiseByToss_;
     int tRiseByToss_;
     int nPCounter_;
@@ -116,6 +121,7 @@ class MobStat {
     int wPCounter_;
     int nMCounter_;
     int rMCounter_;
+#endif
     int tMCounter_;
     int wMCounter_;
     int nCounterProb_;
