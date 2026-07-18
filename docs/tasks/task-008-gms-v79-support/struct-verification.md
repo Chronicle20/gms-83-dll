@@ -1,5 +1,41 @@
 # GMS v79.1 — Struct Size/Layout Verification & Below-Floor Gate Audit
 
+## ⚠️ COMPILE AUDIT CORRECTION (task-008, post-testing)
+
+The per-header verdict rows below were anchored to **disassembly evidence but
+were NOT enforced by a compile-time `assert_size`**. A `static_assert` sweep of
+every header against its own stated v79 size (via `scripts/wsl-build.sh GMS 79 1`)
+found the C++ headers **do not compile to the sizes the rows claim** for 7
+structs. The disassembly numbers in the rows are correct; the *headers* drifted
+and the "unchanged/verified" and "NEEDS-CHANGE → fixed" conclusions were wrong.
+
+| Struct | Row claim | Header actually compiles to | Binary target | Status |
+|---|---|---|---|---|
+| SecondaryStat | "unchanged 0xB88" | **0xE1C (3612)** | 0xB88 (2952) | ❌ +0x294 — embedded in CWvsContext, shifts all stats/party/guild |
+| CLogin | "unchanged 0x258" | **0x278 (632)** | 0x258 (600) | ❌ +0x20; ctor @0x5c93e7 shows m_WorldItem@0x164, m_abOnFamily@0x174, m_lNewEquip@0x178, mid-body reordered vs v95 header |
+| CCtrlButton | "unchanged 0x5A4" | **0x598 (1432)** | 0x5A4 (1444) | ❌ −0xC (embeds CUIToolTip) |
+| CFadeWnd | "NEEDS-CHANGE → fixed 0xCC" | **0xC4 (196)** | 0xCC (204) | ❌ −8 (fix never landed) |
+| CCtrlCheckBox | "unchanged 0x6C" | **0x64 (100)** | 0x6C (108) | ❌ −8 |
+| CUIToolTip | "unchanged 0x514" | **0x510 (1296)** | 0x514 (1300) | ❌ −4 (drags CUIWnd/CCtrlButton) |
+| CUIWnd | "NEEDS-CHANGE → fixed 0x5A8" | **0x5A4 (1444)** | 0x5A8 (1448) | ❌ −4 (embeds CUIToolTip) |
+
+Plus PARTYDATA/PARTYMEMBER/GUILDDATA are each +2 (unpacked header vs packed
+binary) — already acknowledged in their rows but still unfixed.
+
+**Confirmed correct** (header == binary, now `assert_size`-guarded in
+`common/v79_layout_guards.h`): CMapLoadable, CWvsApp, CClientSocket, CLogo,
+COutPacket, CONFIG_SYSOPT, CFuncKeyMappedMan, CWnd, CDialog, CMob, MobStat.
+
+**Process fix:** every verified size is now locked by `common/v79_layout_guards.h`
+(included from pch.h). A "verified" claim without a passing `assert_size` is not
+verified. The 7 broken structs get their assert (uncommented) as each header is
+corrected against the v79 IDB. Root symptom that surfaced this: CLogin's wrong
+layout made `login_hooks.cpp`'s `m_WorldItem.RemoveAll()` corrupt the heap → the
+world-information crash.
+
+---
+
+
 Scope (per confirmed PRD): verify **all 24 version-gated `common/*.h` headers**
 against the v79 binary, **amend every enumerated gate that has no v79 branch**,
 and empirically verify/correct every lower-bound gate whose truth value changes at
