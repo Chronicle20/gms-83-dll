@@ -35,9 +35,22 @@ static _CMob_Init_t _CMob_Init = nullptr;
 
 VOID __fastcall CMob_Init_Hook(void* pThis, PVOID edx, void* oid, void* pkt) {
     DWORD* p = reinterpret_cast<DWORD*>(pThis);
-    Log("[mobdbg] CMob::Init  IN this=%p oid=%p tmpl=%p res0x118=%p", pThis, oid, (void*)p[98], (void*)p[70]);
+    // m_pvc is CMob+0x11C (= p[71]); the resolver reads it. p[72]=m_pvcActive(0x120).
+    Log("[mobdbg] CMob::Init  IN this=%p oid=%p tmpl=%p m_pvc(0x11C)=%p", pThis, oid, (void*)p[98], (void*)p[71]);
     _CMob_Init(pThis, oid, pkt);
-    Log("[mobdbg] CMob::Init OUT this=%p res0x118=%p", pThis, (void*)p[70]);
+    Log("[mobdbg] CMob::Init OUT this=%p m_pvc(0x11C)=%p m_pvcActive(0x120)=%p", pThis, (void*)p[71], (void*)p[72]);
+}
+
+// static CVecCtrlMob* __cdecl CVecCtrlMob::CreateInstance()  @0x90C422
+// If this returns NULL during the bulk re-spawn, the QI into m_pvc leaves it NULL.
+typedef void*(__cdecl* _CVecCtrlMob_CreateInstance_t)();
+static _CVecCtrlMob_CreateInstance_t _CVecCtrlMob_CreateInstance = nullptr;
+
+void* __cdecl CVecCtrlMob_CreateInstance_Hook() {
+    void* r = _CVecCtrlMob_CreateInstance();
+    if (!r)
+        Log("[mobdbg] CVecCtrlMob::CreateInstance returned NULL");
+    return r;
 }
 
 // long __thiscall CMob::OnResolveMoveAction(this, long, long, long, CVecCtrl*)  @0x63A0D2
@@ -92,6 +105,8 @@ BOOL InstallMobDebugHooks() {
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79)
     INITMAPLEHOOK(_CMob_Init, _CMob_Init_t, CMob_Init_Hook, 0x006312A7);
     INITMAPLEHOOK(_CMob_OnResolveMoveAction, _CMob_OnResolveMoveAction_t, CMob_OnResolveMoveAction_Hook, 0x0063A0D2);
+    INITMAPLEHOOK(_CVecCtrlMob_CreateInstance, _CVecCtrlMob_CreateInstance_t, CVecCtrlMob_CreateInstance_Hook,
+                  0x0090C422);
 #endif
     return TRUE;
 }
