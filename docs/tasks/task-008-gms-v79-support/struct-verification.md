@@ -28,10 +28,41 @@ COutPacket, CONFIG_SYSOPT, CFuncKeyMappedMan, CWnd, CDialog, CMob, MobStat.
 
 **Process fix:** every verified size is now locked by `common/v79_layout_guards.h`
 (included from pch.h). A "verified" claim without a passing `assert_size` is not
-verified. The 7 broken structs get their assert (uncommented) as each header is
-corrected against the v79 IDB. Root symptom that surfaced this: CLogin's wrong
-layout made `login_hooks.cpp`'s `m_WorldItem.RemoveAll()` corrupt the heap → the
+verified. Root symptom that surfaced this: CLogin's wrong layout made
+`login_hooks.cpp`'s `m_WorldItem.RemoveAll()` corrupt the heap → the
 world-information crash.
+
+### RESOLUTION — all corrected + guarded (task-008, post-testing)
+
+Every struct above is now fixed against the v79 binary (GMS_v79_1_DEVM, port
+13340) and locked with `assert_size` (+ offset asserts) in `v79_layout_guards.h`
+and per-header. A **CCtrlWnd base defect** (0x2C→0x34, 3 flags modeled `bool` but
+4-byte in the binary, ctor @0x4d4378) was found during the UI work — it was the
+hidden −8 under CCtrlButton/CCtrlCheckBox — and fixed too.
+
+| Struct | v79 target | commit | anchor |
+|---|---|---|---|
+| CLogin | 0x258 | `809e345` | ctor @0x5c93e7; SendCheckPasswordPacket @0x5CBF50 (m_bRequestSent=0x14C, m_WorldItem=0x164, m_aBalloon=0x1DC) |
+| SecondaryStat | 0xB88 | `2039b5c` | ctor sub_6F6D0C aTemporaryStat[7]@0xB50 (55 v95-era tears gated out for v79) |
+| CUIToolTip | 0x514 | `b78e721` | ctor @0x842317; offset-0 vfptr slot restored |
+| CFadeWnd | 0xCC | `b78e721` | ctor @0x50b6d6; 3 flags widened bool→int |
+| CUIWnd | 0x5A8 | `b78e721` | embeds CUIToolTip (fixed transitively) |
+| CCtrlWnd (base) | 0x34 | `b78e721` | ctor @0x4d4378; 3 flags widened bool→int |
+| CCtrlButton | 0x5A4 | `b78e721` | CCtrlWnd 0x34 + CUIToolTip 0x514 (ctor @0x422d59) |
+| CCtrlCheckBox | 0x6C | `b78e721` | CCtrlWnd 0x34 base (ctor @0x4d4378) |
+
+Verified: full-DLL builds `GMS 79 1` and `GMS 83 1` → `>> OK`; clang-format clean.
+
+**Open follow-ups (out of v79 scope):**
+- **v83+ likely share several of these modeling errors** — SecondaryStat (still
+  compiles 0xE1C for v83), CCtrlWnd/CFadeWnd bool-vs-dword flags, CUIToolTip
+  vfptr slot. Their sizes were not v79-verified here; a v83 (and full-matrix)
+  size audit with the same `assert_size` discipline is warranted.
+- **PARTYDATA/PARTYMEMBER/GUILDDATA** remain +2 (unpacked header vs packed
+  binary) — acknowledged in their rows, not yet fixed.
+- Several CLogin/SecondaryStat interior members are modeled as opaque filler
+  (correct size + all offsets our code touches are asserted; individual filler
+  field identities are not pinned — immaterial since our code reads none of them).
 
 ---
 
