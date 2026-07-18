@@ -13,10 +13,13 @@
 //
 // Root cause (from the v79 IDB, GMS_v79_1_DEVM): the stock virtual method
 // CMob::OnResolveMoveAction @0x63A0D2 (IVecCtrlOwner vtable slot 1; named from
-// the v95 PDB) reads a WZ-resource com_ptr at CMob+0x11C and, when it is
-// NULL, computes base 0 and dereferences [0x250] with no null guard:
+// the v95 PDB) reads the mob's vector-controller com_ptr CMob::m_pvc (CMob+0x11C,
+// = [ecx+0x118] since this==CMob+4) and, when it is NULL, computes base 0 and
+// dereferences it with no null guard:
 //     mov eax,[ecx+118h]; ... and edx,eax; cmp [edx+250h],edi   ; edx==0 -> AV
-// On a fresh spawn CMob+0x118 is populated; on re-entry it is NULL.
+// v95 has the SAME unguarded read (Nexon never fixed it); both rely on m_pvc
+// being assigned before the resolver runs. Re-entering a populated map re-spawns
+// every mob in a burst, so m_pvc is still NULL when the resolver is called.
 //
 // None of our loaded DLLs touch CMob, so this is stock behaviour exposed by the
 // re-entry path, not a struct we write. These hooks (v79 only, hardcoded
