@@ -7,4 +7,5 @@ add_edit_dll(bypass SOURCES
     app_hooks.cpp
     client_exception.cpp
     key_mapped_hooks.cpp
+    mob_debug_hooks.cpp
 )
