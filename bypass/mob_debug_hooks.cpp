@@ -65,16 +65,32 @@ static const _ZtlSecureFuse_long_t _ZtlSecureFuse_long = reinterpret_cast<_ZtlSe
 
 int __fastcall CMob_OnResolveMoveAction_Hook(void* pThis, PVOID edx, int a2, int a3, int a4, int a5) {
     DWORD* p = reinterpret_cast<DWORD*>(pThis);
+    // pThis == CMob+4. p[70] = m_pvc (CMob+0x11C) -- the controller the stock
+    // resolver reads. p[69] = the first controller (CMob+0x118).
+    //
+    // Both v79 and v95 create two CVecCtrlMob in CMob::Init. The difference is
+    // which one becomes m_pvc: v95 makes m_pvc the FIRST controller (assigned
+    // before its SetActive fires this resolver); v79 makes m_pvc the SECOND
+    // controller (assigned AFTER the first controller's SetActive). So on a
+    // populated-map re-entry -- where the mob is moving and SetActive resolves a
+    // move action during Init -- v79 reads m_pvc before it exists (NULL) -> AV.
     if (p[70] != 0) {
-        // Resource present -> stock path is correct.
+        // m_pvc present -> stock path is correct.
         return _CMob_OnResolveMoveAction(pThis, a2, a3, a4, a5);
     }
-    // Resource (CMob+0x11C) NULL: the stock CMob::OnResolveMoveAction @0x63A0D2 would compute base 0 and
-    // deref [0x250] -> AV (it lacks the null-guard its sibling CMob::SetShoeAttr
-    // has). Reimplement it faithfully with the guard: a null resource means the
-    // "resource+0x250" test is 0, i.e. v6=0, and the foothold value is derived
-    // from the mob template. This matches the stock-intended behaviour for an
-    // absent resource instead of returning a blind constant. task-008.
+    if (p[69] != 0) {
+        // m_pvc not created yet, but the first controller is (created + positioned
+        // before SetActive). Substitute it so the stock resolver reads a live
+        // controller -- exactly what v95 does (resolve against the first controller).
+        // Restore afterwards; the real m_pvc is assigned moments later in Init.
+        DWORD saved = p[70];
+        p[70] = p[69];
+        int r = _CMob_OnResolveMoveAction(pThis, a2, a3, a4, a5);
+        p[70] = saved;
+        return r;
+    }
+    // Neither controller present (not expected) -> template-only fallback: the
+    // stock "no attr" path (v6=0), foothold derived from the mob template.
     const int v6 = 0; // null resource -> no attr flag
     int v7 = (p[168] && p[98]) ? static_cast<int>(p[98]) : static_cast<int>(p[97]);
     int v8 = _ZtlSecureFuse_long(reinterpret_cast<const void*>(v7 + 64), *reinterpret_cast<unsigned*>(v7 + 72));
