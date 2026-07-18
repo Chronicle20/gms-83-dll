@@ -310,7 +310,14 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
         return;
     }
 
+#if C_RADIO_MANAGER_CREATE_INSTANCE != 0
+    // CreateInstance calls through C_RADIO_MANAGER_CREATE_INSTANCE. v79 has no
+    // CRadioManager singleton (the scheduled-message/radio role is folded into
+    // CMapleTVMan), so that address is the 0x0 absent-sentinel; calling through it
+    // AVs at 0 right after the log line, leaving a popped-but-dead window. Gate on a
+    // non-zero address, same as the InitializeAuth guard above. task-008.
     CRadioManager::CreateInstance();
+#endif
 
     char sModulePath[260];
     GetModuleFileNameA(nullptr, sModulePath, 260);
