@@ -41,15 +41,44 @@ VOID __fastcall CMob_Init_Hook(void* pThis, PVOID edx, void* oid, void* pkt) {
 typedef int(__thiscall* _MobAttr_t)(void* pThis, int a1, int a2, int a3, int a4);
 static _MobAttr_t _MobAttr = nullptr;
 
-int __fastcall MobAttr_Hook(void* pThis, PVOID edx, int a1, int a2, int a3, int a4) {
+// _ZtlSecureFuse<long> @0x004146AA: long __cdecl(long const* const, unsigned)
+typedef long(__cdecl* _ZtlSecureFuse_long_t)(const void*, unsigned);
+static const _ZtlSecureFuse_long_t _ZtlSecureFuse_long = reinterpret_cast<_ZtlSecureFuse_long_t>(0x004146AA);
+
+int __fastcall MobAttr_Hook(void* pThis, PVOID edx, int a2, int a3, int a4, int a5) {
     DWORD* p = reinterpret_cast<DWORD*>(pThis);
-    if (p[70] == 0) {
-        // The dereference the stock code is about to do would AV at 0x250.
-        // Treat a missing resource as the "no attr" case and skip.
-        Log("[mobdbg] sub_63A0D2 res0x118=NULL this=%p tmpl=%p -- SKIPPING (would AV)", pThis, (void*)p[98]);
-        return 6;
+    if (p[70] != 0) {
+        // Resource present -> stock path is correct.
+        return _MobAttr(pThis, a2, a3, a4, a5);
     }
-    return _MobAttr(pThis, a1, a2, a3, a4);
+    // Resource (CMob+0x11C) NULL: the stock sub_63A0D2 would compute base 0 and
+    // deref [0x250] -> AV (it lacks the null-guard its sibling CMob::SetShoeAttr
+    // has). Reimplement it faithfully with the guard: a null resource means the
+    // "resource+0x250" test is 0, i.e. v6=0, and the foothold value is derived
+    // from the mob template. This matches the stock-intended behaviour for an
+    // absent resource instead of returning a blind constant. task-008.
+    const int v6 = 0; // null resource -> no attr flag
+    int v7 = (p[168] && p[98]) ? static_cast<int>(p[98]) : static_cast<int>(p[97]);
+    int v8 = _ZtlSecureFuse_long(reinterpret_cast<const void*>(v7 + 64), *reinterpret_cast<unsigned*>(v7 + 72));
+    if (!v8)
+        return a2 ? ((a2 < 0) | 4) : (a4 | 4);
+    int v9 = v8 - 1;
+    if (v9) {
+        int v10 = v9 - 1;
+        if (v10) {
+            if (v10 != 1)
+                return 0; // v8 >= 4
+            // v8 == 3
+            return a2 ? ((a2 < 0) | (2 * (v6 ? 16 : 6))) : (a4 | (2 * (v6 ? 16 : 6)));
+        }
+        // v8 == 2
+        if (!*reinterpret_cast<int*>(a5 + 272))
+            return a2 ? ((a2 < 0) | 6) : (a4 | 6);
+    }
+    // v8 == 1, or (v8 == 2 and *(a5+272)) -> LABEL_25
+    if (a2)
+        return (a2 < 0) | (2 * (v6 ? 16 : 1));
+    return a4 | 4;
 }
 
 #endif
