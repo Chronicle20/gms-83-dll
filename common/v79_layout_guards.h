@@ -33,13 +33,13 @@ assert_size(sizeof(CDialog),           0x74);  // CFadeWnd::SetOption m_a0 @[ecx
 assert_size(sizeof(CMob),              0x518); // CreateMob @0x630BF0 push 518h
 assert_size(sizeof(MobStat),           0x1F8); // CMob ctor lBurnedInfo @0x1E0 -> 0x1F8
 
-// --- BROKEN (task-008 audit: header != v79 binary; assert added as each is
-// fixed. Values are the v79 binary targets the header must be corrected to). ---
-// assert_size(sizeof(CUIToolTip),     0x514); // header 0x510 (-4)  -- TODO fix
+// --- fixed by task-008 (header now == v79 binary) ---
+assert_size(sizeof(CUIToolTip), 0x514); // ctor @0x842317 (m_pLayer@0x10, m_pNumberCan@0x4A4); +4 = offset-0 vfptr slot
 assert_size(sizeof(CLogin),            0x258); // task-008: header rebuilt to v79 (ctor @0x5c93e7)
-// assert_size(sizeof(CCtrlButton),    0x5A4); // header 0x598 (-0xC) -- TODO fix
-// assert_size(sizeof(CFadeWnd),       0xCC);  // header 0xC4  (-8)   -- TODO fix
-// assert_size(sizeof(CCtrlCheckBox),  0x6C);  // header 0x64  (-8)   -- TODO fix
-// assert_size(sizeof(CUIWnd),         0x5A8); // header 0x5A4 (-4)   -- TODO fix (embeds CUIToolTip)
+assert_size(sizeof(CFadeWnd), 0xCC);           // ctor @0x50b6d6 (m_nType@0xBC); 3 flags widened bool->BOOL
+assert_size(sizeof(CUIWnd), 0x5A8); // embeds CUIToolTip 0x514 @0x6C (ReloadBackgrnd @0x8866dc: m_sBackgrndUOL@0x5A4)
 assert_size(sizeof(SecondaryStat),  0xB88); // task-008: header rebuilt to v79 (55 v95-era tears gated out; ctor sub_6F6D0C)
+assert_size(sizeof(CCtrlWnd),       0x34);  // base; 3 trailing flags widened bool->int (ctor @0x4d4378)
+assert_size(sizeof(CCtrlButton),    0x5A4); // CCtrlWnd 0x34 base + CUIToolTip 0x514 (ctor @0x422d59)
+assert_size(sizeof(CCtrlCheckBox),  0x6C);  // CCtrlWnd 0x34 base (ctor @0x4d4378)
 #endif
