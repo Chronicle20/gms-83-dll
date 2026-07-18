@@ -41,5 +41,5 @@ assert_size(sizeof(CLogin),            0x258); // task-008: header rebuilt to v7
 // assert_size(sizeof(CFadeWnd),       0xCC);  // header 0xC4  (-8)   -- TODO fix
 // assert_size(sizeof(CCtrlCheckBox),  0x6C);  // header 0x64  (-8)   -- TODO fix
 // assert_size(sizeof(CUIWnd),         0x5A8); // header 0x5A4 (-4)   -- TODO fix (embeds CUIToolTip)
-// assert_size(sizeof(SecondaryStat),  0xB88); // header 0xE1C (+0x294) -- TODO fix (shifts CWvsContext)
+assert_size(sizeof(SecondaryStat),  0xB88); // task-008: header rebuilt to v79 (55 v95-era tears gated out; ctor sub_6F6D0C)
 #endif
