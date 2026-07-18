@@ -1,5 +1,8 @@
 #pragma once
 
+#include "asserts.h"
+#include <cstddef>
+
 class CConnectionNoticeDlg;
 
 /*
@@ -194,6 +197,48 @@ public:
 #if defined(REGION_GMS)
     int m_bRecommandWorld;
 #endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79)
+    // =====================================================================
+    // GMS v79 layout (task-008). Anchored to GMS_v79_1_DEVM.exe (port 13340):
+    //   ctor            @0x5C93E7   (field-init extents; last member ends 0x258)
+    //   Update/dtor     @0x5CA348
+    //   ResetVAC        @0x5CF302   (ZArray<AvatarData>@this+276=0x114 etc.)
+    //   SendCheckPasswd @0x5CBF50   (this[83]=m_bRequestSent; RemoveAll this+89,+119)
+    //   OnSelectWorld   @0x5CE522   (this[91]=m_aAvatarData 664B slots; this[93]=m_abOnFamily)
+    //   OnWorldInfo     @0x5CE248   (this[118]=m_nBalloonCount; RemoveAll this+119)
+    //   OnCreate        @0x5C9A09   (this+484=m_aCmd[5]; this[90]=-1)
+    // v79 diverges heavily from the v95-derived layout below; offsets are
+    // absolute (CMapLoadable base ends 0x114). Members between anchors are
+    // opaque filler sized to the exact binary extent -- every field in this
+    // block is 4-byte aligned, so no hidden alignment padding is introduced.
+    // The two open questions (task-008) resolved from the binary:
+    //  Q1: v79 has NO v95-style login-step block before m_WorldItem; the ctor
+    //      writes m_WorldItem at 0x164 immediately, and m_bRequestSent lives
+    //      at 0x14C (not in a post-lock block). The step machine sits earlier.
+    //  Q2: the ctor writes the ZList vtable off_A2F9FC at BOTH 0x178 and 0x18C;
+    //      the second 0x14-byte ZList (m_lNewEquip2) shares m_lNewEquip's exact
+    //      vtable pointer, so it is another ZList<NEWEQUIP> instantiation.
+    // =====================================================================
+    ZArray<AvatarData> m_aAvatarDataVAC;     // 0x138
+    int m_v79_gap13C[4];                     // 0x13C..0x14B (opaque)
+    int m_bRequestSent;                      // 0x14C  ctor idx83 / this[83]
+    int m_v79_gap150[5];                     // 0x150..0x163 (opaque)
+    ZArray<CLogin::WORLDITEM> m_WorldItem;   // 0x164  RemoveAll(this+89)
+    int m_nCharSelected;                     // 0x168  ctor = -1 (idx90)
+    ZArray<AvatarData> m_aAvatarData;        // 0x16C  this[91] (664B slots)
+    ZArray<unsigned long> m_adwCharacterID;  // 0x170  this[92] (16B bufs)
+    ZArray<int> m_abOnFamily;                // 0x174  this[93]
+    ZList<CLogin::NEWEQUIP> m_lNewEquip;     // 0x178  ZList vtable off_A2F9FC
+    ZList<CLogin::NEWEQUIP> m_lNewEquip2;    // 0x18C  2nd ZList (shares off_A2F9FC)
+    int m_v79_gap1A0[14];                    // 0x1A0..0x1D7 (opaque)
+    int m_nBalloonCount;                     // 0x1D8  this[118]
+    ZArray<CLogin::BALLOON> m_aBalloon;      // 0x1DC  RemoveAll(this+119)
+    int m_v79_gap1E0[1];                     // 0x1E0 (opaque)
+    ZXString<char> m_aCmd[5];                // 0x1E4  eh-vector[5]
+    int m_v79_gap1F8[6];                     // 0x1F8..0x20F (opaque)
+    ZArray<CLogin::ASITEM> m_aMaleItem[9];   // 0x210  eh-vector[9]
+    ZArray<CLogin::ASITEM> m_aFemaleItem[9]; // 0x234  eh-vector[9] -> 0x258
+#else
     ZArray<AvatarData> m_aAvatarDataVAC;
     ZArray<CLogin::RANK> m_aRankVAC;
     ZArray<unsigned long> m_adwCharacterID;
@@ -282,4 +327,26 @@ public:
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int m_bCanHaveExtraChar;
 #endif
+#endif // BUILD_MAJOR_VERSION == 79
 };
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+// --- task-008: permanent v79 layout guards (anchored to GMS_v79_1_DEVM) ---
+// sizeof: CLogo::LogoEnd @0x5FFA57 push 258h -> Alloc(0x258); ctor last member
+// (m_aFemaleItem[9]) ends at 0x258.
+assert_size(sizeof(CLogin), 0x258);
+static_assert(offsetof(CLogin, m_aAvatarDataVAC) == 0x138, "CLogin::m_aAvatarDataVAC must be at 0x138 (v79)");
+static_assert(offsetof(CLogin, m_bRequestSent) == 0x14C,
+              "CLogin::m_bRequestSent must be at 0x14C (v79: ctor idx83 / SendCheckPasswordPacket this[83], "
+              "OnCheckPasswordResult this+332)");
+static_assert(offsetof(CLogin, m_WorldItem) == 0x164,
+              "CLogin::m_WorldItem must be at 0x164 (v79: ctor idx89, RemoveAll(this+89))");
+static_assert(offsetof(CLogin, m_nCharSelected) == 0x168,
+              "CLogin::m_nCharSelected must be at 0x168 (v79: ctor idx90 = -1)");
+static_assert(offsetof(CLogin, m_abOnFamily) == 0x174,
+              "CLogin::m_abOnFamily must be at 0x174 (v79: OnSelectWorldResult this[93])");
+static_assert(offsetof(CLogin, m_lNewEquip) == 0x178,
+              "CLogin::m_lNewEquip must be at 0x178 (v79: ZList vtable off_A2F9FC)");
+static_assert(offsetof(CLogin, m_aBalloon) == 0x1DC,
+              "CLogin::m_aBalloon must be at 0x1DC (v79: OnWorldInformation RemoveAll(this+119))");
+#endif

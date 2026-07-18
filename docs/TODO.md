@@ -36,3 +36,15 @@
 - `common/memedit.h:16` `#define x86NOP` is dead after task-004 §4.9 prep
   routed `MemEdit::PatchNop` through `ms::byte_ops::fill_nop`. Remove on
   the next memedit touch.
+
+## Known engine bugs (not ours)
+
+- Mob re-entry crash: `CMob::OnResolveMoveAction` dereferences
+  `CMob::m_pvc` (offset 0x11C on v79) without a null check; when a mob
+  re-enters the field before its vector controller is attached the
+  client AVs. Reproduced on v79; static analysis shows v95 shares the
+  bug. Temporary instrumentation + workaround (resolve against the
+  first controller when `m_pvc` is null) was developed on task-008 and
+  reverted before merge — see the six `debug(v79)` commits ending at
+  `e1b5d00` for the full investigation. A proper fix would be a new
+  standalone edit (null-guard hook), not part of a version port.

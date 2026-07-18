@@ -1,5 +1,19 @@
 #pragma once
 #include "TemporaryStatBase.h"
+#include "asserts.h"
+#include <cstddef>
+
+// task-008: The v95-PDB-derived layout is +0x294 too big for GMS v79. v79 (== v83
+// base) lacks a set of v95-era per-stat components and post-Big-Bang stats that were
+// left ungated. Each block absent in v79 is fenced with GMS_V79_ABSENT below, which
+// only removes the member for GMS v79 and leaves every other version (v83/84/87/95/111
+// GMS, JMS) byte-for-byte unchanged. Evidence: SecondaryStat::Reset @0x6fa9bd (TS-bit
+// order), ctor field-init sub_6F736F, and DecodeForRemote @0x701539 in GMS_v79_1_DEVM.
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+#define GMS_V79_ABSENT 0
+#else
+#define GMS_V79_ABSENT 1
+#endif
 
 struct SecondaryStat {
     int _ZtlSecureTear_nPAD[2];
@@ -10,8 +24,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rPAD__CS;
     int _ZtlSecureTear_tPAD_[2];
     unsigned int _ZtlSecureTear_tPAD__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nItemPADR[2];
     unsigned int _ZtlSecureTear_nItemPADR_CS;
+#endif
     int _ZtlSecureTear_nPDD[2];
     unsigned int _ZtlSecureTear_nPDD_CS;
     int _ZtlSecureTear_nPDD_[2];
@@ -20,8 +36,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rPDD__CS;
     int _ZtlSecureTear_tPDD_[2];
     unsigned int _ZtlSecureTear_tPDD__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nItemPDDR[2];
     unsigned int _ZtlSecureTear_nItemPDDR_CS;
+#endif
     int _ZtlSecureTear_nMAD[2];
     unsigned int _ZtlSecureTear_nMAD_CS;
     int _ZtlSecureTear_nMAD_[2];
@@ -30,8 +48,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rMAD__CS;
     int _ZtlSecureTear_tMAD_[2];
     unsigned int _ZtlSecureTear_tMAD__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nItemMADR[2];
     unsigned int _ZtlSecureTear_nItemMADR_CS;
+#endif
     int _ZtlSecureTear_nMDD[2];
     unsigned int _ZtlSecureTear_nMDD_CS;
     int _ZtlSecureTear_nMDD_[2];
@@ -40,8 +60,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rMDD__CS;
     int _ZtlSecureTear_tMDD_[2];
     unsigned int _ZtlSecureTear_tMDD__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nItemMDDR[2];
     unsigned int _ZtlSecureTear_nItemMDDR_CS;
+#endif
     int _ZtlSecureTear_nACC[2];
     unsigned int _ZtlSecureTear_nACC_CS;
     int _ZtlSecureTear_nACC_[2];
@@ -50,8 +72,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rACC__CS;
     int _ZtlSecureTear_tACC_[2];
     unsigned int _ZtlSecureTear_tACC__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nItemACCR[2];
     unsigned int _ZtlSecureTear_nItemACCR_CS;
+#endif
     int _ZtlSecureTear_nEVA[2];
     unsigned int _ZtlSecureTear_nEVA_CS;
     int _ZtlSecureTear_nEVA_[2];
@@ -60,8 +84,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rEVA__CS;
     int _ZtlSecureTear_tEVA_[2];
     unsigned int _ZtlSecureTear_tEVA__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nItemEVAR[2];
     unsigned int _ZtlSecureTear_nItemEVAR_CS;
+#endif
     int _ZtlSecureTear_nCraft[2];
     unsigned int _ZtlSecureTear_nCraft_CS;
     int _ZtlSecureTear_nCraft_[2];
@@ -100,8 +126,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tDarkSight__CS;
     int _ZtlSecureTear_mDarkSight_[2];
     unsigned int _ZtlSecureTear_mDarkSight__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_pDarkSight_[2];
     unsigned int _ZtlSecureTear_pDarkSight__CS;
+#endif
     int _ZtlSecureTear_nBooster_[2];
     unsigned int _ZtlSecureTear_nBooster__CS;
     int _ZtlSecureTear_rBooster_[2];
@@ -114,12 +142,14 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rPowerGuard__CS;
     int _ZtlSecureTear_tPowerGuard_[2];
     unsigned int _ZtlSecureTear_tPowerGuard__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nMechanic_[2];
     unsigned int _ZtlSecureTear_nMechanic__CS;
     int _ZtlSecureTear_rMechanic_[2];
     unsigned int _ZtlSecureTear_rMechanic__CS;
     int _ZtlSecureTear_tMechanic_[2];
     unsigned int _ZtlSecureTear_tMechanic__CS;
+#endif
     int _ZtlSecureTear_nMaxHP_[2];
     unsigned int _ZtlSecureTear_nMaxHP__CS;
     int _ZtlSecureTear_rMaxHP_[2];
@@ -306,8 +336,10 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rInfinity__CS;
     int _ZtlSecureTear_tInfinity_[2];
     unsigned int _ZtlSecureTear_tInfinity__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_tUpdateInfinity_[2];
     unsigned int _ZtlSecureTear_tUpdateInfinity__CS;
+#endif
     int _ZtlSecureTear_nHolyshield_[2];
     unsigned int _ZtlSecureTear_nHolyshield__CS;
     int _ZtlSecureTear_rHolyshield_[2];
@@ -346,6 +378,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rMaxLevelBuff__CS;
     int _ZtlSecureTear_tMaxLevelBuff_[2];
     unsigned int _ZtlSecureTear_tMaxLevelBuff__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nAura_[2];
     unsigned int _ZtlSecureTear_nAura__CS;
     int _ZtlSecureTear_rAura_[2];
@@ -354,12 +387,14 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tAura__CS;
     int _ZtlSecureTear_tUpdateAura_[2];
     unsigned int _ZtlSecureTear_tUpdateAura__CS;
+#endif
     int _ZtlSecureTear_nSuperBody_[2];
     unsigned int _ZtlSecureTear_nSuperBody__CS;
     int _ZtlSecureTear_rSuperBody_[2];
     unsigned int _ZtlSecureTear_rSuperBody__CS;
     int _ZtlSecureTear_tSuperBody_[2];
     unsigned int _ZtlSecureTear_tSuperBody__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nDarkAura_[2];
     unsigned int _ZtlSecureTear_nDarkAura__CS;
     int _ZtlSecureTear_rDarkAura_[2];
@@ -384,6 +419,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_tYellowAura__CS;
     int _ZtlSecureTear_cYellowAura_[2];
     unsigned int _ZtlSecureTear_cYellowAura__CS;
+#endif
     int _ZtlSecureTear_nBarrier_[2];
     unsigned int _ZtlSecureTear_nBarrier__CS;
     int _ZtlSecureTear_tBarrier_[2];
@@ -563,6 +599,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rSmartKnockback__CS;
     int _ZtlSecureTear_tSmartKnockback_[2];
     unsigned int _ZtlSecureTear_tSmartKnockback__CS;
+#if GMS_V79_ABSENT
     int _ZtlSecureTear_nRepeatEffect_[2];
     unsigned int _ZtlSecureTear_nRepeatEffect__CS;
     int _ZtlSecureTear_rRepeatEffect_[2];
@@ -619,6 +656,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rSoulStone__CS;
     int _ZtlSecureTear_tSoulStone_[2];
     unsigned int _ZtlSecureTear_tSoulStone__CS;
+#endif // GMS_V79_ABSENT: RepeatEffect..SoulStone
     // Atlas bits 82-85 (Flying / Frozen / AssistCharge / MirrorImage [v95 PDB name: nEnrage_]).
     // v87 confirmed via Reset stat-group mapping (docs/tasks/cwvscontext-port/v87_secondarystat_reset_mapping.md).
     // task-006: v84 carries ONLY Flying+Frozen (@0xCA0, 6 tears) — gate split >=87 -> >=84 here;
@@ -866,3 +904,28 @@ struct SecondaryStat {
 #endif
     ZRef<TemporaryStatBase<long>> aTemporaryStat[7];
 };
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+// task-008: v79 SecondaryStat layout proven against GMS_v79_1_DEVM.exe (IDA port 13340).
+// Total size from the ctor sub_6F6D0C: the eh-vector-ctor builds aTemporaryStat[7]
+// @this+0xB50 (`lea eax,[esi+0B50h]`, push 8 elem-size, push 7 count) -> struct ends 0xB88.
+assert_size(sizeof(SecondaryStat), 0xB88);
+static_assert(offsetof(SecondaryStat, aTemporaryStat) == 0xB50,
+              "v79 aTemporaryStat must sit at 0xB50 (ctor sub_6F6D0C lea [esi+0B50h]; dtor loc_9F41F0 add eax,0B50h)");
+// nDefenseAtt/nDefenseState are the ONLY two SecureTear<byte> members: ctor sub_6F736F /
+// DecodeForRemote @0x701539 write them via sub_70C796 at this+0x90C and this+0x938.
+static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nDefenseAtt) == 0x90C,
+              "v79 nDefenseAtt byte-tear @0x90C (DecodeForRemote this[580]=sub_70C796(this+0x90C))");
+static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nDefenseState) == 0x938,
+              "v79 nDefenseState byte-tear @0x938 (DecodeForRemote this[591]=sub_70C796(this+0x938))");
+// Re-anchor the trimmed middle: MesoUpByItem 4-group @0x840, ItemUpByItem 5-group @0x870,
+// BanMap 4-group @0x738 (ctor sub_6F736F batch bases confirm these exact offsets).
+static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nMesoUpByItem) == 0x840,
+              "v79 nMesoUpByItem @0x840 (ctor grp base 0x840)");
+static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nItemUpByItem) == 0x870,
+              "v79 nItemUpByItem 5-group @0x870 (ctor grp bases 0x870..0x880)");
+static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nBanMap_) == 0x738,
+              "v79 BanMap 4-group @0x738 (ctor grp bases 0x738..0x744; DecodeForRemote mask B0F830)");
+#endif
+
+#undef GMS_V79_ABSENT
