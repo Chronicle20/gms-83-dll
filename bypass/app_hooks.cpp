@@ -211,7 +211,11 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp* pThis, PVOID edx, int* pbTerminate) {
 
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
     Log("CWvsApp::SetUp");
-#if defined(REGION_GMS)
+#if defined(REGION_GMS) && C_WVS_APP_INITIALIZE_AUTH != 0
+    // InitializeAuth calls through C_WVS_APP_INITIALIZE_AUTH. The NMCO/Nexon-Passport
+    // auth subsystem post-dates v79, so on v79 (and older: v72/v61) that address is the
+    // 0x0 absent-sentinel; calling through it AVs at 0 right after the log line. Gate on
+    // a non-zero address, same as DR_INIT below. task-008.
     pThis->InitializeAuth();
 #endif
 
@@ -306,7 +310,14 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
         return;
     }
 
+#if C_RADIO_MANAGER_CREATE_INSTANCE != 0
+    // CreateInstance calls through C_RADIO_MANAGER_CREATE_INSTANCE. v79 has no
+    // CRadioManager singleton (the scheduled-message/radio role is folded into
+    // CMapleTVMan), so that address is the 0x0 absent-sentinel; calling through it
+    // AVs at 0 right after the log line, leaving a popped-but-dead window. Gate on a
+    // non-zero address, same as the InitializeAuth guard above. task-008.
     CRadioManager::CreateInstance();
+#endif
 
     char sModulePath[260];
     GetModuleFileNameA(nullptr, sModulePath, 260);

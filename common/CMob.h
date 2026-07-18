@@ -234,9 +234,13 @@ class CMob : CLife {
     ZArray<long> m_aRandTimeforAreaAttack;
     DelaySkill m_delaySkill;
 #endif
+    // v79: doom/reserved tail region ABSENT (sizeof 0x518 vs v83 0x548; field would start past
+    // the end of the 0x518 object). Present in v83+/JMS. Gate excludes ONLY v79. verified task-008
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 83 || defined(REGION_JMS)
     int m_bDoomReserved;
     unsigned __int8 m_bDoomReservedSN;
     ZList<ZRef<ReservedPacket>> m_lpStatChangeReserved;
+#endif
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 87) || defined(REGION_JMS)
     TSecType<int> m_bChasing;
 #endif

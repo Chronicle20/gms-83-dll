@@ -190,3 +190,7 @@
 // clang-format on
 
 #include "TSingleton.h"
+
+// Compile-time struct-layout guards (task-008). Must come last: needs the
+// struct definitions above. A failure means a header drifted from the binary.
+#include "v79_layout_guards.h"

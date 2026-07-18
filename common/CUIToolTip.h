@@ -1,5 +1,8 @@
 #pragma once
 
+#include "asserts.h"
+#include <cstddef>
+
 /*
 00000000 CUIToolTip      struc; (sizeof = 0xA48, align = 0x4, copyof_1535)
 00000000 vfptr           dd ? ; offset
@@ -84,6 +87,16 @@ class CUIToolTip
 #endif
     };
 
+  public:
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+    // v79: the binary reserves a dword at offset 0 (IDA struct labels it "vfptr").
+    // This class is non-polymorphic and does not otherwise model that slot, leaving
+    // the struct 4 bytes short of the 0x514 binary size. ctor @0x842317 anchors the
+    // real layout -- m_pLayer@0x10, m_aLineInfo@0x20, m_pNumberCan@0x4A4 -- i.e. exactly
+    // 4 dwords precede m_pLayer. Gated ==79 so v83/84/87/95/111/JMS stay byte-for-byte
+    // unchanged (they share this latent -4; see task-008 report).
+    void* vfptr;
+#endif
     //vfptr
     int m_nToolTipType;
     int m_nHeight;
@@ -154,3 +167,11 @@ class CUIToolTip
 #endif
     bool m_bIngoreWeddingInfo;
 };
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+assert_size(sizeof(CUIToolTip), 0x514); // ctor @0x842317 (GMS_v79_1_DEVM, port 13340)
+static_assert(offsetof(CUIToolTip, m_pLayer) == 0x10,
+              "v79 CUIToolTip::m_pLayer @0x10 (ctor @0x842317: mov [esi+10h], edi)");
+static_assert(offsetof(CUIToolTip, m_pNumberCan) == 0x4A4,
+              "v79 CUIToolTip::m_pNumberCan @0x4A4 (ctor @0x842317: lea ecx, [esi+4A4h])");
+#endif

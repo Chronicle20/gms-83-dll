@@ -18,10 +18,14 @@ VOID __fastcall CFuncKeyMappedMan__CFuncKeyMappedMan_Hook(CFuncKeyMappedMan* pTh
            sizeof(pThis->m_aFuncKeyMapped));
     memcpy(pThis->m_aFuncKeyMapped_Old, reinterpret_cast<void*>(DEFAULT_FKM_INSTANCE_ADDR),
            sizeof(pThis->m_aFuncKeyMapped_Old));
+    // v79: the quickslot arrays do not exist in CFuncKeyMappedMan (0x388 vs 0x3C8) and there is no
+    // quickslot region to seed (DEFAULT_QKM_INSTANCE_ADDR=0x0) — skip on v79. verified task-008
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 83 || defined(REGION_JMS)
     memcpy(pThis->m_aQuickslotKeyMapped, reinterpret_cast<void*>(DEFAULT_QKM_INSTANCE_ADDR),
            sizeof(pThis->m_aQuickslotKeyMapped));
     memcpy(pThis->m_aQuickslotKeyMapped_Old, reinterpret_cast<void*>(DEFAULT_QKM_INSTANCE_ADDR),
            sizeof(pThis->m_aQuickslotKeyMapped_Old));
+#endif
 
     pThis->m_nPetConsumeItemID = 0;
     pThis->m_nPetConsumeMPItemID = 0;

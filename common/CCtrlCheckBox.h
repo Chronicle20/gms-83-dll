@@ -18,3 +18,9 @@ public:
     int m_nTextOffsetY;
 #endif
 };
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+// v79: CCtrlWnd base 0x34 (fixed, task-008). m_nCheckBoxState is the first member
+// right after the base; m_apCanvasCheckBox[4] is last -> sizeof 0x6C.
+assert_size(sizeof(CCtrlCheckBox), 0x6C);
+#endif

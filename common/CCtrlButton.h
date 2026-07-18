@@ -34,3 +34,9 @@ public:
 #endif
     int m_bSelfDisable;
 };
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+// v79: CCtrlWnd base 0x34 + CUIToolTip m_uiToolTip 0x514 (both fixed, task-008).
+// ctor @0x422d59: m_pPropFocusFrame@0x64, m_uiToolTip@0x8C, m_bSelfDisable@0x5A0.
+assert_size(sizeof(CCtrlButton), 0x5A4);
+#endif

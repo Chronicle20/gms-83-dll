@@ -72,7 +72,9 @@ public:
 // CConfig is allocated with Alloc(sizeof(CConfig)) in CWvsApp::SetUp, then the REAL client
 // ctor runs into that block — so our struct must be AT LEAST the real per-version size or
 // the ctor overruns the heap (CConfig is a long-lived global, so corruption surfaces later).
-// Real sizes (WinMain alloc immediate): v83=1072  v84=1084  v87=1108  v95=1592  v111=3024 (JMS TBD).
+// Real sizes (WinMain alloc immediate): v79=1048 (0x418)  v83=1072  v84=1084  v87=1108  v95=1592
+// v111=3024 (JMS TBD). NOTE: v79 (1048) is the true GMS floor — below the 1072 in the assert below;
+// the >= assert is still safe because our struct is v95-shaped (>= 1592 >> 1048). verified task-008
 // Our GMS layout is v95-shaped (>= 1592: the [43] UI-window arrays + FUNCKEY[89]); it has no
 // per-major gate, so the v83/v84/v87 offsets are technically v95-shaped — harmless, since our code
 // reads no GMS CConfig data member and it's never memcpy'd. The v111 branch adds m_v111Pad to lift
