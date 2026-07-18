@@ -11,8 +11,9 @@
 // Repro: enter a map with mobs (fine) -> cash shop -> exit back to that map.
 // The already-present mobs are re-created and the client AVs.
 //
-// Root cause (from the v79 IDB, GMS_v79_1_DEVM): the stock CMob virtual method
-// sub_63A0D2 @0x63A0D2 reads a WZ-resource com_ptr at CMob+0x118 and, when it is
+// Root cause (from the v79 IDB, GMS_v79_1_DEVM): the stock virtual method
+// CMob::OnResolveMoveAction @0x63A0D2 (IVecCtrlOwner vtable slot 1; named from
+// the v95 PDB) reads a WZ-resource com_ptr at CMob+0x11C and, when it is
 // NULL, computes base 0 and dereferences [0x250] with no null guard:
 //     mov eax,[ecx+118h]; ... and edx,eax; cmp [edx+250h],edi   ; edx==0 -> AV
 // On a fresh spawn CMob+0x118 is populated; on re-entry it is NULL.
@@ -36,22 +37,23 @@ VOID __fastcall CMob_Init_Hook(void* pThis, PVOID edx, void* oid, void* pkt) {
     Log("[mobdbg] CMob::Init OUT this=%p res0x118=%p", pThis, (void*)p[70]);
 }
 
-// int __thiscall sub_63A0D2(CMob* this, int a1, int a2, int a3, int a4)  (vtable @0xA30C28)
-// Reads CMob+0x118 (WZ resource); AVs when it is NULL.
-typedef int(__thiscall* _MobAttr_t)(void* pThis, int a1, int a2, int a3, int a4);
-static _MobAttr_t _MobAttr = nullptr;
+// long __thiscall CMob::OnResolveMoveAction(this, long, long, long, CVecCtrl*)  @0x63A0D2
+// this == CMob+4 (the IVecCtrlOwner sub-object), so [ecx+0x118] is CMob+0x11C.
+// Reads that WZ resource; AVs when it is NULL (missing the guard SetShoeAttr has).
+typedef int(__thiscall* _CMob_OnResolveMoveAction_t)(void* pThis, int a1, int a2, int a3, int a4);
+static _CMob_OnResolveMoveAction_t _CMob_OnResolveMoveAction = nullptr;
 
 // _ZtlSecureFuse<long> @0x004146AA: long __cdecl(long const* const, unsigned)
 typedef long(__cdecl* _ZtlSecureFuse_long_t)(const void*, unsigned);
 static const _ZtlSecureFuse_long_t _ZtlSecureFuse_long = reinterpret_cast<_ZtlSecureFuse_long_t>(0x004146AA);
 
-int __fastcall MobAttr_Hook(void* pThis, PVOID edx, int a2, int a3, int a4, int a5) {
+int __fastcall CMob_OnResolveMoveAction_Hook(void* pThis, PVOID edx, int a2, int a3, int a4, int a5) {
     DWORD* p = reinterpret_cast<DWORD*>(pThis);
     if (p[70] != 0) {
         // Resource present -> stock path is correct.
-        return _MobAttr(pThis, a2, a3, a4, a5);
+        return _CMob_OnResolveMoveAction(pThis, a2, a3, a4, a5);
     }
-    // Resource (CMob+0x11C) NULL: the stock sub_63A0D2 would compute base 0 and
+    // Resource (CMob+0x11C) NULL: the stock CMob::OnResolveMoveAction @0x63A0D2 would compute base 0 and
     // deref [0x250] -> AV (it lacks the null-guard its sibling CMob::SetShoeAttr
     // has). Reimplement it faithfully with the guard: a null resource means the
     // "resource+0x250" test is 0, i.e. v6=0, and the foothold value is derived
@@ -86,7 +88,7 @@ int __fastcall MobAttr_Hook(void* pThis, PVOID edx, int a2, int a3, int a4, int 
 BOOL InstallMobDebugHooks() {
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79)
     INITMAPLEHOOK(_CMob_Init, _CMob_Init_t, CMob_Init_Hook, 0x006312A7);
-    INITMAPLEHOOK(_MobAttr, _MobAttr_t, MobAttr_Hook, 0x0063A0D2);
+    INITMAPLEHOOK(_CMob_OnResolveMoveAction, _CMob_OnResolveMoveAction_t, CMob_OnResolveMoveAction_Hook, 0x0063A0D2);
 #endif
     return TRUE;
 }
