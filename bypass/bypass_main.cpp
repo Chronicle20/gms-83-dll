@@ -3,7 +3,6 @@
 #include "app_hooks.h"
 #include "key_mapped_hooks.h"
 #include "login_hooks.h"
-#include "mob_debug_hooks.h"
 #include "security_hooks.h"
 #include "socket_hooks.h"
 
@@ -17,8 +16,6 @@ DWORD WINAPI MainProc(LPVOID lpParam) {
     if (!InstallSocketHooks())
         return 0;
     if (!InstallKeyMappedHooks())
-        return 0;
-    if (!InstallMobDebugHooks())
         return 0;
     return 0;
 }
