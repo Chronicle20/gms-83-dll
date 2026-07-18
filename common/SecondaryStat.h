@@ -911,21 +911,21 @@ struct SecondaryStat {
 // @this+0xB50 (`lea eax,[esi+0B50h]`, push 8 elem-size, push 7 count) -> struct ends 0xB88.
 assert_size(sizeof(SecondaryStat), 0xB88);
 static_assert(offsetof(SecondaryStat, aTemporaryStat) == 0xB50,
-    "v79 aTemporaryStat must sit at 0xB50 (ctor sub_6F6D0C lea [esi+0B50h]; dtor loc_9F41F0 add eax,0B50h)");
+              "v79 aTemporaryStat must sit at 0xB50 (ctor sub_6F6D0C lea [esi+0B50h]; dtor loc_9F41F0 add eax,0B50h)");
 // nDefenseAtt/nDefenseState are the ONLY two SecureTear<byte> members: ctor sub_6F736F /
 // DecodeForRemote @0x701539 write them via sub_70C796 at this+0x90C and this+0x938.
 static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nDefenseAtt) == 0x90C,
-    "v79 nDefenseAtt byte-tear @0x90C (DecodeForRemote this[580]=sub_70C796(this+0x90C))");
+              "v79 nDefenseAtt byte-tear @0x90C (DecodeForRemote this[580]=sub_70C796(this+0x90C))");
 static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nDefenseState) == 0x938,
-    "v79 nDefenseState byte-tear @0x938 (DecodeForRemote this[591]=sub_70C796(this+0x938))");
+              "v79 nDefenseState byte-tear @0x938 (DecodeForRemote this[591]=sub_70C796(this+0x938))");
 // Re-anchor the trimmed middle: MesoUpByItem 4-group @0x840, ItemUpByItem 5-group @0x870,
 // BanMap 4-group @0x738 (ctor sub_6F736F batch bases confirm these exact offsets).
 static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nMesoUpByItem) == 0x840,
-    "v79 nMesoUpByItem @0x840 (ctor grp base 0x840)");
+              "v79 nMesoUpByItem @0x840 (ctor grp base 0x840)");
 static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nItemUpByItem) == 0x870,
-    "v79 nItemUpByItem 5-group @0x870 (ctor grp bases 0x870..0x880)");
+              "v79 nItemUpByItem 5-group @0x870 (ctor grp bases 0x870..0x880)");
 static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nBanMap_) == 0x738,
-    "v79 BanMap 4-group @0x738 (ctor grp bases 0x738..0x744; DecodeForRemote mask B0F830)");
+              "v79 BanMap 4-group @0x738 (ctor grp bases 0x738..0x744; DecodeForRemote mask B0F830)");
 #endif
 
 #undef GMS_V79_ABSENT
