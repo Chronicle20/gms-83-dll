@@ -36,7 +36,7 @@ assert_size(sizeof(MobStat),           0x1F8); // CMob ctor lBurnedInfo @0x1E0 -
 // --- BROKEN (task-008 audit: header != v79 binary; assert added as each is
 // fixed. Values are the v79 binary targets the header must be corrected to). ---
 // assert_size(sizeof(CUIToolTip),     0x514); // header 0x510 (-4)  -- TODO fix
-// assert_size(sizeof(CLogin),         0x258); // header 0x278 (+0x20) -- TODO fix (ctor @0x5c93e7)
+assert_size(sizeof(CLogin),            0x258); // task-008: header rebuilt to v79 (ctor @0x5c93e7)
 // assert_size(sizeof(CCtrlButton),    0x5A4); // header 0x598 (-0xC) -- TODO fix
 // assert_size(sizeof(CFadeWnd),       0xCC);  // header 0xC4  (-8)   -- TODO fix
 // assert_size(sizeof(CCtrlCheckBox),  0x6C);  // header 0x64  (-8)   -- TODO fix
