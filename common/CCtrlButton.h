@@ -23,6 +23,14 @@ public:
     int m_bAnimateOnce;
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pPropFocusFrame;
     _com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>> m_pLayerFocusFrame;
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61
+    // v61 ONLY: one extra 4-byte pointer slot here — the v61 ctor @0x44e442 builds
+    // m_apPropButton (eh-vector, 4 elems) at 0x70, not 0x6C, so the embedded
+    // m_uiToolTip lands at 0x90 (not 0x8C) -> sizeof(CCtrlButton) 0x570 (alloc-anchored:
+    // push 570h @0x44e2e3 / CUIWnd::OnCreate Alloc(1392)). Size is binary-proven; this
+    // slot's exact identity is best-effort. task-010.
+    void* m_v61_extraFocusSlot;
+#endif
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_apPropButton[4];
     int m_bToolTip;
     int m_bToolTipUpDir;
@@ -53,4 +61,9 @@ assert_size(sizeof(CCtrlButton), 0x5A0);
 // v72: CCtrlWnd base 0x34 + CUIToolTip m_uiToolTip 0x510 @0x8C (last member).
 // alloc @0x500921 push 59Ch -> 0x8C+0x510 = 0x59C; ctor @0x422954.
 assert_size(sizeof(CCtrlButton), 0x59C);
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61
+// v61: CCtrlWnd base 0x34 + one extra 4-byte slot -> m_uiToolTip(CUIToolTip 0x4E0)@0x90
+// (last member). alloc push 570h @0x44e2e3 (CBookDlg::OnCreate) and CUIWnd::OnCreate
+// Alloc(1392) both -> 0x570; ctor @0x44e442. task-010.
+assert_size(sizeof(CCtrlButton), 0x570);
 #endif

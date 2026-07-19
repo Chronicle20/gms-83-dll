@@ -143,7 +143,12 @@ public:
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int m_bField;
 #endif
+    // v61: m_pSpace2D absent — the base ctor sub_59D8CD lays m_lpLayerGen directly at
+    // 0x34 (right after m_pPropField@0x30), so the 8-byte physical-space slot the v72+
+    // layout carries is not present. task-010 (part 1 of the v61 -0xC vs v72 0xF8).
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61)
     ZRef<CWvsPhysicalSpace2D> m_pSpace2D;
+#endif
     ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerGen;
     ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerObj;
     ZList<_com_ptr_t<_com_IIID<IWzGr2DLayer, &IID_IUnknown>>> m_lpLayerTransient;
@@ -170,14 +175,22 @@ public:
     // pinned — flagged for follow-up). Gated ==72 ONLY: v79's guard still locks 0x114 and
     // its CLogin compensates internally via absolute-offset anchors, so leaving v79 as-is
     // avoids destabilizing the merged, play-tested v79 base chain. See audit-v72-cmaploadable.md.
-#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72)
+    // task-010: v61 shares v72's absence of this 0x1C block — extend the ==72 gate to
+    // GMS <79 (v61 base ctor sub_59D8CD ends @0xE8; m_nMagLevel_Back@0xEC is the last
+    // member, same shape as v72). v79 keeps it (0x114).
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION < 79)
     tagRECT m_rcViewRange;
     int m_bSysOptTremble;
     int m_bMagLevelModifying;
     ZArray<CMapLoadable::OBSTACLE_INFO> m_aObstacleInfo;
 #endif
     int m_tRestoreBgmVolume;
+    // v61: only ONE trailing restore-bgm int — the base ctor sub_59D8CD's last field
+    // write is @0xE8 (-> sizeof 0xEC), so the second int is absent. Size + boundary are
+    // binary-proven; which of the pair is dropped is best-effort. task-010 (part 2 of -0xC).
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61)
     int m_nRestoreBgmVolume;
+#endif
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int m_bPlayHoldedBGM;
     int m_tPlayHoldedBGM;

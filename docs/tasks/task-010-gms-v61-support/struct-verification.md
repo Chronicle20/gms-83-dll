@@ -1,5 +1,43 @@
 # GMS v61.1 — Struct Size/Layout Verification & Below-Floor Gate Audit
 
+## ⚠️ POST-MERGE COMPILE AUDIT CORRECTION (task-010, after merging main + play-testing)
+
+The per-struct verdicts below were anchored to disassembly evidence but were **NOT
+compile-enforced**, and several were written *before* the task-008 (v79) / task-009 (v72)
+corrections landed on `main`. Those corrections were gated `== 72 || == 79`, which **silently
+EXCLUDES v61** — so v61 fell through to the pre-correction `#else` branches. A `static_assert`
+sweep of every claimed v61 size against `GMS_v61.1_U_DEVM.exe` (IDA session `9a1bdd7a`) found the
+headers **do not compute the sizes the rows claim** for 10 structs. This is the same silent-drift
+trap that task-008/009 hit, one version deeper.
+
+| Struct | Header computed (v61) | True v61 (binary) | Fix |
+|---|---|---|---|
+| **CLogin** | 0x278 | **0x1DC** | `#elif ==61` body added (CRASH-CRITICAL: login_hooks `m_WorldItem`/`m_aBalloon` RemoveAll ran at wrong offsets → world-info heap corruption) |
+| CCtrlWnd | 0x2C | **0x34** | flag gate widened to include `==61` (4-byte flags, not packed bool) |
+| CFadeWnd | 0xC4 | **0xD0** | flag gate widened + v61-only trailing dword `m_dwFriendReqParam@0xCC` |
+| CUIToolTip | 0x510 | **0x4E0** | vfptr added; JobItem `[5][2]`; GrowthItem block absent |
+| CCtrlButton | 0x594 | **0x570** | CCtrlWnd/CUIToolTip cascade + v61 extra pre-embed slot |
+| CCtrlCheckBox | 0x64 | **0x6C** | CCtrlWnd cascade (gate widened) |
+| CUIWnd | 0x5A4 | **0x570** | CUIToolTip cascade + `m_sBackgrndUOL` absent |
+| CMob | 0x4B8 | **0x490** | MobStat fix + Gap A/B (anger ZArrays + ptPos Prev pair) gated `>=79` |
+| MobStat | 0x1D0 | **0x1B8** | 6 MCounter/BodyPressure ints re-gated `>=79` (were ungated) |
+| CMapLoadable | 0x114 | **0xEC** | rcViewRange block `==72`→`<79`; `m_pSpace2D` + 1 RestoreBgm int `==61`-absent |
+
+Every true size above is now locked in `common/v61_layout_guards.h` (+ per-header asserts). The
+MobStat and CMob fixes ALSO corrected **latent v72 drift** (v72 computed 0x1F0/0x4D0, true
+0x1D8/0x4C0) that task-009 left uncaught. All 9 build configs pass; clang-format clean.
+
+**Audit rows that were wrong estimates** (corrected above): CCtrlButton 0x5A0→0x570,
+CCtrlCheckBox ≈0x9C→0x6C, CUIWnd 0x59C→0x570, CUIToolTip 0x50C→0x4E0, CLife delta −0x8→−0x4.
+The `unchanged`/`confirmed-shares-v72` verdicts for CLogin, CMob, MobStat, CMapLoadable and the
+whole UI family were the core error: v61 does NOT share v72's *header branch* — the v72/v79 fixes
+exclude it. Rows below are retained for the disassembly evidence; trust the table above for sizes.
+
+**IDB note:** the "port 13344 = v61" lane label below is stale — the live session for
+`GMS_v61.1_U_DEVM.exe` is id `9a1bdd7a` (ports were reassigned; always confirm by module filename).
+
+---
+
 Scope: verify the version-gated `common/*.h` headers against the v61 binary and amend every
 enumerated gate that has no catch-all `#else` so v61 selects a defined, measured branch.
 

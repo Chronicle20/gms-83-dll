@@ -220,10 +220,16 @@ class CMob : CLife {
     int m_tLastHitted;
     _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasHPIndicator;
     ZMap<long, long, long> m_mDelayedHPIndicator;
-#if defined(REGION_GMS)
+    // v61/v72: the two anger-indicator ZArrays are absent (present v79+). v61 CMob ctor
+    // @0x5C2128 leaves only one 4-byte slot (m_nGaugeCount) between m_mDelayedHPIndicator
+    // (ends 0x478) and m_pAttrShoe (0x47C); no ZArray is built in that gap. Gating >=79
+    // drops both v61 (0x4A0->) and v72 (0x4D0->) by 0x8; v79 (0x518) keeps them. task-010.
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 79)
     ZArray<long> m_pCanvasAngerIndicatorArrayCount;
 #endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 79) || defined(REGION_JMS)
     ZArray<ZArray<_com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>>>> m_pCanvasAngerIndicatorArray;
+#endif
     int m_nGaugeCount;
 #if defined(REGION_GMS)
     ZRef<CAttrShoe> m_pAttrShoe;
@@ -234,8 +240,15 @@ class CMob : CLife {
 #else
     int m_ptPoxX;
     int m_ptPoxY;
+    // v61/v72: the "Prev" pair of the pre-SECPOINT position block is absent (present v79+).
+    // v61 CMob ends 0x490 (CreateMob push 490h); with m_pAttrShoe@0x47C the tail from 0x480
+    // to 0x490 is only 0x10 (m_ptPoxX/Y + m_nHPpercentage + m_bWaitingToBeSetTossed), leaving
+    // no room for this pair. Byte-region best-effort (identity not symbol-pinned); size proven.
+    // Gating >=79 drops v61/v72 by 0x8; v79 keeps them. task-010.
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 79)
     int m_ptPoxXPrev;
     int m_ptPoxYPrev;
+#endif
 #endif
     int m_nHPpercentage;
     int m_bWaitingToBeSetTossed;
