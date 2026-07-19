@@ -1,5 +1,8 @@
 #pragma once
 
+#include "asserts.h"
+#include <cstddef>
+
 class CConnectionNoticeDlg;
 
 /*
@@ -182,7 +185,16 @@ public:
         ZXString<char> sItemName;
     };
 
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72
+    // v72: m_pConnectionDlg is a raw 4-byte pointer at 0xF8, NOT the 8-byte ZRef of
+    // v79+. Binary-anchored: RemoveNoticeConnecting @0x5B3ED9 reads [this+0xF8], and
+    // m_bIsWaitingVAC lands at 0xFC (MakeVACDlg @0x5B4394 `and [esi+0FCh],0`) — only
+    // 4 bytes above — so the field occupies a single dword. Modeling it as the ZRef
+    // (8B) would push m_aAvatarDataVAC to 0x118 instead of the binary's 0x114. task-009.
+    CConnectionNoticeDlg* m_pConnectionDlg;
+#else
     ZRef<CConnectionNoticeDlg> m_pConnectionDlg;
+#endif
     int m_bIsWaitingVAC;
 #if defined(REGION_GMS)
     int m_bIsVACDlgOn;
@@ -191,9 +203,89 @@ public:
     int m_nCountRelatedSvrs;
     int m_nCountCharacters;
     int m_nCountDataReceivedCharacters;
-#if defined(REGION_GMS)
+    // v72: m_bRecommandWorld is absent (VAC scalar prefix is 6 dwords, 0xFC..0x113;
+    // m_aAvatarDataVAC sits directly at 0x114 per ResetVAC @0x5B4408 `lea ecx,[esi+114h]`).
+    // Present v79+ (kept unchanged there). task-009.
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION != 72
     int m_bRecommandWorld;
 #endif
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79)
+    // =====================================================================
+    // GMS v79 layout (task-008). Anchored to GMS_v79_1_DEVM.exe (port 13340):
+    //   ctor            @0x5C93E7   (field-init extents; last member ends 0x258)
+    //   Update/dtor     @0x5CA348
+    //   ResetVAC        @0x5CF302   (ZArray<AvatarData>@this+276=0x114 etc.)
+    //   SendCheckPasswd @0x5CBF50   (this[83]=m_bRequestSent; RemoveAll this+89,+119)
+    //   OnSelectWorld   @0x5CE522   (this[91]=m_aAvatarData 664B slots; this[93]=m_abOnFamily)
+    //   OnWorldInfo     @0x5CE248   (this[118]=m_nBalloonCount; RemoveAll this+119)
+    //   OnCreate        @0x5C9A09   (this+484=m_aCmd[5]; this[90]=-1)
+    // v79 diverges heavily from the v95-derived layout below; offsets are
+    // absolute (CMapLoadable base ends 0x114). Members between anchors are
+    // opaque filler sized to the exact binary extent -- every field in this
+    // block is 4-byte aligned, so no hidden alignment padding is introduced.
+    // The two open questions (task-008) resolved from the binary:
+    //  Q1: v79 has NO v95-style login-step block before m_WorldItem; the ctor
+    //      writes m_WorldItem at 0x164 immediately, and m_bRequestSent lives
+    //      at 0x14C (not in a post-lock block). The step machine sits earlier.
+    //  Q2: the ctor writes the ZList vtable off_A2F9FC at BOTH 0x178 and 0x18C;
+    //      the second 0x14-byte ZList (m_lNewEquip2) shares m_lNewEquip's exact
+    //      vtable pointer, so it is another ZList<NEWEQUIP> instantiation.
+    // =====================================================================
+    ZArray<AvatarData> m_aAvatarDataVAC;     // 0x138
+    int m_v79_gap13C[4];                     // 0x13C..0x14B (opaque)
+    int m_bRequestSent;                      // 0x14C  ctor idx83 / this[83]
+    int m_v79_gap150[5];                     // 0x150..0x163 (opaque)
+    ZArray<CLogin::WORLDITEM> m_WorldItem;   // 0x164  RemoveAll(this+89)
+    int m_nCharSelected;                     // 0x168  ctor = -1 (idx90)
+    ZArray<AvatarData> m_aAvatarData;        // 0x16C  this[91] (664B slots)
+    ZArray<unsigned long> m_adwCharacterID;  // 0x170  this[92] (16B bufs)
+    ZArray<int> m_abOnFamily;                // 0x174  this[93]
+    ZList<CLogin::NEWEQUIP> m_lNewEquip;     // 0x178  ZList vtable off_A2F9FC
+    ZList<CLogin::NEWEQUIP> m_lNewEquip2;    // 0x18C  2nd ZList (shares off_A2F9FC)
+    int m_v79_gap1A0[14];                    // 0x1A0..0x1D7 (opaque)
+    int m_nBalloonCount;                     // 0x1D8  this[118]
+    ZArray<CLogin::BALLOON> m_aBalloon;      // 0x1DC  RemoveAll(this+119)
+    int m_v79_gap1E0[1];                     // 0x1E0 (opaque)
+    ZXString<char> m_aCmd[5];                // 0x1E4  eh-vector[5]
+    int m_v79_gap1F8[6];                     // 0x1F8..0x20F (opaque)
+    ZArray<CLogin::ASITEM> m_aMaleItem[9];   // 0x210  eh-vector[9]
+    ZArray<CLogin::ASITEM> m_aFemaleItem[9]; // 0x234  eh-vector[9] -> 0x258
+#elif (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72)
+    // =====================================================================
+    // GMS v72 layout (task-009). Anchored to GMS_v72.1_U_DEVM.exe (session eb2a156e):
+    //   ctor               @0x5AECED (field-init extent; last member ends 0x23C)
+    //   ResetVAC           @0x5B4408 (m_aAvatarDataVAC@0x114; locks @0x128/0x130)
+    //   MakeVACDlg         @0x5B4394 (VAC scalars @0xFC/0x100/0x10C/0x110)
+    //   OnSelectWorldResult@0x5B4ABC ([this+14Ch]=m_bRequestSent)
+    //   RemoveNoticeConnecting @0x5B3ED9 (m_pConnectionDlg@0xF8)
+    // v72 has ONE ZList (m_lNewEquip @0x174); v79/v83 build TWO. v72 also LACKS
+    // m_abOnFamily and most of the v95 EventCharacterID..aCmd mid-block. Offsets
+    // absolute; CLogin own-fields begin at 0xF8 (CMapLoadable base = 0xF8). Opaque
+    // gap fillers sized to the exact binary extent; every field is 4-byte aligned.
+    // =====================================================================
+    ZArray<AvatarData> m_aAvatarDataVAC;      // 0x114
+    ZArray<CLogin::RANK> m_aRankVAC;          // 0x118
+    ZArray<unsigned long> m_adwCharacterID;   // 0x11C
+    ZArray<ZXString<char>> m_asCharacterName; // 0x120
+    ZArray<long> m_anWorldID;                 // 0x124
+    ZFatalSection m_lock_Avatar;              // 0x128 (8B)
+    ZFatalSection m_lock_CountSvr;            // 0x130 (8B)
+    ZFatalSection m_lock_Character;           // 0x138 (8B)
+    int m_v72_gap140[3];                      // 0x140..0x14B (com_ptr + login-step ints)
+    int m_bRequestSent;                       // 0x14C  (OnSelectWorldResult [this+14Ch])
+    int m_v72_gap150[5];                      // 0x150..0x163 (login-step block)
+    ZArray<CLogin::WORLDITEM> m_WorldItem;    // 0x164  RemoveAll crash field (sub_5B63FC)
+    int m_nCharSelected;                      // 0x168  ctor = -1
+    ZArray<AvatarData> m_aAvatarData;         // 0x16C
+    ZArray<CLogin::RANK> m_aRank;             // 0x170
+    ZList<CLogin::NEWEQUIP> m_lNewEquip;      // 0x174  ONLY ZList (off_9D317C) -> ends 0x188
+    int m_v72_gap188[15];               // 0x188..0x1C3 (m_nRegStatID/light/dust/avatar/logindesc/eventid/balloonCount)
+    ZArray<CLogin::BALLOON> m_aBalloon; // 0x1C4  (ctor unwind sub_5B64A0; used by login_hooks RemoveAll)
+    ZXString<char> m_aCmd[5];           // 0x1C8  eh-vector[5] -> ends 0x1DC
+    int m_v72_gap1DC[6];                // 0x1DC..0x1F3
+    ZArray<CLogin::ASITEM> m_aMaleItem[9];   // 0x1F4  eh-vector[9] -> ends 0x218
+    ZArray<CLogin::ASITEM> m_aFemaleItem[9]; // 0x218  eh-vector[9] -> 0x23C
+#else
     ZArray<AvatarData> m_aAvatarDataVAC;
     ZArray<CLogin::RANK> m_aRankVAC;
     ZArray<unsigned long> m_adwCharacterID;
@@ -282,4 +374,45 @@ public:
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int m_bCanHaveExtraChar;
 #endif
+#endif // BUILD_MAJOR_VERSION == 79
 };
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+// --- task-008: permanent v79 layout guards (anchored to GMS_v79_1_DEVM) ---
+// sizeof: CLogo::LogoEnd @0x5FFA57 push 258h -> Alloc(0x258); ctor last member
+// (m_aFemaleItem[9]) ends at 0x258.
+assert_size(sizeof(CLogin), 0x258);
+static_assert(offsetof(CLogin, m_aAvatarDataVAC) == 0x138, "CLogin::m_aAvatarDataVAC must be at 0x138 (v79)");
+static_assert(offsetof(CLogin, m_bRequestSent) == 0x14C,
+              "CLogin::m_bRequestSent must be at 0x14C (v79: ctor idx83 / SendCheckPasswordPacket this[83], "
+              "OnCheckPasswordResult this+332)");
+static_assert(offsetof(CLogin, m_WorldItem) == 0x164,
+              "CLogin::m_WorldItem must be at 0x164 (v79: ctor idx89, RemoveAll(this+89))");
+static_assert(offsetof(CLogin, m_nCharSelected) == 0x168,
+              "CLogin::m_nCharSelected must be at 0x168 (v79: ctor idx90 = -1)");
+static_assert(offsetof(CLogin, m_abOnFamily) == 0x174,
+              "CLogin::m_abOnFamily must be at 0x174 (v79: OnSelectWorldResult this[93])");
+static_assert(offsetof(CLogin, m_lNewEquip) == 0x178,
+              "CLogin::m_lNewEquip must be at 0x178 (v79: ZList vtable off_A2F9FC)");
+static_assert(offsetof(CLogin, m_aBalloon) == 0x1DC,
+              "CLogin::m_aBalloon must be at 0x1DC (v79: OnWorldInformation RemoveAll(this+119))");
+#endif
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72
+// --- task-009: permanent v72 layout guards (anchored to GMS_v72.1_U_DEVM) ---
+// sizeof: ctor @0x5AECED last member (m_aFemaleItem[9]) ends 0x23C; LogoEnd Alloc(0x23C).
+// Requires CMapLoadable base == 0xF8, m_pConnectionDlg 4B, m_bRecommandWorld absent.
+assert_size(sizeof(CLogin), 0x23C);
+static_assert(
+    offsetof(CLogin, m_pConnectionDlg) == 0xF8,
+    "CLogin::m_pConnectionDlg @0xF8 (v72: RemoveNoticeConnecting [ecx+0F8h]; anchors CMapLoadable base = 0xF8)");
+static_assert(offsetof(CLogin, m_aAvatarDataVAC) == 0x114,
+              "CLogin::m_aAvatarDataVAC @0x114 (v72: ResetVAC 0x5B4408 lea [esi+114h])");
+static_assert(offsetof(CLogin, m_bRequestSent) == 0x14C,
+              "CLogin::m_bRequestSent @0x14C (v72: OnSelectWorldResult [this+14Ch])");
+static_assert(offsetof(CLogin, m_WorldItem) == 0x164,
+              "CLogin::m_WorldItem @0x164 (v72: RemoveAll crash field sub_5B63FC)");
+static_assert(offsetof(CLogin, m_nCharSelected) == 0x168, "CLogin::m_nCharSelected @0x168 (v72: ctor = -1)");
+static_assert(offsetof(CLogin, m_lNewEquip) == 0x174, "CLogin::m_lNewEquip @0x174 (v72: only ZList, off_9D317C)");
+static_assert(offsetof(CLogin, m_aCmd) == 0x1C8, "CLogin::m_aCmd[5] @0x1C8 (v72)");
+#endif
