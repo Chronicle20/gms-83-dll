@@ -88,13 +88,14 @@ class CUIToolTip
     };
 
   public:
-#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
-    // v79: the binary reserves a dword at offset 0 (IDA struct labels it "vfptr").
+#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79)
+    // v79/v72: the binary reserves a dword at offset 0 (IDA struct labels it "vfptr").
     // This class is non-polymorphic and does not otherwise model that slot, leaving
-    // the struct 4 bytes short of the 0x514 binary size. ctor @0x842317 anchors the
-    // real layout -- m_pLayer@0x10, m_aLineInfo@0x20, m_pNumberCan@0x4A4 -- i.e. exactly
-    // 4 dwords precede m_pLayer. Gated ==79 so v83/84/87/95/111/JMS stay byte-for-byte
-    // unchanged (they share this latent -4; see task-008 report).
+    // the struct 4 bytes short of the binary size. Both ctors (v79 @0x842317,
+    // v72 @0x7f9c33) write m_pLayer@0x10 first and the m_aLineInfo array @0x20 --
+    // i.e. exactly 4 dwords precede m_pLayer, so the offset-0 slot is real. Gated
+    // ==72/==79 so v83/84/87/95/111/JMS stay byte-for-byte unchanged (they share
+    // this latent -4; see task-008 report).
     void* vfptr;
 #endif
     //vfptr
@@ -133,7 +134,15 @@ class CUIToolTip
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Purple;
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Green;
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Yellow;
+    // v72: this last base-font slot is ABSENT. The v72 ctor @0x7f9c33 zeroes the
+    // font run [esi+424h..esi+46Ch] (19 dwords) whereas the v79 ctor @0x842317
+    // zeroes [esi+424h..esi+470h] (20 dwords) — one extra pointer appended at
+    // +0x470. Offsets 0x424..0x46C are byte-identical between the two, so the
+    // delta is strictly this trailing slot. Absent only for GMS v72 -> CUIToolTip
+    // 0x510 (v72) vs 0x514 (v79). task-009.
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72)
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Blue;
+#endif
     // v84: m_pFontGen_Unknown present @0x478 — gate split >=87 -> >=84, task-006 (v84=0x52C)
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 84) || defined(REGION_JMS)
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Unknown;
@@ -174,4 +183,10 @@ static_assert(offsetof(CUIToolTip, m_pLayer) == 0x10,
               "v79 CUIToolTip::m_pLayer @0x10 (ctor @0x842317: mov [esi+10h], edi)");
 static_assert(offsetof(CUIToolTip, m_pNumberCan) == 0x4A4,
               "v79 CUIToolTip::m_pNumberCan @0x4A4 (ctor @0x842317: lea ecx, [esi+4A4h])");
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72
+assert_size(sizeof(CUIToolTip), 0x510); // ctor @0x7f9c33 (GMS_v72.1_U_DEVM); one fewer base font than v79
+static_assert(offsetof(CUIToolTip, m_pLayer) == 0x10,
+              "v72 CUIToolTip::m_pLayer @0x10 (ctor @0x7f9c33: mov [esi+10h], edi)");
+static_assert(offsetof(CUIToolTip, m_pNumberCan) == 0x4A0,
+              "v72 CUIToolTip::m_pNumberCan @0x4A0 (ctor @0x7f9c33: mov [esi+4A0h], edi) -- 4 below v79");
 #endif

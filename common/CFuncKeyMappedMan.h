@@ -48,7 +48,8 @@ public:
 // No v79 branch added here on purpose: fixing the member gate belongs to the struct audit (Task 12/16).
 // v79: with the quickslot pair now gated out, the header computes 0x388 — restores the guard
 // deferred in Task 3 (World-B closure). verified task-008
-// v72 size verified task-009 (== v79 0x388; CreateInstance Alloc(0x388) + ctor field-init extent, quickslot pair gated out at :18)
+// v72 size verified task-009 (== v79 0x388; CreateInstance Alloc(0x388) + ctor field-init extent, quickslot pair gated
+// out at :18)
 #if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79)
 assert_size(sizeof(CFuncKeyMappedMan), 0x388)
 #elif defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 83 || BUILD_MAJOR_VERSION == 84 || BUILD_MAJOR_VERSION == 87)

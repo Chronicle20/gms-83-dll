@@ -162,10 +162,20 @@ public:
 #endif
     int m_nMagLevel_Obj;
     int m_nMagLevel_Back;
+    // task-009: v72 (and, per the binary, v79) omit 0x1C of this tail — the base ctor
+    // sub_5EADAB field-inits reach only [esi+0ECh]/[esi+0F0h], leaving m_nMagLevel_Back
+    // @0xEC and the RestoreBgm pair @0xF0/0xF4 as the last members -> sizeof 0xF8 (proven
+    // by CLogin::m_pConnectionDlg @0xF8). The *size* is binary-firm; the exact 4 absent
+    // members (0x1C) are a best-effort split (their individual identities are not byte-
+    // pinned — flagged for follow-up). Gated ==72 ONLY: v79's guard still locks 0x114 and
+    // its CLogin compensates internally via absolute-offset anchors, so leaving v79 as-is
+    // avoids destabilizing the merged, play-tested v79 base chain. See audit-v72-cmaploadable.md.
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72)
     tagRECT m_rcViewRange;
     int m_bSysOptTremble;
     int m_bMagLevelModifying;
     ZArray<CMapLoadable::OBSTACLE_INFO> m_aObstacleInfo;
+#endif
     int m_tRestoreBgmVolume;
     int m_nRestoreBgmVolume;
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)

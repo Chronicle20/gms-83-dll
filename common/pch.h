@@ -191,6 +191,8 @@
 
 #include "TSingleton.h"
 
-// Compile-time struct-layout guards (task-008). Must come last: needs the
+// Compile-time struct-layout guards (task-008/009). Must come last: needs the
 // struct definitions above. A failure means a header drifted from the binary.
+// Each file is internally gated by BUILD_MAJOR_VERSION, so including both is safe.
+#include "v72_layout_guards.h"
 #include "v79_layout_guards.h"

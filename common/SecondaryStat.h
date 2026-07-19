@@ -6,13 +6,26 @@
 // task-008: The v95-PDB-derived layout is +0x294 too big for GMS v79. v79 (== v83
 // base) lacks a set of v95-era per-stat components and post-Big-Bang stats that were
 // left ungated. Each block absent in v79 is fenced with GMS_V79_ABSENT below, which
-// only removes the member for GMS v79 and leaves every other version (v83/84/87/95/111
-// GMS, JMS) byte-for-byte unchanged. Evidence: SecondaryStat::Reset @0x6fa9bd (TS-bit
-// order), ctor field-init sub_6F736F, and DecodeForRemote @0x701539 in GMS_v79_1_DEVM.
-#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+// removes the member for GMS v79 and v72 (both share the pre-v83 base) and leaves
+// every other version (v83/84/87/95/111 GMS, JMS) byte-for-byte unchanged. Evidence:
+// SecondaryStat::Reset @0x6fa9bd (TS-bit order), ctor field-init sub_6F736F, and
+// DecodeForRemote @0x701539 in GMS_v79_1_DEVM.
+// task-009: v72 shares every v79 absence (positional DecodeForRemote diff: no offset
+// shifts through nWindWalk_@0xA54), so v72 joins the GMS_V79_ABSENT=0 base -> 0xB88.
+#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 79 || BUILD_MAJOR_VERSION == 72)
 #define GMS_V79_ABSENT 0
 #else
 #define GMS_V79_ABSENT 1
+#endif
+
+// task-009: v72 ADDITIONALLY lacks 6 stat triples that v79 keeps (EventRate,
+// ComboAbilityBuff, ComboDrain, ComboBarrier, BodyPressure, SmartKnockback — Aran/
+// combo-era stats added after v72). Absent for v72 only; present v79+. Verified by
+// v72 ctor sub_6C70E9 (aTemporaryStat[7] @this+0xA78 -> sizeof 0xAB0) vs v79 0xB88.
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72
+#define GMS_V72_ABSENT 0
+#else
+#define GMS_V72_ABSENT 1
 #endif
 
 struct SecondaryStat {
@@ -563,6 +576,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rWindWalk__CS;
     int _ZtlSecureTear_tWindWalk_[2];
     unsigned int _ZtlSecureTear_tWindWalk__CS;
+#if GMS_V72_ABSENT
     int _ZtlSecureTear_nEventRate_[2];
     unsigned int _ZtlSecureTear_nEventRate__CS;
     int _ZtlSecureTear_rEventRate_[2];
@@ -599,6 +613,7 @@ struct SecondaryStat {
     unsigned int _ZtlSecureTear_rSmartKnockback__CS;
     int _ZtlSecureTear_tSmartKnockback_[2];
     unsigned int _ZtlSecureTear_tSmartKnockback__CS;
+#endif // GMS_V72_ABSENT (EventRate..SmartKnockback absent in v72)
 #if GMS_V79_ABSENT
     int _ZtlSecureTear_nRepeatEffect_[2];
     unsigned int _ZtlSecureTear_nRepeatEffect__CS;
@@ -928,4 +943,22 @@ static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nBanMap_) == 0x738,
               "v79 BanMap 4-group @0x738 (ctor grp bases 0x738..0x744; DecodeForRemote mask B0F830)");
 #endif
 
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72
+// task-009: v72 SecondaryStat proven against GMS_v72.1_U_DEVM.exe (session eb2a156e).
+// ctor sub_6C70E9 builds aTemporaryStat[7] @this+0xA78 (`lea eax,[esi+0A78h]`, push 8
+// elem-size, push 7 count) -> struct ends 0xAB0. -0xD8 vs v79 (6 stat triples absent:
+// EventRate..SmartKnockback). nWindWalk_@0xA54 is the last pre-array member (trim point).
+assert_size(sizeof(SecondaryStat), 0xAB0);
+static_assert(offsetof(SecondaryStat, aTemporaryStat) == 0xA78,
+              "v72 aTemporaryStat @0xA78 (ctor sub_6C70E9 lea [esi+0A78h]; DecodeForRemote add esi,0A7Ch)");
+static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nWindWalk_) == 0xA54,
+              "v72 nWindWalk_ @0xA54 = last member before the trailing array (trim point vs v79)");
+static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nDefenseAtt) == 0x90C,
+              "v72 nDefenseAtt byte-tear @0x90C (shared with v79)");
+static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nDefenseState) == 0x938,
+              "v72 nDefenseState byte-tear @0x938 (shared with v79)");
+static_assert(offsetof(SecondaryStat, _ZtlSecureTear_nBanMap_) == 0x738, "v72 BanMap 4-group @0x738 (shared with v79)");
+#endif
+
 #undef GMS_V79_ABSENT
+#undef GMS_V72_ABSENT
