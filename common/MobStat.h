@@ -149,7 +149,11 @@ class MobStat {
 #endif
     long double nFs;
     int bInvincible;
+    // v72: bDisable absent — v72 copies ONE post-nFs field (bInvincible@0x1C0), v79 copies TWO
+    // (bInvincible@0x1D8, bDisable@0x1DC). present v79+/JMS. three-way split, verified task-009
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 79 || defined(REGION_JMS)
     int bDisable;
+#endif
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     int bCannotEvade;
 #endif

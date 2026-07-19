@@ -94,7 +94,10 @@ public:
 // them every frame, so a wrong size = wrong field offsets = corruption. Real sizes (size sweep):
 // v79/v83/v84 = 0x60, v87 = 0x6C, v111 = 0x8C, JMS = 0x64 (v95 TBD). These pass with the current
 // version gates — locking them here guards against a gate regression.
-#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 79 || BUILD_MAJOR_VERSION == 83 || BUILD_MAJOR_VERSION == 84)
+// v72 size verified task-009 (WinMain stack-ctor @0x8EF809 -> this=ebp-0xF4; highest field @+0x5C (m_ahInput[2]), next
+// local @+0x6C; ctor @0x8F26C7 field-init through +0x38 == v79 -> 0x60)
+#if defined(REGION_GMS) &&                                                                                             \
+    (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79 || BUILD_MAJOR_VERSION == 83 || BUILD_MAJOR_VERSION == 84)
 assert_size(sizeof(CWvsApp), 0x60) // v79 size verified task-008 (ctor @0x942D3B base layout == v83/84)
 #elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 87
 assert_size(sizeof(CWvsApp), 0x6C)

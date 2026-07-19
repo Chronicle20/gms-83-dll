@@ -41,6 +41,7 @@ assert_size(sizeof(CUIWnd), 0x5A8); // embeds CUIToolTip 0x514 @0x6C (ReloadBack
 assert_size(sizeof(SecondaryStat),
             0xB88);                  // task-008: header rebuilt to v79 (55 v95-era tears gated out; ctor sub_6F6D0C)
 assert_size(sizeof(CCtrlWnd), 0x34); // base; 3 trailing flags widened bool->int (ctor @0x4d4378)
-assert_size(sizeof(CCtrlButton), 0x5A4);  // CCtrlWnd 0x34 base + CUIToolTip 0x514 (ctor @0x422d59)
+assert_size(sizeof(CCtrlButton), 0x5A0); // 0x8C embed + CUIToolTip 0x514 (last member); alloc @0x50c293 push 5A0h
+                                         // (task-009 corrects task-008's 0x5A4)
 assert_size(sizeof(CCtrlCheckBox), 0x6C); // CCtrlWnd 0x34 base (ctor @0x4d4378)
 #endif

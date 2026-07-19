@@ -14,7 +14,8 @@ public:
     FUNCKEY_MAPPED m_aFuncKeyMapped_Old[94];
 #endif
     // v79: lacks the two quickslot int arrays (0x40 below-floor member shift; sizeof 0x388 vs
-    // v83 0x3C8) — present in v83+ and JMS. Gate excludes ONLY v79. verified task-008
+    // v83 0x3C8) — present in v83+ and JMS. Gate (>= 83 || JMS) excludes v79 AND v72.
+    // verified task-008; v72 sizeof 0x388 confirmed task-009 (quickslot pair absent in v72 too)
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 83 || defined(REGION_JMS)
     int m_aQuickslotKeyMapped[8];
     int m_aQuickslotKeyMapped_Old[8];
@@ -47,7 +48,9 @@ public:
 // No v79 branch added here on purpose: fixing the member gate belongs to the struct audit (Task 12/16).
 // v79: with the quickslot pair now gated out, the header computes 0x388 — restores the guard
 // deferred in Task 3 (World-B closure). verified task-008
-#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
+// v72 size verified task-009 (== v79 0x388; CreateInstance Alloc(0x388) + ctor field-init extent, quickslot pair gated
+// out at :18)
+#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79)
 assert_size(sizeof(CFuncKeyMappedMan), 0x388)
 #elif defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 83 || BUILD_MAJOR_VERSION == 84 || BUILD_MAJOR_VERSION == 87)
 assert_size(sizeof(CFuncKeyMappedMan), 0x3C8)

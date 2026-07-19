@@ -256,7 +256,14 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
 
     CFuncKeyMappedMan::CreateInstance();
     CQuickslotKeyMappedMan::CreateInstance();
+#if C_MACRO_SYS_MAN_CREATE_INSTANCE != 0
+    // CreateInstance calls through C_MACRO_SYS_MAN_CREATE_INSTANCE. v72 has no separate
+    // CMacroSysMan singleton (the macro-sys-data-init role is folded into
+    // CQuickslotKeyMappedMan, created just above), so that address is the 0x0 absent-
+    // sentinel; calling through it AVs at 0. Gate on a non-zero address, same as the
+    // CRadioManager guard below. task-009.
     CMacroSysMan::CreateInstance();
+#endif
 
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95)
     CBattleRecordMan::CreateInstance();

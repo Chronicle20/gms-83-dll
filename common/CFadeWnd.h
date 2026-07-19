@@ -18,11 +18,12 @@ class CFadeWnd : public CDialog
     int m_nPhase;
     int m_tPhase;
     int m_tTimeOver;
-#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
-    // v79: these three flags are 4-byte BOOLs in the binary (dwords @0xB0/0xB4/0xB8),
-    // not packed C++ bool. CFadeWnd::CFadeWnd @0x50b6d6 writes [this+0xB0]=0 (m_bClose)
-    // and [this+0xBC]=-1 (m_nType); the 0xC gap between them is exactly 3 dwords. Gated
-    // ==79 so other GMS/JMS versions stay byte-for-byte unchanged.
+#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79)
+    // v79/v72: these three flags are 4-byte BOOLs in the binary (dwords @0xB0/0xB4/0xB8),
+    // not packed C++ bool. CFadeWnd::CFadeWnd (v79 @0x50b6d6, v72 @0x4ffd72 —
+    // byte-identical) writes [this+0xB0]=0 (m_bClose) and [this+0xBC]=-1 (m_nType);
+    // the 0xC gap between them is exactly 3 dwords. Gated ==72/==79 so other GMS/JMS
+    // versions stay byte-for-byte unchanged.
     int m_bClose;
     int m_bUserAlarm;
     int m_bOK;
@@ -47,10 +48,10 @@ class CFadeWnd : public CDialog
     void Close(CFadeWnd*, int bOK);
 };
 
-#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
-assert_size(sizeof(CFadeWnd), 0xCC); // CDialog(0x74) base; ctor @0x50b6d6
+#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79)
+assert_size(sizeof(CFadeWnd), 0xCC); // CDialog(0x74) base; ctor v79 @0x50b6d6 / v72 @0x4ffd72
 static_assert(offsetof(CFadeWnd, m_nType) == 0xBC,
-              "v79 CFadeWnd::m_nType @0xBC (ctor @0x50b6d6: *((_DWORD*)this+47) = -1)");
+              "CFadeWnd::m_nType @0xBC (ctor: or [this+0xBC], -1; v79 @0x50b6d6, v72 @0x4ffd72)");
 static_assert(offsetof(CFadeWnd, m_dwSN) == 0xC4,
-              "v79 CFadeWnd::m_dwSN @0xC4 (>=87 m_nLevel/m_nJobCode/m_nExpQuestID block absent)");
+              "CFadeWnd::m_dwSN @0xC4 (>=87 m_nLevel/m_nJobCode/m_nExpQuestID block absent)");
 #endif
