@@ -30,6 +30,10 @@
 
 struct SecondaryStat {
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72
+    // clang-format off
+    // (v61 faithful tail: the two-tears-per-line + trailing offset columns below are a
+    //  deliberate hand-alignment for offset cross-referencing against the binary; keep
+    //  clang-format from splitting each pair onto its own line. task-010)
     // ============================================================================
     // v61 faithful tail — transcribed from docs/tasks/task-010-gms-v61-support/
     // v61_secondarystat_layout.md (full rebuild, user decision task-010).
@@ -305,6 +309,7 @@ struct SecondaryStat {
     // SITE D — trailing two-state base-stat array: v61 = 6 entries x 4B = 0x18 @0x958..0x970.
     // (v72 = 7 x 8B = 0x38.) 4-byte entry on 32-bit ⇒ raw pointer, not the 8-byte ZRef.
     TemporaryStatBase<long>* aTemporaryStat[6];                                   // 0x958..0x970
+    // clang-format on
 #else
     int _ZtlSecureTear_nPAD[2];
     unsigned int _ZtlSecureTear_nPAD_CS;
@@ -1202,7 +1207,8 @@ struct SecondaryStat {
 };
 
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72
-assert_size(sizeof(SecondaryStat), 0x970) // v61 faithful layout — full rebuild, task-010
+// v61 faithful layout — full rebuild, task-010
+assert_size(sizeof(SecondaryStat), 0x970);
 #endif
 
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79

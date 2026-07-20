@@ -35,7 +35,8 @@ public:
     int m_nTargetVersion;
 #if defined(REGION_GMS)
     int m_tLastServerIPCheck;
-#if BUILD_MAJOR_VERSION >= 72 // v61 lacks the 2nd IP-check + GG-hook timer (added v72); m_ahInput lands @+0x4C, sizeof 0x58 — verified task-010
+#if BUILD_MAJOR_VERSION >= 72 // v61 lacks the 2nd IP-check + GG-hook timer (added v72); m_ahInput lands @+0x4C, sizeof
+                              // 0x58 — verified task-010
     int m_tLastServerIPCheck2;
     int m_tLastGGHookingAPICheck;
 #endif
@@ -96,11 +97,15 @@ public:
 // them every frame, so a wrong size = wrong field offsets = corruption. Real sizes (size sweep):
 // v79/v83/v84 = 0x60, v87 = 0x6C, v111 = 0x8C, JMS = 0x64 (v95 TBD). These pass with the current
 // version gates — locking them here guards against a gate regression.
-// v72 size verified task-009 (WinMain stack-ctor @0x8EF809 -> this=ebp-0xF4; highest field @+0x5C (m_ahInput[2]), next local @+0x6C; ctor @0x8F26C7 field-init through +0x38 == v79 -> 0x60)
-#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79 || BUILD_MAJOR_VERSION == 83 || BUILD_MAJOR_VERSION == 84)
+// v72 size verified task-009 (WinMain stack-ctor @0x8EF809 -> this=ebp-0xF4; highest field @+0x5C (m_ahInput[2]), next
+// local @+0x6C; ctor @0x8F26C7 field-init through +0x38 == v79 -> 0x60)
+#if defined(REGION_GMS) &&                                                                                             \
+    (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79 || BUILD_MAJOR_VERSION == 83 || BUILD_MAJOR_VERSION == 84)
 assert_size(sizeof(CWvsApp), 0x60) // v79 size verified task-008 (ctor @0x942D3B base layout == v83/84)
 #elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61
-assert_size(sizeof(CWvsApp), 0x58) // v61 size verified task-010 (WinMain stack-ctor @0x8207B3 frame Δ=0x58; m_ahInput@+0x4C via InitializeInput 0x8247F9 & Run 0x823411; GMS sec-region −2 ints vs v72)
+assert_size(sizeof(CWvsApp),
+            0x58) // v61 size verified task-010 (WinMain stack-ctor @0x8207B3 frame Δ=0x58; m_ahInput@+0x4C via
+                  // InitializeInput 0x8247F9 & Run 0x823411; GMS sec-region −2 ints vs v72)
 #elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 87
 assert_size(sizeof(CWvsApp), 0x6C)
 #elif defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 95
