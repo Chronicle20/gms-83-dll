@@ -1,8 +1,19 @@
 #include "pch.h"
 
 COutPacket::COutPacket(INT nType) {
-    reinterpret_cast<void (__fastcall *)(COutPacket *, void *, INT)>(
-            C_OUT_PACKET)(this, nullptr, nType);
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72
+    // v61 ONLY: the COutPacket ctor takes a SECOND stack arg (bLoopback, written to
+    // [this+0]) and does `retn 8`. v72+ dropped it -> `COutPacket(nType)` / `retn 4`.
+    // Passing one arg through the v72-shaped cast leaves the callee cleaning 8 bytes
+    // while we push 4 -> ESP mismatch -> Run-Time Check Failure #0 the moment the login
+    // packet is built (CLogin::SendCheckPasswordPacket). Pass bLoopback=0 explicitly so
+    // the pushed/cleaned byte counts agree. Verified against GMS_v61.1_U_DEVM (ctor
+    // @0x5FFC4F reads arg_0=nType + arg_4=loopback, retn 8; call site @0x564471 pushes
+    // both). task-010.
+    reinterpret_cast<void (__fastcall *)(COutPacket *, void *, INT, INT)>(C_OUT_PACKET)(this, nullptr, nType, 0);
+#else
+    reinterpret_cast<void (__fastcall *)(COutPacket *, void *, INT)>(C_OUT_PACKET)(this, nullptr, nType);
+#endif
 }
 
 void COutPacket::Encode1(unsigned char n) {
