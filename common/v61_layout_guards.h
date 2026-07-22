@@ -20,8 +20,21 @@
 // Included at the end of pch.h; all referenced types are defined by then.
 
 #include "asserts.h"
+#include <cstddef>
 
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61
+// --- CWvsContext account region (task-010 post-testing; char-select garbage fix) ---
+// v61 reorders/resizes the account fields (m_nSubGradeCode is a plain byte, ZXStrings precede
+// it) vs v72+. These offsets are the fields our edit DLLs actually read; a wrong value here is
+// the reported channelId/characterId garbage. Verified against GMS_v61.1_U_DEVM (IDA 9a1bdd7a):
+// SetAccountInfo @0x56613D, sub_82CE54 (world/channel), OnConnect migrate [ctx+0x2088]=charId.
+static_assert(offsetof(CWvsContext, m_dwAccountId) == 0x2028, "v61 CWvsContext::m_dwAccountId @0x2028");
+static_assert(offsetof(CWvsContext, m_nSubGradeCode) == 0x2044,
+              "v61 CWvsContext::m_nSubGradeCode @0x2044 (plain byte)");
+static_assert(offsetof(CWvsContext, m_nWorldID) == 0x2048, "v61 CWvsContext::m_nWorldID @0x2048");
+static_assert(offsetof(CWvsContext, m_nChannelID) == 0x204C, "v61 CWvsContext::m_nChannelID @0x204C");
+static_assert(offsetof(CWvsContext, m_dwCharacterId) == 0x2088, "v61 CWvsContext::m_dwCharacterId @0x2088");
+
 // --- core / net (task-010 Task 13; Alloc-immediate anchored) ---
 assert_size(sizeof(CClientSocket), 0x94); // CreateInstance @0x826007 push 94h
 assert_size(sizeof(COutPacket), 0x10);    // ctor init sub_5FFC98 highest write +0xC

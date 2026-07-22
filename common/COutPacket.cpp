@@ -10,9 +10,9 @@ COutPacket::COutPacket(INT nType) {
     // the pushed/cleaned byte counts agree. Verified against GMS_v61.1_U_DEVM (ctor
     // @0x5FFC4F reads arg_0=nType + arg_4=loopback, retn 8; call site @0x564471 pushes
     // both). task-010.
-    reinterpret_cast<void (__fastcall *)(COutPacket *, void *, INT, INT)>(C_OUT_PACKET)(this, nullptr, nType, 0);
+    reinterpret_cast<void(__fastcall*)(COutPacket*, void*, INT, INT)>(C_OUT_PACKET)(this, nullptr, nType, 0);
 #else
-    reinterpret_cast<void (__fastcall *)(COutPacket *, void *, INT)>(C_OUT_PACKET)(this, nullptr, nType);
+    reinterpret_cast<void(__fastcall*)(COutPacket*, void*, INT)>(C_OUT_PACKET)(this, nullptr, nType);
 #endif
 }
 
