@@ -19,12 +19,12 @@ public:
 #endif
 };
 
-#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79)
-// v79/v72: CCtrlWnd base 0x34 (v79 ctor @0x4d4378, v72 @0x4cc645 — proven
-// identical). m_nCheckBoxState is the first member right after the base;
+#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 61 || BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79)
+// v61/v79/v72: CCtrlWnd base 0x34 (v61 ctor @0x4b2783, v79 @0x4d4378, v72 @0x4cc645 —
+// proven identical). m_nCheckBoxState is the first member right after the base;
 // m_apCanvasCheckBox[4] is last -> sizeof 0x6C. The >=95 text-offset pair is
-// excluded for both, and all members between the base and the array are
-// version-invariant, so v72 == v79 == 0x6C. (v72 ctor stripped in the IDB; verdict
-// is base-arithmetic anchored to the shared CCtrlWnd base.) task-008/task-009.
+// excluded for all three, and all members between the base and the array are
+// version-invariant. v61 anchored by alloc @0x45501b push 6Ch (task-010; corrects the
+// audit's ≈0x9C estimate). task-008/task-009/task-010.
 assert_size(sizeof(CCtrlCheckBox), 0x6C);
 #endif

@@ -23,7 +23,13 @@ struct CUIWnd : CWnd {
     bool m_bBackgrnd;
     int m_nOption;
     ZArray<unsigned char> m_abOption;
+    // v61: the trailing m_sBackgrndUOL is absent — the ctor (sub_787356) stops initializing
+    // at [esi+56C] (= m_abOption), giving sizeof 0x570 (vs the 0x574 the shared tail would
+    // yield). Size binary-proven by 3 direct subclasses that begin own members @0x570; the
+    // dropped-member identity is best-effort. task-010.
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61)
     ZXString<unsigned short> m_sBackgrndUOL;
+#endif
 };
 
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
@@ -41,4 +47,11 @@ static_assert(offsetof(CUIWnd, m_nBtCloseType) == 0x580,
               "v72 CUIWnd::m_nBtCloseType @0x580 (ctor sub_83C0EC: mov [esi+580h], arg) -- 4 below v79");
 static_assert(offsetof(CUIWnd, m_sBackgrndUOL) == 0x5A0,
               "v72 CUIWnd::m_sBackgrndUOL @0x5A0 (ReloadBackgrnd @0x83c71e: lea ecx, [esi+5A0h])");
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61
+// v61: CWnd(0x64) + m_uiToolTip(CUIToolTip 0x4E0)@0x6C -> 0x30 below v72; trailing
+// m_sBackgrndUOL absent -> sizeof 0x570 (3 direct subclasses begin own members @0x570;
+// ctor sub_787356). task-010.
+assert_size(sizeof(CUIWnd), 0x570);
+static_assert(offsetof(CUIWnd, m_nBtCloseType) == 0x550,
+              "v61 CUIWnd::m_nBtCloseType @0x550 (m_uiToolTip 0x4E0 -> trailing 0x30 below v72)");
 #endif

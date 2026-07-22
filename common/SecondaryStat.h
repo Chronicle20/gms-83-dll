@@ -29,6 +29,288 @@
 #endif
 
 struct SecondaryStat {
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72
+    // clang-format off
+    // (v61 faithful tail: the two-tears-per-line + trailing offset columns below are a
+    //  deliberate hand-alignment for offset cross-referencing against the binary; keep
+    //  clang-format from splitting each pair onto its own line. task-010)
+    // ============================================================================
+    // v61 faithful tail — transcribed from docs/tasks/task-010-gms-v61-support/
+    // v61_secondarystat_layout.md (full rebuild, user decision task-010).
+    // Members named where the binary pinned them; _ZtlSecureTear_unkNNN_ placeholders
+    // (offset + size commented) where a v61 tear is not individually named. Reaches
+    // exact sizeof 0x970 — locked by the assert_size below. v61 and v72 are byte-
+    // identical 0x0..0x78C; the divergence is concentrated in 4 late sites
+    // (A=SpiritJavelin@0x78C, B=Infinity@0x7B0, C=GhostMorph@0x934, D=array@0x958),
+    // but the over-model #else prefix is itself unfaithful to v61 (different tear
+    // counts/order), so the whole v61 body is rebuilt self-contained here.
+    //
+    // Base region @0x000 size 0xC (vtable + stat-set mask head; nPAD starts at 0xC).
+    void* _vfptr;                                                              // 0x000
+    unsigned int _uStatHead[2];                                                // 0x004..0x00C
+    // bit0 WeaponAttack @0x00C (0x30, 4 tears)
+    int _ZtlSecureTear_nPAD[2];        unsigned int _ZtlSecureTear_nPAD_CS;    // 0x00C
+    int _ZtlSecureTear_nPAD_[2];       unsigned int _ZtlSecureTear_nPAD__CS;   // 0x018
+    int _ZtlSecureTear_rPAD_[2];       unsigned int _ZtlSecureTear_rPAD__CS;   // 0x024
+    int _ZtlSecureTear_tPAD_[2];       unsigned int _ZtlSecureTear_tPAD__CS;   // 0x030
+    // bit1 WeaponDefense @0x03C (0x30, 4)
+    int _ZtlSecureTear_nPDD[2];        unsigned int _ZtlSecureTear_nPDD_CS;    // 0x03C
+    int _ZtlSecureTear_nPDD_[2];       unsigned int _ZtlSecureTear_nPDD__CS;   // 0x048
+    int _ZtlSecureTear_rPDD_[2];       unsigned int _ZtlSecureTear_rPDD__CS;   // 0x054
+    int _ZtlSecureTear_tPDD_[2];       unsigned int _ZtlSecureTear_tPDD__CS;   // 0x060
+    // bit2 MagicAttack @0x06C (0x30, 4)
+    int _ZtlSecureTear_nMAD[2];        unsigned int _ZtlSecureTear_nMAD_CS;    // 0x06C
+    int _ZtlSecureTear_nMAD_[2];       unsigned int _ZtlSecureTear_nMAD__CS;   // 0x078
+    int _ZtlSecureTear_rMAD_[2];       unsigned int _ZtlSecureTear_rMAD__CS;   // 0x084
+    int _ZtlSecureTear_tMAD_[2];       unsigned int _ZtlSecureTear_tMAD__CS;   // 0x090
+    // bit3 MagicDefense @0x09C (0x30, 4)
+    int _ZtlSecureTear_nMDD[2];        unsigned int _ZtlSecureTear_nMDD_CS;    // 0x09C
+    int _ZtlSecureTear_nMDD_[2];       unsigned int _ZtlSecureTear_nMDD__CS;   // 0x0A8
+    int _ZtlSecureTear_rMDD_[2];       unsigned int _ZtlSecureTear_rMDD__CS;   // 0x0B4
+    int _ZtlSecureTear_tMDD_[2];       unsigned int _ZtlSecureTear_tMDD__CS;   // 0x0C0
+    // bit4 Accuracy @0x0CC (0x30, 4)
+    int _ZtlSecureTear_nACC[2];        unsigned int _ZtlSecureTear_nACC_CS;    // 0x0CC
+    int _ZtlSecureTear_nACC_[2];       unsigned int _ZtlSecureTear_nACC__CS;   // 0x0D8
+    int _ZtlSecureTear_rACC_[2];       unsigned int _ZtlSecureTear_rACC__CS;   // 0x0E4
+    int _ZtlSecureTear_tACC_[2];       unsigned int _ZtlSecureTear_tACC__CS;   // 0x0F0
+    // bit5 Avoidability @0x0FC (0x30, 4)
+    int _ZtlSecureTear_nEVA[2];        unsigned int _ZtlSecureTear_nEVA_CS;    // 0x0FC
+    int _ZtlSecureTear_nEVA_[2];       unsigned int _ZtlSecureTear_nEVA__CS;   // 0x108
+    int _ZtlSecureTear_rEVA_[2];       unsigned int _ZtlSecureTear_rEVA__CS;   // 0x114
+    int _ZtlSecureTear_tEVA_[2];       unsigned int _ZtlSecureTear_tEVA__CS;   // 0x120
+    // bit6 Hands @0x12C (0x30, 4)
+    int _ZtlSecureTear_nCraft[2];      unsigned int _ZtlSecureTear_nCraft_CS;  // 0x12C
+    int _ZtlSecureTear_nCraft_[2];     unsigned int _ZtlSecureTear_nCraft__CS; // 0x138
+    int _ZtlSecureTear_rCraft_[2];     unsigned int _ZtlSecureTear_rCraft__CS; // 0x144
+    int _ZtlSecureTear_tCraft_[2];     unsigned int _ZtlSecureTear_tCraft__CS; // 0x150
+    // bit50 Barrier @0x15C (0x30, 4) [ext-table inferred]
+    int _ZtlSecureTear_nBarrier_[2];   unsigned int _ZtlSecureTear_nBarrier__CS;  // 0x15C
+    int _ZtlSecureTear_rBarrier_[2];   unsigned int _ZtlSecureTear_rBarrier__CS;  // 0x168
+    int _ZtlSecureTear_tBarrier_[2];   unsigned int _ZtlSecureTear_tBarrier__CS;  // 0x174
+    int _ZtlSecureTear_unk180_[2];     unsigned int _ZtlSecureTear_unk180__CS;    // 0x180 v61 Barrier 4th tear, name unresolved
+    // bit51 Confuse/ReverseInput @0x18C (0x24, 3) [ext-table inferred]
+    int _ZtlSecureTear_nReverseInput_[2]; unsigned int _ZtlSecureTear_nReverseInput__CS; // 0x18C
+    int _ZtlSecureTear_rReverseInput_[2]; unsigned int _ZtlSecureTear_rReverseInput__CS; // 0x198
+    int _ZtlSecureTear_tReverseInput_[2]; unsigned int _ZtlSecureTear_tReverseInput__CS; // 0x1A4
+    // bit7 Speed @0x1B0 (0x24, 3)
+    int _ZtlSecureTear_nSpeed_[2];     unsigned int _ZtlSecureTear_nSpeed__CS;    // 0x1B0
+    int _ZtlSecureTear_rSpeed_[2];     unsigned int _ZtlSecureTear_rSpeed__CS;    // 0x1BC
+    int _ZtlSecureTear_tSpeed_[2];     unsigned int _ZtlSecureTear_tSpeed__CS;    // 0x1C8
+    // bit8 Jump @0x1D4 (0x30, 4)
+    int _ZtlSecureTear_nJump[2];       unsigned int _ZtlSecureTear_nJump_CS;      // 0x1D4
+    int _ZtlSecureTear_nJump_[2];      unsigned int _ZtlSecureTear_nJump__CS;     // 0x1E0
+    int _ZtlSecureTear_rJump_[2];      unsigned int _ZtlSecureTear_rJump__CS;     // 0x1EC
+    int _ZtlSecureTear_tJump_[2];      unsigned int _ZtlSecureTear_tJump__CS;     // 0x1F8
+    // bit9 MagicGuard @0x204 (0x24, 3)
+    int _ZtlSecureTear_nMagicGuard_[2]; unsigned int _ZtlSecureTear_nMagicGuard__CS; // 0x204
+    int _ZtlSecureTear_rMagicGuard_[2]; unsigned int _ZtlSecureTear_rMagicGuard__CS; // 0x210
+    int _ZtlSecureTear_tMagicGuard_[2]; unsigned int _ZtlSecureTear_tMagicGuard__CS; // 0x21C
+    // bit10 DarkSight @0x228 (0x24, 3)
+    int _ZtlSecureTear_nDarkSight_[2]; unsigned int _ZtlSecureTear_nDarkSight__CS; // 0x228
+    int _ZtlSecureTear_rDarkSight_[2]; unsigned int _ZtlSecureTear_rDarkSight__CS; // 0x234
+    int _ZtlSecureTear_tDarkSight_[2]; unsigned int _ZtlSecureTear_tDarkSight__CS; // 0x240
+    // bit11 Booster @0x24C (0x24, 3)
+    int _ZtlSecureTear_nBooster_[2];   unsigned int _ZtlSecureTear_nBooster__CS;  // 0x24C
+    int _ZtlSecureTear_rBooster_[2];   unsigned int _ZtlSecureTear_rBooster__CS;  // 0x258
+    int _ZtlSecureTear_tBooster_[2];   unsigned int _ZtlSecureTear_tBooster__CS;  // 0x264
+    // bit12 PowerGuard @0x270 (0x24, 3)
+    int _ZtlSecureTear_nPowerGuard_[2]; unsigned int _ZtlSecureTear_nPowerGuard__CS; // 0x270
+    int _ZtlSecureTear_rPowerGuard_[2]; unsigned int _ZtlSecureTear_rPowerGuard__CS; // 0x27C
+    int _ZtlSecureTear_tPowerGuard_[2]; unsigned int _ZtlSecureTear_tPowerGuard__CS; // 0x288
+    // bit13 HyperBodyHP (MaxHP) @0x294 (0x24, 3)
+    int _ZtlSecureTear_nMaxHP_[2];     unsigned int _ZtlSecureTear_nMaxHP__CS;    // 0x294
+    int _ZtlSecureTear_rMaxHP_[2];     unsigned int _ZtlSecureTear_rMaxHP__CS;    // 0x2A0
+    int _ZtlSecureTear_tMaxHP_[2];     unsigned int _ZtlSecureTear_tMaxHP__CS;    // 0x2AC
+    // bit14 HyperBodyMP (MaxMP) @0x2B8 (0x24, 3)
+    int _ZtlSecureTear_nMaxMP_[2];     unsigned int _ZtlSecureTear_nMaxMP__CS;    // 0x2B8
+    int _ZtlSecureTear_rMaxMP_[2];     unsigned int _ZtlSecureTear_rMaxMP__CS;    // 0x2C4
+    int _ZtlSecureTear_tMaxMP_[2];     unsigned int _ZtlSecureTear_tMaxMP__CS;    // 0x2D0
+    // bit52 ItemUpByItem @0x2DC (0x24, 3) [ext-table inferred]
+    int _ZtlSecureTear_nItemUpByItem_[2]; unsigned int _ZtlSecureTear_nItemUpByItem__CS; // 0x2DC
+    int _ZtlSecureTear_rItemUpByItem_[2]; unsigned int _ZtlSecureTear_rItemUpByItem__CS; // 0x2E8
+    int _ZtlSecureTear_tItemUpByItem_[2]; unsigned int _ZtlSecureTear_tItemUpByItem__CS; // 0x2F4
+    // bit15 Invincible @0x300 (0x24, 3)
+    int _ZtlSecureTear_nInvincible_[2]; unsigned int _ZtlSecureTear_nInvincible__CS; // 0x300
+    int _ZtlSecureTear_rInvincible_[2]; unsigned int _ZtlSecureTear_rInvincible__CS; // 0x30C
+    int _ZtlSecureTear_tInvincible_[2]; unsigned int _ZtlSecureTear_tInvincible__CS; // 0x318
+    // bit16 SoulArrow @0x324 (0x24, 3)
+    int _ZtlSecureTear_nSoulArrow_[2]; unsigned int _ZtlSecureTear_nSoulArrow__CS; // 0x324
+    int _ZtlSecureTear_rSoulArrow_[2]; unsigned int _ZtlSecureTear_rSoulArrow__CS; // 0x330
+    int _ZtlSecureTear_tSoulArrow_[2]; unsigned int _ZtlSecureTear_tSoulArrow__CS; // 0x33C
+    // bit17 Stun @0x348 (0x24, 3)
+    int _ZtlSecureTear_nStun_[2];      unsigned int _ZtlSecureTear_nStun__CS;     // 0x348
+    int _ZtlSecureTear_rStun_[2];      unsigned int _ZtlSecureTear_rStun__CS;     // 0x354
+    int _ZtlSecureTear_tStun_[2];      unsigned int _ZtlSecureTear_tStun__CS;     // 0x360
+    // bit18 Poison @0x36C (0x30, 4)
+    int _ZtlSecureTear_nPoison_[2];    unsigned int _ZtlSecureTear_nPoison__CS;   // 0x36C
+    int _ZtlSecureTear_rPoison_[2];    unsigned int _ZtlSecureTear_rPoison__CS;   // 0x378
+    int _ZtlSecureTear_tPoison_[2];    unsigned int _ZtlSecureTear_tPoison__CS;   // 0x384
+    int _ZtlSecureTear_unk390_[2];     unsigned int _ZtlSecureTear_unk390__CS;    // 0x390 v61 Poison 4th tear, name unresolved
+    // bit19 Seal @0x39C (0x24, 3)
+    int _ZtlSecureTear_nSeal_[2];      unsigned int _ZtlSecureTear_nSeal__CS;     // 0x39C
+    int _ZtlSecureTear_rSeal_[2];      unsigned int _ZtlSecureTear_rSeal__CS;     // 0x3A8
+    int _ZtlSecureTear_tSeal_[2];      unsigned int _ZtlSecureTear_tSeal__CS;     // 0x3B4
+    // bit20 Darkness @0x3C0 (0x24, 3)
+    int _ZtlSecureTear_nDarkness_[2];  unsigned int _ZtlSecureTear_nDarkness__CS; // 0x3C0
+    int _ZtlSecureTear_rDarkness_[2];  unsigned int _ZtlSecureTear_rDarkness__CS; // 0x3CC
+    int _ZtlSecureTear_tDarkness_[2];  unsigned int _ZtlSecureTear_tDarkness__CS; // 0x3D8
+    // bit21 Combo @0x3E4 (0x24, 3)
+    int _ZtlSecureTear_nComboCounter_[2]; unsigned int _ZtlSecureTear_nComboCounter__CS; // 0x3E4
+    int _ZtlSecureTear_rComboCounter_[2]; unsigned int _ZtlSecureTear_rComboCounter__CS; // 0x3F0
+    int _ZtlSecureTear_tComboCounter_[2]; unsigned int _ZtlSecureTear_tComboCounter__CS; // 0x3FC
+    // bit22 WhiteKnightCharge (WeaponCharge) @0x408 (0x24, 3)
+    int _ZtlSecureTear_nWeaponCharge_[2]; unsigned int _ZtlSecureTear_nWeaponCharge__CS; // 0x408
+    int _ZtlSecureTear_rWeaponCharge_[2]; unsigned int _ZtlSecureTear_rWeaponCharge__CS; // 0x414
+    int _ZtlSecureTear_tWeaponCharge_[2]; unsigned int _ZtlSecureTear_tWeaponCharge__CS; // 0x420
+    // bit23 DragonBlood @0x42C (0x24, 3)
+    int _ZtlSecureTear_nDragonBlood_[2]; unsigned int _ZtlSecureTear_nDragonBlood__CS; // 0x42C
+    int _ZtlSecureTear_rDragonBlood_[2]; unsigned int _ZtlSecureTear_rDragonBlood__CS; // 0x438
+    int _ZtlSecureTear_tDragonBlood_[2]; unsigned int _ZtlSecureTear_tDragonBlood__CS; // 0x444
+    // bit24 HolySymbol @0x450 (0x24, 3)
+    int _ZtlSecureTear_nHolySymbol_[2]; unsigned int _ZtlSecureTear_nHolySymbol__CS; // 0x450
+    int _ZtlSecureTear_rHolySymbol_[2]; unsigned int _ZtlSecureTear_rHolySymbol__CS; // 0x45C
+    int _ZtlSecureTear_tHolySymbol_[2]; unsigned int _ZtlSecureTear_tHolySymbol__CS; // 0x468
+    // bit25 MesoUp @0x474 (0x24, 3)
+    int _ZtlSecureTear_nMesoUp_[2];    unsigned int _ZtlSecureTear_nMesoUp__CS;   // 0x474
+    int _ZtlSecureTear_rMesoUp_[2];    unsigned int _ZtlSecureTear_rMesoUp__CS;   // 0x480
+    int _ZtlSecureTear_tMesoUp_[2];    unsigned int _ZtlSecureTear_tMesoUp__CS;   // 0x48C
+    // bit26 ShadowPartner @0x498 (0x24, 3)
+    int _ZtlSecureTear_nShadowPartner_[2]; unsigned int _ZtlSecureTear_nShadowPartner__CS; // 0x498
+    int _ZtlSecureTear_rShadowPartner_[2]; unsigned int _ZtlSecureTear_rShadowPartner__CS; // 0x4A4
+    int _ZtlSecureTear_tShadowPartner_[2]; unsigned int _ZtlSecureTear_tShadowPartner__CS; // 0x4B0
+    // bit53 RespectPImmune @0x4BC (0x24, 3) [ext-table inferred]
+    int _ZtlSecureTear_nRespectPImmune_[2]; unsigned int _ZtlSecureTear_nRespectPImmune__CS; // 0x4BC
+    int _ZtlSecureTear_rRespectPImmune_[2]; unsigned int _ZtlSecureTear_rRespectPImmune__CS; // 0x4C8
+    int _ZtlSecureTear_tRespectPImmune_[2]; unsigned int _ZtlSecureTear_tRespectPImmune__CS; // 0x4D4
+    // bit27 PickPocket @0x4E0 (0x24, 3)
+    int _ZtlSecureTear_nPickPocket_[2]; unsigned int _ZtlSecureTear_nPickPocket__CS; // 0x4E0
+    int _ZtlSecureTear_rPickPocket_[2]; unsigned int _ZtlSecureTear_rPickPocket__CS; // 0x4EC
+    int _ZtlSecureTear_tPickPocket_[2]; unsigned int _ZtlSecureTear_tPickPocket__CS; // 0x4F8
+    // bit54 RespectMImmune @0x504 (0x24, 3) [ext-table inferred]
+    int _ZtlSecureTear_nRespectMImmune_[2]; unsigned int _ZtlSecureTear_nRespectMImmune__CS; // 0x504
+    int _ZtlSecureTear_rRespectMImmune_[2]; unsigned int _ZtlSecureTear_rRespectMImmune__CS; // 0x510
+    int _ZtlSecureTear_tRespectMImmune_[2]; unsigned int _ZtlSecureTear_tRespectMImmune__CS; // 0x51C
+    // bit55 DefenseAttack @0x528 (0x24, 3) [ext-table inferred]
+    int _ZtlSecureTear_nDefenseAtt_[2]; unsigned int _ZtlSecureTear_nDefenseAtt__CS; // 0x528
+    int _ZtlSecureTear_rDefenseAtt_[2]; unsigned int _ZtlSecureTear_rDefenseAtt__CS; // 0x534
+    int _ZtlSecureTear_tDefenseAtt_[2]; unsigned int _ZtlSecureTear_tDefenseAtt__CS; // 0x540
+    // bit56 DefenseState @0x54C (0x24, 3) [ext-table inferred]
+    int _ZtlSecureTear_nDefenseState_[2]; unsigned int _ZtlSecureTear_nDefenseState__CS; // 0x54C
+    int _ZtlSecureTear_rDefenseState_[2]; unsigned int _ZtlSecureTear_rDefenseState__CS; // 0x558
+    int _ZtlSecureTear_tDefenseState_[2]; unsigned int _ZtlSecureTear_tDefenseState__CS; // 0x564
+    // bit28 MesoGuard @0x570 (0x24, 3)
+    int _ZtlSecureTear_nMesoGuard_[2]; unsigned int _ZtlSecureTear_nMesoGuard__CS; // 0x570
+    int _ZtlSecureTear_rMesoGuard_[2]; unsigned int _ZtlSecureTear_rMesoGuard__CS; // 0x57C
+    int _ZtlSecureTear_tMesoGuard_[2]; unsigned int _ZtlSecureTear_tMesoGuard__CS; // 0x588
+    // bit57 IncreaseEffectHpPotion @0x594 (0x24, 3) [ext-table inferred]
+    int _ZtlSecureTear_nIncEffectHPPotion_[2]; unsigned int _ZtlSecureTear_nIncEffectHPPotion__CS; // 0x594
+    int _ZtlSecureTear_rIncEffectHPPotion_[2]; unsigned int _ZtlSecureTear_rIncEffectHPPotion__CS; // 0x5A0
+    int _ZtlSecureTear_tIncEffectHPPotion_[2]; unsigned int _ZtlSecureTear_tIncEffectHPPotion__CS; // 0x5AC
+    // bit29 Thaw @0x5B8 (0x24, 3)
+    int _ZtlSecureTear_nThaw_[2];      unsigned int _ZtlSecureTear_nThaw__CS;     // 0x5B8
+    int _ZtlSecureTear_rThaw_[2];      unsigned int _ZtlSecureTear_rThaw__CS;     // 0x5C4
+    int _ZtlSecureTear_tThaw_[2];      unsigned int _ZtlSecureTear_tThaw__CS;     // 0x5D0
+    // bit30 Weaken (Weakness) @0x5DC (0x30, 4)
+    int _ZtlSecureTear_nWeakness_[2];  unsigned int _ZtlSecureTear_nWeakness__CS; // 0x5DC
+    int _ZtlSecureTear_rWeakness_[2];  unsigned int _ZtlSecureTear_rWeakness__CS; // 0x5E8
+    int _ZtlSecureTear_tWeakness_[2];  unsigned int _ZtlSecureTear_tWeakness__CS; // 0x5F4
+    int _ZtlSecureTear_unk600_[2];     unsigned int _ZtlSecureTear_unk600__CS;    // 0x600 v61 Weakness 4th tear, name unresolved
+    // bit31 Curse @0x60C (0x24, 3)
+    int _ZtlSecureTear_nCurse_[2];     unsigned int _ZtlSecureTear_nCurse__CS;    // 0x60C
+    int _ZtlSecureTear_rCurse_[2];     unsigned int _ZtlSecureTear_rCurse__CS;    // 0x618
+    int _ZtlSecureTear_tCurse_[2];     unsigned int _ZtlSecureTear_tCurse__CS;    // 0x624
+    // bit58 IncreaseEffectMpPotion @0x630 (0x24, 3) [ext-table inferred]
+    int _ZtlSecureTear_nIncEffectMPPotion_[2]; unsigned int _ZtlSecureTear_nIncEffectMPPotion__CS; // 0x630
+    int _ZtlSecureTear_rIncEffectMPPotion_[2]; unsigned int _ZtlSecureTear_rIncEffectMPPotion__CS; // 0x63C
+    int _ZtlSecureTear_tIncEffectMPPotion_[2]; unsigned int _ZtlSecureTear_tIncEffectMPPotion__CS; // 0x648
+    // bit32 Slow @0x654 (0x30, 4)
+    int _ZtlSecureTear_nSlow_[2];      unsigned int _ZtlSecureTear_nSlow__CS;     // 0x654
+    int _ZtlSecureTear_rSlow_[2];      unsigned int _ZtlSecureTear_rSlow__CS;     // 0x660
+    int _ZtlSecureTear_tSlow_[2];      unsigned int _ZtlSecureTear_tSlow__CS;     // 0x66C
+    int _ZtlSecureTear_unk678_[2];     unsigned int _ZtlSecureTear_unk678__CS;    // 0x678 v61 Slow 4th tear, name unresolved
+    // bit33 Morph @0x684 (0x24, 3)
+    int _ZtlSecureTear_nMorph_[2];     unsigned int _ZtlSecureTear_nMorph__CS;    // 0x684
+    int _ZtlSecureTear_rMorph_[2];     unsigned int _ZtlSecureTear_rMorph__CS;    // 0x690
+    int _ZtlSecureTear_tMorph_[2];     unsigned int _ZtlSecureTear_tMorph__CS;    // 0x69C
+    // bit34 Recovery (Regen) @0x6A8 (0x24, 3)
+    int _ZtlSecureTear_nRegen_[2];     unsigned int _ZtlSecureTear_nRegen__CS;    // 0x6A8
+    int _ZtlSecureTear_rRegen_[2];     unsigned int _ZtlSecureTear_rRegen__CS;    // 0x6B4
+    int _ZtlSecureTear_tRegen_[2];     unsigned int _ZtlSecureTear_tRegen__CS;    // 0x6C0
+    // bit35 MapleWarrior (BasicStatUp) @0x6CC (0x24, 3)
+    int _ZtlSecureTear_nBasicStatUp_[2]; unsigned int _ZtlSecureTear_nBasicStatUp__CS; // 0x6CC
+    int _ZtlSecureTear_rBasicStatUp_[2]; unsigned int _ZtlSecureTear_rBasicStatUp__CS; // 0x6D8
+    int _ZtlSecureTear_tBasicStatUp_[2]; unsigned int _ZtlSecureTear_tBasicStatUp__CS; // 0x6E4
+    // bit36 Stance @0x6F0 (0x24, 3)
+    int _ZtlSecureTear_nStance_[2];    unsigned int _ZtlSecureTear_nStance__CS;   // 0x6F0
+    int _ZtlSecureTear_rStance_[2];    unsigned int _ZtlSecureTear_rStance__CS;   // 0x6FC
+    int _ZtlSecureTear_tStance_[2];    unsigned int _ZtlSecureTear_tStance__CS;   // 0x708
+    // bit37 SharpEyes @0x714 (0x24, 3)
+    int _ZtlSecureTear_nSharpEyes_[2]; unsigned int _ZtlSecureTear_nSharpEyes__CS; // 0x714
+    int _ZtlSecureTear_rSharpEyes_[2]; unsigned int _ZtlSecureTear_rSharpEyes__CS; // 0x720
+    int _ZtlSecureTear_tSharpEyes_[2]; unsigned int _ZtlSecureTear_tSharpEyes__CS; // 0x72C
+    // bit38 ManaReflection @0x738 (0x30, 4)
+    int _ZtlSecureTear_nManaReflection_[2]; unsigned int _ZtlSecureTear_nManaReflection__CS; // 0x738
+    int _ZtlSecureTear_rManaReflection_[2]; unsigned int _ZtlSecureTear_rManaReflection__CS; // 0x744
+    int _ZtlSecureTear_tManaReflection_[2]; unsigned int _ZtlSecureTear_tManaReflection__CS; // 0x750
+    int _ZtlSecureTear_unk75C_[2];     unsigned int _ZtlSecureTear_unk75C__CS;    // 0x75C v61 ManaReflection 4th tear, name unresolved
+    // bit39 Seduce (Attract) @0x768 (0x24, 3)
+    int _ZtlSecureTear_nAttract_[2];   unsigned int _ZtlSecureTear_nAttract__CS;  // 0x768
+    int _ZtlSecureTear_rAttract_[2];   unsigned int _ZtlSecureTear_rAttract__CS;  // 0x774
+    int _ZtlSecureTear_tAttract_[2];   unsigned int _ZtlSecureTear_tAttract__CS;  // 0x780
+    // bit40 ShadowClaw (SpiritJavelin) @0x78C (0x24, 3) — SITE A (v72 has 6 tears here)
+    int _ZtlSecureTear_nSpiritJavelin_[2]; unsigned int _ZtlSecureTear_nSpiritJavelin__CS; // 0x78C
+    int _ZtlSecureTear_rSpiritJavelin_[2]; unsigned int _ZtlSecureTear_rSpiritJavelin__CS; // 0x798
+    int _ZtlSecureTear_tSpiritJavelin_[2]; unsigned int _ZtlSecureTear_tSpiritJavelin__CS; // 0x7A4
+    // bit41 Infinity @0x7B0 (0x30, 4) — SITE B (v72 has 10 tears here)
+    int _ZtlSecureTear_nInfinity_[2];  unsigned int _ZtlSecureTear_nInfinity__CS; // 0x7B0
+    int _ZtlSecureTear_rInfinity_[2];  unsigned int _ZtlSecureTear_rInfinity__CS; // 0x7BC
+    int _ZtlSecureTear_tInfinity_[2];  unsigned int _ZtlSecureTear_tInfinity__CS; // 0x7C8
+    int _ZtlSecureTear_tUpdateInfinity_[2]; unsigned int _ZtlSecureTear_tUpdateInfinity__CS; // 0x7D4
+    // bit42 HolyShield @0x7E0 (0x30, 4)
+    int _ZtlSecureTear_nHolyshield_[2]; unsigned int _ZtlSecureTear_nHolyshield__CS; // 0x7E0
+    int _ZtlSecureTear_rHolyshield_[2]; unsigned int _ZtlSecureTear_rHolyshield__CS; // 0x7EC
+    int _ZtlSecureTear_tHolyshield_[2]; unsigned int _ZtlSecureTear_tHolyshield__CS; // 0x7F8
+    int _ZtlSecureTear_unk804_[2];     unsigned int _ZtlSecureTear_unk804__CS;    // 0x804 v61 HolyShield 4th tear, name unresolved
+    // bit43 Hamstring @0x810 (0x3C, 5)
+    int _ZtlSecureTear_nHamString_[2]; unsigned int _ZtlSecureTear_nHamString__CS; // 0x810
+    int _ZtlSecureTear_rHamString_[2]; unsigned int _ZtlSecureTear_rHamString__CS; // 0x81C
+    int _ZtlSecureTear_tHamString_[2]; unsigned int _ZtlSecureTear_tHamString__CS; // 0x828
+    int _ZtlSecureTear_unk834_[2];     unsigned int _ZtlSecureTear_unk834__CS;    // 0x834 v61 Hamstring 4th tear, name unresolved
+    int _ZtlSecureTear_unk840_[2];     unsigned int _ZtlSecureTear_unk840__CS;    // 0x840 v61 Hamstring 5th tear, name unresolved
+    // bit44 Blind @0x84C (0x30, 4)
+    int _ZtlSecureTear_nBlind_[2];     unsigned int _ZtlSecureTear_nBlind__CS;    // 0x84C
+    int _ZtlSecureTear_rBlind_[2];     unsigned int _ZtlSecureTear_rBlind__CS;    // 0x858
+    int _ZtlSecureTear_tBlind_[2];     unsigned int _ZtlSecureTear_tBlind__CS;    // 0x864
+    int _ZtlSecureTear_unk870_[2];     unsigned int _ZtlSecureTear_unk870__CS;    // 0x870 v61 Blind 4th tear, name unresolved
+    // bit45 Concentrate @0x87C (0x2C, 3 long-tears + 1 byte-tear)
+    int _ZtlSecureTear_nConcentration_[2]; unsigned int _ZtlSecureTear_nConcentration__CS; // 0x87C
+    int _ZtlSecureTear_rConcentration_[2]; unsigned int _ZtlSecureTear_rConcentration__CS; // 0x888
+    int _ZtlSecureTear_tConcentration_[2]; unsigned int _ZtlSecureTear_tConcentration__CS; // 0x894
+    char _ZtlSecureTear_unk8A0_[2];    unsigned int _ZtlSecureTear_unk8A0__CS;    // 0x8A0 v61 Concentrate trailing byte-tear (8B), name unresolved
+    // bit46 BanMap @0x8A8 (0x2C, 3 long-tears + 1 byte-tear)
+    int _ZtlSecureTear_nBanMap_[2];    unsigned int _ZtlSecureTear_nBanMap__CS;   // 0x8A8
+    int _ZtlSecureTear_rBanMap_[2];    unsigned int _ZtlSecureTear_rBanMap__CS;   // 0x8B4
+    int _ZtlSecureTear_tBanMap_[2];    unsigned int _ZtlSecureTear_tBanMap__CS;   // 0x8C0
+    char _ZtlSecureTear_mBanMap_[2];   unsigned int _ZtlSecureTear_mBanMap__CS;   // 0x8CC v61 BanMap trailing byte-tear (8B); name = over-model mBanMap (inferred)
+    // bit47 EchoOfHero (MaxLevelBuff) @0x8D4 (0x30, 4)
+    int _ZtlSecureTear_nMaxLevelBuff_[2]; unsigned int _ZtlSecureTear_nMaxLevelBuff__CS; // 0x8D4
+    int _ZtlSecureTear_rMaxLevelBuff_[2]; unsigned int _ZtlSecureTear_rMaxLevelBuff__CS; // 0x8E0
+    int _ZtlSecureTear_tMaxLevelBuff_[2]; unsigned int _ZtlSecureTear_tMaxLevelBuff__CS; // 0x8EC
+    int _ZtlSecureTear_unk8F8_[2];     unsigned int _ZtlSecureTear_unk8F8__CS;    // 0x8F8 v61 MaxLevelBuff 4th tear, name unresolved
+    // bit48 MesoUpByItem @0x904 (0x30, 4)
+    int _ZtlSecureTear_nMesoUpByItem[2];  unsigned int _ZtlSecureTear_nMesoUpByItem_CS;  // 0x904
+    int _ZtlSecureTear_nMesoUpByItem_[2]; unsigned int _ZtlSecureTear_nMesoUpByItem__CS; // 0x910
+    int _ZtlSecureTear_rMesoUpByItem_[2]; unsigned int _ZtlSecureTear_rMesoUpByItem__CS; // 0x91C
+    int _ZtlSecureTear_tMesoUpByItem_[2]; unsigned int _ZtlSecureTear_tMesoUpByItem__CS; // 0x928
+    // bit49 GhostMorph (Ghost) @0x934 (0x24, 3) — SITE C (v72 has 0xDC trailing here)
+    int _ZtlSecureTear_nGhost_[2];     unsigned int _ZtlSecureTear_nGhost__CS;    // 0x934
+    int _ZtlSecureTear_rGhost_[2];     unsigned int _ZtlSecureTear_rGhost__CS;    // 0x940
+    int _ZtlSecureTear_tGhost_[2];     unsigned int _ZtlSecureTear_tGhost__CS;    // 0x94C
+    // SITE D — trailing two-state base-stat array: v61 = 6 entries x 4B = 0x18 @0x958..0x970.
+    // (v72 = 7 x 8B = 0x38.) 4-byte entry on 32-bit ⇒ raw pointer, not the 8-byte ZRef.
+    TemporaryStatBase<long>* aTemporaryStat[6];                                   // 0x958..0x970
+    // clang-format on
+#else
     int _ZtlSecureTear_nPAD[2];
     unsigned int _ZtlSecureTear_nPAD_CS;
     int _ZtlSecureTear_nPAD_[2];
@@ -917,8 +1199,17 @@ struct SecondaryStat {
     int _ZtlSecureTear_lSummonBomb_[2];
     unsigned int _ZtlSecureTear_lSummonBomb__CS;
 #endif
+    // v72+/v79/v83/v87/v95/v111/JMS185 over-model trailing two-state array: 7 x 8B ZRef = 0x38.
+    // (The v61 layout — including its 6 x 4B array — lives in the self-contained #if<72 branch above;
+    // this single tail gate absorbs the former Site-D [6]/[7] split. verified task-010)
     ZRef<TemporaryStatBase<long>> aTemporaryStat[7];
+#endif // v61 vs v72+ SecondaryStat body gate (BUILD_MAJOR_VERSION < 72)
 };
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72
+// v61 faithful layout — full rebuild, task-010
+assert_size(sizeof(SecondaryStat), 0x970);
+#endif
 
 #if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 79
 // task-008: v79 SecondaryStat layout proven against GMS_v79_1_DEVM.exe (IDA port 13340).

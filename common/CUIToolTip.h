@@ -88,14 +88,14 @@ class CUIToolTip
     };
 
   public:
-#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79)
-    // v79/v72: the binary reserves a dword at offset 0 (IDA struct labels it "vfptr").
+#if defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 61 || BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 79)
+    // v61/v79/v72: the binary reserves a dword at offset 0 (IDA struct labels it "vfptr").
     // This class is non-polymorphic and does not otherwise model that slot, leaving
-    // the struct 4 bytes short of the binary size. Both ctors (v79 @0x842317,
-    // v72 @0x7f9c33) write m_pLayer@0x10 first and the m_aLineInfo array @0x20 --
-    // i.e. exactly 4 dwords precede m_pLayer, so the offset-0 slot is real. Gated
-    // ==72/==79 so v83/84/87/95/111/JMS stay byte-for-byte unchanged (they share
-    // this latent -4; see task-008 report).
+    // the struct 4 bytes short of the binary size. All three ctors (v61 @0x748ffe,
+    // v79 @0x842317, v72 @0x7f9c33) write m_pLayer@0x10 first and the m_aLineInfo array
+    // @0x20 -- i.e. exactly 4 dwords precede m_pLayer, so the offset-0 slot is real.
+    // Gated ==61/==72/==79 so v83/84/87/95/111/JMS stay byte-for-byte unchanged (they
+    // share this latent -4; see task-008 report).
     void* vfptr;
 #endif
     //vfptr
@@ -140,7 +140,9 @@ class CUIToolTip
     // +0x470. Offsets 0x424..0x46C are byte-identical between the two, so the
     // delta is strictly this trailing slot. Absent only for GMS v72 -> CUIToolTip
     // 0x510 (v72) vs 0x514 (v79). task-009.
-#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION == 72)
+    // v61 shares v72's font region exactly (19 fonts, m_pFontGen_Blue absent) — v61 ctor
+    // @0x748ffe zeroes [edi+424h..46Ch] (19 dwords), same run as v72. task-010.
+#if !(defined(REGION_GMS) && (BUILD_MAJOR_VERSION == 72 || BUILD_MAJOR_VERSION == 61))
     _com_ptr_t<_com_IIID<IWzFont, &IID_IUnknown>> m_pFontGen_Blue;
 #endif
     // v84: m_pFontGen_Unknown present @0x478 — gate split >=87 -> >=84, task-006 (v84=0x52C)
@@ -163,13 +165,23 @@ class CUIToolTip
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberCan;
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberCannot;
 
-#if defined(REGION_GMS)
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61
+    // v61: this equip-canvas array is 10 elems, not [6][2]=12 (ctor @0x748ffe eh-vector
+    // `push 0Ah` @0x7490d5, base @0x4A8). task-010.
+    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_JobItem[5][2];
+    _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasDot[3];
+#elif defined(REGION_GMS)
     _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_JobItem[6][2];
     _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasDot[3];
 #endif
+    // v61: the GrowthItem block + its two Number props are ABSENT (ctor @0x748ffe has no
+    // 4th eh-vector-ctor and no zeroing past 0x4DC; m_pCanvasDot[3] ends @0x4DC, then the
+    // single trailing dword m_bIngoreWeddingInfo -> sizeof 0x4E0). task-010.
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61)
     _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_GrowthItem[4][2];
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberGrowthEnable;
     _com_ptr_t<_com_IIID<IWzProperty, &IID_IUnknown>> m_pNumberGrowthDisable;
+#endif
     // v84: present @0x518 — gate >=87 -> >=84, task-006 (v84=0x52C)
 #if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 84) || defined(REGION_JMS)
     _com_ptr_t<_com_IIID<IWzCanvas, &IID_IUnknown>> m_pCanvasEquip_Durability[2][2];
@@ -189,4 +201,14 @@ static_assert(offsetof(CUIToolTip, m_pLayer) == 0x10,
               "v72 CUIToolTip::m_pLayer @0x10 (ctor @0x7f9c33: mov [esi+10h], edi)");
 static_assert(offsetof(CUIToolTip, m_pNumberCan) == 0x4A0,
               "v72 CUIToolTip::m_pNumberCan @0x4A0 (ctor @0x7f9c33: mov [esi+4A0h], edi) -- 4 below v79");
+#elif defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61
+// task-010: v61 CUIToolTip = 0x4E0 — 0x30 smaller than v72 (JobItem [5][2] not [6][2];
+// GrowthItem block absent). Size cross-checked by TWO embeds: CCtrlButton (0x90..0x570)
+// and CUIWnd (0x6C..0x54C) both = 0x4E0. Font/prefix region (0x10..0x4A8) byte-identical
+// to v72. ctor @0x748ffe (last member @0x4DC).
+assert_size(sizeof(CUIToolTip), 0x4E0);
+static_assert(offsetof(CUIToolTip, m_pLayer) == 0x10,
+              "v61 CUIToolTip::m_pLayer @0x10 (ctor @0x748ffe: mov [edi+10h], ebx; vfptr slot @0)");
+static_assert(offsetof(CUIToolTip, m_pNumberCan) == 0x4A0,
+              "v61 CUIToolTip::m_pNumberCan @0x4A0 (ctor @0x748ffe: mov [edi+4A0h], ebx) -- shared with v72");
 #endif

@@ -297,7 +297,15 @@ INT __fastcall CClientSocket__OnConnect_Hook(CClientSocket* pThis, PVOID edx, in
         auto cOutPacket = COutPacket(PLAYER_LOGGED_IN);
         cOutPacket.Encode4(CWvsContext::GetInstance()->m_dwCharacterId);
         cOutPacket.EncodeBuffer(systemInfo.GetMachineId(), 16);
-#if defined(REGION_GMS)
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72
+        // v61: m_nSubGradeCode is a plain byte (not TSecType), so read it directly; keep the
+        // signed >= 0 test the TSecType path uses (cast so the high bit is treated as sign). task-010.
+        if (static_cast<signed char>(CWvsContext::GetInstance()->m_nSubGradeCode) >= 0) {
+            cOutPacket.Encode1(0);
+        } else {
+            cOutPacket.Encode1(1);
+        }
+#elif defined(REGION_GMS)
         if (CWvsContext::GetInstance()->m_nSubGradeCode.GetData() >= 0) {
             cOutPacket.Encode1(0);
         } else {

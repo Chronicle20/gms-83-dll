@@ -108,6 +108,11 @@ class MobStat {
     int rDazzle_;
     int tDazzle_;
     int nRiseByToss_;
+    // v61: rRiseByToss_..rMCounter_ (8 ints, 0x20) absent — the RiseByToss/Counter block is
+    // reduced; nFs lands v61 +0x198 vs v72 +0x1B8 (MobStat 0x1B8 vs v72 0x1D8). The 8-int
+    // count/contiguity is disasm-anchored (Task 15b MobStat::DecodeTemporary diff); the v72
+    // branch (#else effect) is byte-identical. split, verified task-010
+#if !(defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72)
     int rRiseByToss_;
     int tRiseByToss_;
     int nPCounter_;
@@ -116,12 +121,20 @@ class MobStat {
     int wPCounter_;
     int nMCounter_;
     int rMCounter_;
+#endif
+    // v61 AND v72 lack these 6 ints — present only v79+. v61 SetFrom @0x6685A7 proves
+    // nFs@0x198 sits directly after nRiseByToss_@0x194 (no MCounter/BodyPressure block);
+    // v72's true size 0x1D8 (vs the 0x1F0 this run over-modeled) needs them gone too. They
+    // were left UNGATED by task-008/009 — the real cause of the v61/v72 MobStat drift, not
+    // the (correct) <72 8-int block above. Gate >=79 so v79/v83+/JMS stay unchanged. task-010.
+#if (defined(REGION_GMS) && BUILD_MAJOR_VERSION >= 79) || defined(REGION_JMS)
     int tMCounter_;
     int wMCounter_;
     int nCounterProb_;
     int nBodyPressure_;
     int rBodyPressure_;
     int tBodyPressure_;
+#endif
     // v79: lacks the Weakness group; removing it also reclaims the 4B alignment pad before the
     // 8-aligned `long double nFs` (0xC + 4B = 0x10 shrink → MobStat 0x1F8 vs v83 0x208;
     // lBurnedInfo v79@0x1E0 vs v83@0x1F0). Present in v83+/JMS. Gate excludes ONLY v79. verified task-008

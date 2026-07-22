@@ -63,6 +63,25 @@ class CWvsContext {
     unsigned int m_dwAccountId;
     int m_nGender;
     TSecType<unsigned char> m_nGradeCode;
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION < 72
+    // === v61 account region (task-010; verified GMS_v61.1_U_DEVM, IDA 9a1bdd7a) ===
+    // Diverges from v72+: the two account ZXStrings precede m_nSubGradeCode, and
+    // m_nSubGradeCode is a PLAIN byte (not TSecType). That resize+reorder shifted
+    // m_nChannelID / m_dwCharacterId into garbage at char-select (reported bug). The four
+    // fields our code reads (subGrade byte, world, channel, charId) are pinned to their
+    // measured v61 offsets; the premium/date/count middle is opaque filler (no edit DLL
+    // reads it). Anchors: SetAccountInfo @0x56613D (accountId@0x2028, gender@0x202C,
+    // gradeCode TSec@0x2030, subGrade byte@0x2044); sub_82CE54 (world@0x2048, channel@
+    // 0x204C); OnSelectCharacterResult @0x567C2F + OnConnect migrate read [ctx+0x2088]=charId.
+    ZXString<char> m_sEMailAccount;  // 0x203C
+    ZXString<char> m_sNexonClubID;   // 0x2040
+    unsigned __int8 m_nSubGradeCode; // 0x2044  plain byte, NOT TSecType
+    unsigned __int8 m_nCountryID;    // 0x2045
+    int m_nWorldID;                  // 0x2048  (2 pad bytes @0x2046)
+    int m_nChannelID;                // 0x204C
+    int m_v61_acctGap2050[14];       // 0x2050..0x2088  premium/dates/char-counts (opaque)
+    unsigned int m_dwCharacterId;    // 0x2088
+#else
 #if defined(REGION_GMS)
     TSecType<unsigned char> m_nSubGradeCode;
 #elif defined(REGION_JMS)
@@ -102,6 +121,7 @@ class CWvsContext {
     int m_bTesterAccount;
 #endif
     unsigned int m_dwCharacterId;
+#endif // v61 account-region gate
     int m_bExclRequestSent;
     int m_tExclRequestSent;
     int m_tExclRequestSentQ[2];

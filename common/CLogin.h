@@ -285,6 +285,32 @@ public:
     int m_v72_gap1DC[6];                // 0x1DC..0x1F3
     ZArray<CLogin::ASITEM> m_aMaleItem[9];   // 0x1F4  eh-vector[9] -> ends 0x218
     ZArray<CLogin::ASITEM> m_aFemaleItem[9]; // 0x218  eh-vector[9] -> 0x23C
+#elif (defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61)
+    // =====================================================================
+    // GMS v61 layout (task-010). Anchored to GMS_v61.1_U_DEVM (session 9a1bdd7a):
+    //   ctor            @0x5620D4; stage alloc sub_8460D8 `push 1DCh` -> sizeof 0x1DC.
+    //   SendCheckPasswordPacket @0x564418  (THE reimplemented crash fn): reads/sets
+    //     m_bRequestSent [esi+144h], then m_WorldItem.RemoveAll [esi+15Ch] (32B elems,
+    //     sub_5694D6) + m_aBalloon.RemoveAll [esi+1BCh] (12B elems, sub_569619).
+    //   OnWorldInformation appends 32B WORLDITEM @0x15C / clears m_aBalloon@0x1BC;
+    //   OnSelectWorldResult clears m_bRequestSent@0x144; ctor sets m_nCharSelected@0x160=-1.
+    // CMapLoadable base ends 0xEC (base ctor sub_59D8CD last write +0xE8). v61 builds ONE
+    // ZList (m_lNewEquip @0x16C, vtable off_8E8C54); m_aMaleItem/m_aFemaleItem are ABSENT
+    // (present in v72@0x1F4/0x218). The shared VAC prefix above occupies 0xEC..0x110. Only
+    // the 3 hook-touched fields + total size are load-bearing; interior members are opaque
+    // filler sized to the exact binary extent (every slot 4-byte aligned). This corrects the
+    // v61 crash: without it, v61 fell through to the v95-shaped #else (0x278), so
+    // login_hooks' m_WorldItem/m_aBalloon RemoveAll ran at wrong offsets (heap corruption).
+    // =====================================================================
+    int m_v61_gap110[13];                  // 0x110..0x143 (VAC arrays / locks / login-step; opaque)
+    int m_bRequestSent;                    // 0x144  SendCheckPasswordPacket [esi+144h]
+    int m_v61_gap148[5];                   // 0x148..0x15B (opaque)
+    ZArray<CLogin::WORLDITEM> m_WorldItem; // 0x15C  RemoveAll(sub_5694D6, 32B elems)
+    int m_nCharSelected;                   // 0x160  ctor = -1
+    int m_v61_gap164[22];                  // 0x164..0x1BB (avatar/rank arrays + m_lNewEquip ZList; opaque)
+    ZArray<CLogin::BALLOON> m_aBalloon;    // 0x1BC  RemoveAll(sub_569619, 12B elems)
+    ZXString<char> m_aCmd[5];              // 0x1C0..0x1D4  eh-vector[5]
+    int m_v61_tail1D4[2];                  // 0x1D4..0x1DC (opaque POD tail)
 #else
     ZArray<AvatarData> m_aAvatarDataVAC;
     ZArray<CLogin::RANK> m_aRankVAC;
@@ -415,4 +441,18 @@ static_assert(offsetof(CLogin, m_WorldItem) == 0x164,
 static_assert(offsetof(CLogin, m_nCharSelected) == 0x168, "CLogin::m_nCharSelected @0x168 (v72: ctor = -1)");
 static_assert(offsetof(CLogin, m_lNewEquip) == 0x174, "CLogin::m_lNewEquip @0x174 (v72: only ZList, off_9D317C)");
 static_assert(offsetof(CLogin, m_aCmd) == 0x1C8, "CLogin::m_aCmd[5] @0x1C8 (v72)");
+#endif
+
+#if defined(REGION_GMS) && BUILD_MAJOR_VERSION == 61
+// --- task-010: permanent v61 layout guards (anchored to GMS_v61.1_U_DEVM, session 9a1bdd7a) ---
+// sizeof: stage alloc sub_8460D8 `push 1DCh` @0x8460f9; ctor @0x5620D4. Requires CMapLoadable
+// base == 0xEc. The three offsets below are the login_hooks-touched fields (SendCheckPasswordPacket
+// @0x564418) — a wrong value here reproduces the world-information heap-corruption crash.
+assert_size(sizeof(CLogin), 0x1DC);
+static_assert(offsetof(CLogin, m_bRequestSent) == 0x144,
+              "CLogin::m_bRequestSent @0x144 (v61: SendCheckPasswordPacket [esi+144h]; OnSelectWorldResult clears it)");
+static_assert(offsetof(CLogin, m_WorldItem) == 0x15C,
+              "CLogin::m_WorldItem @0x15C (v61: SendCheckPasswordPacket RemoveAll sub_5694D6, 32B WORLDITEM elems)");
+static_assert(offsetof(CLogin, m_aBalloon) == 0x1BC,
+              "CLogin::m_aBalloon @0x1BC (v61: SendCheckPasswordPacket RemoveAll sub_569619, 12B BALLOON elems)");
 #endif

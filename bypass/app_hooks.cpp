@@ -46,8 +46,10 @@ VOID __fastcall CWvsApp__CallUpdate_Hook(CWvsApp* pThis, PVOID edx, int tCurTime
         pThis->m_tUpdateTime = tCurTime;
 #if defined(REGION_GMS)
         pThis->m_tLastServerIPCheck = tCurTime;
+#if BUILD_MAJOR_VERSION >= 72 // v61 lacks the 2nd IP-check + GG-hook timer (task-010)
         pThis->m_tLastServerIPCheck2 = tCurTime;
         pThis->m_tLastGGHookingAPICheck = tCurTime;
+#endif
 #endif
         pThis->m_tLastSecurityCheck = tCurTime;
         pThis->m_bFirstUpdate = 0;
@@ -212,10 +214,10 @@ VOID __fastcall CWvsApp__Run_Hook(CWvsApp* pThis, PVOID edx, int* pbTerminate) {
 VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
     Log("CWvsApp::SetUp");
 #if defined(REGION_GMS) && C_WVS_APP_INITIALIZE_AUTH != 0
-    // InitializeAuth calls through C_WVS_APP_INITIALIZE_AUTH. The NMCO/Nexon-Passport
-    // auth subsystem post-dates v79, so on v79 (and older: v72/v61) that address is the
-    // 0x0 absent-sentinel; calling through it AVs at 0 right after the log line. Gate on
-    // a non-zero address, same as DR_INIT below. task-008.
+    // CWvsApp::InitializeAuth() calls through C_WVS_APP_INITIALIZE_AUTH (common/CWvsApp.cpp).
+    // That key is 0x0 for v61/v72/v79 (the NMCO/CNMCOClientObject auth subsystem post-dates
+    // those builds) — calling the wrapper there would call(0) => AV at 0x0. Guard with the
+    // sentinel test so it stays for v83+ (real address) and compiles out below the floor.
     pThis->InitializeAuth();
 #endif
 
@@ -232,7 +234,10 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
     reinterpret_cast<void(__cdecl*)()>(DR_INIT)();
 #endif
 
-#if defined(REGION_GMS)
+#if defined(REGION_GMS) && GET_SE_PRIVILEGE != 0
+    // GetSEPrivilege() calls through GET_SE_PRIVILEGE (helper above). v61 lacks the
+    // debug-privilege escalation entirely (key 0x0) — calling through 0 would AV. The
+    // sentinel guard keeps it for v72+ (real address) and drops it for v61.
     GetSEPrivilege();
 #endif
 
@@ -257,11 +262,9 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
     CFuncKeyMappedMan::CreateInstance();
     CQuickslotKeyMappedMan::CreateInstance();
 #if C_MACRO_SYS_MAN_CREATE_INSTANCE != 0
-    // CreateInstance calls through C_MACRO_SYS_MAN_CREATE_INSTANCE. v72 has no separate
-    // CMacroSysMan singleton (the macro-sys-data-init role is folded into
-    // CQuickslotKeyMappedMan, created just above), so that address is the 0x0 absent-
-    // sentinel; calling through it AVs at 0. Gate on a non-zero address, same as the
-    // CRadioManager guard below. task-009.
+    // CMacroSysMan does not exist as a separate singleton in v61/v72 (key 0x0; the role is
+    // folded into CWvsContext::OnMacroSysDataInit). Present in v79+. The wrapper calls through
+    // the key, so guard the call site to avoid call(0). Region-agnostic: JMS has it (non-zero).
     CMacroSysMan::CreateInstance();
 #endif
 
@@ -308,8 +311,15 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
         Log("Throw error regarding CQuestMan::LoadDemand");
         return;
     }
+    // LoadPartyQuestInfo / LoadExclusive post-date v61 (keys 0x0; the wrappers in
+    // common/CQuestMan.cpp call through them). Guard each call site so v61 does not call(0);
+    // both keys are real for v72+ and JMS, so the calls stay there. (SetUp is their sole caller.)
+#if C_QUEST_MAN_LOAD_PARTY_QUEST_INFO != 0
     CQuestMan::GetInstance()->LoadPartyQuestInfo();
+#endif
+#if C_QUEST_MAN_LOAD_EXCLUSIVE != 0
     CQuestMan::GetInstance()->LoadExclusive();
+#endif
 
     CMonsterBookMan::CreateInstance();
     if (!CMonsterBookMan::GetInstance()->LoadBook()) {
@@ -318,11 +328,9 @@ VOID __fastcall CWvsApp__SetUp_Hook(CWvsApp* pThis, PVOID edx) {
     }
 
 #if C_RADIO_MANAGER_CREATE_INSTANCE != 0
-    // CreateInstance calls through C_RADIO_MANAGER_CREATE_INSTANCE. v79 has no
-    // CRadioManager singleton (the scheduled-message/radio role is folded into
-    // CMapleTVMan), so that address is the 0x0 absent-sentinel; calling through it
-    // AVs at 0 right after the log line, leaving a popped-but-dead window. Gate on a
-    // non-zero address, same as the InitializeAuth guard above. task-008.
+    // CRadioManager has no separate singleton in v61/v72/v79 (key 0x0; the scheduled-message
+    // role is folded into CMapleTVMan). Present v83+. Wrapper calls through the key, so guard
+    // the call site. Region-agnostic: JMS has it (non-zero).
     CRadioManager::CreateInstance();
 #endif
 
@@ -403,11 +411,17 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp* pThis, PVOID edx, const char* sCm
     }
 
 #if defined(REGION_GMS)
+    // G_DW_TARGET_OS is the WoW64/target-OS marker; it is 0x0 for v61 (the marker + the
+    // IsWow64/ResetLSP machinery post-date v61), so every *g_dwTargetOS write is a null
+    // store there. Guard the derefs with the sentinel test; the IsWow64 probe itself is a
+    // harmless API call and stays so the (separately-guarded) ResetLSP can read bIsWow64.
+#if G_DW_TARGET_OS != 0
     int* g_dwTargetOS = reinterpret_cast<int*>(G_DW_TARGET_OS);
 
     if (ovi.dwMajorVersion < 5) {
         *g_dwTargetOS = 1996;
     }
+#endif
 
     BOOL bIsWow64 = FALSE;
     auto fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
@@ -415,12 +429,18 @@ VOID __fastcall CWvsApp__CWvsApp_Hook(CWvsApp* pThis, PVOID edx, const char* sCm
         fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
     }
 
+#if G_DW_TARGET_OS != 0
     if (bIsWow64) {
         *g_dwTargetOS = 1996;
     }
+#endif
+#if RESET_LSP != 0
+    // ResetLSP() calls through RESET_LSP (helper above); 0x0 for v61 (the WSAStartup/LSP-reset
+    // machinery post-dates v61). Guard so v61 does not call(0); kept for v72+ (real address).
     if (ovi.dwMajorVersion >= 6 && !bIsWow64) {
         ResetLSP();
     }
+#endif
     sToken.Empty();
 #endif
 }
